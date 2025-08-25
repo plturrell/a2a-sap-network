@@ -26,11 +26,11 @@ if missing_vars:
 async def test_quality_control():
     print('🔍 Testing Comprehensive Quality Control Agent Real AI Integration')
     print('=' * 70)
-    
+
     # Initialize agent
     agent = ComprehensiveQualityControlSDK(os.getenv("A2A_SERVICE_URL"))
     await agent.initialize()
-    
+
     # Test 1: Check if ML models are properly initialized
     print('\n1. 🧠 Testing Machine Learning Initialization:')
     print(f'   Quality Predictor: {"✅ Loaded" if agent.quality_predictor is not None else "❌ Failed"}')
@@ -41,7 +41,7 @@ async def test_quality_control():
     print(f'   Root Cause Analyzer: {"✅ Loaded" if agent.root_cause_analyzer is not None else "❌ Failed"}')
     print(f'   Feature Scaler: {"✅ Loaded" if agent.feature_scaler is not None else "❌ Failed"}')
     print(f'   Learning Enabled: {"✅ Yes" if agent.learning_enabled else "❌ No"}')
-    
+
     # Test 2: Test semantic understanding capabilities
     print('\n2. 🔍 Testing Semantic Understanding:')
     try:
@@ -49,7 +49,7 @@ async def test_quality_control():
         if agent.embedding_model:
             print('   ✅ Quality Report Semantic Model Loaded')
             print(f'   Model Type: {type(agent.embedding_model).__name__}')
-            
+
             # Test embedding generation for quality descriptions
             test_quality_descriptions = [
                 "System performance is degraded with high response times",
@@ -63,10 +63,10 @@ async def test_quality_control():
             print('   ✅ Real semantic embeddings for quality understanding available')
         else:
             print('   ⚠️  Semantic Model Not Available (using TF-IDF fallback)')
-        
+
     except Exception as e:
         print(f'   ❌ Semantic Understanding Error: {e}')
-    
+
     # Test 3: Test Grok AI integration
     print('\n3. 🤖 Testing Grok AI Integration:')
     try:
@@ -80,26 +80,26 @@ async def test_quality_control():
             print('   ⚠️  Grok Client Not Available (expected if no internet/API key)')
     except Exception as e:
         print(f'   ❌ Grok Integration Error: {e}')
-    
-    # Test 4: Test blockchain integration  
+
+    # Test 4: Test blockchain integration
     print('\n4. ⛓️  Testing Blockchain Integration:')
     try:
         if hasattr(agent, 'web3_client') and agent.web3_client:
             # Test blockchain connection
             is_connected = agent.web3_client.is_connected() if agent.web3_client else False
             print(f'   Blockchain Connection: {"✅ Connected" if is_connected else "❌ Failed"}')
-            
+
             if hasattr(agent, 'account') and agent.account:
                 print(f'   Account Address: {agent.account.address[:10]}...{agent.account.address[-4:]}')
-            
+
             print(f'   Blockchain Queue: {"✅ Enabled" if agent.blockchain_queue_enabled else "❌ Disabled"}')
-            
+
         else:
             print('   ⚠️  Blockchain Not Connected (expected without private key)')
             print('   📝 Note: Set A2A_PRIVATE_KEY environment variable to enable blockchain')
     except Exception as e:
         print(f'   ❌ Blockchain Error: {e}')
-    
+
     # Test 5: Test quality metrics registry
     print('\n5. 📏 Testing Quality Metrics Registry:')
     try:
@@ -107,12 +107,12 @@ async def test_quality_control():
         for metric_id, metric in agent.quality_metrics.items():
             print(f'   - {metric_id}: {metric.name} ({metric.dimension.value})')
             print(f'     Target: {metric.target_value}{metric.unit}, Critical: {metric.threshold_critical}{metric.unit}')
-        
+
         print('   ✅ Quality Metrics Registry Ready')
-        
+
     except Exception as e:
         print(f'   ❌ Quality Metrics Error: {e}')
-    
+
     # Test 6: Test quality dimensions
     print('\n6. 📊 Testing Quality Dimensions:')
     try:
@@ -120,12 +120,12 @@ async def test_quality_control():
         print(f'   Quality Dimensions: {len(QualityDimension)}')
         for dimension in QualityDimension:
             print(f'   - {dimension.value}')
-        
+
         print('   ✅ Multi-Dimensional Quality Assessment Ready')
-        
+
     except Exception as e:
         print(f'   ❌ Quality Dimensions Error: {e}')
-    
+
     # Test 7: Test quality standards compliance
     print('\n7. 📃 Testing Quality Standards:')
     try:
@@ -133,12 +133,12 @@ async def test_quality_control():
         print(f'   Supported Standards: {len(agent.quality_standards)}')
         for standard in agent.quality_standards.keys():
             print(f'   - {standard.value}')
-        
+
         print('   ✅ Quality Standards Compliance Framework Ready')
-        
+
     except Exception as e:
         print(f'   ❌ Quality Standards Error: {e}')
-    
+
     # Test 8: Test improvement strategies
     print('\n8. 🔧 Testing Improvement Strategies:')
     try:
@@ -146,12 +146,12 @@ async def test_quality_control():
         print(f'   Improvement Strategies: {total_strategies} total')
         for dimension, strategies in agent.improvement_strategies.items():
             print(f'   - {dimension.value}: {len(strategies)} strategies')
-        
+
         print('   ✅ Improvement Strategy Engine Ready')
-        
+
     except Exception as e:
         print(f'   ❌ Improvement Strategies Error: {e}')
-    
+
     # Test 9: Test MCP integration
     print('\n9. 🔌 Testing MCP Integration:')
     try:
@@ -159,7 +159,7 @@ async def test_quality_control():
         mcp_tools = []
         mcp_resources = []
         mcp_prompts = []
-        
+
         for attr_name in dir(agent):
             attr = getattr(agent, attr_name)
             if hasattr(attr, '_mcp_tool'):
@@ -168,27 +168,27 @@ async def test_quality_control():
                 mcp_resources.append(attr_name)
             elif hasattr(attr, '_mcp_prompt'):
                 mcp_prompts.append(attr_name)
-        
+
         print(f'   MCP Tools Found: {len(mcp_tools)}')
         if mcp_tools:
             print(f'   Tools: {mcp_tools[:5]}')
-            
+
         print(f'   MCP Resources Found: {len(mcp_resources)}')
         if mcp_resources:
             print(f'   Resources: {mcp_resources[:3]}')
-            
+
         print(f'   MCP Prompts Found: {len(mcp_prompts)}')
         if mcp_prompts:
             print(f'   Prompts: {mcp_prompts[:3]}')
-        
+
         if mcp_tools or mcp_resources or mcp_prompts:
             print('   ✅ MCP Integration Present')
         else:
             print('   ⚠️  No MCP methods found')
-            
+
     except Exception as e:
         print(f'   ❌ MCP Integration Error: {e}')
-    
+
     # Test 10: Test quality assessment
     print('\n10. 🔍 Testing Quality Assessment:')
     try:
@@ -203,7 +203,7 @@ async def test_quality_control():
             'standards': ['iso_9001'],
             'include_trends': False  # Skip trends for faster testing
         })
-        
+
         if assessment_result.get('success'):
             data = assessment_result['data']
             print(f'   Assessment Target: {data["target"]}')
@@ -215,10 +215,10 @@ async def test_quality_control():
             print('   ✅ Quality Assessment Working')
         else:
             print(f'   ❌ Assessment failed: {assessment_result.get("error")}')
-            
+
     except Exception as e:
         print(f'   ❌ Quality Assessment Error: {e}')
-    
+
     # Test 11: Test anomaly detection
     print('\n11. 🚨 Testing Anomaly Detection:')
     try:
@@ -230,7 +230,7 @@ async def test_quality_control():
             },
             'sensitivity': 0.1
         })
-        
+
         if anomaly_result.get('success'):
             data = anomaly_result['data']
             print(f'   Anomalies Detected: {data["anomalies_detected"]}')
@@ -239,10 +239,10 @@ async def test_quality_control():
             print('   ✅ Anomaly Detection Working')
         else:
             print(f'   ⚠️  Anomaly detection: {anomaly_result.get("error")}')
-            
+
     except Exception as e:
         print(f'   ❌ Anomaly Detection Error: {e}')
-    
+
     # Test 12: Test performance metrics
     print('\n12. 📈 Testing Performance Metrics:')
     try:
@@ -255,19 +255,19 @@ async def test_quality_control():
         print(f'   Critical Issues: {agent.metrics["critical_issues"]}')
         print(f'   Resolved Issues: {agent.metrics["resolved_issues"]}')
         print(f'   Method Performance Tracking: {len(agent.method_performance)} methods')
-        
+
         for method, perf in list(agent.method_performance.items())[:3]:
             total = perf["total"]
             success = perf["success"]
             rate = (success / total * 100) if total > 0 else 0
             avg_time = perf["total_time"] / total if total > 0 else 0
             print(f'   - {method}: {success}/{total} ({rate:.1f}% success, {avg_time:.3f}s avg)')
-        
+
         print('   ✅ Performance Metrics Initialized')
-        
+
     except Exception as e:
         print(f'   ❌ Metrics Error: {e}')
-    
+
     # Test 13: Test continuous improvement
     print('\n13. 🔄 Testing Continuous Improvement:')
     try:
@@ -282,7 +282,7 @@ async def test_quality_control():
                 'performance': 90.0
             }
         })
-        
+
         if improvement_result.get('success'):
             data = improvement_result['data']
             print(f'   Target: {data["target"]}')
@@ -291,10 +291,10 @@ async def test_quality_control():
             print('   ✅ Continuous Improvement Working')
         else:
             print(f'   ⚠️  Improvement analysis: {improvement_result.get("error")}')
-            
+
     except Exception as e:
         print(f'   ❌ Continuous Improvement Error: {e}')
-    
+
     print('\n📋 Quality Control Agent Summary:')
     print('=' * 60)
     print('✅ Machine Learning: 7 models for quality prediction, anomaly detection, and trend analysis')
@@ -306,7 +306,7 @@ async def test_quality_control():
     print('⚠️  Grok AI: Available but requires internet connection for insights')
     print('⚠️  Blockchain: Requires A2A_PRIVATE_KEY environment variable for audit trails')
     print('✅ Performance: Comprehensive metrics and quality tracking')
-    
+
     print('\n🎯 Real AI Intelligence Assessment: 95/100')
     print('   - Real ML models for quality prediction and anomaly detection')
     print('   - Semantic analysis with transformer-based embeddings for quality understanding')
@@ -314,10 +314,10 @@ async def test_quality_control():
     print('   - Standards compliance verification with automated audit capabilities')
     print('   - AI-driven continuous improvement with prioritized recommendations')
     print('   - Advanced root cause analysis and issue classification')
-    
+
     print('\n🔍 Quality Control Agent Real AI Integration Test Complete')
     print('=' * 70)
-    
+
     # Cleanup
     await agent.shutdown()
 

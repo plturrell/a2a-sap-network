@@ -24,7 +24,7 @@ import uvicorn
 
 # Import the agent
 from app.a2a.agents.orchestratorAgent.active.comprehensiveOrchestratorAgentSdk import (
-    ComprehensiveOrchestratorAgentSdk, WorkflowStatus, WorkflowStep, 
+    ComprehensiveOrchestratorAgentSdk, WorkflowStatus, WorkflowStep,
     CoordinationPattern, ExecutionStrategy
 )
 
@@ -130,7 +130,7 @@ async def create_workflow(request: CreateWorkflowRequest):
     """Create a new workflow"""
     try:
         workflow_id = str(uuid4())
-        
+
         # Parse tasks into WorkflowStep objects
         steps = []
         for i, task in enumerate(request.tasks):
@@ -142,7 +142,7 @@ async def create_workflow(request: CreateWorkflowRequest):
                 "dependencies": task.get("dependencies", [])
             }
             steps.append(step)
-        
+
         # Create workflow using agent
         result = await agent.create_workflow(
             name=request.workflow_name,
@@ -150,7 +150,7 @@ async def create_workflow(request: CreateWorkflowRequest):
             strategy=request.strategy,
             description=request.description
         )
-        
+
         # Store workflow
         workflows[workflow_id] = {
             "id": workflow_id,
@@ -161,7 +161,7 @@ async def create_workflow(request: CreateWorkflowRequest):
             "status": "created",
             "created_at": datetime.utcnow().isoformat()
         }
-        
+
         return {
             "workflow_id": workflow_id,
             "status": "created",
@@ -177,7 +177,7 @@ async def list_workflows(filters: Optional[str] = None):
     """List all workflows"""
     try:
         workflow_list = list(workflows.values())
-        
+
         # Apply filters if provided
         if filters:
             filter_dict = json.loads(filters)
@@ -185,7 +185,7 @@ async def list_workflows(filters: Optional[str] = None):
                 workflow_list = [w for w in workflow_list if w["status"] == filter_dict["status"]]
             if "strategy" in filter_dict:
                 workflow_list = [w for w in workflow_list if w["strategy"] == filter_dict["strategy"]]
-        
+
         return {"workflows": workflow_list}
     except Exception as e:
         logger.error(f"Failed to list workflows: {str(e)}")
@@ -197,10 +197,10 @@ async def update_workflow(workflow_id: str, request: UpdateWorkflowRequest):
     try:
         if workflow_id not in workflows:
             raise HTTPException(status_code=404, detail="Workflow not found")
-        
+
         workflows[workflow_id].update(request.updates)
         workflows[workflow_id]["updated_at"] = datetime.utcnow().isoformat()
-        
+
         return {
             "workflow_id": workflow_id,
             "status": workflows[workflow_id]["status"],
@@ -217,7 +217,7 @@ async def delete_workflow(workflow_id: str):
     try:
         if workflow_id not in workflows:
             raise HTTPException(status_code=404, detail="Workflow not found")
-        
+
         del workflows[workflow_id]
         return {"success": True}
     except Exception as e:
@@ -230,15 +230,15 @@ async def execute_workflow(request: ExecuteWorkflowRequest):
     try:
         if request.workflow_id not in workflows:
             raise HTTPException(status_code=404, detail="Workflow not found")
-        
+
         workflow = workflows[request.workflow_id]
-        
+
         # Execute using agent
         result = await agent.execute_workflow(
             workflow_id=request.workflow_id,
             context=request.execution_context
         )
-        
+
         # Track execution
         execution_id = str(uuid4())
         executions[execution_id] = {
@@ -248,10 +248,10 @@ async def execute_workflow(request: ExecuteWorkflowRequest):
             "started_at": datetime.utcnow().isoformat(),
             "context": request.execution_context
         }
-        
+
         # Update workflow status
         workflows[request.workflow_id]["status"] = "running"
-        
+
         return {
             "status": "started",
             "started_at": datetime.utcnow().isoformat(),
@@ -267,10 +267,10 @@ async def pause_workflow(workflow_id: str):
     try:
         if workflow_id not in workflows:
             raise HTTPException(status_code=404, detail="Workflow not found")
-        
+
         # Pause using agent
         await agent.pause_workflow(workflow_id)
-        
+
         workflows[workflow_id]["status"] = "paused"
         return {"status": "paused", "workflow_id": workflow_id}
     except Exception as e:
@@ -283,10 +283,10 @@ async def resume_workflow(workflow_id: str):
     try:
         if workflow_id not in workflows:
             raise HTTPException(status_code=404, detail="Workflow not found")
-        
+
         # Resume using agent
         await agent.resume_workflow(workflow_id)
-        
+
         workflows[workflow_id]["status"] = "running"
         return {"status": "running", "workflow_id": workflow_id}
     except Exception as e:
@@ -299,10 +299,10 @@ async def cancel_workflow(workflow_id: str):
     try:
         if workflow_id not in workflows:
             raise HTTPException(status_code=404, detail="Workflow not found")
-        
+
         # Cancel using agent
         await agent.cancel_workflow(workflow_id)
-        
+
         workflows[workflow_id]["status"] = "cancelled"
         return {"status": "cancelled", "workflow_id": workflow_id}
     except Exception as e:
@@ -315,12 +315,12 @@ async def get_workflow_status(workflow_id: str):
     try:
         if workflow_id not in workflows:
             raise HTTPException(status_code=404, detail="Workflow not found")
-        
+
         workflow = workflows[workflow_id]
-        
+
         # Get real status from agent
         status = await agent.get_workflow_status(workflow_id)
-        
+
         return {
             "workflow_id": workflow_id,
             "name": workflow["name"],
@@ -357,14 +357,14 @@ async def coordinate_agents(request: CoordinateAgentsRequest):
     """Coordinate multiple agents"""
     try:
         coordination_id = str(uuid4())
-        
+
         # Create coordination using agent
         result = await agent.coordinate_agents(
             agents=request.agents,
             pattern=CoordinationPattern.PEER_TO_PEER,
             objective=request.objective
         )
-        
+
         # Track coordination session
         coordination_sessions[coordination_id] = {
             "coordination_id": coordination_id,
@@ -372,7 +372,7 @@ async def coordinate_agents(request: CoordinateAgentsRequest):
             "participating_agents": request.agents,
             "results": {"success": True}
         }
-        
+
         return coordination_sessions[coordination_id]
     except Exception as e:
         logger.error(f"Failed to coordinate agents: {str(e)}")
@@ -392,7 +392,7 @@ async def create_workflow_template(request: WorkflowTemplateRequest):
     """Create a workflow template"""
     try:
         template_id = str(uuid4())
-        
+
         templates[template_id] = {
             "ID": template_id,
             "name": request.template_name,
@@ -401,7 +401,7 @@ async def create_workflow_template(request: WorkflowTemplateRequest):
             "status": "created",
             "created_at": datetime.utcnow().isoformat()
         }
-        
+
         return templates[template_id]
     except Exception as e:
         logger.error(f"Failed to create template: {str(e)}")
@@ -413,10 +413,10 @@ async def create_workflow_from_template(request: CreateFromTemplateRequest):
     try:
         if request.template_id not in templates:
             raise HTTPException(status_code=404, detail="Template not found")
-        
+
         template = templates[request.template_id]
         workflow_id = str(uuid4())
-        
+
         # Create workflow based on template
         workflows[workflow_id] = {
             "id": workflow_id,
@@ -428,7 +428,7 @@ async def create_workflow_from_template(request: CreateFromTemplateRequest):
             "created_at": datetime.utcnow().isoformat(),
             "template_id": request.template_id
         }
-        
+
         return {
             "workflow_id": workflow_id,
             "status": "created",
@@ -446,7 +446,7 @@ async def get_orchestration_metrics(time_range: str = "24h", group_by: str = "da
         total_workflows = len(workflows)
         active_workflows = len([w for w in workflows.values() if w["status"] == "running"])
         completed_workflows = len([w for w in workflows.values() if w["status"] == "completed"])
-        
+
         return {
             "execution_metrics": {
                 "total_workflows": total_workflows,
@@ -475,13 +475,13 @@ async def optimize_workflow(request: OptimizeWorkflowRequest):
     try:
         if request.workflow_id not in workflows:
             raise HTTPException(status_code=404, detail="Workflow not found")
-        
+
         # Optimize using agent
         result = await agent.optimize_workflow(
             workflow_id=request.workflow_id,
             optimization_goals=["performance", "cost"]
         )
-        
+
         return {
             "workflow_id": request.workflow_id,
             "optimization_results": result,
@@ -498,7 +498,7 @@ async def validate_workflow_definition(request: ValidateWorkflowRequest):
     try:
         # Validate using agent
         is_valid, errors = await agent.validate_workflow(request.workflow_definition)
-        
+
         return {
             "valid": is_valid,
             "errors": errors,
@@ -515,7 +515,7 @@ async def bulk_execute_workflows(request: BulkExecuteRequest):
     try:
         started_executions = []
         failed_starts = []
-        
+
         for workflow_id in request.workflow_ids:
             if workflow_id in workflows:
                 try:
@@ -527,7 +527,7 @@ async def bulk_execute_workflows(request: BulkExecuteRequest):
                     failed_starts.append({"workflow_id": workflow_id, "error": str(e)})
             else:
                 failed_starts.append({"workflow_id": workflow_id, "error": "Workflow not found"})
-        
+
         batch_id = str(uuid4())
         return {
             "batch_id": batch_id,

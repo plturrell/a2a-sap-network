@@ -27,7 +27,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
     A2A-compliant handler for Agent Manager - A2A Ecosystem Orchestration
     All communication through blockchain messaging only
     """
-    
+
     def __init__(self, agent_sdk: ComprehensiveAgentManagerSDK):
         """Initialize A2A handler with agent SDK"""
         # Configure secure agent
@@ -79,23 +79,23 @@ class AgentManagerA2AHandler(SecureA2AAgent):
             rate_limit_requests=100,
             rate_limit_window=60
         )
-        
+
         super().__init__(config)
-        
+
         self.agent_sdk = agent_sdk
-        
+
         # Initialize A2A blockchain client
         self.a2a_client = A2ANetworkClient(
             agent_id=config.agent_id,
             private_key=os.getenv('A2A_PRIVATE_KEY'),
             rpc_url=os.getenv('A2A_RPC_URL', 'http://localhost:8545')
         )
-        
+
         # Register message handlers
         self._register_handlers()
-        
+
         logger.info(f"A2A-compliant handler initialized for {config.agent_name}")
-    
+
     def _register_handlers(self):
         """Register A2A message handlers"""
 
@@ -105,7 +105,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
             try:
                 agent_card = await self.agent_sdk.get_agent_card()
                 result = agent_card
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="get_agent_card",
@@ -113,9 +113,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to get_agent_card: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -127,7 +127,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 # TODO: Implement json_rpc logic
                 # Example: result = await self.agent_sdk.json_rpc_handler(data)
                 result = {"status": "success", "operation": "json_rpc"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="json_rpc",
@@ -135,9 +135,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to json_rpc: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -148,7 +148,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
             try:
                 # Process message through agent SDK
                 result = await self.agent_sdk.process_message(message, context_id)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="process_message",
@@ -156,9 +156,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to process_message: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -170,10 +170,10 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 task_id = data.get("task_id")
                 if not task_id:
                     raise ValueError("task_id is required")
-                
+
                 status = await self.agent_sdk.get_task_status(task_id)
                 result = status
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="get_task_status",
@@ -181,9 +181,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to get_task_status: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -195,7 +195,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 # TODO: Implement get_queue_status logic
                 # Example: result = await self.agent_sdk.get_queue_status(data)
                 result = {"status": "success", "operation": "get_queue_status"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="get_queue_status",
@@ -203,9 +203,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to get_queue_status: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -217,7 +217,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 # TODO: Implement get_message_status logic
                 # Example: result = await self.agent_sdk.get_message_status(data)
                 result = {"status": "success", "operation": "get_message_status"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="get_message_status",
@@ -225,9 +225,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to get_message_status: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -239,7 +239,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 # TODO: Implement cancel_message logic
                 # Example: result = await self.agent_sdk.cancel_message(data)
                 result = {"status": "success", "operation": "cancel_message"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="cancel_message",
@@ -247,9 +247,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to cancel_message: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -267,7 +267,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     "blockchain_connected": await self._check_blockchain_connection()
                 }
                 result = health_status
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="health_check",
@@ -275,9 +275,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to health_check: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -289,7 +289,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 # TODO: Implement register_agent logic
                 # Example: result = await self.agent_sdk.register_agent(data)
                 result = {"status": "success", "operation": "register_agent"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="register_agent",
@@ -297,9 +297,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to register_agent: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -311,7 +311,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 # TODO: Implement deregister_agent logic
                 # Example: result = await self.agent_sdk.deregister_agent(data)
                 result = {"status": "success", "operation": "deregister_agent"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="deregister_agent",
@@ -319,9 +319,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to deregister_agent: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -333,7 +333,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 # TODO: Implement list_agents logic
                 # Example: result = await self.agent_sdk.list_agents(data)
                 result = {"status": "success", "operation": "list_agents"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="list_agents",
@@ -341,9 +341,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to list_agents: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -355,7 +355,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 # TODO: Implement get_agent_info logic
                 # Example: result = await self.agent_sdk.get_agent_info(data)
                 result = {"status": "success", "operation": "get_agent_info"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="get_agent_info",
@@ -363,9 +363,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to get_agent_info: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -377,7 +377,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 # TODO: Implement check_agent_health logic
                 # Example: result = await self.agent_sdk.check_agent_health(data)
                 result = {"status": "success", "operation": "check_agent_health"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="check_agent_health",
@@ -385,9 +385,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to check_agent_health: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -399,7 +399,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 # TODO: Implement create_trust_contract logic
                 # Example: result = await self.agent_sdk.create_trust_contract(data)
                 result = {"status": "success", "operation": "create_trust_contract"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="create_trust_contract",
@@ -407,9 +407,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to create_trust_contract: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -421,7 +421,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 # TODO: Implement list_trust_contracts logic
                 # Example: result = await self.agent_sdk.list_trust_contracts(data)
                 result = {"status": "success", "operation": "list_trust_contracts"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="list_trust_contracts",
@@ -429,9 +429,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to list_trust_contracts: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -443,7 +443,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 # TODO: Implement get_trust_contract logic
                 # Example: result = await self.agent_sdk.get_trust_contract(data)
                 result = {"status": "success", "operation": "get_trust_contract"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="get_trust_contract",
@@ -451,9 +451,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to get_trust_contract: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -465,7 +465,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 # TODO: Implement revoke_trust_contract logic
                 # Example: result = await self.agent_sdk.revoke_trust_contract(data)
                 result = {"status": "success", "operation": "revoke_trust_contract"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="revoke_trust_contract",
@@ -473,9 +473,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to revoke_trust_contract: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -487,7 +487,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 # TODO: Implement create_workflow logic
                 # Example: result = await self.agent_sdk.create_workflow(data)
                 result = {"status": "success", "operation": "create_workflow"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="create_workflow",
@@ -495,9 +495,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to create_workflow: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -509,7 +509,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 # TODO: Implement list_workflows logic
                 # Example: result = await self.agent_sdk.list_workflows(data)
                 result = {"status": "success", "operation": "list_workflows"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="list_workflows",
@@ -517,9 +517,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to list_workflows: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -531,7 +531,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 # TODO: Implement get_workflow_status logic
                 # Example: result = await self.agent_sdk.get_workflow_status(data)
                 result = {"status": "success", "operation": "get_workflow_status"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="get_workflow_status",
@@ -539,9 +539,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to get_workflow_status: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -553,7 +553,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 # TODO: Implement cancel_workflow logic
                 # Example: result = await self.agent_sdk.cancel_workflow(data)
                 result = {"status": "success", "operation": "cancel_workflow"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="cancel_workflow",
@@ -561,9 +561,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to cancel_workflow: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -575,7 +575,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 # TODO: Implement system_health_check logic
                 # Example: result = await self.agent_sdk.system_health_check(data)
                 result = {"status": "success", "operation": "system_health_check"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="system_health_check",
@@ -583,9 +583,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to system_health_check: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -597,7 +597,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 # TODO: Implement system_metrics logic
                 # Example: result = await self.agent_sdk.system_metrics(data)
                 result = {"status": "success", "operation": "system_metrics"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="system_metrics",
@@ -605,9 +605,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to system_metrics: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -619,7 +619,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 # TODO: Implement all_agents_health logic
                 # Example: result = await self.agent_sdk.all_agents_health(data)
                 result = {"status": "success", "operation": "all_agents_health"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="all_agents_health",
@@ -627,9 +627,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to all_agents_health: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -639,7 +639,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
             """Handle comprehensive agent lifecycle management"""
             try:
                 result = await self.agent_sdk.manage_lifecycle(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="agent_lifecycle_management",
@@ -647,9 +647,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to agent_lifecycle_management: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -659,7 +659,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
             """Handle agent registration capability"""
             try:
                 result = await self.agent_sdk.register_agent_enhanced(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="agent_registration",
@@ -667,9 +667,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to agent_registration: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -679,7 +679,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
             """Handle comprehensive health monitoring capability"""
             try:
                 result = await self.agent_sdk.monitor_health(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="health_monitoring",
@@ -687,9 +687,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to health_monitoring: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -699,7 +699,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
             """Handle performance tracking capability"""
             try:
                 result = await self.agent_sdk.track_performance(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="performance_tracking",
@@ -707,9 +707,9 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to performance_tracking: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -719,7 +719,7 @@ class AgentManagerA2AHandler(SecureA2AAgent):
             """Handle agent coordination capability"""
             try:
                 result = await self.agent_sdk.coordinate_agents(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="agent_coordination",
@@ -727,12 +727,12 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to agent_coordination: {e}")
-                return self.create_secure_response(str(e), status="error")    
+                return self.create_secure_response(str(e), status="error")
     async def process_a2a_message(self, message: A2AMessage) -> Dict[str, Any]:
         """
         Main entry point for A2A messages
@@ -742,19 +742,19 @@ class AgentManagerA2AHandler(SecureA2AAgent):
             # Extract operation from message
             operation = None
             data = {}
-            
+
             if message.parts and len(message.parts) > 0:
                 part = message.parts[0]
                 if part.data:
                     operation = part.data.get("operation")
                     data = part.data.get("data", {})
-            
+
             if not operation:
                 return self.create_secure_response(
                     "No operation specified in message",
                     status="error"
                 )
-            
+
             # Get handler for operation
             handler = self.handlers.get(operation)
             if not handler:
@@ -762,17 +762,17 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                     f"Unknown operation: {operation}",
                     status="error"
                 )
-            
+
             # Create context ID
             context_id = f"{message.sender_id}:{operation}:{datetime.utcnow().timestamp()}"
-            
+
             # Process through handler
             return await handler(message, context_id, data)
-            
+
         except Exception as e:
             logger.error(f"Failed to process A2A message: {e}")
             return self.create_secure_response(str(e), status="error")
-    
+
     async def _log_blockchain_transaction(self, operation: str, data_hash: str, result_hash: str, context_id: str):
         """Log transaction to blockchain for audit trail"""
         try:
@@ -784,33 +784,33 @@ class AgentManagerA2AHandler(SecureA2AAgent):
                 "context_id": context_id,
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
             # Send to blockchain through A2A client
             await self.a2a_client.log_transaction(transaction_data)
-            
+
         except Exception as e:
             logger.error(f"Failed to log blockchain transaction: {e}")
-    
+
     def _hash_data(self, data: Any) -> str:
         """Create hash of data for blockchain logging"""
         import hashlib
         json_str = json.dumps(data, sort_keys=True, default=str)
         return hashlib.sha256(json_str.encode()).hexdigest()
-    
+
     async def _check_blockchain_connection(self) -> bool:
         """Check if blockchain connection is active"""
         try:
             return await self.a2a_client.is_connected()
         except Exception:
             return False
-    
+
     async def start(self):
         """Start the A2A handler"""
         logger.info(f"Starting A2A handler for {self.config.agent_name}")
-        
+
         # Connect to blockchain
         await self.a2a_client.connect()
-        
+
         # Register agent on blockchain
         await self.a2a_client.register_agent({
             "agent_id": self.config.agent_id,
@@ -818,22 +818,22 @@ class AgentManagerA2AHandler(SecureA2AAgent):
             "capabilities": list(self.config.allowed_operations),
             "version": self.config.agent_version
         })
-        
+
         logger.info(f"A2A handler started and registered on blockchain")
-    
+
     async def stop(self):
         """Stop the A2A handler"""
         logger.info(f"Stopping A2A handler for {self.config.agent_name}")
-        
+
         # Unregister from blockchain
         await self.a2a_client.unregister_agent(self.config.agent_id)
-        
+
         # Disconnect
         await self.a2a_client.disconnect()
-        
+
         # Parent cleanup
         await self.shutdown()
-        
+
         logger.info(f"A2A handler stopped")
 
 
@@ -849,14 +849,14 @@ To migrate from REST endpoints to A2A messaging:
 
 1. Replace router initialization:
    # OLD: router = APIRouter(...)
-   # NEW: 
+   # NEW:
    handler = create_agent_manager_a2a_handler(agent_manager_sdk)
 
 2. Replace FastAPI app with A2A listener:
    # OLD: app.include_router(router)
    # NEW:
    await handler.start()
-   
+
 3. Process messages through A2A:
    # Messages arrive through blockchain
    result = await handler.process_a2a_message(a2a_message)

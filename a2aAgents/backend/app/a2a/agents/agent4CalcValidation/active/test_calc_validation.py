@@ -36,16 +36,16 @@ logger = logging.getLogger(__name__)
 
 async def test_calc_validation_agent():
     """Test the calculation validation agent"""
-    
+
     # Create agent
     agent = CalcValidationAgentSDK(os.getenv("A2A_SERVICE_URL"))
-    
+
     try:
         # Initialize
         logger.info("Initializing Calculation Validation Agent...")
         await agent.initialize()
         logger.info("✅ Agent initialized")
-        
+
         # Test cases
         test_cases = [
             {
@@ -79,19 +79,19 @@ async def test_calc_validation_agent():
                 'method': 'numerical'
             }
         ]
-        
+
         logger.info(f"\n{'='*60}")
         logger.info("TESTING CALCULATION VALIDATION")
         logger.info(f"{'='*60}")
-        
+
         for i, test_case in enumerate(test_cases):
             logger.info(f"\nTest {i+1}: {test_case['name']}")
             logger.info(f"Expression: {test_case['expression']}")
             logger.info(f"Method: {test_case['method']}")
-            
+
             # Create message
             from app.a2a.sdk.types import A2AMessage, MessagePart
-            
+
             message = A2AMessage(
                 id=f"test_{i}",
                 conversation_id=f"validation_test_{i}",
@@ -106,30 +106,30 @@ async def test_calc_validation_agent():
                     )
                 ]
             )
-            
+
             # Perform validation
             start_time = time.time()
             response = await agent.handle_calculation_validation(message)
             end_time = time.time()
-            
+
             if response.get('success'):
                 result = response['data']
-                
+
                 # Log results
                 logger.info(f"Method used: {result.get('method_used')}")
                 logger.info(f"Confidence: {result.get('confidence', 0):.3f}")
                 logger.info(f"Error bound: {result.get('error_bound')}")
                 logger.info(f"Processing time: {end_time - start_time:.3f}s")
-                
+
                 if result.get('error_message'):
                     logger.info(f"Error: {result['error_message']}")
                 else:
                     logger.info(f"Result: {result.get('result')}")
-                
+
                 logger.info("✅ Test PASSED")
             else:
                 logger.error(f"❌ Test FAILED: {response.get('error')}")
-        
+
         # Test legacy interface
         logger.info(f"\nTesting legacy interface...")
         legacy_result = await agent.validate_calculation({
@@ -138,10 +138,10 @@ async def test_calc_validation_agent():
             'method': 'numerical'
         })
         logger.info(f"Legacy result: {legacy_result}")
-        
+
         # Get agent status
         status = agent.get_agent_status()
-        
+
         logger.info(f"\n{'='*60}")
         logger.info("AGENT STATUS")
         logger.info(f"{'='*60}")
@@ -149,20 +149,20 @@ async def test_calc_validation_agent():
         logger.info(f"Total validations: {status['metrics']['total_validations']}")
         logger.info(f"Cache hits: {status['metrics']['cache_hits']}")
         logger.info(f"Validation errors: {status['metrics']['validation_errors']}")
-        
+
         logger.info(f"\nMethod Performance:")
         for method, perf in status['method_performance'].items():
             logger.info(f"  {method}: {perf['success_rate']:.1%} success rate ({perf['total_attempts']} attempts)")
-        
+
         logger.info(f"\nCapabilities:")
         for capability in status['capabilities']:
             logger.info(f"  ✅ {capability}")
-        
+
         logger.info(f"\n🎉 All tests completed successfully!")
-        
+
     except Exception as e:
         logger.error(f"Test failed: {e}", exc_info=True)
-    
+
     finally:
         await agent.shutdown()
 
@@ -173,7 +173,7 @@ def main():
     logger.info("CALCULATION VALIDATION AGENT TEST")
     logger.info("Testing mathematical validation capabilities")
     logger.info("="*60)
-    
+
     # Run test
     asyncio.run(test_calc_validation_agent())
 

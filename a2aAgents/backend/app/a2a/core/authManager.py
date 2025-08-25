@@ -112,9 +112,9 @@ class OAuth2Client:
         """Request new token from OAuth2 server via A2A blockchain messaging"""
         # A2A Protocol Compliance: Use blockchain messaging for OAuth2 token requests
         from .networkClient import A2ANetworkClient
-        
+
         network_client = A2ANetworkClient(agent_id="auth_manager")
-        
+
         token_request = {
             "operation": "oauth2_token_request",
             "client_id": self.client_id,
@@ -132,14 +132,14 @@ class OAuth2Client:
                 message=token_request,
                 message_type="OAUTH2_TOKEN_REQUEST"
             )
-            
+
             if not response or response.get('error'):
                 error_msg = f"OAuth2 token request failed via blockchain: {response.get('error', 'Unknown error')}"
                 logger.error(error_msg)
                 raise RuntimeError(error_msg)
-            
+
             token_data = response.get("token_data", {})
-            
+
             if not token_data.get("access_token"):
                 raise RuntimeError("No access token received from OAuth2 proxy agent")
 

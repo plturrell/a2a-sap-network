@@ -52,13 +52,13 @@ except ImportError:
     # Fallback if trust system not available
     def initialize_agent_trust(*args, **kwargs):
         return {"status": "trust_system_unavailable"}
-    
+
     def get_trust_contract():
         return None
-    
+
     def verify_a2a_message(*args, **kwargs):
         return True, {"status": "trust_system_unavailable"}
-    
+
     @a2a_handler("HEALTH_CHECK")
     async def handle_health_check(self, message: A2AMessage, context_id: str) -> Dict[str, Any]:
         """Handle A2A protocol health check messages"""

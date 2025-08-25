@@ -21,30 +21,30 @@ logger = logging.getLogger(__name__)
 
 class MockServiceDiscoveryAgent(SecureA2AAgent):
     """Mock implementation of Service Discovery Agent for testing"""
-    
+
     # Security features provided by SecureA2AAgent:
     # - JWT authentication and authorization
-    # - Rate limiting and request throttling  
+    # - Rate limiting and request throttling
     # - Input validation and sanitization
     # - Audit logging and compliance tracking
     # - Encrypted communication channels
     # - Automatic security scanning
-    
+
     def __init__(self):
-        
+
         super().__init__()
         self.mock_services = {}
         self.mock_health_results = {}
         self.mock_load_balancer_calls = []
         self.mock_heartbeats = {}
         self.failure_scenarios = {}
-        
+
         # Pre-populate with test services
         self._populate_test_services()
-    
+
     def _populate_test_services(self):
         """Populate mock registry with test services"""
-        
+
         # Mock Agent Manager Service
         agent_manager_endpoints = [
             ServiceEndpoint(
@@ -57,7 +57,7 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
                 success_rate=0.95
             ),
             ServiceEndpoint(
-                id="am-ep-2", 
+                id="am-ep-2",
                 url="http://localhost:8002",
                 protocol="http",
                 port=8002,
@@ -66,7 +66,7 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
                 success_rate=0.90
             )
         ]
-        
+
         agent_manager_service = ServiceRegistration(
             service_id="agent-manager-001",
             agent_id="agent-manager",
@@ -79,20 +79,20 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
             health_check_url="http://localhost:8001/health",
             tags=["core", "management"]
         )
-        
+
         # Mock Reasoning Agent Service
         reasoning_endpoints = [
             ServiceEndpoint(
                 id="ra-ep-1",
                 url="http://localhost:8003",
-                protocol="http", 
+                protocol="http",
                 port=8003,
                 weight=1.5,
                 response_time_ms=120.0,
                 success_rate=0.98
             )
         ]
-        
+
         reasoning_service = ServiceRegistration(
             service_id="reasoning-agent-001",
             agent_id="reasoning-agent",
@@ -105,7 +105,7 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
             health_check_url="http://localhost:8003/health",
             tags=["intelligence", "core"]
         )
-        
+
         # Mock SQL Agent Service (Degraded)
         sql_endpoints = [
             ServiceEndpoint(
@@ -118,7 +118,7 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
                 success_rate=0.70  # Degraded performance
             )
         ]
-        
+
         sql_service = ServiceRegistration(
             service_id="sql-agent-001",
             agent_id="sql-agent",
@@ -131,7 +131,7 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
             health_check_url="http://localhost:8004/health",
             tags=["data", "database"]
         )
-        
+
         # Store mock services
         self.mock_services = {
             "agent-manager-001": agent_manager_service,
@@ -148,12 +148,12 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
         **kwargs
     ) -> Dict[str, Any]:
         """Mock service registration"""
-        
+
         if self.failure_scenarios.get("register_service"):
             raise Exception("Mock registration failure")
-        
+
         service_id = f"mock-{str(uuid.uuid4())[:8]}"
-        
+
         # Convert endpoints
         service_endpoints = []
         for ep_data in endpoints:
@@ -165,7 +165,7 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
                 weight=ep_data.get("weight", 1.0)
             )
             service_endpoints.append(endpoint)
-        
+
         # Create mock registration
         registration = ServiceRegistration(
             service_id=service_id,
@@ -177,11 +177,11 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
             capabilities=kwargs.get("capabilities", []),
             status=ServiceStatus.HEALTHY
         )
-        
+
         self.mock_services[service_id] = registration
-        
+
         logger.info(f"Mock registered service: {service_name} ({service_id})")
-        
+
         return {
             "service_id": service_id,
             "status": "registered",
@@ -197,12 +197,12 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
         **kwargs
     ) -> Dict[str, Any]:
         """Mock service discovery"""
-        
+
         if self.failure_scenarios.get("discover_services"):
             raise Exception("Mock discovery failure")
-        
+
         matching_services = []
-        
+
         for registration in self.mock_services.values():
             # Apply filters
             if service_name and registration.service_name != service_name:
@@ -212,7 +212,7 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
             if capabilities:
                 if not all(cap in registration.capabilities for cap in capabilities):
                     continue
-            
+
             # Convert to response format
             service_info = {
                 "service_id": registration.service_id,
@@ -236,9 +236,9 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
                 ]
             }
             matching_services.append(service_info)
-        
+
         logger.info(f"Mock discovered {len(matching_services)} services")
-        
+
         return {
             "services": matching_services,
             "total_found": len(matching_services),
@@ -256,30 +256,30 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
         **kwargs
     ) -> Dict[str, Any]:
         """Mock load balancing endpoint selection"""
-        
+
         if self.failure_scenarios.get("get_service_endpoint"):
             raise Exception("Mock endpoint selection failure")
-        
+
         # Track load balancer calls
         self.mock_load_balancer_calls.append({
             "service_name": service_name,
             "strategy": strategy,
             "timestamp": datetime.now()
         })
-        
+
         # Find service by name
         matching_service = None
         for service in self.mock_services.values():
             if service.service_name == service_name:
                 matching_service = service
                 break
-        
+
         if not matching_service:
             raise ValueError(f"Mock service not found: {service_name}")
-        
+
         if not matching_service.endpoints:
             raise ValueError(f"Mock service has no endpoints: {service_name}")
-        
+
         # Simple selection logic for mock
         if strategy == "health_based":
             selected_endpoint = max(
@@ -288,9 +288,9 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
             )
         else:
             selected_endpoint = matching_service.endpoints[0]
-        
+
         logger.info(f"Mock selected endpoint {selected_endpoint.id} for {service_name}")
-        
+
         return {
             "service_id": matching_service.service_id,
             "endpoint": {
@@ -312,10 +312,10 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
         **kwargs
     ) -> Dict[str, Any]:
         """Mock health monitoring"""
-        
+
         if self.failure_scenarios.get("get_service_health"):
             raise Exception("Mock health check failure")
-        
+
         if service_id:
             services = [self.mock_services.get(service_id)]
             services = [s for s in services if s is not None]
@@ -326,7 +326,7 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
             ]
         else:
             services = list(self.mock_services.values())
-        
+
         results = []
         for service in services:
             health_info = {
@@ -348,7 +348,7 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
                 ]
             }
             results.append(health_info)
-        
+
         return {
             "services": results,
             "total_services": len(results),
@@ -362,25 +362,25 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
         **kwargs
     ) -> Dict[str, Any]:
         """Mock heartbeat processing"""
-        
+
         if self.failure_scenarios.get("send_heartbeat"):
             raise Exception("Mock heartbeat failure")
-        
+
         if service_id not in self.mock_services:
             raise ValueError(f"Mock service not found: {service_id}")
-        
+
         service = self.mock_services[service_id]
         service.last_heartbeat = datetime.now()
-        
+
         # Track heartbeat
         self.mock_heartbeats[service_id] = {
             "agent_id": agent_id,
             "timestamp": datetime.now(),
             "service_name": service.service_name
         }
-        
+
         logger.debug(f"Mock heartbeat for service: {service.service_name}")
-        
+
         return {
             "service_id": service_id,
             "status": "heartbeat_received",
@@ -393,20 +393,20 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
         agent_id: str
     ) -> Dict[str, Any]:
         """Mock service deregistration"""
-        
+
         if self.failure_scenarios.get("deregister_service"):
             raise Exception("Mock deregistration failure")
-        
+
         if service_id not in self.mock_services:
             raise ValueError(f"Mock service not found: {service_id}")
-        
+
         service = self.mock_services[service_id]
         service_name = service.service_name
-        
+
         del self.mock_services[service_id]
-        
+
         logger.info(f"Mock deregistered service: {service_name}")
-        
+
         return {
             "service_id": service_id,
             "status": "deregistered",
@@ -456,20 +456,20 @@ class MockServiceDiscoveryAgent(SecureA2AAgent):
 # Test utilities and fixtures
 class ServiceDiscoveryTestHelper(SecureA2AAgent):
     """Helper class for service discovery testing"""
-    
+
     # Security features provided by SecureA2AAgent:
     # - JWT authentication and authorization
-    # - Rate limiting and request throttling  
+    # - Rate limiting and request throttling
     # - Input validation and sanitization
     # - Audit logging and compliance tracking
     # - Encrypted communication channels
     # - Automatic security scanning
-    
+
     def __init__(self, mock_agent: MockServiceDiscoveryAgent):
-        
+
         super().__init__()
         self.mock_agent = mock_agent
-    
+
     async def create_test_service(
         self,
         service_name: str,
@@ -479,7 +479,7 @@ class ServiceDiscoveryTestHelper(SecureA2AAgent):
         status: ServiceStatus = ServiceStatus.HEALTHY
     ) -> str:
         """Create a test service for testing"""
-        
+
         endpoints = []
         for i in range(endpoint_count):
             endpoints.append({
@@ -487,21 +487,21 @@ class ServiceDiscoveryTestHelper(SecureA2AAgent):
                 "url": f"http://localhost:{8000 + i}",
                 "port": 8000 + i
             })
-        
+
         result = await self.mock_agent.register_service(
             agent_id=agent_id,
             service_name=service_name,
             service_type=service_type,
             endpoints=endpoints
         )
-        
+
         # Update status if needed
         service_id = result["service_id"]
         if status != ServiceStatus.HEALTHY:
             self.mock_agent.mock_services[service_id].status = status
-        
+
         return service_id
-    
+
     async def simulate_service_failure(self, service_id: str):
         """Simulate service failure"""
         if service_id in self.mock_agent.mock_services:
@@ -510,7 +510,7 @@ class ServiceDiscoveryTestHelper(SecureA2AAgent):
             for endpoint in service.endpoints:
                 endpoint.success_rate = 0.0
                 endpoint.response_time_ms = 5000.0
-    
+
     async def simulate_service_recovery(self, service_id: str):
         """Simulate service recovery"""
         if service_id in self.mock_agent.mock_services:
@@ -519,7 +519,7 @@ class ServiceDiscoveryTestHelper(SecureA2AAgent):
             for endpoint in service.endpoints:
                 endpoint.success_rate = 0.95
                 endpoint.response_time_ms = 100.0
-    
+
     def verify_load_balancing(self, service_name: str, expected_strategy: str) -> bool:
         """Verify load balancing calls"""
         calls = [

@@ -75,7 +75,7 @@ async def perform_calculation(
     """Perform a calculation with intelligent routing support"""
     try:
         agent = await get_calculation_agent()
-        
+
         # Create A2A message
         message = A2AMessage(
             messageId=str(uuid4()),
@@ -91,13 +91,13 @@ async def perform_calculation(
                 "timestamp": datetime.utcnow().isoformat()
             }
         )
-        
+
         # Process calculation
         context_id = str(uuid4())
         result = await agent.handle_calculation_request(message, context_id)
-        
+
         return JSONResponse(content=result)
-        
+
     except Exception as e:
         logger.error(f"Calculation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -112,18 +112,18 @@ async def natural_language_calculation(
     """Process natural language calculation requests"""
     try:
         agent = await get_calculation_agent()
-        
+
         result = await agent.natural_language_calculation({
             "query": query,
             "context": context or {}
         })
-        
+
         return {
             "success": True,
             "result": result,
             "user_id": current_user.get("id")
         }
-        
+
     except Exception as e:
         logger.error(f"Natural language calculation failed: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -139,12 +139,12 @@ async def intelligent_dispatch(
     """Intelligently analyze and dispatch calculation requests"""
     try:
         agent = await get_calculation_agent()
-        
+
         dispatch_data = {
             "request": request,
             "context": context or {}
         }
-        
+
         if execute_skill:
             # Full dispatch with skill execution
             result = await agent.intelligent_dispatch(dispatch_data)
@@ -154,14 +154,14 @@ async def intelligent_dispatch(
                 result = await agent.intelligent_dispatcher.analyze_and_dispatch(request, context)
             else:
                 raise HTTPException(status_code=503, detail="Intelligent dispatcher not available")
-        
+
         return {
             "success": True,
             "result": result,
             "executed": execute_skill,
             "user_id": current_user.get("id")
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -178,18 +178,18 @@ async def evaluate_expression(
     """Evaluate a mathematical expression"""
     try:
         agent = await get_calculation_agent()
-        
+
         result = await agent.evaluate_expression({
             "expression": expression,
             "variables": variables or {}
         })
-        
+
         return {
             "success": True,
             "result": result,
             "user_id": current_user.get("id")
         }
-        
+
     except Exception as e:
         logger.error(f"Expression evaluation failed: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -205,19 +205,19 @@ async def differentiate_expression(
     """Differentiate a mathematical expression"""
     try:
         agent = await get_calculation_agent()
-        
+
         result = await agent.differentiate_expression({
             "expression": expression,
             "variable": variable,
             "order": order
         })
-        
+
         return {
             "success": True,
             "result": result,
             "user_id": current_user.get("id")
         }
-        
+
     except Exception as e:
         logger.error(f"Differentiation failed: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -233,19 +233,19 @@ async def integrate_expression(
     """Integrate a mathematical expression"""
     try:
         agent = await get_calculation_agent()
-        
+
         result = await agent.integrate_expression({
             "expression": expression,
             "variable": variable,
             "limits": limits
         })
-        
+
         return {
             "success": True,
             "result": result,
             "user_id": current_user.get("id")
         }
-        
+
     except Exception as e:
         logger.error(f"Integration failed: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -260,18 +260,18 @@ async def solve_equations(
     """Solve equations"""
     try:
         agent = await get_calculation_agent()
-        
+
         result = await agent.solve_equation({
             "equations": equations,
             "variables": variables or ["x"]
         })
-        
+
         return {
             "success": True,
             "result": result,
             "user_id": current_user.get("id")
         }
-        
+
     except Exception as e:
         logger.error(f"Equation solving failed: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -285,15 +285,15 @@ async def price_bond(
     """Price a bond using QuantLib"""
     try:
         agent = await get_calculation_agent()
-        
+
         result = await agent.price_bond(bond_params)
-        
+
         return {
             "success": True,
             "result": result,
             "user_id": current_user.get("id")
         }
-        
+
     except Exception as e:
         logger.error(f"Bond pricing failed: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -307,15 +307,15 @@ async def price_option(
     """Price an option using QuantLib"""
     try:
         agent = await get_calculation_agent()
-        
+
         result = await agent.price_option(option_params)
-        
+
         return {
             "success": True,
             "result": result,
             "user_id": current_user.get("id")
         }
-        
+
     except Exception as e:
         logger.error(f"Option pricing failed: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -329,15 +329,15 @@ async def analyze_graph(
     """Analyze a graph using NetworkX"""
     try:
         agent = await get_calculation_agent()
-        
+
         result = await agent.analyze_graph(graph_data)
-        
+
         return {
             "success": True,
             "result": result,
             "user_id": current_user.get("id")
         }
-        
+
     except Exception as e:
         logger.error(f"Graph analysis failed: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -351,15 +351,15 @@ async def find_shortest_path(
     """Find shortest path in a graph"""
     try:
         agent = await get_calculation_agent()
-        
+
         result = await agent.find_shortest_path(graph_data)
-        
+
         return {
             "success": True,
             "result": result,
             "user_id": current_user.get("id")
         }
-        
+
     except Exception as e:
         logger.error(f"Pathfinding failed: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -373,15 +373,15 @@ async def distributed_calculation(
     """Perform distributed calculation using Ray"""
     try:
         agent = await get_calculation_agent()
-        
+
         result = await agent.distributed_calculation(calculation_params)
-        
+
         return {
             "success": True,
             "result": result,
             "user_id": current_user.get("id")
         }
-        
+
     except Exception as e:
         logger.error(f"Distributed calculation failed: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -397,19 +397,19 @@ async def ai_assisted_calculation(
     """Get AI assistance for calculations"""
     try:
         agent = await get_calculation_agent()
-        
+
         result = await agent.ai_assisted_calculation({
             "query": query,
             "context": context or {},
             "calculation_hint": calculation_hint
         })
-        
+
         return {
             "success": True,
             "result": result,
             "user_id": current_user.get("id")
         }
-        
+
     except Exception as e:
         logger.error(f"AI-assisted calculation failed: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -425,19 +425,19 @@ async def intelligent_dispatch(
     """Intelligently analyze and dispatch calculation request to appropriate skill"""
     try:
         agent = await get_calculation_agent()
-        
+
         result = await agent.intelligent_dispatch_calculation({
             "request": request,
             "context": context or {},
             "auto_execute": auto_execute
         })
-        
+
         return {
             "success": result.get("success", False),
             "result": result,
             "user_id": current_user.get("id")
         }
-        
+
     except Exception as e:
         logger.error(f"Intelligent dispatch failed: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -453,19 +453,19 @@ async def multi_step_calculation(
     """Execute multiple calculation steps from natural language instructions"""
     try:
         agent = await get_calculation_agent()
-        
+
         result = await agent.multi_step_calculation({
             "instructions": instructions,
             "context": context or {},
             "share_results": share_results
         })
-        
+
         return {
             "success": result.get("success", False),
             "result": result,
             "user_id": current_user.get("id")
         }
-        
+
     except Exception as e:
         logger.error(f"Multi-step calculation failed: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -479,15 +479,15 @@ async def create_workflow(
     """Create a computation workflow"""
     try:
         agent = await get_calculation_agent()
-        
+
         workflow_id = await agent.orchestrator.create_workflow(workflow_definition)
-        
+
         return {
             "success": True,
             "workflow_id": workflow_id,
             "user_id": current_user.get("id")
         }
-        
+
     except Exception as e:
         logger.error(f"Workflow creation failed: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -503,21 +503,21 @@ async def execute_workflow(
     """Execute a computation workflow"""
     try:
         agent = await get_calculation_agent()
-        
+
         # Execute workflow in background
         background_tasks.add_task(
             agent.orchestrator.execute_workflow,
             workflow_id,
             input_data
         )
-        
+
         return {
             "success": True,
             "message": "Workflow execution started",
             "workflow_id": workflow_id,
             "user_id": current_user.get("id")
         }
-        
+
     except Exception as e:
         logger.error(f"Workflow execution failed: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -531,18 +531,18 @@ async def get_workflow_status(
     """Get workflow execution status"""
     try:
         agent = await get_calculation_agent()
-        
+
         if workflow_id not in agent.orchestrator.workflows:
             raise HTTPException(status_code=404, detail="Workflow not found")
-        
+
         workflow = agent.orchestrator.workflows[workflow_id]
-        
+
         return {
             "success": True,
             "workflow": workflow,
             "user_id": current_user.get("id")
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -555,14 +555,14 @@ async def get_calculation_stats(current_user: Dict = Depends(get_current_user)):
     """Get calculation statistics"""
     try:
         agent = await get_calculation_agent()
-        
+
         return {
             "success": True,
             "stats": agent.calculation_stats,
             "health": await agent.get_agent_health(),
             "user_id": current_user.get("id")
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to get stats: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -574,13 +574,13 @@ async def health_check():
     try:
         agent = await get_calculation_agent()
         health = await agent.get_agent_health()
-        
+
         return {
             "status": "healthy",
             "agent_health": health,
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         return JSONResponse(
             status_code=503,

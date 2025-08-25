@@ -19,39 +19,39 @@ class CircuitBreakerError(Exception):
 
 class CircuitBreaker:
     """Circuit breaker pattern implementation"""
-    
+
     def __init__(self, failure_threshold: int = 5, recovery_timeout: int = 60):
         self.failure_threshold = failure_threshold
         self.recovery_timeout = recovery_timeout
         self.failure_count = 0
         self.last_failure_time: Optional[datetime] = None
         self.state = "closed"  # closed, open, half-open
-        
+
     def call_succeeded(self):
         """Reset failure count on success"""
         self.failure_count = 0
         self.state = "closed"
-        
+
     def call_failed(self):
         """Record failure and potentially open circuit"""
         self.failure_count += 1
         self.last_failure_time = datetime.utcnow()
-        
+
         if self.failure_count >= self.failure_threshold:
             self.state = "open"
             logger.warning(f"Circuit breaker opened after {self.failure_count} failures")
-            
+
     def is_open(self) -> bool:
         """Check if circuit should be open"""
         if self.state == "closed":
             return False
-            
+
         if self.state == "open" and self.last_failure_time:
             if datetime.utcnow() - self.last_failure_time > timedelta(seconds=self.recovery_timeout):
                 self.state = "half-open"
                 logger.info("Circuit breaker entering half-open state")
                 return False
-                
+
         return self.state == "open"
 
 
@@ -64,7 +64,7 @@ def retry_with_backoff(
 ):
     """
     Decorator for retrying functions with exponential backoff
-    
+
     Args:
         max_attempts: Maximum number of retry attempts
         backoff_factor: Multiplier for exponential backoff
@@ -77,9 +77,9 @@ def retry_with_backoff(
         def sync_wrapper(*args, **kwargs) -> Any:
             if circuit_breaker and circuit_breaker.is_open():
                 raise CircuitBreakerError("Circuit breaker is open")
-                
+
             last_exception = None
-            
+
             for attempt in range(max_attempts):
                 try:
                     result = func(*args, **kwargs)
@@ -88,29 +88,29 @@ def retry_with_backoff(
                     return result
                 except exceptions as e:
                     last_exception = e
-                    
+
                     if attempt == max_attempts - 1:
                         if circuit_breaker:
                             circuit_breaker.call_failed()
                         logger.error(f"Final attempt failed for {func.__name__}: {str(e)}")
                         raise
-                        
+
                     delay = min(backoff_factor ** attempt, max_delay)
                     logger.warning(
                         f"Attempt {attempt + 1}/{max_attempts} failed for {func.__name__}: {str(e)}. "
                         f"Retrying in {delay:.1f} seconds..."
                     )
                     time.sleep(delay)
-                    
+
             raise last_exception
-            
+
         @functools.wraps(func)
         async def async_wrapper(*args, **kwargs) -> Any:
             if circuit_breaker and circuit_breaker.is_open():
                 raise CircuitBreakerError("Circuit breaker is open")
-                
+
             last_exception = None
-            
+
             for attempt in range(max_attempts):
                 try:
                     result = await func(*args, **kwargs)
@@ -119,42 +119,42 @@ def retry_with_backoff(
                     return result
                 except exceptions as e:
                     last_exception = e
-                    
+
                     if attempt == max_attempts - 1:
                         if circuit_breaker:
                             circuit_breaker.call_failed()
                         logger.error(f"Final attempt failed for {func.__name__}: {str(e)}")
                         raise
-                        
+
                     delay = min(backoff_factor ** attempt, max_delay)
                     logger.warning(
                         f"Attempt {attempt + 1}/{max_attempts} failed for {func.__name__}: {str(e)}. "
                         f"Retrying in {delay:.1f} seconds..."
                     )
                     await asyncio.sleep(delay)
-                    
+
             raise last_exception
-            
+
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
         else:
             return sync_wrapper
-            
+
     return decorator
 
 
 class RetryManager:
     """Centralized retry management with circuit breakers"""
-    
+
     def __init__(self):
         self.circuit_breakers = {}
-        
+
     def get_circuit_breaker(self, name: str) -> CircuitBreaker:
         """Get or create a circuit breaker for a service"""
         if name not in self.circuit_breakers:
             self.circuit_breakers[name] = CircuitBreaker()
         return self.circuit_breakers[name]
-        
+
     def retry_with_circuit_breaker(
         self,
         service_name: str,

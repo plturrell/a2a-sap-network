@@ -147,10 +147,10 @@ async def initialize_agent_endpoint(
             cache_ttl=cache_ttl,
             max_tests_per_product=max_tests_per_product
         )
-        
+
         # Initialize agent
         initialization_result = await agent.initialize()
-        
+
         return {
             "status": "initialized",
             "agent_id": agent.agent_id,
@@ -161,7 +161,7 @@ async def initialize_agent_endpoint(
             "base_url": base_url,
             "initialization_result": initialization_result
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to initialize Agent 5: {e}")
         raise HTTPException(status_code=500, detail=f"Initialization failed: {str(e)}")
@@ -172,19 +172,19 @@ async def health_check():
     """Enhanced health check endpoint"""
     try:
         agent_instance = get_agent()
-        
+
         return {
             "status": "healthy",
             "services": {
                 "a2a_protocol": "healthy",
                 "data_manager": "healthy",
-                "catalog_manager": "healthy", 
+                "catalog_manager": "healthy",
                 "validation_engine": "healthy"
             },
             "metrics": {
                 "active_tasks": len(agent_instance.test_suites),
                 "total_tests_generated": sum(
-                    len(suite.generated_tests) 
+                    len(suite.generated_tests)
                     for suite in agent_instance.test_suites.values()
                 ),
                 "websocket_connections": len(agent_instance.websocket_connections),
@@ -202,7 +202,7 @@ async def health_check():
             },
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         return {
             "status": "unhealthy",
@@ -229,9 +229,9 @@ async def discover_ord_products(
             namespace_filter=request.namespace_filter,
             resource_types=request.resource_types
         )
-        
+
         return result
-        
+
     except Exception as e:
         logger.error(f"ORD discovery failed: {e}")
         raise HTTPException(status_code=500, detail=f"ORD discovery failed: {str(e)}")
@@ -252,15 +252,15 @@ async def generate_dynamic_tests(
             test_methodology=request.test_methodology,
             test_config=request.test_config
         )
-        
+
         result = await agent_instance.dynamic_test_generation(qa_request)
-        
+
         return result
-        
+
     except Exception as e:
         logger.error(f"Dynamic test generation failed: {e}")
         raise HTTPException(
-            status_code=500, 
+            status_code=500,
             detail=f"Dynamic test generation failed: {str(e)}"
         )
 
@@ -276,7 +276,7 @@ async def execute_a2a_task(
     try:
         # Create A2A message
         from app.a2a.sdk import A2AMessage, MessageRole
-        
+
         a2a_message = A2AMessage(
             role=MessageRole.USER,
             content={
@@ -285,12 +285,12 @@ async def execute_a2a_task(
                 "id": request.id or f"req_{datetime.utcnow().timestamp()}"
             }
         )
-        
+
         # Execute task
         result = await agent_instance.execute_task(a2a_message)
-        
+
         return result
-        
+
     except Exception as e:
         logger.error(f"A2A task execution failed: {e}")
         return {
@@ -312,7 +312,7 @@ async def get_task_status(
     try:
         status_data = await agent_instance.get_task_status(task_id)
         return TaskStatusResponse(**status_data)
-        
+
     except Exception as e:
         logger.error(f"Failed to get task status: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get task status: {str(e)}")
@@ -328,9 +328,9 @@ async def get_task_report(
     try:
         if task_id not in agent_instance.test_suites:
             raise HTTPException(status_code=404, detail="Task not found")
-        
+
         test_suite = agent_instance.test_suites[task_id]
-        
+
         if format.lower() == "json":
             return {
                 "suite_id": test_suite.suite_id,
@@ -382,7 +382,7 @@ async def get_task_report(
             }
         else:
             raise HTTPException(status_code=400, detail=f"Unsupported format: {format}")
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -399,9 +399,9 @@ async def get_partial_task_report(
     try:
         if task_id not in agent_instance.test_suites:
             raise HTTPException(status_code=404, detail="Task not found")
-        
+
         test_suite = agent_instance.test_suites[task_id]
-        
+
         return {
             "suite_id": test_suite.suite_id,
             "created_at": test_suite.created_at.isoformat(),
@@ -423,7 +423,7 @@ async def get_partial_task_report(
                 ]
             }
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -440,20 +440,20 @@ async def websocket_stream_task(
 ):
     """WebSocket endpoint for streaming task progress and results"""
     agent_instance = None
-    
+
     try:
         # Get agent instance
         global agent
         if agent is None:
             await websocket.close(code=1003, reason="Agent not initialized")
             return
-        
+
         agent_instance = agent
         await websocket.accept()
-        
+
         # Register WebSocket connection
         await agent_instance.register_websocket_connection(task_id, websocket)
-        
+
         # Send initial connection acknowledgment
         await websocket.send_text(json.dumps({
             "type": "connection",
@@ -463,18 +463,18 @@ async def websocket_stream_task(
                 "timestamp": datetime.utcnow().isoformat()
             }
         }))
-        
+
         # Keep connection alive and handle incoming messages
         try:
             while True:
                 # Wait for messages from client (like ping/pong)
                 try:
                     message = await asyncio.wait_for(websocket.receive_text(), timeout=30.0)
-                    
+
                     # Handle client messages
                     try:
                         data = json.loads(message)
-                        
+
                         if data.get("type") == "ping":
                             await websocket.send_text(json.dumps({
                                 "type": "pong",
@@ -487,29 +487,29 @@ async def websocket_stream_task(
                                 "taskId": task_id,
                                 "data": status
                             }))
-                            
+
                     except json.JSONDecodeError:
                         # Ignore invalid JSON
                         pass
-                        
+
                 except asyncio.TimeoutError:
                     # Send keep-alive ping
                     await websocket.send_text(json.dumps({
                         "type": "keep_alive",
                         "timestamp": datetime.utcnow().isoformat()
                     }))
-                    
+
         except WebSocketDisconnect:
             logger.info(f"WebSocket disconnected for task {task_id}")
         except Exception as e:
             logger.error(f"WebSocket error for task {task_id}: {e}")
             await websocket.close(code=1011, reason=f"Internal error: {str(e)}")
-            
+
     except Exception as e:
         logger.error(f"WebSocket setup failed for task {task_id}: {e}")
         if websocket.client_state.name != "DISCONNECTED":
             await websocket.close(code=1011, reason=f"Setup failed: {str(e)}")
-    
+
     finally:
         # Cleanup
         if agent_instance and task_id:
@@ -527,7 +527,7 @@ async def get_question_templates(
         "templates": agent_instance.question_templates,
         "categories": list(agent_instance.question_templates.keys()),
         "total_templates": sum(
-            len(category.keys()) 
+            len(category.keys())
             for category in agent_instance.question_templates.values()
         )
     }
@@ -543,7 +543,7 @@ async def get_metrics(
         "websocket_connections": len(agent_instance.websocket_connections),
         "processing_stats": agent_instance.processing_stats,
         "total_tests_generated": sum(
-            len(suite.generated_tests) 
+            len(suite.generated_tests)
             for suite in agent_instance.test_suites.values()
         ),
         "circuit_breakers": agent_instance.circuit_breaker_manager.get_all_stats() if hasattr(agent_instance, 'circuit_breaker_manager') else {}
@@ -555,20 +555,20 @@ async def reset_validation_state(
     agent_instance: QAValidationAgentSDK = Depends(get_agent)
 ):
     """Reset validation state and circuit breakers"""
-    
+
     # Reset circuit breakers
     if hasattr(agent_instance, 'circuit_breaker_manager'):
         agent_instance.circuit_breaker_manager.reset_all()
-    
+
     # Clear completed test suites (keep active ones)
     completed_suites = [
         suite_id for suite_id, suite in agent_instance.test_suites.items()
         if suite.execution_results is not None
     ]
-    
+
     for suite_id in completed_suites:
         del agent_instance.test_suites[suite_id]
-    
+
     return {
         "message": f"Reset validation state and cleared {len(completed_suites)} completed test suites",
         "reset_at": datetime.utcnow().isoformat(),
@@ -583,15 +583,15 @@ async def shutdown_agent(
     """Gracefully shutdown the agent"""
     try:
         await agent_instance.shutdown()
-        
+
         global agent
         agent = None
-        
+
         return {
             "message": "Agent shutdown successfully",
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Agent shutdown failed: {e}")
         raise HTTPException(status_code=500, detail=f"Shutdown failed: {str(e)}")

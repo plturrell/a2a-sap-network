@@ -176,7 +176,7 @@ class ConsistencyManager:
         self._running = False
         self._sync_task = None
         self._monitor_task = None
-        
+
         # Node URL registry
         self.node_urls: Dict[str, str] = {}
 
@@ -379,7 +379,7 @@ class ConsistencyManager:
         if not self.network_client:
             logger.error("Network client not available for replication")
             return False
-            
+
         try:
             # Get node URL from known_nodes registry
             node_url = await self._get_node_url(node_id)
@@ -405,9 +405,9 @@ class ConsistencyManager:
 
             # Replicate to target node
             success = await self.network_client.replicate_data(
-                node_url, 
-                data_item.key, 
-                replication_data, 
+                node_url,
+                data_item.key,
+                replication_data,
                 data_item.version.version
             )
 
@@ -430,32 +430,32 @@ class ConsistencyManager:
         """Fetch data from other nodes"""
         if not self.network_client:
             return None
-            
+
         best_item = None
         best_version = -1
-        
+
         for node_id in self.known_nodes:
             if node_id == self.node_id:
                 continue
-                
+
             try:
                 node_url = await self._get_node_url(node_id)
                 if not node_url:
                     continue
-                    
+
                 # Fetch data from node
                 data = await self.network_client.fetch_data(
                     node_url, key, consistency_level.value
                 )
-                
+
                 if data and "version" in data:
                     version_info = data["version"]
                     version = version_info["version"]
-                    
+
                     # Keep the item with the highest version
                     if version > best_version:
                         best_version = version
-                        
+
                         # Reconstruct DataItem
                         data_version = DataVersion(
                             version=version,
@@ -465,7 +465,7 @@ class ConsistencyManager:
                             checksum=version_info.get("checksum", ""),
                             metadata=version_info.get("metadata", {})
                         )
-                        
+
                         best_item = DataItem(
                             key=key,
                             value=data["value"],
@@ -475,14 +475,14 @@ class ConsistencyManager:
                             pending_writes=[],
                             conflict_history=[]
                         )
-                        
+
             except Exception as e:
                 logger.debug(f"Failed to fetch {key} from node {node_id}: {e}")
                 continue
-                
+
         if best_item:
             logger.debug(f"Fetched {key} from network, version {best_version}")
-            
+
         return best_item
 
     async def _get_latest_version(self, key: str) -> int:
@@ -495,24 +495,24 @@ class ConsistencyManager:
 
         if not self.network_client:
             return max_version
-            
+
         # Query other nodes for their versions
         for node_id in self.known_nodes:
             if node_id == self.node_id:
                 continue
-                
+
             try:
                 node_url = await self._get_node_url(node_id)
                 if not node_url:
                     continue
-                    
+
                 version = await self.network_client.get_latest_version(node_url, key)
                 max_version = max(max_version, version)
-                
+
             except Exception as e:
                 logger.debug(f"Failed to get version from node {node_id}: {e}")
                 continue
-                
+
         return max_version
 
     def _increment_vector_clock(self, key: str) -> Dict[str, int]:
@@ -698,7 +698,7 @@ class ConsistencyManager:
             return None
 
         local_item = self.data_store[key]
-        
+
         # Check replica count
         expected_replicas = min(self.config.replication_factor, len(self.known_nodes))
         actual_replicas = len(local_item.replicas)
@@ -712,31 +712,31 @@ class ConsistencyManager:
                 details={"expected": expected_replicas, "actual": actual_replicas},
                 severity="medium",
             )
-        
+
         # Check version consistency across nodes
         if self.network_client:
             inconsistent_nodes = []
             local_version = local_item.version.version
-            
+
             for node_id in self.known_nodes:
                 if node_id == self.node_id or node_id not in local_item.replicas:
                     continue
-                    
+
                 try:
                     node_url = await self._get_node_url(node_id)
                     if not node_url:
                         continue
-                        
+
                     remote_version = await self.network_client.get_latest_version(node_url, key)
-                    
+
                     # Allow some version drift for eventual consistency
                     if abs(remote_version - local_version) > 5:
                         inconsistent_nodes.append(node_id)
-                        
+
                 except Exception as e:
                     logger.debug(f"Failed to check consistency with node {node_id}: {e}")
                     continue
-            
+
             if inconsistent_nodes:
                 return ConsistencyViolation(
                     violation_type="version_inconsistency",
@@ -774,17 +774,17 @@ class ConsistencyManager:
         """Get URL for a specific node"""
         if node_id in self.node_urls:
             return self.node_urls[node_id]
-        
+
         # Try service discovery if URL not cached
         # This would integrate with a service registry in production
         if node_id == self.node_id:
             return None  # Don't need URL for self
-            
+
         # Default to localhost-based URLs for development
         # In production, this would query a service registry
         port = 8000 + int(node_id.split('_')[-1]) if '_' in node_id else 8000
         url = f"http://localhost:{port}"
-        
+
         # Cache the URL
         self.node_urls[node_id] = url
         return url

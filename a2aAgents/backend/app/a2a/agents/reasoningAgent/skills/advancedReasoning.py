@@ -25,7 +25,7 @@ async def advanced_reasoning(
 ) -> Dict[str, Any]:
     """
     Advanced reasoning with multi-agent orchestration
-    
+
     Args:
         question: Complex question to reason about
         reasoning_architecture: Architecture (hierarchical, peer_to_peer, blackboard, chain_of_thought, swarm, debate)
@@ -42,7 +42,7 @@ async def advanced_reasoning(
         from ..debateArchitecture import create_debate_coordinator
         from ..blackboardArchitecture import create_blackboard_system
         from ..reasoningAgent import HierarchicalReasoner
-        
+
         # Select architecture
         result = None
         if reasoning_architecture == "peer_to_peer":
@@ -63,7 +63,7 @@ async def advanced_reasoning(
         else:  # hierarchical default
             reasoner = HierarchicalReasoner()
             result = await reasoner.reason(question, context, confidence_threshold)
-        
+
         # Format response for MCP
         return {
             "success": True,

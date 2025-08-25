@@ -34,7 +34,7 @@ class A2AConfig:
 
 class EnvironmentConfig:
     """Manages environment configuration for A2A system"""
-    
+
     # Default values for different environments
     DEFAULTS = {
         EnvironmentMode.DEVELOPMENT: {
@@ -49,7 +49,7 @@ class EnvironmentConfig:
         },
         EnvironmentMode.TEST: {
             "A2A_SERVICE_URL": "http://localhost:4004",
-            "A2A_SERVICE_HOST": "localhost", 
+            "A2A_SERVICE_HOST": "localhost",
             "A2A_BASE_URL": "http://localhost:4004",
             "A2A_PRIVATE_KEY": "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
             "A2A_RPC_URL": "http://localhost:8545",
@@ -61,7 +61,7 @@ class EnvironmentConfig:
             # No defaults for production - all must be explicitly set
         }
     }
-    
+
     # Agent port mappings
     AGENT_PORTS = {
         "agent0_data_product": 8000,
@@ -81,7 +81,7 @@ class EnvironmentConfig:
         "agent14_embedding_finetuner": 8014,
         "agent15_orchestrator": 8015
     }
-    
+
     # Contract addresses for development
     DEV_CONTRACT_ADDRESSES = {
         "AgentRegistry": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
@@ -89,12 +89,12 @@ class EnvironmentConfig:
         "TrustManager": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
         "StorageManager": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9"
     }
-    
+
     @classmethod
     def get_mode(cls) -> EnvironmentMode:
         """Get current environment mode"""
         mode_str = os.getenv("A2A_MODE", "").lower()
-        
+
         # Check for explicit mode setting
         if mode_str in ["dev", "development"]:
             return EnvironmentMode.DEVELOPMENT
@@ -102,19 +102,19 @@ class EnvironmentConfig:
             return EnvironmentMode.PRODUCTION
         elif mode_str in ["test", "testing"]:
             return EnvironmentMode.TEST
-            
+
         # Check for dev mode flag
         if os.getenv("A2A_DEV_MODE", "false").lower() == "true":
             return EnvironmentMode.DEVELOPMENT
-            
+
         # Default to production
         return EnvironmentMode.PRODUCTION
-    
+
     @classmethod
     def load_config(cls) -> A2AConfig:
         """Load configuration based on environment"""
         mode = cls.get_mode()
-        
+
         # Apply defaults for non-production modes
         if mode != EnvironmentMode.PRODUCTION:
             defaults = cls.DEFAULTS.get(mode, {})
@@ -122,26 +122,26 @@ class EnvironmentConfig:
                 if key not in os.environ:
                     os.environ[key] = value
                     logger.info(f"{mode.value} mode: Using default for {key}")
-        
+
         # Validate required variables
         required_vars = ["A2A_SERVICE_URL", "A2A_SERVICE_HOST", "A2A_BASE_URL"]
         missing_vars = [var for var in required_vars if not os.getenv(var)]
-        
+
         if missing_vars:
             if mode == EnvironmentMode.PRODUCTION:
                 raise ValueError(f"Missing required environment variables: {missing_vars}")
             else:
                 raise ValueError(f"Failed to set defaults for: {missing_vars}")
-        
+
         # Load contract addresses
         contract_addresses = cls.DEV_CONTRACT_ADDRESSES if mode != EnvironmentMode.PRODUCTION else {}
-        
+
         # Override with environment variables if set
         for contract_name in ["AgentRegistry", "MessageBus", "TrustManager", "StorageManager"]:
             env_var = f"A2A_CONTRACT_{contract_name.upper()}"
             if os.getenv(env_var):
                 contract_addresses[contract_name] = os.getenv(env_var)
-        
+
         # Create configuration
         config = A2AConfig(
             mode=mode,
@@ -156,35 +156,35 @@ class EnvironmentConfig:
             mock_blockchain=os.getenv("A2A_MOCK_BLOCKCHAIN", "false").lower() == "true",
             mock_storage=os.getenv("A2A_MOCK_STORAGE", "false").lower() == "true"
         )
-        
+
         logger.info(f"Loaded A2A configuration for {mode.value} mode")
         if config.debug:
             logger.debug(f"Configuration: {config}")
-        
+
         return config
-    
+
     @classmethod
     def set_development_mode(cls):
         """Convenience method to set development mode"""
         os.environ["A2A_MODE"] = "development"
         os.environ["A2A_DEV_MODE"] = "true"
-    
+
     @classmethod
     def set_production_mode(cls):
         """Convenience method to set production mode"""
         os.environ["A2A_MODE"] = "production"
         os.environ["A2A_DEV_MODE"] = "false"
-    
+
     @classmethod
     def is_development(cls) -> bool:
         """Check if running in development mode"""
         return cls.get_mode() == EnvironmentMode.DEVELOPMENT
-    
+
     @classmethod
     def is_production(cls) -> bool:
         """Check if running in production mode"""
         return cls.get_mode() == EnvironmentMode.PRODUCTION
-    
+
     @classmethod
     def is_test(cls) -> bool:
         """Check if running in test mode"""

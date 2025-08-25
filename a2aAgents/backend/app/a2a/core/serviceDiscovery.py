@@ -82,27 +82,27 @@ class ServiceDiscovery:
 
             # A2A Protocol Compliance: Use blockchain-based service discovery
             from .networkClient import A2ANetworkClient
-            
+
             network_client = A2ANetworkClient(agent_id="service_discovery")
-            
+
             discovery_request = {
                 "operation": "discover_agents",
                 "service_type": service_type,
                 "capabilities": capabilities or [],
                 "active_only": True
             }
-            
+
             response = await network_client.send_a2a_message(
                 to_agent="agent_registry",
                 message=discovery_request,
                 message_type="SERVICE_DISCOVERY"
             )
-            
+
             if not response or response.get('error'):
                 error_msg = f"Blockchain service discovery failed: {response.get('error', 'Registry unreachable via blockchain')}"
                 logger.error(error_msg)
                 raise RuntimeError(error_msg)
-            
+
             agents_data = response.get("agents", [])
             services = []
 
@@ -168,27 +168,27 @@ class ServiceDiscovery:
         try:
             # A2A Protocol Compliance: Use blockchain messaging for health checks
             from .networkClient import A2ANetworkClient
-            
+
             network_client = A2ANetworkClient(agent_id="service_discovery")
-            
+
             health_request = {
                 "operation": "health_check",
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
             response = await network_client.send_a2a_message(
                 to_agent=service.agent_id,
                 message=health_request,
                 message_type="HEALTH_CHECK"
             )
-            
+
             if response and response.get("status") == "healthy":
                 service.health_status = "healthy"
                 service.last_health_check = datetime.utcnow()
-                
+
                 # Reset failure count on success
                 self.service_health_status[service.agent_id] = 0
-                
+
                 logger.debug(f"✅ Health check passed for {service.agent_id}")
                 return True
             else:
@@ -212,9 +212,9 @@ class ServiceDiscovery:
         try:
             # A2A Protocol Compliance: Use blockchain messaging for registration
             from .networkClient import A2ANetworkClient
-            
+
             network_client = A2ANetworkClient(agent_id="service_discovery")
-            
+
             registration_data = {
                 "operation": "register_agent",
                 "agent_id": service.agent_id,
@@ -230,7 +230,7 @@ class ServiceDiscovery:
                 message=registration_data,
                 message_type="AGENT_REGISTRATION"
             )
-            
+
             if response and response.get("status") == "success":
                 logger.info(f"✅ Successfully registered service {service.agent_id} via blockchain")
                 return True
@@ -251,9 +251,9 @@ class ServiceDiscovery:
         try:
             # A2A Protocol Compliance: Use blockchain messaging for deregistration
             from .networkClient import A2ANetworkClient
-            
+
             network_client = A2ANetworkClient(agent_id="service_discovery")
-            
+
             deregistration_data = {
                 "operation": "deregister_agent",
                 "agent_id": agent_id,
@@ -265,11 +265,11 @@ class ServiceDiscovery:
                 message=deregistration_data,
                 message_type="AGENT_DEREGISTRATION"
             )
-            
+
             if response and response.get("status") == "success":
                 # Remove from local cache
                 self._remove_from_cache(agent_id)
-                
+
                 logger.info(f"✅ Successfully deregistered service {agent_id} via blockchain")
                 return True
             else:

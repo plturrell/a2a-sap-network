@@ -34,7 +34,7 @@ class ChatMessage:
     timestamp: datetime
     metadata: Dict[str, Any]
     embedding: Optional[List[float]] = None
-    
+
 @dataclass
 class ChatConversation:
     """Chat conversation model"""
@@ -50,24 +50,24 @@ class ChatConversation:
 
 class ChatPersistenceLayer:
     """Unified persistence layer for chat history with multiple backend support"""
-    
+
     def __init__(self, db_type: DatabaseType, connection_string: str):
         self.db_type = db_type
         self.connection_string = connection_string
         self.connection = None
         self._initialized = False
-        
+
         # Connection pools
         self._pg_pool = None
         self._mongo_client = None
-        
+
         logger.info(f"Initializing chat persistence with {db_type.value}")
-    
+
     async def initialize(self):
         """Initialize database connection and schema"""
         if self._initialized:
             return
-            
+
         try:
             if self.db_type == DatabaseType.SQLITE:
                 await self._init_sqlite()
@@ -77,18 +77,18 @@ class ChatPersistenceLayer:
                 await self._init_mongodb()
             else:
                 raise ValueError(f"Unsupported database type: {self.db_type}")
-                
+
             self._initialized = True
             logger.info("Chat persistence layer initialized successfully")
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize persistence layer: {e}")
             raise
-    
+
     async def _init_sqlite(self):
         """Initialize SQLite database"""
         self.connection = await aiosqlite.connect(self.connection_string)
-        
+
         # Create tables
         await self.connection.executescript("""
             CREATE TABLE IF NOT EXISTS conversations (
@@ -103,7 +103,7 @@ class ChatPersistenceLayer:
                 summary TEXT,
                 FOREIGN KEY (notification_id) REFERENCES notifications(id)
             );
-            
+
             CREATE TABLE IF NOT EXISTS messages (
                 message_id TEXT PRIMARY KEY,
                 conversation_id TEXT NOT NULL,
@@ -115,19 +115,19 @@ class ChatPersistenceLayer:
                 embedding BLOB,
                 FOREIGN KEY (conversation_id) REFERENCES conversations(conversation_id)
             );
-            
-            CREATE INDEX IF NOT EXISTS idx_messages_conversation 
+
+            CREATE INDEX IF NOT EXISTS idx_messages_conversation
                 ON messages(conversation_id);
-            CREATE INDEX IF NOT EXISTS idx_messages_timestamp 
+            CREATE INDEX IF NOT EXISTS idx_messages_timestamp
                 ON messages(timestamp);
-            CREATE INDEX IF NOT EXISTS idx_conversations_user 
+            CREATE INDEX IF NOT EXISTS idx_conversations_user
                 ON conversations(user_id);
-            CREATE INDEX IF NOT EXISTS idx_conversations_status 
+            CREATE INDEX IF NOT EXISTS idx_conversations_status
                 ON conversations(status);
         """)
-        
+
         await self.connection.commit()
-    
+
     async def _init_postgresql(self):
         """Initialize PostgreSQL database with connection pool"""
         self._pg_pool = await asyncpg.create_pool(
@@ -136,7 +136,7 @@ class ChatPersistenceLayer:
             max_size=20,
             command_timeout=60
         )
-        
+
         # Create schema
         async with self._pg_pool.acquire() as conn:
             await conn.execute("""
@@ -151,7 +151,7 @@ class ChatPersistenceLayer:
                     metadata JSONB,
                     summary TEXT
                 );
-                
+
                 CREATE TABLE IF NOT EXISTS messages (
                     message_id UUID PRIMARY KEY,
                     conversation_id UUID NOT NULL REFERENCES conversations(conversation_id),
@@ -162,46 +162,46 @@ class ChatPersistenceLayer:
                     metadata JSONB,
                     embedding vector(1536)  -- For OpenAI embeddings
                 );
-                
+
                 -- Indexes for performance
-                CREATE INDEX IF NOT EXISTS idx_messages_conversation 
+                CREATE INDEX IF NOT EXISTS idx_messages_conversation
                     ON messages(conversation_id);
-                CREATE INDEX IF NOT EXISTS idx_messages_timestamp 
+                CREATE INDEX IF NOT EXISTS idx_messages_timestamp
                     ON messages(timestamp DESC);
-                CREATE INDEX IF NOT EXISTS idx_conversations_user 
+                CREATE INDEX IF NOT EXISTS idx_conversations_user
                     ON conversations(user_id);
-                CREATE INDEX IF NOT EXISTS idx_conversations_updated 
+                CREATE INDEX IF NOT EXISTS idx_conversations_updated
                     ON conversations(updated_at DESC);
-                    
+
                 -- Full text search
-                CREATE INDEX IF NOT EXISTS idx_messages_fts 
+                CREATE INDEX IF NOT EXISTS idx_messages_fts
                     ON messages USING gin(to_tsvector('english', message));
             """)
-    
+
     async def _init_mongodb(self):
         """Initialize MongoDB with proper indexes"""
         self._mongo_client = AsyncIOMotorClient(self.connection_string)
         self.db = self._mongo_client.a2a_chat
-        
+
         # Create indexes
         await self.db.conversations.create_index([
             ("conversation_id", 1)
         ], unique=True)
-        
+
         await self.db.conversations.create_index([
             ("user_id", 1),
             ("updated_at", -1)
         ])
-        
+
         await self.db.messages.create_index([
             ("conversation_id", 1),
             ("timestamp", -1)
         ])
-        
+
         await self.db.messages.create_index([
             ("message", "text")
         ])
-    
+
     async def save_conversation(self, conversation: ChatConversation) -> bool:
         """Save or update a conversation"""
         try:
@@ -211,16 +211,16 @@ class ChatPersistenceLayer:
                 return await self._save_conversation_postgresql(conversation)
             elif self.db_type == DatabaseType.MONGODB:
                 return await self._save_conversation_mongodb(conversation)
-                
+
         except Exception as e:
             logger.error(f"Error saving conversation: {e}")
             return False
-    
+
     async def _save_conversation_sqlite(self, conversation: ChatConversation) -> bool:
         """Save conversation to SQLite"""
         await self.connection.execute("""
-            INSERT OR REPLACE INTO conversations 
-            (conversation_id, notification_id, user_id, agent_id, status, 
+            INSERT OR REPLACE INTO conversations
+            (conversation_id, notification_id, user_id, agent_id, status,
              created_at, updated_at, metadata, summary)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
@@ -234,25 +234,25 @@ class ChatPersistenceLayer:
             json.dumps(conversation.metadata),
             conversation.summary
         ))
-        
+
         await self.connection.commit()
         return True
-    
+
     async def _save_conversation_postgresql(self, conversation: ChatConversation) -> bool:
         """Save conversation to PostgreSQL"""
         async with self._pg_pool.acquire() as conn:
             await conn.execute("""
-                INSERT INTO conversations 
+                INSERT INTO conversations
                 (conversation_id, notification_id, user_id, agent_id, status,
                  created_at, updated_at, metadata, summary)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-                ON CONFLICT (conversation_id) 
+                ON CONFLICT (conversation_id)
                 DO UPDATE SET
                     status = EXCLUDED.status,
                     updated_at = EXCLUDED.updated_at,
                     metadata = EXCLUDED.metadata,
                     summary = EXCLUDED.summary
-            """, 
+            """,
                 conversation.conversation_id,
                 conversation.notification_id,
                 conversation.user_id,
@@ -264,19 +264,19 @@ class ChatPersistenceLayer:
                 conversation.summary
             )
         return True
-    
+
     async def _save_conversation_mongodb(self, conversation: ChatConversation) -> bool:
         """Save conversation to MongoDB"""
         doc = asdict(conversation)
         doc['_id'] = conversation.conversation_id
-        
+
         await self.db.conversations.replace_one(
             {'_id': doc['_id']},
             doc,
             upsert=True
         )
         return True
-    
+
     async def save_message(self, message: ChatMessage) -> bool:
         """Save a chat message"""
         try:
@@ -286,19 +286,19 @@ class ChatPersistenceLayer:
                 return await self._save_message_postgresql(message)
             elif self.db_type == DatabaseType.MONGODB:
                 return await self._save_message_mongodb(message)
-                
+
         except Exception as e:
             logger.error(f"Error saving message: {e}")
             return False
-    
+
     async def _save_message_sqlite(self, message: ChatMessage) -> bool:
         """Save message to SQLite"""
         embedding_bytes = None
         if message.embedding:
             embedding_bytes = json.dumps(message.embedding).encode()
-            
+
         await self.connection.execute("""
-            INSERT INTO messages 
+            INSERT INTO messages
             (message_id, conversation_id, sender, recipient, message,
              timestamp, metadata, embedding)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -312,24 +312,24 @@ class ChatPersistenceLayer:
             json.dumps(message.metadata),
             embedding_bytes
         ))
-        
+
         # Update conversation timestamp
         await self.connection.execute("""
-            UPDATE conversations 
-            SET updated_at = ? 
+            UPDATE conversations
+            SET updated_at = ?
             WHERE conversation_id = ?
         """, (message.timestamp.isoformat(), message.conversation_id))
-        
+
         await self.connection.commit()
         return True
-    
+
     async def _save_message_postgresql(self, message: ChatMessage) -> bool:
         """Save message to PostgreSQL"""
         async with self._pg_pool.acquire() as conn:
             # Use transaction for atomicity
             async with conn.transaction():
                 await conn.execute("""
-                    INSERT INTO messages 
+                    INSERT INTO messages
                     (message_id, conversation_id, sender, recipient, message,
                      timestamp, metadata, embedding)
                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -343,32 +343,32 @@ class ChatPersistenceLayer:
                     json.dumps(message.metadata),
                     message.embedding
                 )
-                
+
                 # Update conversation
                 await conn.execute("""
-                    UPDATE conversations 
-                    SET updated_at = $1 
+                    UPDATE conversations
+                    SET updated_at = $1
                     WHERE conversation_id = $2
                 """, message.timestamp, message.conversation_id)
-                
+
         return True
-    
+
     async def _save_message_mongodb(self, message: ChatMessage) -> bool:
         """Save message to MongoDB"""
         doc = asdict(message)
         doc['_id'] = message.message_id
-        
+
         # Insert message
         await self.db.messages.insert_one(doc)
-        
+
         # Update conversation
         await self.db.conversations.update_one(
             {'_id': message.conversation_id},
             {'$set': {'updated_at': message.timestamp}}
         )
-        
+
         return True
-    
+
     async def get_conversation(self, conversation_id: str) -> Optional[ChatConversation]:
         """Retrieve a conversation by ID"""
         try:
@@ -378,14 +378,14 @@ class ChatPersistenceLayer:
                 return await self._get_conversation_postgresql(conversation_id)
             elif self.db_type == DatabaseType.MONGODB:
                 return await self._get_conversation_mongodb(conversation_id)
-                
+
         except Exception as e:
             logger.error(f"Error retrieving conversation: {e}")
             return None
-    
+
     async def get_messages(
-        self, 
-        conversation_id: str, 
+        self,
+        conversation_id: str,
         limit: int = 50,
         offset: int = 0
     ) -> List[ChatMessage]:
@@ -397,13 +397,13 @@ class ChatPersistenceLayer:
                 return await self._get_messages_postgresql(conversation_id, limit, offset)
             elif self.db_type == DatabaseType.MONGODB:
                 return await self._get_messages_mongodb(conversation_id, limit, offset)
-                
+
         except Exception as e:
             logger.error(f"Error retrieving messages: {e}")
             return []
-    
+
     async def search_messages(
-        self, 
+        self,
         query: str,
         user_id: Optional[str] = None,
         limit: int = 20
@@ -416,11 +416,11 @@ class ChatPersistenceLayer:
                 return await self._search_messages_postgresql(query, user_id, limit)
             elif self.db_type == DatabaseType.MONGODB:
                 return await self._search_messages_mongodb(query, user_id, limit)
-                
+
         except Exception as e:
             logger.error(f"Error searching messages: {e}")
             return []
-    
+
     async def get_user_conversations(
         self,
         user_id: str,
@@ -431,46 +431,46 @@ class ChatPersistenceLayer:
         try:
             if self.db_type == DatabaseType.SQLITE:
                 query = """
-                    SELECT * FROM conversations 
+                    SELECT * FROM conversations
                     WHERE user_id = ?
                 """
                 params = [user_id]
-                
+
                 if status:
                     query += " AND status = ?"
                     params.append(status)
-                    
+
                 query += " ORDER BY updated_at DESC LIMIT ?"
                 params.append(limit)
-                
+
                 cursor = await self.connection.execute(query, params)
                 rows = await cursor.fetchall()
-                
+
                 return [self._row_to_conversation(row) for row in rows]
-                
+
         except Exception as e:
             logger.error(f"Error getting user conversations: {e}")
             return []
-    
+
     async def archive_old_conversations(self, days: int = 30) -> int:
         """Archive conversations older than specified days"""
         cutoff_date = datetime.utcnow() - timedelta(days=days)
-        
+
         try:
             if self.db_type == DatabaseType.SQLITE:
                 cursor = await self.connection.execute("""
-                    UPDATE conversations 
-                    SET status = 'archived' 
+                    UPDATE conversations
+                    SET status = 'archived'
                     WHERE updated_at < ? AND status != 'archived'
                 """, (cutoff_date.isoformat(),))
-                
+
                 await self.connection.commit()
                 return cursor.rowcount
-                
+
         except Exception as e:
             logger.error(f"Error archiving conversations: {e}")
             return 0
-    
+
     def _row_to_conversation(self, row) -> ChatConversation:
         """Convert database row to ChatConversation object"""
         return ChatConversation(
@@ -484,7 +484,7 @@ class ChatPersistenceLayer:
             metadata=json.loads(row[7]) if row[7] else {},
             summary=row[8]
         )
-    
+
     def _row_to_message(self, row) -> ChatMessage:
         """Convert database row to ChatMessage object"""
         embedding = None
@@ -493,7 +493,7 @@ class ChatPersistenceLayer:
                 embedding = json.loads(row[7].decode())
             else:
                 embedding = row[7]
-                
+
         return ChatMessage(
             message_id=row[0],
             conversation_id=row[1],
@@ -504,7 +504,7 @@ class ChatPersistenceLayer:
             metadata=json.loads(row[6]) if row[6] else {},
             embedding=embedding
         )
-    
+
     async def close(self):
         """Close database connections"""
         if self.db_type == DatabaseType.SQLITE and self.connection:
@@ -521,7 +521,7 @@ def create_chat_persistence(
     connection_string: Optional[str] = None
 ) -> ChatPersistenceLayer:
     """Create chat persistence layer with specified database"""
-    
+
     if not connection_string:
         # Default connection strings
         defaults = {
@@ -530,7 +530,7 @@ def create_chat_persistence(
             "mongodb": "mongodb://localhost:27017/a2a_chat"
         }
         connection_string = defaults.get(db_type, "chat_history.db")
-    
+
     return ChatPersistenceLayer(
         DatabaseType(db_type),
         connection_string

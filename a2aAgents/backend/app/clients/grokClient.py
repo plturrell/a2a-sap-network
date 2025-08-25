@@ -24,7 +24,7 @@ try:
     aiq_path = Path(__file__).parent.parent.parent.parent.parent.parent / "coverage" / "src"
     if str(aiq_path) not in sys.path:
         sys.path.insert(0, str(aiq_path))
-    
+
     from aiq.llm.sap_ai_core import LLMService, ExecutionMode, Message
     SAP_AI_CORE_AVAILABLE = True
     logger.info("SAP AI Core SDK integration enabled for GrokClient")
@@ -55,7 +55,7 @@ class GrokConfig:
 
 class GrokClient:
     """Production-ready Grok API client for A2A agents"""
-    
+
     def __init__(self, config: Optional[GrokConfig] = None):
         """Initialize Grok client with configuration"""
         if config is None:
@@ -65,7 +65,7 @@ class GrokClient:
                 model=os.getenv('GROK_MODEL') or os.getenv('XAI_MODEL', 'grok-4-latest'),
                 timeout=int(os.getenv('GROK_TIMEOUT') or os.getenv('XAI_TIMEOUT', '30'))
             )
-        
+
         if not config.api_key or config.api_key in ['', 'your-api-key-here']:
             # Allow missing keys in development - they will fail gracefully
             logger.warning("Grok API key not configured - using mock mode")
@@ -73,15 +73,15 @@ class GrokClient:
             self.mock_mode = True
         else:
             self.mock_mode = False
-        
+
         self.config = config
         self.headers = {
             "Authorization": f"Bearer {config.api_key}",
             "Content-Type": "application/json"
         }
-        
+
         logger.info(f"Grok client initialized with model: {config.model}")
-    
+
     def chat_completion(
         self,
         messages: List[Dict[str, str]],
@@ -99,7 +99,7 @@ class GrokClient:
                 finish_reason="stop",
                 raw_response={"mock": True}
             )
-            
+
         try:
             payload = {
                 "model": self.config.model,
@@ -107,10 +107,10 @@ class GrokClient:
                 "temperature": temperature,
                 **kwargs
             }
-            
+
             if max_tokens:
                 payload["max_tokens"] = max_tokens
-            
+
             # Secure HTTP client configuration
             with httpx.Client(
                 timeout=self.config.timeout,
@@ -123,10 +123,10 @@ class GrokClient:
                     headers=self.headers,
                     json=payload
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
-                    
+
                     return GrokResponse(
                         content=data['choices'][0]['message']['content'],
                         model=data['model'],
@@ -140,11 +140,11 @@ class GrokClient:
                     )
                 else:
                     raise Exception(f"HTTP {response.status_code}: {response.text}")
-        
+
         except Exception as e:
             logger.error(f"Grok chat completion error: {e}")
             raise
-    
+
     async def async_chat_completion(
         self,
         messages: List[Dict[str, str]],
@@ -162,7 +162,7 @@ class GrokClient:
                 finish_reason="stop",
                 raw_response={"mock": True}
             )
-            
+
         try:
             payload = {
                 "model": self.config.model,
@@ -170,10 +170,10 @@ class GrokClient:
                 "temperature": temperature,
                 **kwargs
             }
-            
+
             if max_tokens:
                 payload["max_tokens"] = max_tokens
-            
+
             # Secure async HTTP client configuration
             async with httpx.AsyncClient(
                 timeout=self.config.timeout,
@@ -186,10 +186,10 @@ class GrokClient:
                     headers=self.headers,
                     json=payload
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
-                    
+
                     return GrokResponse(
                         content=data['choices'][0]['message']['content'],
                         model=data['model'],
@@ -203,11 +203,11 @@ class GrokClient:
                     )
                 else:
                     raise Exception(f"HTTP {response.status_code}: {response.text}")
-        
+
         except Exception as e:
             logger.error(f"Grok async chat completion error: {e}")
             raise
-    
+
     async def stream_completion(
         self,
         messages: List[Dict[str, str]],
@@ -224,10 +224,10 @@ class GrokClient:
                 "stream": True,
                 **kwargs
             }
-            
+
             if max_tokens:
                 payload["max_tokens"] = max_tokens
-            
+
             # Secure streaming HTTP client configuration
             async with httpx.AsyncClient(
                 timeout=self.config.timeout,
@@ -246,38 +246,38 @@ class GrokClient:
                             line = line.strip()
                             if not line:
                                 continue
-                                
+
                             if line.startswith("data: "):
                                 data = line[6:].strip()  # Remove "data: " prefix and strip whitespace
-                                
+
                                 if data == "[DONE]":
                                     break
-                                    
+
                                 if not data:  # Skip empty data
                                     continue
-                                    
+
                                 try:
                                     chunk_data = json.loads(data)
                                     choices = chunk_data.get('choices', [])
-                                    
+
                                     if choices and len(choices) > 0:
                                         delta = choices[0].get('delta', {})
                                         content = delta.get('content')
-                                        
+
                                         if content is not None:  # Allow empty strings but not None
                                             yield content
-                                            
+
                                 except json.JSONDecodeError as e:
                                     logger.debug(f"Failed to parse JSON: {data[:100]}... Error: {e}")
                                     continue
                     else:
                         error_text = await response.aread() if hasattr(response, 'aread') else response.text
                         raise Exception(f"HTTP {response.status_code}: {error_text}")
-        
+
         except Exception as e:
             logger.error(f"Grok streaming error: {e}")
             raise
-    
+
     def analyze_financial_data(self, data: str, context: str = "") -> GrokResponse:
         """Specialized method for financial data analysis"""
         messages = [
@@ -290,9 +290,9 @@ class GrokClient:
                 "content": f"Context: {context}\n\nAnalyze this financial data:\n{data}"
             }
         ]
-        
+
         return self.chat_completion(messages, temperature=0.3)
-    
+
     async def generate_financial_insights(
         self,
         data: Dict[str, Any],
@@ -309,13 +309,13 @@ class GrokClient:
                 "content": f"Generate financial insights from this data:\n{data}"
             }
         ]
-        
+
         return await self.chat_completion_async(messages, temperature=0.4)
-    
+
     def validate_financial_entities(self, entities: List[str]) -> GrokResponse:
         """Validate financial entities and suggest corrections"""
         entities_text = "\n".join([f"- {entity}" for entity in entities])
-        
+
         messages = [
             {
                 "role": "system",
@@ -326,9 +326,9 @@ class GrokClient:
                 "content": f"Validate these financial entities:\n{entities_text}"
             }
         ]
-        
+
         return self.chat_completion(messages, temperature=0.1)
-    
+
     async def process_a2a_request(
         self,
         request_type: str,
@@ -339,20 +339,20 @@ class GrokClient:
         system_prompt = f"""You are an AI assistant integrated into an A2A (Agent-to-Agent) financial system.
         Request Type: {request_type}
         Context: {context or 'No additional context'}
-        
+
         Provide structured, actionable responses that other A2A agents can process."""
-        
+
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"Process this A2A request:\n{data}"}
         ]
-        
+
         return await self.async_chat_completion(messages, temperature=0.5)
-    
+
     def health_check(self) -> Dict[str, Any]:
         """Health check for the Grok client"""
         import time
-        
+
         try:
             start_time = time.time()
             response = self.chat_completion(
@@ -362,20 +362,20 @@ class GrokClient:
             )
             end_time = time.time()
             response_time = round(end_time - start_time, 3)
-            
+
             return {
                 "status": "healthy",
                 "model": self.config.model,
                 "response_time_seconds": response_time,
                 "response": response.content.strip()
             }
-        
+
         except Exception as e:
             return {
                 "status": "unhealthy",
                 "error": str(e)
             }
-    
+
     async def close(self):
         """Close client connections"""
         if hasattr(self.async_client, 'close'):
@@ -395,7 +395,7 @@ _grok_client_instance: Optional[GrokClient] = None
 def get_grok_client() -> GrokClient:
     """Get singleton Grok client instance"""
     global _grok_client_instance
-    
+
     if _grok_client_instance is None:
         try:
             _grok_client_instance = create_grok_client()
@@ -407,5 +407,5 @@ def get_grok_client() -> GrokClient:
                 base_url="https://api.x.ai/v1",
                 model="grok-mock"
             ))
-    
+
     return _grok_client_instance

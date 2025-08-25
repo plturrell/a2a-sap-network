@@ -23,52 +23,52 @@ from ..sdk.agentBase import A2AAgentBase
 
 class SecureAgentConfig(BaseModel):
     """Configuration for secure agent"""
-    
+
     # Agent identification
     agent_id: str
     agent_name: str
     agent_version: str = "1.0.0"
     description: str = ""
     base_url: str = "http://localhost:4004"
-    
+
     # Security settings
     enable_authentication: bool = True
     enable_rate_limiting: bool = True
     enable_input_validation: bool = True
     max_request_size: int = 1024 * 1024  # 1MB
-    
+
     # Rate limiting
     rate_limit_requests: int = 100
     rate_limit_window: int = 60
-    
+
     # Allowed operations
     allowed_operations: Set[str] = Field(default_factory=set)
-    
+
     # API keys (loaded from environment)
     api_keys: Dict[str, str] = Field(default_factory=dict)
-    
+
     @validator('api_keys', pre=True, always=True)
     def load_api_keys(cls, v, values):
         """Load API keys from environment variables"""
         if not v:
             v = {}
-        
+
         # Load common API keys from environment
         api_key_env_vars = [
             'GROK_API_KEY',
-            'OPENAI_API_KEY', 
+            'OPENAI_API_KEY',
             'ANTHROPIC_API_KEY',
             'PERPLEXITY_API_KEY',
             'XAI_API_KEY'
         ]
-        
+
         for env_var in api_key_env_vars:
             if os.getenv(env_var):
                 # Store without exposing in config
                 v[env_var] = os.getenv(env_var)
-        
+
         return v
-    
+
     class Config:
         # Prevent API keys from being serialized
         fields = {
@@ -81,7 +81,7 @@ class SecureA2AAgent(A2AAgentBase):
     Security-hardened base class for A2A agents
     Provides authentication, rate limiting, input validation, and secure logging
     """
-    
+
     def __init__(self, config: SecureAgentConfig):
         """Initialize secure agent with security middleware"""
         # Initialize parent SDK
@@ -93,12 +93,12 @@ class SecureA2AAgent(A2AAgentBase):
             capabilities=list(config.allowed_operations),
             version=config.agent_version
         )
-        
+
         self.config = config
-        
+
         # Initialize secure logger
         self.logger = get_secure_logger(f"a2a.agents.{config.agent_id}")
-        
+
         # Initialize security middleware
         security_config = SecurityConfig(
             auth_enabled=config.enable_authentication,
@@ -108,13 +108,13 @@ class SecureA2AAgent(A2AAgentBase):
             max_payload_size=config.max_request_size
         )
         self.security = SecurityMiddleware(security_config)
-        
+
         # Input validator
         self.validator = InputValidator()
-        
+
         # Track active operations for cleanup
         self._active_operations: Set[asyncio.Task] = set()
-        
+
         self.logger.info(
             f"Secure agent initialized",
             extra={
@@ -126,7 +126,7 @@ class SecureA2AAgent(A2AAgentBase):
                 }
             }
         )
-    
+
     def secure_handler(self, operation: str, auth_required: bool = True):
         """
         Decorator for secure message handlers
@@ -145,7 +145,7 @@ class SecureA2AAgent(A2AAgentBase):
                         status_code=403,
                         detail=f"Operation '{operation}' not allowed for this agent"
                     )
-                
+
                 # 2. Validate message structure
                 try:
                     self._validate_message(message)
@@ -158,7 +158,7 @@ class SecureA2AAgent(A2AAgentBase):
                         status_code=400,
                         detail=f"Invalid message: {str(e)}"
                     )
-                
+
                 # 3. Extract and validate input data
                 data = {}
                 if message.parts:
@@ -167,7 +167,7 @@ class SecureA2AAgent(A2AAgentBase):
                         data = self._validate_input_data(raw_data, operation)
                     else:
                         data = raw_data
-                
+
                 # 4. Check rate limiting
                 if self.config.enable_rate_limiting:
                     client_id = f"{message.sender_id}:{operation}"
@@ -180,7 +180,7 @@ class SecureA2AAgent(A2AAgentBase):
                             "status": "error",
                             "error": "Rate limit exceeded. Please try again later."
                         }
-                
+
                 # 5. Log operation (securely)
                 self.logger.info(
                     f"Processing secure operation",
@@ -191,21 +191,21 @@ class SecureA2AAgent(A2AAgentBase):
                         "data_size": len(str(data))
                     }
                 )
-                
+
                 # 6. Execute handler with timeout
                 try:
                     # Create task for tracking
                     task = asyncio.create_task(func(self, message, context_id, data))
                     self._active_operations.add(task)
-                    
+
                     # Execute with timeout
                     result = await asyncio.wait_for(task, timeout=300)  # 5 minute timeout
-                    
+
                     # Clean up
                     self._active_operations.discard(task)
-                    
+
                     return result
-                    
+
                 except asyncio.TimeoutError:
                     self.logger.error(
                         f"Operation timeout",
@@ -228,33 +228,33 @@ class SecureA2AAgent(A2AAgentBase):
                         "status": "error",
                         "error": f"Operation failed: {str(e)}"
                     }
-            
+
             # Store handler for later registration
             if not hasattr(self, '_handlers'):
                 self._handlers = {}
             self._handlers[operation] = wrapper
             return wrapper
-        
+
         return decorator
-    
+
     def _validate_message(self, message: A2AMessage) -> None:
         """Validate A2A message structure"""
         if not message.sender_id:
             raise ValueError("Message must have sender_id")
-        
+
         if not message.parts:
             raise ValueError("Message must have at least one part")
-        
+
         # Validate message parts
         for part in message.parts:
             if part.content:
                 # Validate content length
                 if len(part.content) > self.config.max_request_size:
                     raise ValueError(f"Message content exceeds maximum size")
-                
+
                 # Check for script injection in content
                 self.validator.validate_no_scripts(part.content, "message content")
-    
+
     def _validate_input_data(self, data: Any, operation: str) -> Any:
         """Validate input data based on operation"""
         # Define validation schemas per operation
@@ -272,20 +272,20 @@ class SecureA2AAgent(A2AAgentBase):
                 "format": {"type": "string", "max_length": 20, "required": False}
             }
         }
-        
+
         # Get schema for operation
         schema = validation_schemas.get(operation, {})
-        
+
         # Validate against schema
         if isinstance(data, dict):
             validated = {}
             for field, rules in schema.items():
                 value = data.get(field)
-                
+
                 # Check required fields
                 if rules.get("required") and value is None:
                     raise ValueError(f"Required field '{field}' is missing")
-                
+
                 if value is not None:
                     # Validate type
                     field_type = rules.get("type")
@@ -295,21 +295,21 @@ class SecureA2AAgent(A2AAgentBase):
                         )
                     elif field_type == "dict" and not isinstance(value, dict):
                         raise ValueError(f"Field '{field}' must be a dictionary")
-                    
+
                     validated[field] = value
-            
+
             # Include any additional fields not in schema (after validation)
             for key, value in data.items():
                 if key not in validated:
                     if isinstance(value, str):
                         value = self.validator.validate_string(value, key)
                     validated[key] = value
-            
+
             return validated
         else:
             # For non-dict data, apply basic validation
             return self.security.validate_request_data(data)
-    
+
     def get_api_key(self, service: str) -> Optional[str]:
         """Securely retrieve API key for external service"""
         # Map service names to environment variable names
@@ -320,13 +320,13 @@ class SecureA2AAgent(A2AAgentBase):
             'perplexity': 'PERPLEXITY_API_KEY',
             'xai': 'XAI_API_KEY'
         }
-        
+
         env_var = service_map.get(service.lower())
         if env_var:
             return self.config.api_keys.get(env_var)
-        
+
         return None
-    
+
     async def make_external_request(self, service: str, endpoint: str, data: Any) -> Dict[str, Any]:
         """
         Make secure external API request through A2A protocol
@@ -336,9 +336,9 @@ class SecureA2AAgent(A2AAgentBase):
         api_key = self.get_api_key(service)
         if not api_key:
             raise ValueError(f"No API key configured for service: {service}")
-        
+
         # A2A protocol compliance: External requests should be logged for audit
-        
+
         # Log external request (without exposing API key)
         self.logger.info(
             f"External API request",
@@ -348,26 +348,26 @@ class SecureA2AAgent(A2AAgentBase):
                 "data_size": len(str(data))
             }
         )
-        
+
         # Route through A2A protocol (not direct HTTP)
         # This is a placeholder - implement according to your A2A protocol
         return {"status": "success", "data": {}}
-    
+
     async def shutdown(self) -> None:
         """Clean shutdown of agent"""
         self.logger.info(f"Shutting down secure agent: {self.config.agent_id}")
-        
+
         # Cancel any active operations
         for task in self._active_operations:
             task.cancel()
-        
+
         # Wait for operations to complete
         if self._active_operations:
             await asyncio.gather(*self._active_operations, return_exceptions=True)
-        
+
         # Call parent shutdown
         await super().shutdown()
-    
+
     def create_secure_response(self, data: Any, status: str = "success") -> Dict[str, Any]:
         """Create a secure response with proper structure"""
         response = {
@@ -376,12 +376,12 @@ class SecureA2AAgent(A2AAgentBase):
             "agent_id": self.config.agent_id,
             "version": self.config.agent_version
         }
-        
+
         if status == "success":
             response["data"] = data
         else:
             response["error"] = data
-        
+
         return response
 
 
@@ -398,11 +398,11 @@ def convert_to_secure_agent(agent_class):
                 agent_name=kwargs.get('agent_name', 'Unknown Agent'),
                 allowed_operations=kwargs.get('allowed_operations', set())
             )
-            
+
             # Initialize secure base
             SecureA2AAgent.__init__(self, config)
-            
+
             # Initialize original agent
             agent_class.__init__(self, *args, **kwargs)
-    
+
     return SecureAgent

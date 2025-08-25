@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 async def test_reasoning_without_agents():
     """Test that reasoning fails properly when agents are missing"""
     logger.info("=== Testing Reasoning Agent without dependencies ===")
-    
+
     try:
         # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
         async with httpx.AsyncClient() as client:
@@ -45,7 +45,7 @@ async def test_reasoning_without_agents():
                     }
                 }
             )
-            
+
             if response.status_code == 200:
                 result = response.json()
                 # This should have failed if agents are missing
@@ -54,7 +54,7 @@ async def test_reasoning_without_agents():
             else:
                 logger.info("✅ Reasoning properly failed when agents unavailable")
                 return True
-                
+
     except Exception as e:
         logger.info(f"✅ Reasoning properly failed with error: {e}")
         return True
@@ -63,7 +63,7 @@ async def test_reasoning_without_agents():
 async def test_qa_agent_without_reasoning():
     """Test that QA agent fails properly when reasoning agent is missing"""
     logger.info("\n=== Testing QA Agent without Reasoning Agent ===")
-    
+
     try:
         # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
         async with httpx.AsyncClient() as client:
@@ -83,7 +83,7 @@ async def test_qa_agent_without_reasoning():
                     }
                 }
             )
-            
+
             if response.status_code == 200:
                 result = response.json()
                 # Check if it used reasoning or fell back
@@ -92,7 +92,7 @@ async def test_qa_agent_without_reasoning():
             else:
                 logger.info("✅ QA Agent properly failed when reasoning unavailable")
                 return True
-                
+
     except Exception as e:
         logger.info(f"✅ QA Agent properly failed with error: {e}")
         return True
@@ -101,12 +101,12 @@ async def test_qa_agent_without_reasoning():
 async def test_initialization_failures():
     """Test that agents fail to initialize without dependencies"""
     logger.info("\n=== Testing Agent Initialization Failures ===")
-    
+
     agents_to_test = [
         ("Reasoning Agent", "http://localhost:8008/health"),
         ("QA Validation Agent", "http://localhost:8007/health")
     ]
-    
+
     results = []
     # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
     # async with httpx.AsyncClient() as client:
@@ -124,19 +124,19 @@ async def test_initialization_failures():
             except Exception as e:
                 logger.info(f"✅ {name} not available: {e}")
                 results.append(True)
-    
+
     return all(results)
 
 
 async def test_no_mock_responses():
     """Test that no mock or simulated responses are returned"""
     logger.info("\n=== Testing for Mock Responses ===")
-    
+
     mock_indicators = [
         "mock", "Mock", "simulate", "Simulate", "dummy", "Dummy",
         "fallback", "Fallback", "internal", "Internal"
     ]
-    
+
     try:
         # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
         async with httpx.AsyncClient() as client:
@@ -154,22 +154,22 @@ async def test_no_mock_responses():
                         }
                     }
                 )
-                
+
                 if response.status_code == 200:
                     result_text = str(response.json())
                     for indicator in mock_indicators:
                         if indicator in result_text:
                             logger.error(f"❌ Found mock indicator '{indicator}' in response!")
                             return False
-                            
+
             except Exception as e:
                 # Expected to fail without dependencies
                 pass
-    
+
     except Exception as e:
         logger.info(f"✅ No mock responses detected")
         return True
-    
+
     logger.info("✅ No mock indicators found")
     return True
 
@@ -179,32 +179,32 @@ async def main():
     logger.info("🚀 Starting No-Fallback Tests")
     logger.info("These tests verify that NO fallbacks or mocks are used")
     logger.info("=" * 60)
-    
+
     all_passed = True
-    
+
     # Test 1: Reasoning without agents
     if not await test_reasoning_without_agents():
         all_passed = False
-    
+
     # Test 2: QA without reasoning
     if not await test_qa_agent_without_reasoning():
         all_passed = False
-    
+
     # Test 3: Initialization failures
     if not await test_initialization_failures():
         all_passed = False
-    
+
     # Test 4: No mock responses
     if not await test_no_mock_responses():
         all_passed = False
-    
+
     logger.info("\n" + "=" * 60)
     if all_passed:
         logger.info("✅ All no-fallback tests passed!")
         logger.info("The system properly fails when dependencies are missing")
     else:
         logger.error("❌ Some tests failed - fallbacks may still be present")
-    
+
     return all_passed
 
 

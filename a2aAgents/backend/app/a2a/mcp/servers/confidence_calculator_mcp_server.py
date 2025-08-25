@@ -53,25 +53,25 @@ except ImportError as e:
         def __init__(self, base_url, enable_monitoring=True):
             self.base_url = base_url
             self.enable_monitoring = enable_monitoring
-        
+
         def process_request(self, request):
             return f"Mock response from {'confidence_calculator'}"
-        
+
         def get_status(self):
             return {"status": "running", "service": "confidence_calculator"}
-    
+
     agent_class = MockAgent
 
 logger = logging.getLogger(__name__)
 
 class StandaloneConfidenceFactorsServer:
     """Standalone MCP server for confidence_calculator"""
-    
+
     def __init__(self):
         self.name = "mcp_confidence_calculator_server"
         self.version = "1.0.0"
         self.port = 8108
-        
+
         # Initialize the agent
         try:
             self.agent = agent_class(
@@ -86,16 +86,16 @@ class StandaloneConfidenceFactorsServer:
                 base_url=f"http://localhost:{self.port}",
                 enable_monitoring=True
             )
-        
+
         logger.info(f"Initialized {self.__class__.__name__} on port {self.port}")
-    
+
     async def handle_request(self, request):
         """Handle MCP request"""
         method = request.get("method", "unknown")
         params = request.get("params", {})
-        
+
         # Route to appropriate tool
-        
+
         if method == "calculate_reasoning_confidence_mcp":
             try:
                 if hasattr(self.agent, 'calculate_reasoning_confidence_mcp'):
@@ -111,7 +111,7 @@ class StandaloneConfidenceFactorsServer:
                 else:
                     return {"error": "Tool calculate_reasoning_confidence_mcp not found", "status": "error"}
             except Exception as e:
-                return {"error": f"Error executing calculate_reasoning_confidence_mcp: {str(e)}", "status": "error"}        
+                return {"error": f"Error executing calculate_reasoning_confidence_mcp: {str(e)}", "status": "error"}
         if method == "calculate_evidence_quality_mcp":
             try:
                 if hasattr(self.agent, 'calculate_evidence_quality_mcp'):
@@ -127,7 +127,7 @@ class StandaloneConfidenceFactorsServer:
                 else:
                     return {"error": "Tool calculate_evidence_quality_mcp not found", "status": "error"}
             except Exception as e:
-                return {"error": f"Error executing calculate_evidence_quality_mcp: {str(e)}", "status": "error"}        
+                return {"error": f"Error executing calculate_evidence_quality_mcp: {str(e)}", "status": "error"}
         if method == "calculate_semantic_alignment_mcp":
             try:
                 if hasattr(self.agent, 'calculate_semantic_alignment_mcp'):
@@ -143,7 +143,7 @@ class StandaloneConfidenceFactorsServer:
                 else:
                     return {"error": "Tool calculate_semantic_alignment_mcp not found", "status": "error"}
             except Exception as e:
-                return {"error": f"Error executing calculate_semantic_alignment_mcp: {str(e)}", "status": "error"}        
+                return {"error": f"Error executing calculate_semantic_alignment_mcp: {str(e)}", "status": "error"}
         if method == "adjust_confidence_for_uncertainty_mcp":
             try:
                 if hasattr(self.agent, 'adjust_confidence_for_uncertainty_mcp'):
@@ -159,7 +159,7 @@ class StandaloneConfidenceFactorsServer:
                 else:
                     return {"error": "Tool adjust_confidence_for_uncertainty_mcp not found", "status": "error"}
             except Exception as e:
-                return {"error": f"Error executing adjust_confidence_for_uncertainty_mcp: {str(e)}", "status": "error"}        
+                return {"error": f"Error executing adjust_confidence_for_uncertainty_mcp: {str(e)}", "status": "error"}
         if method == "calculate_fallback_confidence":
             try:
                 if hasattr(self.agent, 'calculate_fallback_confidence'):
@@ -175,7 +175,7 @@ class StandaloneConfidenceFactorsServer:
                 else:
                     return {"error": "Tool calculate_fallback_confidence not found", "status": "error"}
             except Exception as e:
-                return {"error": f"Error executing calculate_fallback_confidence: {str(e)}", "status": "error"}        
+                return {"error": f"Error executing calculate_fallback_confidence: {str(e)}", "status": "error"}
         if method == "mcp_confidence_calculator":
             try:
                 if hasattr(self.agent, 'mcp_confidence_calculator'):
@@ -192,10 +192,10 @@ class StandaloneConfidenceFactorsServer:
                     return {"error": "Tool mcp_confidence_calculator not found", "status": "error"}
             except Exception as e:
                 return {"error": f"Error executing mcp_confidence_calculator: {str(e)}", "status": "error"}
-        
+
         # Default fallback
         return {"error": f"Unknown method: {method}", "available_tools": [6], "status": "error"}
-    
+
     async def start_server(self):
         """Start the MCP server with production features"""
         try:
@@ -213,7 +213,7 @@ class StandaloneConfidenceFactorsServer:
 
 # A2A Protocol Compliance: All imports must be available
 # No fallback implementations allowed - the agent must have all required dependencies
-            
+
             class MCPHandler(BaseHTTPRequestHandler):
                 def do_GET(self):
                     if self.path == "/health":
@@ -230,12 +230,12 @@ class StandaloneConfidenceFactorsServer:
                     else:
                         self.send_response(404)
                         self.end_headers()
-            
+
             server = HTTPServer(('0.0.0.0', 8108), MCPHandler)
             print(f"Starting basic HTTP server for mcp_confidence_calculator_server on port 8108")
             server.serve_forever()
             return
-        
+
         app = FastAPI(
             title="mcp_confidence_calculator_server",
             description="Reasoning confidence calculation and assessment",
@@ -243,7 +243,7 @@ class StandaloneConfidenceFactorsServer:
             docs_url=None,  # Disable docs in production
             redoc_url=None  # Disable redoc in production
         )
-        
+
         # Add CORS middleware
         app.add_middleware(
             CORSMiddleware,
@@ -252,7 +252,7 @@ class StandaloneConfidenceFactorsServer:
             allow_methods=["GET", "POST"],
             allow_headers=["Authorization", "Content-Type", "X-API-Key"],
         )
-        
+
         # Global exception handler
         @app.exception_handler(Exception)
         async def global_exception_handler(request: Request, exc: Exception):
@@ -261,17 +261,17 @@ class StandaloneConfidenceFactorsServer:
                 status_code=500,
                 content={"error": "Internal server error", "status": "error"}
             )
-        
+
         # Graceful shutdown handler
         shutdown_event = asyncio.Event()
-        
+
         def signal_handler(signum, frame):
             logger.info(f"Received signal {signum}, shutting down...")
             shutdown_event.set()
-            
+
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)
-        
+
         @app.get("/health")
         async def health_check():
             return {
@@ -281,7 +281,7 @@ class StandaloneConfidenceFactorsServer:
                 "tools": 6,
                 "agent_type": type(self.agent).__name__
             }
-        
+
         @app.get("/info")
         async def service_info():
             return {
@@ -317,7 +317,7 @@ class StandaloneConfidenceFactorsServer:
                     }
                 ]
             }
-        
+
         @app.post("/mcp")
         async def handle_mcp_request(request: dict, auth_info: dict = None):
             """Handle authenticated MCP requests"""
@@ -325,13 +325,13 @@ class StandaloneConfidenceFactorsServer:
                 # Add auth context to request
                 if auth_info:
                     request['_auth'] = auth_info
-                    
+
                 result = await self.handle_request(request)
-                
+
                 # Add correlation ID if present
                 if '_correlation_id' in request:
                     result['_correlation_id'] = request['_correlation_id']
-                    
+
                 return result
             except Exception as e:
                 logger.error(f"Error handling MCP request: {e}")
@@ -340,21 +340,21 @@ class StandaloneConfidenceFactorsServer:
                     "status": "error",
                     "code": 500
                 }
-        
+
         # Startup event
         @app.on_event("startup")
         async def startup():
             logger.info(f"Starting mcp_confidence_calculator_server on port 8108")
             # Initialize connections, caches, etc.
-            
+
         # Shutdown event
         @app.on_event("shutdown")
         async def shutdown():
             logger.info(f"Shutting down mcp_confidence_calculator_server")
             # Clean up resources, close connections
-            
+
         print(f"🚀 Starting mcp_confidence_calculator_server on port 8108")
-        
+
         # Production server configuration
         config = uvicorn.Config(
             app=app,
@@ -366,14 +366,14 @@ class StandaloneConfidenceFactorsServer:
             server_header=False,  # Don't expose server info
             date_header=False,    # Don't expose date for security
         )
-        
+
         server = uvicorn.Server(config)
         await server.serve()
 
 async def main():
     """Main server entry point"""
     logging.basicConfig(level=logging.INFO)
-    
+
     try:
         server = StandaloneConfidenceFactorsServer()
         await server.start_server()

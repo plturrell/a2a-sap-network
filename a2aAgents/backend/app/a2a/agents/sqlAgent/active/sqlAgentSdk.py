@@ -21,7 +21,7 @@ from app.a2a.sdk.blockchainIntegration import BlockchainIntegrationMixin
 
 class SqlAgentSDK(A2AAgentBase, BlockchainIntegrationMixin, PerformanceMonitoringMixin):
     """SQL Agent SDK"""
-    
+
     def __init__(self, base_url: str):
         # Define blockchain capabilities for SQL agent
         blockchain_capabilities = [
@@ -34,7 +34,7 @@ class SqlAgentSDK(A2AAgentBase, BlockchainIntegrationMixin, PerformanceMonitorin
             "data_integrity",
             "performance_monitoring"
         ]
-        
+
         # Initialize A2AAgentBase with blockchain capabilities
         A2AAgentBase.__init__(
             self,
@@ -46,31 +46,31 @@ class SqlAgentSDK(A2AAgentBase, BlockchainIntegrationMixin, PerformanceMonitorin
             blockchain_capabilities=blockchain_capabilities,
             a2a_protocol_only=True  # Force A2A protocol compliance
         )
-        
+
         # Initialize blockchain integration
         BlockchainIntegrationMixin.__init__(self)
-        
+
         logger.info(f"Initialized {self.name} with A2A Protocol v0.2.9 compliance")
-    
+
     async def initialize(self) -> None:
         """Initialize agent with A2A protocol compliance"""
         logger.info("Initializing SQL Agent...")
         try:
             # Establish standard trust relationships FIRST
             await self.establish_standard_trust_relationships()
-            
+
             # Initialize blockchain integration
             try:
                 await self.initialize_blockchain()
                 logger.info("✅ Blockchain integration initialized for SQL Agent")
             except Exception as e:
                 logger.warning(f"⚠️ Blockchain initialization failed: {e}")
-            
+
             logger.info("SQL Agent initialized successfully with A2A protocol")
         except Exception as e:
             logger.error(f"SQL Agent initialization failed: {e}")
             raise
-    
+
     @a2a_handler("HEALTH_CHECK")
     async def handle_health_check(self, message: A2AMessage, context_id: str) -> Dict[str, Any]:
         """Handle A2A protocol health check messages"""

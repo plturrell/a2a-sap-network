@@ -52,16 +52,16 @@ from .agents.reasoningAgent.active.reasoningAgentSdk import ReasoningAgentSDK
 
 class A2ANetworkApplication:
     """Main A2A Network Application"""
-    
+
     def __init__(self):
         self.listener: Optional[A2ABlockchainListener] = None
         self.running = False
         self.handlers = []
-        
+
     async def initialize_agents(self) -> List:
         """Initialize all agent SDKs and handlers"""
         logger.info("Initializing A2A agents...")
-        
+
         # Initialize agent SDKs
         agent_sdks = {
             'agent0': DataProductRegistrationAgentSDK(
@@ -101,7 +101,7 @@ class A2ANetworkApplication:
                 agent_id="reasoning_agent"
             )
         }
-        
+
         # Create A2A handlers
         handlers = [
             create_agent0_a2a_handler(agent_sdks['agent0']),
@@ -115,14 +115,14 @@ class A2ANetworkApplication:
             create_catalog_manager_a2a_handler(agent_sdks['catalog_manager']),
             create_agent9Router_a2a_handler(agent_sdks['reasoning_agent'])
         ]
-        
+
         logger.info(f"Initialized {len(handlers)} A2A agent handlers")
         return handlers
-    
+
     async def start(self):
         """Start the A2A network application"""
         logger.info("Starting A2A Network Application...")
-        
+
         # Check required environment variables
         required_env = ['A2A_PRIVATE_KEY', 'A2A_MESSAGE_ROUTER_ADDRESS']
         missing = [var for var in required_env if not os.getenv(var)]
@@ -130,36 +130,36 @@ class A2ANetworkApplication:
             logger.error(f"Missing required environment variables: {missing}")
             logger.error("Please set up your environment using the setup script")
             sys.exit(1)
-        
+
         # Initialize agents
         self.handlers = await self.initialize_agents()
-        
+
         # Create blockchain listener
         self.listener = A2ABlockchainListener(self.handlers)
         await self.listener.start()
-        
+
         self.running = True
         logger.info("A2A Network Application started successfully")
         logger.info("Listening for blockchain messages...")
-        
+
         # Display status
         await self.display_status()
-    
+
     async def stop(self):
         """Stop the A2A network application"""
         logger.info("Stopping A2A Network Application...")
         self.running = False
-        
+
         if self.listener:
             await self.listener.stop()
-        
+
         logger.info("A2A Network Application stopped")
-    
+
     async def display_status(self):
         """Display application status"""
         if self.listener:
             status = await self.listener.get_status()
-            
+
             print("\n" + "="*60)
             print("A2A NETWORK STATUS")
             print("="*60)
@@ -172,11 +172,11 @@ class A2ANetworkApplication:
             print("All agent communication now goes through blockchain messaging")
             print("No REST endpoints are exposed - full A2A protocol compliance")
             print("="*60 + "\n")
-    
+
     async def run(self):
         """Main application loop"""
         await self.start()
-        
+
         # Run event listening loop
         try:
             await self.listener.listen()
@@ -194,7 +194,7 @@ def setup_signal_handlers(app: A2ANetworkApplication):
         logger.info(f"Received signal {sig}")
         asyncio.create_task(app.stop())
         sys.exit(0)
-    
+
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
@@ -211,13 +211,13 @@ async def main():
     ║  HTTP Endpoints: DISABLED                                 ║
     ╚═══════════════════════════════════════════════════════════╝
     """)
-    
+
     # Create application
     app = A2ANetworkApplication()
-    
+
     # Setup signal handlers
     setup_signal_handlers(app)
-    
+
     # Run application
     await app.run()
 
@@ -227,7 +227,7 @@ if __name__ == "__main__":
     if sys.version_info < (3, 7):
         print("Python 3.7+ is required")
         sys.exit(1)
-    
+
     # Run the application
     asyncio.run(main())
 

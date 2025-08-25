@@ -32,15 +32,15 @@ templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
-    
+
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
-    
+
     def disconnect(self, websocket: WebSocket):
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
-    
+
     async def send_to_all(self, message: dict):
         for connection in self.active_connections.copy():
             try:
@@ -84,7 +84,7 @@ async def get_agents():
                 "status": "error",
                 "error": str(e)
             })
-    
+
     return {"agents": agents}
 
 
@@ -97,11 +97,11 @@ async def get_agent_metrics(agent_id: str, hours: int = 1):
             status_code=404,
             content={"error": f"Agent {agent_id} not found"}
         )
-    
+
     try:
         current_metrics = monitor.get_current_metrics()
         history = monitor.get_metrics_history(hours=hours)
-        
+
         return {
             "agent_id": agent_id,
             "current": current_metrics.to_dict(),
@@ -131,7 +131,7 @@ async def get_agent_recommendations(agent_id: str):
             status_code=404,
             content={"error": f"Agent {agent_id} not found"}
         )
-    
+
     # Get recommendations from the agent if it has the optimization mixin
     try:
         # This would need to be implemented in the performance monitor
@@ -165,22 +165,22 @@ async def get_system_overview():
         total_memory = 0
         total_requests = 0
         total_errors = 0
-        
+
         for monitor in _performance_monitors.values():
             try:
                 metrics = monitor.get_current_metrics()
                 total_cpu += metrics.cpu_usage
                 total_memory += metrics.memory_usage
                 total_requests += metrics.request_count
-                
+
                 if metrics.error_rate < 0.05:  # Less than 5% error rate
                     healthy_agents += 1
-                
+
                 total_errors += int(metrics.request_count * metrics.error_rate)
-                
+
             except Exception as e:
                 logger.error(f"Error getting metrics for system overview: {e}")
-        
+
         return {
             "system": {
                 "total_agents": total_agents,
@@ -205,16 +205,16 @@ async def get_system_overview():
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint for real-time updates"""
     await manager.connect(websocket)
-    
+
     try:
         while True:
             # Send real-time updates every 5 seconds
             await asyncio.sleep(5)
-            
+
             # Get current system status
             agents_data = await get_agents()
             system_data = await get_system_overview()
-            
+
             update_message = {
                 "type": "system_update",
                 "timestamp": datetime.utcnow().isoformat(),
@@ -223,9 +223,9 @@ async def websocket_endpoint(websocket: WebSocket):
                     "system": system_data["system"]
                 }
             }
-            
+
             await websocket.send_json(update_message)
-            
+
     except WebSocketDisconnect:
         manager.disconnect(websocket)
     except Exception as e:
@@ -242,7 +242,7 @@ async def optimize_agent(agent_id: str):
             status_code=404,
             content={"error": f"Agent {agent_id} not found"}
         )
-    
+
     try:
         # This would trigger optimization if the agent has the optimization mixin
         # For now, return a success message
@@ -263,12 +263,12 @@ async def periodic_updates():
     while True:
         try:
             await asyncio.sleep(10)  # Update every 10 seconds
-            
+
             if manager.active_connections:
                 # Get latest data
                 agents_data = await get_agents()
                 system_data = await get_system_overview()
-                
+
                 update_message = {
                     "type": "periodic_update",
                     "timestamp": datetime.utcnow().isoformat(),
@@ -277,9 +277,9 @@ async def periodic_updates():
                         "system": system_data["system"]
                     }
                 }
-                
+
                 await manager.send_to_all(update_message)
-                
+
         except Exception as e:
             logger.error(f"Error in periodic updates: {e}")
             await asyncio.sleep(10)
@@ -407,45 +407,45 @@ DASHBOARD_HTML = """
 </head>
 <body>
     <div class="connection-status" id="connectionStatus">Connecting...</div>
-    
+
     <div class="dashboard">
         <div class="header">
             <h1>A2A Performance Dashboard</h1>
             <p>Real-time monitoring of A2A agent performance</p>
         </div>
-        
+
         <div class="stats-grid" id="systemStats">
             <!-- System stats will be populated here -->
         </div>
-        
+
         <div class="agent-grid" id="agentGrid">
             <!-- Agent cards will be populated here -->
         </div>
-        
+
         <div class="last-updated" id="lastUpdated"></div>
     </div>
-    
+
     <script>
         let ws;
         let isConnected = false;
-        
+
         function connect() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsUrl = `${protocol}//${window.location.host}/ws`;
-            
+
             ws = new BlockchainEventClient(wsUrl);
-            
+
             ws.onopen = function() {
                 isConnected = true;
                 updateConnectionStatus();
                 console.log('Connected to dashboard');
             };
-            
+
             ws.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 updateDashboard(data);
             };
-            
+
             ws.onclose = function() {
                 isConnected = false;
                 updateConnectionStatus();
@@ -453,12 +453,12 @@ DASHBOARD_HTML = """
                 // Reconnect after 5 seconds
                 setTimeout(connect, 5000);
             };
-            
+
             ws.onerror = function(error) {
                 console.error('WebSocket error:', error);
             };
         }
-        
+
         function updateConnectionStatus() {
             const status = document.getElementById('connectionStatus');
             if (isConnected) {
@@ -469,17 +469,17 @@ DASHBOARD_HTML = """
                 status.className = 'connection-status disconnected';
             }
         }
-        
+
         function updateDashboard(message) {
             if (message.data) {
                 updateSystemStats(message.data.system);
                 updateAgents(message.data.agents);
-                
-                document.getElementById('lastUpdated').textContent = 
+
+                document.getElementById('lastUpdated').textContent =
                     `Last updated: ${new Date(message.timestamp).toLocaleString()}`;
             }
         }
-        
+
         function updateSystemStats(system) {
             const statsGrid = document.getElementById('systemStats');
             statsGrid.innerHTML = `
@@ -509,7 +509,7 @@ DASHBOARD_HTML = """
                 </div>
             `;
         }
-        
+
         function updateAgents(agents) {
             const agentGrid = document.getElementById('agentGrid');
             agentGrid.innerHTML = agents.map(agent => {
@@ -527,7 +527,7 @@ DASHBOARD_HTML = """
                         </div>
                     `;
                 }
-                
+
                 return `
                     <div class="agent-card">
                         <div class="agent-header">
@@ -558,7 +558,7 @@ DASHBOARD_HTML = """
                 `;
             }).join('');
         }
-        
+
         // Initialize connection
         connect();
     </script>

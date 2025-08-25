@@ -3,7 +3,7 @@ A2A Agents Module - Organized Structure
 
 Agent Organization:
 - agent0_data_product/      - Data Product Registration Agent (Agent 0)
-- agent1_standardization/   - Data Standardization Agent (Agent 1) 
+- agent1_standardization/   - Data Standardization Agent (Agent 1)
 - agent2_ai_preparation/    - AI Preparation Agent (Agent 2)
 - agent3_vector_processing/ - Vector Processing Agent (Agent 3)
 - agent4_calc_validation/   - Calculation Validation Agent (Agent 4)
@@ -33,7 +33,7 @@ from .agent4CalcValidation.active.calcValidationAgentSdk import CalcValidationAg
 
 __all__ = [
     "DataProductRegistrationAgentSDK",
-    "DataStandardizationAgentSDK", 
+    "DataStandardizationAgentSDK",
     "AIPreparationAgentSDK",
     "VectorProcessingAgentSDK",
     "CalcValidationAgentSDK",

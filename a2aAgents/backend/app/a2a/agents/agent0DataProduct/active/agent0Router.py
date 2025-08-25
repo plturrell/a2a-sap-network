@@ -36,7 +36,7 @@ async def json_rpc_handler(request: Request):
         )
     try:
         body = await request.json()
-        
+
         if "jsonrpc" not in body or body["jsonrpc"] != "2.0":
             return JSONResponse(
                 status_code=400,
@@ -49,23 +49,23 @@ async def json_rpc_handler(request: Request):
                     "id": body.get("id")
                 }
             )
-        
+
         method = body.get("method")
         params = body.get("params", {})
         request_id = body.get("id")
-        
+
         if method == "agent.getCard":
             result = await agent0.get_agent_card()
-        
+
         elif method == "agent.processMessage":
             message = A2AMessage(**params.get("message", {}))
             context_id = params.get("contextId", str(datetime.utcnow().timestamp()))
             result = await agent0.process_message(message, context_id)
-        
+
         elif method == "agent.getTaskStatus":
             task_id = params.get("taskId")
             result = await agent0.get_task_status(task_id)
-        
+
         else:
             return JSONResponse(
                 status_code=400,
@@ -78,7 +78,7 @@ async def json_rpc_handler(request: Request):
                     "id": request_id
                 }
             )
-        
+
         return JSONResponse(
             content={
                 "jsonrpc": "2.0",
@@ -86,7 +86,7 @@ async def json_rpc_handler(request: Request):
                 "id": request_id
             }
         )
-        
+
     except Exception as e:
         return JSONResponse(
             status_code=500,
@@ -109,10 +109,10 @@ async def rest_message_handler(request: Request):
         body = await request.json()
         message = A2AMessage(**body.get("message", {}))
         context_id = body.get("contextId", str(datetime.utcnow().timestamp()))
-        
+
         result = await agent0.process_message(message, context_id)
         return JSONResponse(content=result)
-        
+
     except Exception as e:
         return JSONResponse(
             status_code=400,
@@ -195,7 +195,7 @@ async def health_check():
             "streaming_enabled": queue_status["capabilities"]["streaming_enabled"],
             "batch_processing_enabled": queue_status["capabilities"]["batch_processing_enabled"]
         }
-    
+
     return {
         "status": "healthy",
         "agent": "Data Product Registration Agent",

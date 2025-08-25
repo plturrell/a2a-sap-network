@@ -102,10 +102,10 @@ logger = logging.getLogger(__name__)
 class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMixin, TelemetryMixin):
     """
     Enhanced Reasoning Agent with AI Intelligence Framework Integration
-    
+
     This agent combines sophisticated multi-agent reasoning patterns with the
     comprehensive AI Intelligence Framework to achieve 95+ AI intelligence rating.
-    
+
     Enhanced Capabilities:
     - Multi-strategy reasoning (Chain of Thought, Tree of Thought, Graph of Thought, etc.)
     - Adaptive learning from reasoning experiences
@@ -114,7 +114,7 @@ class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHa
     - Full explainability of reasoning processes
     - Autonomous decision-making and goal planning
     """
-    
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
 
         # Initialize security features
@@ -133,33 +133,33 @@ class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHa
         PerformanceMonitorMixin.__init__(self)
         SecurityHardenedMixin.__init__(self)
         TelemetryMixin.__init__(self)
-        
+
         # Configuration
         self.config = config or {}
-        
+
         # AI Intelligence Framework - Core enhancement
         self.ai_framework = None
         self.intelligence_config = create_enhanced_agent_config()
-        
+
         # Original reasoning components (enhanced)
         self.grok_messaging = None
         self.orchestration_skills = None
         self.hierarchical_skills = None
         self.swarm_skills = None
         self.enhanced_skills = None
-        
+
         # Architecture coordinators (enhanced with AI framework)
         self.peer_coordinator = None
         self.chain_reasoner = None
         self.swarm_coordinator = None
         self.debate_coordinator = None
         self.blackboard = None
-        
+
         # Enhanced reasoning state
         self.reasoning_sessions = {}
         self.confidence_calculator = None
         self.memory_system = None
-        
+
         # Performance metrics (enhanced)
         self.enhanced_metrics = {
             "ai_reasoning_operations": 0,
@@ -170,17 +170,17 @@ class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHa
             "memory_retrievals": 0,
             "average_intelligence_score": 0.0
         }
-        
+
         logger.info("Enhanced Reasoning Agent with AI Intelligence Framework initialized")
-    
+
     async def initialize(self) -> None:
         """Initialize enhanced reasoning agent with AI Intelligence Framework"""
         logger.info("Initializing Enhanced Reasoning Agent with AI Intelligence Framework...")
-        
+
         try:
             # Initialize base agent
             await super().initialize()
-            
+
             # Initialize AI Intelligence Framework - Primary Enhancement
             logger.info("🧠 Initializing AI Intelligence Framework...")
             self.ai_framework = await create_ai_intelligence_framework(
@@ -188,39 +188,39 @@ class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHa
                 config=self.intelligence_config
             )
             logger.info("✅ AI Intelligence Framework initialized successfully")
-            
+
             # Initialize original reasoning components (enhanced with AI framework)
             await self._initialize_enhanced_reasoning_components()
-            
+
             # Initialize performance monitoring
             self._setup_enhanced_monitoring()
-            
+
             logger.info("🎉 Enhanced Reasoning Agent fully initialized with 95+ AI intelligence capabilities!")
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize Enhanced Reasoning Agent: {e}")
             raise
-    
+
     async def _initialize_enhanced_reasoning_components(self):
         """Initialize reasoning components enhanced with AI framework"""
         # Initialize Grok messaging with AI enhancement
         self.grok_messaging = GrokSkillMessaging(self)
-        
+
         # Initialize reasoning skills with AI framework integration
         self.orchestration_skills = ReasoningOrchestrationSkills(self.ai_framework)
         self.hierarchical_skills = HierarchicalReasoningSkills(self.ai_framework)
         self.swarm_skills = SwarmReasoningSkills(self.ai_framework)
         self.enhanced_skills = EnhancedReasoningSkills(self.ai_framework)
-        
+
         # Initialize architecture coordinators with AI enhancement
         self.peer_coordinator = await create_peer_to_peer_coordinator(self.ai_framework)
         self.chain_reasoner = await create_chain_of_thought_reasoner(self.ai_framework)
         self.swarm_coordinator = await create_swarm_intelligence_coordinator(self.ai_framework)
         self.debate_coordinator = await create_debate_coordinator(self.ai_framework)
         self.blackboard = BlackboardController(ai_framework=self.ai_framework)
-        
+
         logger.info("✅ Enhanced reasoning components initialized")
-    
+
     def _setup_enhanced_monitoring(self):
         """Setup enhanced performance monitoring for AI intelligence"""
         # Enhanced monitoring with AI intelligence metrics
@@ -235,12 +235,12 @@ class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHa
                     "memory_utilization": "gauge"
                 }
             )
-    
+
     @a2a_handler("intelligent_reasoning")
     async def handle_intelligent_reasoning(self, message: A2AMessage) -> Dict[str, Any]:
         """
         Enhanced reasoning handler with full AI Intelligence Framework integration
-        
+
         Combines all AI capabilities: reasoning, learning, memory, collaboration,
         explainability, and autonomous decision-making.
         """
@@ -249,7 +249,7 @@ class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHa
             reasoning_query = self._extract_reasoning_query(message)
             if not reasoning_query:
                 return self._create_error_response("No valid reasoning query found")
-            
+
             # Perform integrated intelligence operation - Core Enhancement
             intelligence_result = await self.ai_framework.integrated_intelligence_operation(
                 task_description=reasoning_query.get("query", "Complex reasoning task"),
@@ -261,16 +261,16 @@ class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHa
                     "timestamp": datetime.utcnow().isoformat()
                 }
             )
-            
+
             # Enhance with original reasoning capabilities
             enhanced_result = await self._enhance_with_traditional_reasoning(
                 reasoning_query, intelligence_result
             )
-            
+
             # Update metrics
             self.enhanced_metrics["ai_reasoning_operations"] += 1
             self._update_intelligence_score(intelligence_result)
-            
+
             return {
                 "success": True,
                 "ai_intelligence_result": intelligence_result,
@@ -279,11 +279,11 @@ class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHa
                 "agent_id": self.agent_id,
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
         except Exception as e:
             logger.error(f"Intelligent reasoning failed: {e}")
             return self._create_error_response(f"Intelligent reasoning failed: {str(e)}")
-    
+
     @a2a_skill("adaptive_reasoning_learning")
     async def adaptive_reasoning_learning(self, learning_data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -304,19 +304,19 @@ class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHa
                     }
                 }
             )
-            
+
             self.enhanced_metrics["adaptive_learning_updates"] += 1
-            
+
             return {
                 "learning_applied": True,
                 "learning_insights": learning_result,
                 "updated_reasoning_strategies": self._get_updated_strategies()
             }
-            
+
         except Exception as e:
             logger.error(f"Adaptive learning failed: {e}")
             raise
-    
+
     @a2a_skill("collaborative_reasoning")
     async def collaborative_reasoning(self, collaboration_context: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -327,22 +327,22 @@ class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHa
             collaboration_result = await self.ai_framework.collaborative_decision_making(
                 decision_context=collaboration_context
             )
-            
+
             # Enhance with traditional multi-agent reasoning
             if self.swarm_coordinator:
                 swarm_result = await self.swarm_coordinator.coordinate_swarm_reasoning(
                     collaboration_context
                 )
                 collaboration_result["swarm_intelligence"] = swarm_result
-            
+
             self.enhanced_metrics["collaborative_decisions"] += 1
-            
+
             return collaboration_result
-            
+
         except Exception as e:
             logger.error(f"Collaborative reasoning failed: {e}")
             raise
-    
+
     @a2a_skill("explainable_reasoning")
     async def explainable_reasoning(self, reasoning_context: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -353,15 +353,15 @@ class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHa
             explanation_result = await self.ai_framework.explainable_operation(
                 operation_context=reasoning_context
             )
-            
+
             self.enhanced_metrics["explainable_operations"] += 1
-            
+
             return explanation_result
-            
+
         except Exception as e:
             logger.error(f"Explainable reasoning failed: {e}")
             raise
-    
+
     @a2a_task(
         task_type="autonomous_reasoning_planning",
         description="Autonomous planning and execution of reasoning tasks",
@@ -382,21 +382,21 @@ class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHa
                     "performance_metrics": self.enhanced_metrics
                 }
             )
-            
+
             self.enhanced_metrics["autonomous_actions"] += 1
-            
+
             return autonomous_result
-            
+
         except Exception as e:
             logger.error(f"Autonomous reasoning planning failed: {e}")
             raise
-    
-    async def _enhance_with_traditional_reasoning(self, 
+
+    async def _enhance_with_traditional_reasoning(self,
                                                  reasoning_query: Dict[str, Any],
                                                  intelligence_result: Dict[str, Any]) -> Dict[str, Any]:
         """Enhance AI framework results with traditional reasoning capabilities"""
         enhanced_result = {}
-        
+
         try:
             # Apply hierarchical reasoning if available
             if self.hierarchical_skills:
@@ -404,60 +404,60 @@ class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHa
                     reasoning_query, intelligence_result
                 )
                 enhanced_result["hierarchical_reasoning"] = hierarchical_result
-            
+
             # Apply chain-of-thought reasoning
             if self.chain_reasoner:
                 chain_result = await self.chain_reasoner.reason_step_by_step(
                     reasoning_query, intelligence_result
                 )
                 enhanced_result["chain_of_thought"] = chain_result
-            
+
             # Apply debate reasoning for complex problems
             if self.debate_coordinator and reasoning_query.get("complexity") == "high":
                 debate_result = await self.debate_coordinator.conduct_reasoning_debate(
                     reasoning_query, intelligence_result
                 )
                 enhanced_result["debate_reasoning"] = debate_result
-            
+
             return enhanced_result
-            
+
         except Exception as e:
             logger.error(f"Traditional reasoning enhancement failed: {e}")
             return {"error": str(e)}
-    
+
     def _extract_reasoning_query(self, message: A2AMessage) -> Optional[Dict[str, Any]]:
         """Extract reasoning query from A2A message"""
         for part in message.parts:
             if part.kind == "data" and part.data:
                 return part.data
         return None
-    
+
     def _calculate_current_intelligence_score(self) -> float:
         """Calculate current AI intelligence score based on performance"""
         base_score = 95.0  # Enhanced agent baseline
-        
+
         # Adjust based on AI framework performance
         if self.ai_framework:
             framework_status = self.ai_framework.get_intelligence_status()
             active_components = sum(framework_status["components"].values())
             component_bonus = (active_components / 6) * 5.0  # Up to 5 bonus points
-            
+
             # Performance metrics bonus
             performance_metrics = framework_status["performance_metrics"]
             if performance_metrics["operations_completed"] > 0:
-                success_rate = 1 - (performance_metrics["operations_failed"] / 
+                success_rate = 1 - (performance_metrics["operations_failed"] /
                                   max(performance_metrics["operations_completed"], 1))
                 performance_bonus = success_rate * 3.0  # Up to 3 bonus points
             else:
                 performance_bonus = 0.0
-            
+
             total_score = min(base_score + component_bonus + performance_bonus, 100.0)
         else:
             total_score = base_score
-        
+
         self.enhanced_metrics["average_intelligence_score"] = total_score
         return total_score
-    
+
     def _update_intelligence_score(self, intelligence_result: Dict[str, Any]):
         """Update intelligence score based on operation results"""
         if intelligence_result.get("success"):
@@ -466,7 +466,7 @@ class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHa
             bonus = min(components_used * 0.1, 1.0)
             current_score = self.enhanced_metrics["average_intelligence_score"]
             self.enhanced_metrics["average_intelligence_score"] = min(current_score + bonus, 100.0)
-    
+
     def _get_current_state(self) -> Dict[str, Any]:
         """Get current agent state for autonomous planning"""
         return {
@@ -475,7 +475,7 @@ class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHa
             "ai_framework_status": self.ai_framework.get_intelligence_status() if self.ai_framework else {},
             "available_skills": self._get_available_skills()
         }
-    
+
     def _get_available_resources(self) -> Dict[str, Any]:
         """Get available resources for autonomous planning"""
         return {
@@ -494,7 +494,7 @@ class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHa
                 "enhanced": self.enhanced_skills is not None
             }
         }
-    
+
     def _get_available_skills(self) -> List[str]:
         """Get list of available skills"""
         skills = []
@@ -505,17 +505,17 @@ class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHa
         if hasattr(self, 'explainable_reasoning'):
             skills.append("explainable_reasoning")
         return skills
-    
+
     def _get_updated_strategies(self) -> Dict[str, Any]:
         """Get updated reasoning strategies after learning"""
         return {
-            "available_strategies": ["chain_of_thought", "tree_of_thought", "graph_of_thought", 
+            "available_strategies": ["chain_of_thought", "tree_of_thought", "graph_of_thought",
                                    "counterfactual", "causal", "ensemble"],
-            "adaptive_weights": self.ai_framework.learning_system.get_strategy_weights() if 
+            "adaptive_weights": self.ai_framework.learning_system.get_strategy_weights() if
                               self.ai_framework and self.ai_framework.learning_system else {},
             "performance_history": self.enhanced_metrics
         }
-    
+
     def _create_error_response(self, message: str) -> Dict[str, Any]:
         """Create error response"""
         return {
@@ -524,33 +524,33 @@ class EnhancedReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHa
             "timestamp": datetime.utcnow().isoformat(),
             "agent_id": self.agent_id
         }
-    
+
     async def get_enhanced_agent_health(self) -> Dict[str, Any]:
         """Get comprehensive health status including AI intelligence metrics"""
         health = await super().get_agent_health() if hasattr(super(), 'get_agent_health') else {}
-        
+
         # Add AI intelligence health metrics
         if self.ai_framework:
             health["ai_intelligence"] = self.ai_framework.get_intelligence_status()
-        
+
         health["enhanced_metrics"] = self.enhanced_metrics
         health["current_intelligence_score"] = self._calculate_current_intelligence_score()
         health["reasoning_capabilities"] = self._get_available_resources()
-        
+
         return health
-    
+
     async def shutdown(self):
         """Shutdown enhanced reasoning agent"""
         logger.info("Shutting down Enhanced Reasoning Agent...")
-        
+
         # Shutdown AI Intelligence Framework
         if self.ai_framework:
             await self.ai_framework.shutdown()
-        
+
         # Shutdown base agent
         if hasattr(super(), 'shutdown'):
             await super().shutdown()
-        
+
         logger.info("Enhanced Reasoning Agent shutdown complete")
 
 
@@ -562,7 +562,7 @@ class ReasoningAgent(EnhancedReasoningAgent):
 
 class GrokSkillMessaging:
     """Grok-4 powered intelligent skill messaging system"""
-    
+
     def __init__(self, reasoning_agent):
         # Initialize security features
         self._init_security_features()
@@ -573,10 +573,10 @@ class GrokSkillMessaging:
         self.message_context_cache = {}
         self.skill_performance_history = {}
         self.semantic_routing_cache = {}
-        
+
         # Initialize Grok-4 client
         self._initialize_grok_client()
-    
+
     def _initialize_grok_client(self):
         """Initialize Grok client for intra-skill messaging"""
         try:
@@ -586,16 +586,16 @@ class GrokSkillMessaging:
         except Exception as e:
             logger.warning(f"Failed to initialize Grok client: {e}")
             self.grok_client = None
-    
+
     async def optimize_intra_skill_message(self, message: SkillMessage, context: Dict[str, Any]) -> SkillMessage:
         """Optimize intra-skill message routing and content using Grok"""
         if not self.grok_client:
             return message
-        
+
         try:
             # Focus specifically on intra-skill message routing optimization
             routing_prompt = f"""
-You are optimizing message routing within a reasoning agent's skill network. 
+You are optimizing message routing within a reasoning agent's skill network.
 
 Intra-Skill Message:
 - Route: {message.sender_skill} → {message.receiver_skill}
@@ -619,38 +619,38 @@ Optimize for:
 
 Provide specific routing optimizations as JSON.
 """
-            
+
             # Get Grok optimization for intra-skill routing
             response = await self._call_grok_async(routing_prompt)
-            
+
             if response:
                 # Apply routing optimizations
                 if 'priority_adjustment' in response:
                     new_priority = response['priority_adjustment']
                     if new_priority in [p.value for p in SkillPriority]:
                         message.priority = SkillPriority(new_priority)
-                
+
                 if 'payload_optimization' in response:
                     optimized_params = response['payload_optimization']
                     if isinstance(optimized_params, dict):
                         message.params = optimized_params
-                
+
                 if 'context_optimization' in response:
                     message.context = message.context or {}
                     message.context.update(response['context_optimization'])
                     message.context['grok_optimized'] = True
-            
+
             return message
-            
+
         except Exception as e:
             logger.error(f"Grok intra-skill message optimization failed: {e}")
             return message
-    
+
     async def determine_optimal_intra_skill_route(self, message_content: str, available_skills: List[str], current_loads: Dict[str, float]) -> Dict[str, Any]:
         """Use Grok to determine optimal intra-skill routing within the reasoning agent"""
         if not self.grok_client:
             return {"recommended_skill": available_skills[0] if available_skills else None}
-        
+
         try:
             # Focus on intra-skill routing within the same reasoning agent
             intra_routing_prompt = f"""
@@ -678,9 +678,9 @@ Determine optimal intra-skill routing considering:
 
 Return routing decision as JSON.
 """
-            
+
             response = await self._call_grok_async(intra_routing_prompt)
-            
+
             return {
                 "recommended_skill": response.get('recommended_skill', available_skills[0] if available_skills else None),
                 "routing_confidence": response.get('confidence', 0.5),
@@ -689,16 +689,16 @@ Return routing decision as JSON.
                 "alternative_routes": response.get('alternatives', []),
                 "network_optimization": response.get('network_optimizations', [])
             }
-            
+
         except Exception as e:
             logger.error(f"Grok intra-skill routing failed: {e}")
             return {"recommended_skill": available_skills[0] if available_skills else None}
-    
+
     async def predict_skill_coordination_needs(self, reasoning_request: Dict[str, Any]) -> Dict[str, Any]:
         """Predict optimal skill coordination strategy using Grok-4"""
         if not self.grok_client:
             return {"coordination_strategy": "sequential"}
-        
+
         try:
             prediction_prompt = f"""
 You are an expert in multi-agent reasoning coordination. Analyze this reasoning request and predict optimal skill coordination:
@@ -722,9 +722,9 @@ Predict:
 
 Provide specific coordination plan with timing and dependencies.
 """
-            
+
             response = await self._call_grok_async(prediction_prompt)
-            
+
             return {
                 "coordination_strategy": response.get('strategy', 'sequential'),
                 "skill_execution_plan": response.get('execution_plan', []),
@@ -733,16 +733,16 @@ Provide specific coordination plan with timing and dependencies.
                 "estimated_performance": response.get('performance_estimate', {}),
                 "risk_assessment": response.get('risks', {})
             }
-            
+
         except Exception as e:
             logger.error(f"Grok-4 coordination prediction failed: {e}")
             return {"coordination_strategy": "sequential"}
-    
+
     async def analyze_skill_communication_patterns(self, communication_history: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Analyze skill communication patterns for optimization using Grok-4"""
         if not self.grok_client or not communication_history:
             return {"patterns": [], "recommendations": []}
-        
+
         try:
             analysis_prompt = f"""
 You are an expert in analyzing multi-agent communication patterns. Analyze this skill communication history:
@@ -763,9 +763,9 @@ Analyze for:
 
 Provide actionable insights and optimization recommendations.
 """
-            
+
             response = await self._call_grok_async(analysis_prompt)
-            
+
             return {
                 "communication_patterns": response.get('patterns', []),
                 "efficiency_metrics": response.get('efficiency', {}),
@@ -774,16 +774,16 @@ Provide actionable insights and optimization recommendations.
                 "anomalies_detected": response.get('anomalies', []),
                 "performance_trends": response.get('trends', {})
             }
-            
+
         except Exception as e:
             logger.error(f"Grok-4 pattern analysis failed: {e}")
             return {"patterns": [], "recommendations": []}
-    
+
     async def generate_error_recovery_strategy(self, error_context: Dict[str, Any]) -> Dict[str, Any]:
         """Generate intelligent error recovery strategy using Grok-4"""
         if not self.grok_client:
             return {"recovery_strategy": "retry"}
-        
+
         try:
             recovery_prompt = f"""
 You are an expert in distributed system error recovery. Generate an optimal recovery strategy for this skill communication error:
@@ -813,9 +813,9 @@ Consider:
 
 Provide specific recovery plan with steps and fallback options.
 """
-            
+
             response = await self._call_grok_async(recovery_prompt)
-            
+
             return {
                 "recovery_strategy": response.get('strategy', 'retry'),
                 "recovery_steps": response.get('steps', []),
@@ -824,11 +824,11 @@ Provide specific recovery plan with steps and fallback options.
                 "expected_success_probability": response.get('success_probability', 0.5),
                 "monitoring_points": response.get('monitoring', [])
             }
-            
+
         except Exception as e:
             logger.error(f"Grok-4 error recovery generation failed: {e}")
             return {"recovery_strategy": "retry"}
-    
+
     async def _call_grok_async(self, prompt: str) -> Dict[str, Any]:
         """Make async call to Grok-4 API"""
         try:
@@ -839,7 +839,7 @@ Provide specific recovery plan with steps and fallback options.
         except Exception as e:
             logger.error(f"Async Grok-4 call failed: {e}")
             return {}
-    
+
     def _call_grok_sync(self, prompt: str) -> Dict[str, Any]:
         """Make synchronous call to Grok-4 for question decomposition"""
         try:
@@ -848,7 +848,7 @@ Provide specific recovery plan with steps and fallback options.
                 import asyncio
                 from .grokReasoning import GrokReasoning
                 grok = GrokReasoning()
-                
+
                 # Run async method in sync context
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
@@ -857,26 +857,26 @@ Provide specific recovery plan with steps and fallback options.
                     return response.get('decomposition', {}) if response.get('success') else {}
                 finally:
                     loop.close()
-            
+
             return {}
-            
+
         except Exception as e:
             logger.error(f"Grok-4 sync call failed: {e}")
             return {}
-    
+
     async def update_skill_performance_history(self, skill_name: str, performance_data: Dict[str, Any]):
         """Update skill performance history for Grok-4 analysis"""
         if skill_name not in self.skill_performance_history:
             self.skill_performance_history[skill_name] = []
-        
+
         # Add timestamp and keep last 100 records
         performance_data['timestamp'] = datetime.utcnow().isoformat()
         self.skill_performance_history[skill_name].append(performance_data)
-        
+
         # Limit history size
         if len(self.skill_performance_history[skill_name]) > 100:
             self.skill_performance_history[skill_name] = self.skill_performance_history[skill_name][-100:]
-    
+
     async def cleanup(self):
         """Cleanup Grok-4 messaging resources"""
         self.message_context_cache.clear()
@@ -955,13 +955,13 @@ class ReasoningState:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
-class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMixin, 
+class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMixin,
                     TelemetryMixin):
     """
     Advanced multi-agent reasoning system implementing sophisticated architectures
     for complex question answering and reasoning tasks
     """
-    
+
     def __init__(
         self,
         base_url: Optional[str] = None,
@@ -975,7 +975,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
     ):
         # Import config at the top of __init__
         from config.agentConfig import config
-        
+
         super().__init__(
             agent_id=create_agent_id("reasoning"),
             name="Advanced Reasoning Agent",
@@ -984,12 +984,12 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             base_url=base_url or config.base_url,
             **kwargs
         )
-        
+
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-        
+
         # Network configuration using centralized config
         self.agent_network_url = agent_network_url or config.agent_network_url
         self.data_manager_url = data_manager_url or config.data_manager_url
@@ -997,20 +997,20 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
         self.agent_manager_url = agent_manager_url or config.agent_manager_url
         self.max_sub_agents = max_sub_agents
         self.reasoning_timeout = reasoning_timeout
-        
+
         # Initialize components
         self._setup_circuit_breakers()
         self._setup_sub_agents()
         self._initialize_skills()
-        
+
         # Enable mixins
         self.enable_performance_monitoring(metrics_port=8008)
         self.enable_telemetry()
-        
+
         # Reasoning state management
         self.active_reasoning_sessions: Dict[str, ReasoningState] = {}
         self.sub_agent_pool: Dict[AgentRole, List[SubAgentConfig]] = {}
-        
+
         # Initialize MCP skill coordination for intra-agent communication
         self.mcp_skill_coordinator = None
         self.mcp_skill_client = None
@@ -1058,7 +1058,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "communication_patterns": ["validation", "feedback"]
             }
         }
-        
+
         # Performance tracking
         self.reasoning_metrics = {
             "total_sessions": 0,
@@ -1067,14 +1067,14 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             "architecture_usage": {arch.value: 0 for arch in ReasoningArchitecture},
             "average_reasoning_time": 0.0
         }
-        
+
         # Trust and security - will be initialized in initialize()
         self.trust_identity = None
         self.trusted_agents = set()
         self.private_key = os.getenv("AGENT_PRIVATE_KEY")
         if not self.private_key:
             raise ValueError("AGENT_PRIVATE_KEY environment variable is required. No default test keys allowed in production.")
-        
+
         # Initialize intra-skill communication metrics
         self.skill_communication_metrics = {
             "total_skill_calls": 0,
@@ -1086,13 +1086,13 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             "skill_load_balancing": {},
             "cross_skill_validation_count": 0
         }
-        
+
         # Initialize Grok for intelligent intra-skill messaging
         self.grok_client = None
         self.grok_intra_skill_messaging = None
         if GROK_AVAILABLE:
             self._initialize_grok_intra_skill_messaging()
-        
+
         # Skill message intelligence patterns
         self.skill_message_patterns = {
             "context_propagation": "maintain_reasoning_context_across_skills",
@@ -1120,7 +1120,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
     def _setup_circuit_breakers(self):
         """Initialize circuit breakers for sub-agent communication"""
         self.circuit_breaker_manager = get_breaker_manager()
-        
+
         # Circuit breaker for each agent role
         for role in AgentRole:
             self.circuit_breaker_manager.get_breaker(
@@ -1129,7 +1129,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 success_threshold=2,
                 timeout=30.0
             )
-        
+
         # Network-level circuit breaker
         self.circuit_breaker_manager.get_breaker(
             "agent_network",
@@ -1137,7 +1137,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             success_threshold=3,
             timeout=60.0
         )
-        
+
         # Circuit breakers for A2A agent services
         self.circuit_breaker_manager.get_breaker(
             "data_manager",
@@ -1170,7 +1170,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 priority=1.0
             )
         ]
-        
+
         # Evidence retriever agents - Use Data Manager
         self.sub_agent_pool[AgentRole.EVIDENCE_RETRIEVER] = [
             SubAgentConfig(
@@ -1181,7 +1181,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 priority=0.9
             )
         ]
-        
+
         # Reasoning engine agents - Dynamic discovery
         self.sub_agent_pool[AgentRole.REASONING_ENGINE] = [
             SubAgentConfig(
@@ -1191,7 +1191,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 priority=1.2
             ) for i in range(2)
         ]
-        
+
         # Answer synthesizer agents - Dynamic discovery
         self.sub_agent_pool[AgentRole.ANSWER_SYNTHESIZER] = [
             SubAgentConfig(
@@ -1209,14 +1209,14 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
         self.hierarchical_skills = HierarchicalReasoningSkills(self.trust_identity)
         self.swarm_skills = SwarmReasoningSkills(self.trust_identity)
         self.enhanced_skills = EnhancedReasoningSkills(self.trust_identity)
-        
+
         # Initialize architecture coordinators
         self.blackboard_controller = BlackboardController()
         self.peer_to_peer_coordinator = create_peer_to_peer_coordinator()
         self.chain_of_thought_reasoner = create_chain_of_thought_reasoner(self.grok_client)
         self.swarm_coordinator = create_swarm_intelligence_coordinator()
         self.debate_coordinator = create_debate_coordinator()
-    
+
     def _initialize_grok_intra_skill_messaging(self):
         """Initialize Grok powered intra-skill messaging"""
         try:
@@ -1236,7 +1236,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
         """Query an A2A agent with circuit breaker protection and blockchain signing"""
         try:
             breaker = self.circuit_breaker_manager.get_breaker(breaker_name)
-            
+
             async def make_request():
                 # Prepare message content using standardized template
                 message_content = MessageTemplate.create_request(
@@ -1244,7 +1244,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     parameters=parameters,
                     sender_id=self.agent_id
                 )
-                
+
                 # Sign message if trust identity is available
                 if self.trust_identity:
                     signed_message = sign_a2a_message(
@@ -1253,7 +1253,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     )
                     message_content["signature"] = signed_message["signature"]
                     message_content["signer"] = signed_message["signer"]
-                
+
                 # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
                 # async with httpx.AsyncClient() as client:
                 # httpx.AsyncClient(timeout=30.0) as client:
@@ -1267,9 +1267,9 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                         }
                     )
                     response.raise_for_status()
-                    
+
                     result = response.json()
-                    
+
                     # Verify response signature if present
                     if "signature" in result and "signer" in result and self.trust_identity:
                         is_valid = verify_a2a_message(
@@ -1279,16 +1279,16 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                         )
                         if not is_valid:
                             raise ValueError(f"Invalid signature from {agent_url}")
-                    
+
                     return result
-            
+
             result = await breaker.call(make_request)
             return result.get("result", result)
-            
+
         except Exception as e:
             logger.error(f"A2A agent query failed for {agent_url}: {e}")
             raise  # Don't return error dict - fail properly
-    
+
     async def _query_data_manager(
         self,
         operation: str,
@@ -1301,7 +1301,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             data,
             "data_manager"
         )
-    
+
     async def _query_catalog_manager(
         self,
         operation: str,
@@ -1314,7 +1314,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             params,
             "catalog_manager"
         )
-    
+
     async def _query_agent_manager(
         self,
         operation: str,
@@ -1329,9 +1329,9 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
         )
 
     async def _query_sub_agent(
-        self, 
-        agent_config: SubAgentConfig, 
-        task: str, 
+        self,
+        agent_config: SubAgentConfig,
+        task: str,
         parameters: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Query a sub-agent with circuit breaker protection"""
@@ -1345,7 +1345,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     parameters,
                     f"agent_{agent_config.role.value}"
                 )
-            
+
             # Otherwise, route to appropriate A2A service based on role
             if agent_config.role == AgentRole.EVIDENCE_RETRIEVER:
                 # Use Data Manager for evidence retrieval
@@ -1372,7 +1372,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                             parameters,
                             f"agent_{agent_config.role.value}"
                         )
-            
+
             # For other roles, try to discover agents via Catalog Manager
             discovered_agents = await self._query_catalog_manager(
                 "discover_agents",
@@ -1381,7 +1381,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "status": "active"
                 }
             )
-            
+
             if discovered_agents.get("agents"):
                 # Use first available agent
                 agent_endpoint = discovered_agents["agents"][0].get("endpoint")
@@ -1392,20 +1392,20 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                         parameters,
                         f"agent_{agent_config.role.value}"
                     )
-            
+
             # No agent available for this role
             logger.warning(f"No real agent available for role {agent_config.role.value}")
             return {
                 "error": f"No agent available for role {agent_config.role.value}",
                 "role": agent_config.role.value
             }
-            
+
         except Exception as e:
             logger.error(f"Sub-agent query failed for {agent_config.agent_id}: {e}")
             return {"error": str(e), "agent_id": agent_config.agent_id}
 
     async def _orchestrate_hierarchical_reasoning(
-        self, 
+        self,
         state: ReasoningState,
         request: ReasoningRequest
     ) -> Dict[str, Any]:
@@ -1414,13 +1414,13 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             # Phase 1: Question Analysis
             logger.info("Phase 1: Analyzing question")
             analysis_results = []
-            
+
             # Discover real QA agents from A2A network
             try:
                 qa_agents = await discover_qa_agents()
                 if not qa_agents:
                     raise RuntimeError("No QA agents available in A2A network")
-                
+
                 qa_agent_available = False
                 for qa_service in qa_agents:
                     try:
@@ -1441,22 +1441,22 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                             break
                     except Exception as e:
                         logger.warning(f"Failed to query QA agent {qa_service.agent_id}: {e}")
-                        
+
             except Exception as e:
                 logger.error(f"Failed to discover QA agents: {e}")
-            
+
             # Require real QA agent - no fallback to mock implementations
             if not qa_agent_available:
                 error_msg = "Question analysis requires QA agents but none are available. Cannot proceed with mock implementations."
                 logger.error(error_msg)
                 raise RuntimeError(error_msg)
-            
+
             # Aggregate analysis results
             for result in analysis_results:
                 if isinstance(result, Exception):
                     logger.error(f"Analysis failed: {result}")
                     continue
-                    
+
                 if "reasoning_chain" in result:
                     # Extract sub-questions from reasoning chain
                     chain = result["reasoning_chain"]
@@ -1468,14 +1468,14 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                             })
                 elif "sub_questions" in result:
                     state.decomposed_questions.extend([
-                        {"question": q, "priority": 1.0} 
+                        {"question": q, "priority": 1.0}
                         for q in result["sub_questions"]
                     ])
-            
+
             # Phase 2: Evidence Retrieval
             logger.info("Phase 2: Retrieving evidence")
             evidence_results = []
-            
+
             # Only proceed if we have questions to work with
             if state.decomposed_questions:
                 # Discover real Data Manager agents from A2A network
@@ -1483,11 +1483,11 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     data_managers = await discover_data_managers()
                     if not data_managers:
                         raise RuntimeError("No Data Manager agents available in A2A network")
-                    
+
                     # Use the first healthy data manager
                     data_manager = data_managers[0]
                     logger.info(f"Using Data Manager {data_manager.agent_id} for evidence retrieval")
-                    
+
                     retriever_tasks = []
                     for question in state.decomposed_questions[:5]:  # Limit to top 5
                         task = self._query_a2a_agent(
@@ -1502,20 +1502,20 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                             f"data_manager_{data_manager.agent_id}"
                         )
                         retriever_tasks.append(task)
-                    
+
                     evidence_results = await asyncio.gather(*retriever_tasks, return_exceptions=True)
-                    
+
                 except Exception as e:
                     error_msg = f"Evidence retrieval requires Data Manager but failed: {e}. Cannot proceed with mock evidence generation."
                     logger.error(error_msg)
                     raise RuntimeError(error_msg)
-            
+
             # Aggregate evidence
             for result in evidence_results:
                 if isinstance(result, Exception):
                     logger.error(f"Evidence retrieval failed: {result}")
                     continue
-                    
+
                 if "results" in result:
                     # Convert Data Manager results to evidence format
                     for item in result["results"]:
@@ -1527,17 +1527,17 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                         })
                 elif "evidence" in result:
                     state.evidence_pool.extend(result["evidence"])
-            
+
             # Phase 3: Reasoning using discovered agents or internal skills
             logger.info("Phase 3: Performing reasoning")
             reasoning_tasks = []
-            
+
             # Try to discover reasoning agents
             reasoning_agents = await self._query_catalog_manager(
                 "discover_agents",
                 {"capability": "reasoning", "status": "active"}
             )
-            
+
             if reasoning_agents.get("agents"):
                 # Use discovered reasoning agents
                 for agent in reasoning_agents["agents"][:2]:  # Use up to 2 agents
@@ -1556,41 +1556,41 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 error_msg = "Reasoning requires external reasoning engines but none are available. Cannot proceed with mock reasoning implementations."
                 logger.error(error_msg)
                 raise RuntimeError(error_msg)
-            
+
             reasoning_results = await asyncio.gather(*reasoning_tasks, return_exceptions=True)
-            
+
             # Aggregate reasoning chains
             for result in reasoning_results:
                 if isinstance(result, Exception):
                     logger.error(f"Reasoning failed: {result}")
                     continue
-                    
+
                 if "inference" in result:
                     state.reasoning_chains.append({
                         "inference": result["inference"],
                         "confidence": result.get("confidence", 0.5),
                         "steps": result.get("reasoning_steps", [])
                     })
-            
+
             # Phase 4: Multi-Agent Debate (if enabled)
             if request.enable_debate and len(state.reasoning_chains) > 1:
                 logger.info("Phase 4: Conducting multi-agent debate")
                 debate_result = await self._conduct_debate(
-                    state, 
+                    state,
                     request.max_debate_rounds
                 )
                 state.debate_history = debate_result["debate_history"]
-            
+
             # Phase 5: Answer Synthesis
             logger.info("Phase 5: Synthesizing answer")
             synthesizer_tasks = []
-            
+
             # Try to discover synthesis agents
             synthesis_agents = await self._query_catalog_manager(
                 "discover_agents",
                 {"capability": "answer_synthesis", "status": "active"}
             )
-            
+
             if synthesis_agents.get("agents"):
                 # Use discovered synthesis agents
                 for agent in synthesis_agents["agents"][:2]:
@@ -1610,17 +1610,17 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 error_msg = "Answer synthesis requires synthesis agents but none are available. Cannot proceed with mock synthesis implementations."
                 logger.error(error_msg)
                 raise RuntimeError(error_msg)
-            
+
             synthesis_results = await asyncio.gather(*synthesizer_tasks, return_exceptions=True)
-            
+
             # Select best answer
             best_answer = None
             best_confidence = 0.0
-            
+
             for result in synthesis_results:
                 if isinstance(result, Exception):
                     continue
-                    
+
                 # Handle both external agent format and internal format
                 if "answer" in result:
                     answer = result["answer"]
@@ -1630,33 +1630,33 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     confidence = result.get("confidence", 0)
                 else:
                     continue
-                    
+
                 if confidence > best_confidence:
                     best_answer = answer
                     best_confidence = confidence
                     state.confidence_scores["final"] = best_confidence
-            
+
             state.final_answer = best_answer or "Unable to determine answer with sufficient confidence"
-            
+
             return {
                 "answer": state.final_answer,
                 "confidence": best_confidence,
                 "reasoning_architecture": "hierarchical",
                 "phases_completed": 5,
-                "sub_agents_used": len(analysis_results) + len(evidence_results) + 
+                "sub_agents_used": len(analysis_results) + len(evidence_results) +
                                  len(reasoning_results) + len(synthesis_results),
                 "evidence_count": len(state.evidence_pool),
                 "reasoning_chains": len(state.reasoning_chains),
                 "debate_rounds": len(state.debate_history)
             }
-            
+
         except Exception as e:
             logger.error(f"Hierarchical reasoning failed: {e}")
             raise
 
     async def _conduct_debate(
-        self, 
-        state: ReasoningState, 
+        self,
+        state: ReasoningState,
         max_rounds: int
     ) -> Dict[str, Any]:
         """Conduct multi-agent debate using enhanced debate mechanism"""
@@ -1669,7 +1669,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "evidence": [e["content"] for e in state.evidence_pool[:3] if e.get("relevance", 0) > 0.7],
                 "confidence": chain["confidence"]
             })
-        
+
         # Use enhanced debate mechanism
         debate_result = await self.enhanced_skills.enhanced_debate_mechanism({
             "positions": positions,
@@ -1677,17 +1677,17 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             "max_rounds": max_rounds,
             "convergence_threshold": 0.8
         })
-        
+
         # Update reasoning chains based on debate outcome
         if debate_result["consensus_achieved"]:
             final_position = debate_result["final_position"]
             final_confidence = debate_result["confidence"]
-            
+
             # Update all chains to converged position
             for chain in state.reasoning_chains:
                 chain["inference"] = final_position
                 chain["confidence"] = final_confidence
-        
+
         return {
             "debate_history": debate_result.get("key_arguments", []),
             "consensus_achieved": debate_result["consensus_achieved"],
@@ -1699,12 +1699,12 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
         # Simple implementation - in production, use embeddings
         common_words = set(text1.lower().split()) & set(text2.lower().split())
         total_words = set(text1.lower().split()) | set(text2.lower().split())
-        
+
         if not total_words:
             return 0.0
-        
+
         return len(common_words) / len(total_words)
-    
+
     async def _self_sufficient_reasoning(
         self,
         question: str,
@@ -1713,7 +1713,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
     ) -> Dict[str, Any]:
         """Perform self-sufficient reasoning without external dependencies"""
         logger.info(f"Using self-sufficient {architecture.value} reasoning")
-        
+
         # Use enhanced skills for internal reasoning
         if architecture == ReasoningArchitecture.HIERARCHICAL:
             return await self.enhanced_skills.hierarchical_multi_engine_reasoning({
@@ -1722,44 +1722,44 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "reasoning_engines": ["logical", "probabilistic", "analogical", "causal"],
                 "max_depth": 5
             })
-        
+
         elif architecture == ReasoningArchitecture.PEER_TO_PEER:
             # Use real peer-to-peer coordinator
             return await self.peer_to_peer_coordinator.reason(question, context)
-        
+
         elif architecture == ReasoningArchitecture.BLACKBOARD:
             # Use real blackboard controller
             return await self.blackboard_controller.reason(question, context)
-        
+
         elif architecture == ReasoningArchitecture.GRAPH_BASED:
             # Graph-based reasoning using knowledge graph
             return await self._graph_based_reasoning(question, context)
-        
+
         elif architecture == ReasoningArchitecture.HUB_AND_SPOKE:
             # Hub and spoke pattern
             return await self._hub_and_spoke_reasoning(question, context)
-        
+
         elif architecture == ReasoningArchitecture.CHAIN_OF_THOUGHT:
             # Use real chain-of-thought reasoner
             from .chainOfThoughtArchitecture import ReasoningStrategy
             return await self.chain_of_thought_reasoner.reason(question, context, ReasoningStrategy.LINEAR)
-        
+
         elif architecture == ReasoningArchitecture.SWARM:
             # Use real swarm intelligence coordinator
             from .swarmIntelligenceArchitecture import SwarmBehavior
             return await self.swarm_coordinator.reason(question, context, SwarmBehavior.EXPLORATION)
-        
+
         elif architecture == ReasoningArchitecture.DEBATE:
             # Use real debate coordinator
             return await self.debate_coordinator.reason(question, context)
-        
+
         else:
             # Default to hierarchical
             return await self.enhanced_skills.hierarchical_multi_engine_reasoning({
                 "question": question,
                 "context": context
             })
-    
+
     async def _graph_based_reasoning(
         self,
         question: str,
@@ -1768,7 +1768,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
         """Graph-based reasoning using knowledge representation"""
         # Build knowledge graph from question and context
         concepts = self._extract_concepts_from_question(question)
-        
+
         # Create reasoning graph
         reasoning_paths = []
         for concept in concepts:
@@ -1779,10 +1779,10 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "confidence": 0.7
             }
             reasoning_paths.append(path)
-        
+
         # Find best path
         best_path = max(reasoning_paths, key=lambda p: p["confidence"])
-        
+
         return {
             "answer": f"Based on graph analysis of {best_path['start']}",
             "confidence": best_path["confidence"],
@@ -1790,7 +1790,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             "graph_nodes": len(concepts),
             "paths_explored": len(reasoning_paths)
         }
-    
+
     async def _hub_and_spoke_reasoning(
         self,
         question: str,
@@ -1802,31 +1802,31 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             "question": question,
             "spokes": []
         }
-        
+
         # Each spoke handles different aspect
         spoke_aspects = ["logical", "emotional", "practical", "theoretical"]
-        
+
         for aspect in spoke_aspects:
             # Calculate deterministic confidence based on aspect complexity and question length
             question_complexity = min(len(question.split()), 20) / 20.0  # Normalize to 0-1
             aspect_weight = len(aspect) / 20.0  # Simple aspect complexity measure
             base_confidence = 0.6 + (question_complexity * 0.2) + (aspect_weight * 0.1)
-            
+
             spoke_result = {
                 "aspect": aspect,
                 "analysis": f"{aspect} analysis of {question[:30]}...",
                 "confidence": min(0.9, base_confidence)  # Cap at 0.9
             }
             hub_analysis["spokes"].append(spoke_result)
-        
+
         # Hub synthesizes spoke results
         avg_confidence = np.mean([s["confidence"] for s in hub_analysis["spokes"]])
-        
+
         # Try Grok-4 for hub synthesis
         try:
             from .grokReasoning import GrokReasoning
             grok = GrokReasoning()
-            
+
             # Prepare spoke results for Grok-4 synthesis
             sub_answers = [
                 {
@@ -1836,9 +1836,9 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 }
                 for spoke in hub_analysis["spokes"]
             ]
-            
+
             result = await grok.synthesize_answer(sub_answers, question)
-            
+
             if result.get('success'):
                 return {
                     "answer": result.get('synthesis'),
@@ -1849,7 +1849,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 }
         except Exception as e:
             logger.warning(f"Grok-4 hub synthesis failed, using fallback: {e}")
-        
+
         # Fallback to simple synthesis
         return {
             "answer": f"Hub synthesis: {question[:50]}... analyzed from {len(spoke_aspects)} perspectives",
@@ -1858,10 +1858,10 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             "spokes_used": len(spoke_aspects),
             "enhanced": False
         }
-    
+
     async def _extract_concepts_from_question(self, question: str) -> List[str]:
         """Extract key concepts from question using Grok-4"""
-        
+
         # Try Grok-4 first for intelligent concept extraction
         if hasattr(self, 'grok_client') and self.grok_client:
             try:
@@ -1871,24 +1871,24 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
 # A2A Protocol Compliance: All imports must be available
 # No fallback implementations allowed - the agent must have all required dependencies
                 grok = GrokReasoning()
-                
+
                 result = await grok.analyze_patterns(question, [])
-                
+
                 if result.get('success'):
                     patterns = result.get('patterns', {})
                     concepts = patterns.get('key_concepts', [])
                     if concepts:
                         return concepts[:10]  # Top 10 concepts from Grok-4
-                        
+
             except Exception as e:
                 logger.warning(f"Grok-4 concept extraction failed, using fallback: {e}")
-        
+
         # Fallback to simple extraction
         stop_words = {"what", "how", "why", "when", "where", "is", "are", "the", "a", "an"}
         words = question.lower().split()
         concepts = [w for w in words if w not in stop_words and len(w) > 3]
         return concepts[:5]  # Top 5 concepts
-    
+
 
     @a2a_skill(
         name="multi_agent_reasoning",
@@ -1900,7 +1900,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "context": {"type": "object"},
                 "architecture": {
                     "type": "string",
-                    "enum": ["hierarchical", "peer_to_peer", "hub_and_spoke", 
+                    "enum": ["hierarchical", "peer_to_peer", "hub_and_spoke",
                             "blackboard", "graph_based", "hybrid"],
                     "default": "hierarchical"
                 },
@@ -1913,14 +1913,14 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
     )
     @PerformanceMonitorMixin.monitor_performance
     async def multi_agent_reasoning(
-        self, 
+        self,
         request: ReasoningRequest,
         **kwargs
     ) -> Dict[str, Any]:
         """Main entry point for multi-agent reasoning"""
         session_id = f"reasoning_{uuid.uuid4().hex[:8]}"
         start_time = time.time()
-        
+
         try:
             # Initialize reasoning state
             state = ReasoningState(
@@ -1932,11 +1932,11 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "request_params": request.dict()
                 }
             )
-            
+
             self.active_reasoning_sessions[session_id] = state
             self.reasoning_metrics["total_sessions"] += 1
             self.reasoning_metrics["architecture_usage"][request.architecture.value] += 1
-            
+
             # Execute reasoning based on architecture
             try:
                 if request.architecture == ReasoningArchitecture.HIERARCHICAL:
@@ -1961,33 +1961,33 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "confidence": 0.0,
                     "error": str(e)
                 }
-            
+
             # Update metrics
             elapsed_time = time.time() - start_time
             self.reasoning_metrics["average_reasoning_time"] = (
-                (self.reasoning_metrics["average_reasoning_time"] * 
+                (self.reasoning_metrics["average_reasoning_time"] *
                  (self.reasoning_metrics["successful_reasoning"]) + elapsed_time) /
                 (self.reasoning_metrics["successful_reasoning"] + 1)
             )
-            
+
             if result.get("confidence", 0) >= request.confidence_threshold:
                 self.reasoning_metrics["successful_reasoning"] += 1
                 self.reasoning_metrics["average_confidence"] = (
-                    (self.reasoning_metrics["average_confidence"] * 
-                     (self.reasoning_metrics["successful_reasoning"] - 1) + 
+                    (self.reasoning_metrics["average_confidence"] *
+                     (self.reasoning_metrics["successful_reasoning"] - 1) +
                      result["confidence"]) /
                     self.reasoning_metrics["successful_reasoning"]
                 )
-            
+
             # Add session metadata to result
             result["session_id"] = session_id
             result["reasoning_time"] = elapsed_time
             result["architecture_used"] = request.architecture.value
-            
+
             # Results are now cached in enhanced skills layer
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Multi-agent reasoning failed: {e}")
             return {
@@ -2009,13 +2009,13 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
         """Execute reasoning task via A2A protocol"""
         try:
             params = message.content.get("params", {})
-            
+
             # Convert to ReasoningRequest
             request = ReasoningRequest(**params)
-            
+
             # Execute reasoning
             result = await self.multi_agent_reasoning(request)
-            
+
             return {
                 "id": message.content.get("id"),
                 "result": {
@@ -2023,7 +2023,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "reasoning_result": result
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Reasoning task execution failed: {e}")
             return {
@@ -2040,17 +2040,17 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             "metrics": self.reasoning_metrics,
             "active_sessions": len(self.active_reasoning_sessions),
             "sub_agent_pool": {
-                role.value: len(agents) 
+                role.value: len(agents)
                 for role, agents in self.sub_agent_pool.items()
             },
             "circuit_breaker_status": {
-                name: breaker.state 
+                name: breaker.state
                 for name, breaker in self.circuit_breaker_manager._breakers.items()
             }
         }
 
     # ========= MCP Tool Implementations =========
-    
+
     @mcp_tool(
         name="advanced_reasoning",
         description="Perform advanced multi-agent reasoning on complex questions using multiple architectures"
@@ -2066,7 +2066,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
     ) -> Dict[str, Any]:
         """
         Advanced reasoning with multi-agent orchestration
-        
+
         Args:
             question: Complex question to reason about
             reasoning_architecture: Architecture (hierarchical, peer_to_peer, blackboard, graph_based, hub_and_spoke)
@@ -2080,7 +2080,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             valid_architectures = [arch.value for arch in ReasoningArchitecture]
             if reasoning_architecture not in valid_architectures:
                 reasoning_architecture = "hierarchical"
-            
+
             # Create reasoning request
             request = ReasoningRequest(
                 question=question,
@@ -2090,10 +2090,10 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 max_debate_rounds=max_debate_rounds,
                 confidence_threshold=confidence_threshold
             )
-            
+
             # Execute reasoning
             result = await self.multi_agent_reasoning(request)
-            
+
             # Format response for MCP
             return {
                 "success": True,
@@ -2119,7 +2119,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "error": str(e),
                 "question": question
             }
-    
+
     @mcp_tool(
         name="hypothesis_generation",
         description="Generate and validate hypotheses for complex reasoning problems"
@@ -2133,7 +2133,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
     ) -> Dict[str, Any]:
         """
         Generate hypotheses for reasoning problems
-        
+
         Args:
             problem: Problem statement to generate hypotheses for
             domain: Problem domain (scientific, logical, business, general)
@@ -2148,39 +2148,39 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "reasoning_engines": ["logical", "probabilistic", "analogical"],
                 "max_depth": 3
             })
-            
+
             # Extract hypotheses from reasoning result
             hypotheses = []
             answer = hypotheses_result.get("answer", "")
-            
+
             # Parse hypotheses from answer (simple approach)
             lines = answer.split('\n')
             hypothesis_count = 0
-            
+
             for line in lines:
                 if hypothesis_count >= max_hypotheses:
                     break
-                
+
                 line = line.strip()
-                if line and (line.startswith('-') or line.startswith('•') or 
+                if line and (line.startswith('-') or line.startswith('•') or
                             any(marker in line.lower() for marker in ["hypothesis", "theory", "possibility"])):
-                    
+
                     # Calculate confidence based on line characteristics
                     confidence = 0.6 + (len(line.split()) / 50) * 0.3  # Longer = more confident
                     confidence = min(0.95, confidence)  # Cap at 0.95
-                    
+
                     hypothesis = {
                         "hypothesis": line.lstrip('-•').strip(),
                         "domain": domain or "general",
                         "type": "generated"
                     }
-                    
+
                     if include_confidence:
                         hypothesis["confidence"] = round(confidence, 3)
-                    
+
                     hypotheses.append(hypothesis)
                     hypothesis_count += 1
-            
+
             # If no structured hypotheses found, create from reasoning result
             if not hypotheses and hypotheses_result.get("answer"):
                 base_confidence = hypotheses_result.get("confidence", 0.7)
@@ -2190,7 +2190,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "type": "reasoning_generated",
                     "confidence": base_confidence if include_confidence else None
                 })
-            
+
             return {
                 "success": True,
                 "problem": problem,
@@ -2203,7 +2203,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "reasoning_confidence": hypotheses_result.get("confidence", 0.0)
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"MCP hypothesis_generation error: {e}")
             return {
@@ -2211,7 +2211,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "error": str(e),
                 "problem": problem
             }
-    
+
     @mcp_tool(
         name="debate_orchestration",
         description="Orchestrate multi-perspective debates on complex topics"
@@ -2226,7 +2226,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
     ) -> Dict[str, Any]:
         """
         Orchestrate structured debates between multiple perspectives
-        
+
         Args:
             topic: Topic for debate
             perspectives: List of perspectives (auto-generated if not provided)
@@ -2238,7 +2238,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             # Generate perspectives if not provided
             if not perspectives:
                 perspectives = ["analytical", "practical", "theoretical", "critical"]
-            
+
             # Create debate positions
             positions = []
             for i, perspective in enumerate(perspectives):
@@ -2249,14 +2249,14 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "reasoning_engines": ["logical", "analogical"],
                     "max_depth": 2
                 })
-                
+
                 positions.append({
                     "perspective": perspective,
                     "argument": position_result.get("answer", f"{perspective} analysis of {topic}"),
                     "evidence": [f"Evidence point {j+1} from {perspective} view" for j in range(2)],
                     "confidence": position_result.get("confidence", 0.7)
                 })
-            
+
             # Conduct debate using enhanced skills
             debate_result = await self.enhanced_skills.enhanced_debate_mechanism({
                 "positions": positions,
@@ -2264,7 +2264,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "max_rounds": max_rounds,
                 "convergence_threshold": convergence_threshold
             })
-            
+
             return {
                 "success": True,
                 "topic": topic,
@@ -2283,7 +2283,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "convergence_threshold": convergence_threshold
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"MCP debate_orchestration error: {e}")
             return {
@@ -2291,7 +2291,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "error": str(e),
                 "topic": topic
             }
-    
+
     @mcp_tool(
         name="grok_skill_coordination",
         description="Coordinate reasoning skills using Grok-4 intelligence for optimal workflow orchestration"
@@ -2305,7 +2305,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
     ) -> Dict[str, Any]:
         """
         Coordinate reasoning skills using Grok-4 intelligence
-        
+
         Args:
             reasoning_request: Complex reasoning request requiring skill coordination
             coordination_mode: Mode (intelligent, sequential, parallel, adaptive)
@@ -2319,12 +2319,12 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "error": "Grok-4 skill messaging not available",
                     "fallback": "Using basic coordination"
                 }
-            
+
             coordination_start_time = time.time()
-            
+
             # Get Grok-4 coordination strategy
             coordination_plan = await self.grok_skill_messaging.predict_skill_coordination_needs(reasoning_request)
-            
+
             # Execute coordinated skill workflow
             workflow_results = []
             skill_execution_plan = coordination_plan.get("skill_execution_plan", [
@@ -2335,12 +2335,12 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 {"skill": "debate_moderator", "phase": 5},
                 {"skill": "answer_synthesizer", "phase": 6}
             ])
-            
+
             # Execute skills according to Grok-4 plan
             for phase_num in range(1, max([step.get("phase", 1) for step in skill_execution_plan]) + 1):
                 phase_skills = [step for step in skill_execution_plan if step.get("phase") == phase_num]
                 phase_results = []
-                
+
                 # Execute skills in parallel within each phase
                 phase_tasks = []
                 for skill_step in phase_skills:
@@ -2357,7 +2357,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                             reasoning_request
                         )
                     phase_tasks.append(task)
-                
+
                 if phase_tasks:
                     phase_results = await asyncio.gather(*phase_tasks, return_exceptions=True)
                     workflow_results.extend([
@@ -2368,7 +2368,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                         }
                         for i, result in enumerate(phase_results)
                     ])
-            
+
             # Analyze coordination performance
             coordination_duration = time.time() - coordination_start_time
             performance_analysis = {
@@ -2378,7 +2378,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "coordination_efficiency": coordination_plan.get("estimated_performance", {}),
                 "grok_optimizations_applied": len(coordination_plan.get("optimization_opportunities", []))
             }
-            
+
             # Get optimization recommendations if enabled
             optimization_suggestions = []
             if enable_optimization:
@@ -2392,7 +2392,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     } for result in workflow_results]
                 )
                 optimization_suggestions = workflow_analysis.get("optimization_recommendations", [])
-            
+
             return {
                 "success": True,
                 "coordination_strategy": coordination_plan.get("coordination_strategy", "intelligent"),
@@ -2410,7 +2410,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "grok_enhanced": True
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Grok skill coordination error: {e}")
             return {
@@ -2418,7 +2418,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "error": str(e),
                 "coordination_mode": coordination_mode
             }
-    
+
     @mcp_tool(
         name="skill_communication_optimization",
         description="Analyze and optimize inter-skill communication patterns using Grok-4 intelligence"
@@ -2431,7 +2431,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
     ) -> Dict[str, Any]:
         """
         Analyze and optimize skill communication using Grok-4
-        
+
         Args:
             analysis_scope: Scope of analysis (full, recent, specific_skills)
             optimization_target: Target (efficiency, accuracy, reliability, speed)
@@ -2443,7 +2443,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "success": False,
                     "error": "Grok-4 skill messaging not available"
                 }
-            
+
             # Gather communication history
             communication_history = []
             for skill_name, latency_history in self.skill_communication_metrics["skill_call_latency"].items():
@@ -2455,10 +2455,10 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                         "success": True,  # Simplified for now
                         "latency": latency
                     })
-            
+
             # Analyze patterns with Grok-4
             pattern_analysis = await self.grok_skill_messaging.analyze_skill_communication_patterns(communication_history)
-            
+
             # Get current skill network status
             skill_network_status = {}
             for skill_name, skill_info in self.reasoning_skill_network.items():
@@ -2469,7 +2469,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "communication_patterns": skill_info["communication_patterns"],
                     "avg_latency": sum(self.skill_communication_metrics["skill_call_latency"].get(skill_name, [0])) / max(len(self.skill_communication_metrics["skill_call_latency"].get(skill_name, [1])), 1)
                 }
-            
+
             # Generate optimization recommendations
             optimization_recommendations = [
                 {
@@ -2491,7 +2491,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "expected_improvement": "15% overall workflow speedup"
                 }
             ]
-            
+
             # Future performance predictions
             performance_predictions = {}
             if include_predictions:
@@ -2501,7 +2501,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "optimal_coordination_strategy": "adaptive_hybrid",
                     "predicted_efficiency_gain": 0.2
                 }
-            
+
             return {
                 "success": True,
                 "analysis_scope": analysis_scope,
@@ -2526,7 +2526,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "skills_analyzed": len(self.reasoning_skill_network)
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Skill communication optimization error: {e}")
             return {
@@ -2534,7 +2534,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "error": str(e),
                 "analysis_scope": analysis_scope
             }
-    
+
     @mcp_tool(
         name="reasoning_chain_analysis",
         description="Analyze and optimize reasoning chains for complex problems"
@@ -2548,7 +2548,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
     ) -> Dict[str, Any]:
         """
         Analyze reasoning chains for logical consistency and optimization
-        
+
         Args:
             reasoning_chain: Reasoning chain to analyze (text or structured)
             analysis_type: Type of analysis (comprehensive, logical, efficiency)
@@ -2563,7 +2563,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             else:
                 chain_text = reasoning_chain.get("text", str(reasoning_chain))
                 chain_structure = reasoning_chain
-            
+
             # Analyze using swarm intelligence
             analysis_result = await self.enhanced_skills.swarm_intelligence_reasoning({
                 "question": f"Analyze this reasoning chain: {chain_text}",
@@ -2575,7 +2575,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "iterations": 30,
                 "swarm_size": 15
             })
-            
+
             # Extract analysis components
             analysis = {
                 "logical_consistency": 0.8,  # Would be calculated from analysis
@@ -2583,10 +2583,10 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "completeness": 0.85,
                 "clarity": 0.75
             }
-            
+
             # Calculate overall score
             overall_score = sum(analysis.values()) / len(analysis)
-            
+
             # Generate optimizations if requested
             optimizations = []
             if optimize:
@@ -2595,7 +2595,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "Add supporting evidence for key assertions",
                     "Simplify complex intermediate steps"
                 ]
-            
+
             # Generate alternatives if requested
             alternatives = []
             if include_alternatives:
@@ -2605,7 +2605,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "reasoning_engines": ["analogical", "causal"],
                     "max_depth": 2
                 })
-                
+
                 alternatives = [
                     {
                         "approach": "analogical_reasoning",
@@ -2613,7 +2613,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                         "confidence": alt_result.get("confidence", 0.6)
                     }
                 ]
-            
+
             return {
                 "success": True,
                 "original_chain": chain_text[:200] + "..." if len(chain_text) > 200 else chain_text,
@@ -2632,7 +2632,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "analysis_confidence": analysis_result.get("confidence", 0.0)
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"MCP reasoning_chain_analysis error: {e}")
             return {
@@ -2640,19 +2640,19 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "error": str(e),
                 "chain": str(reasoning_chain)[:100] + "..."
             }
-    
+
     # ========= MCP Resource Implementations =========
-    
+
     @mcp_resource(
         uri="reasoning://status",
         description="Reasoning Agent status and performance metrics"
     )
     async def get_reasoning_status(self) -> Dict[str, Any]:
         """Get reasoning agent status and metrics"""
-        
+
         # Get current metrics
         metrics = await self.get_reasoning_metrics()
-        
+
         return {
             "reasoning_status": {
                 "agent_id": self.agent_id,
@@ -2665,7 +2665,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "average_confidence": round(self.reasoning_metrics["average_confidence"], 3),
                     "average_reasoning_time": round(self.reasoning_metrics["average_reasoning_time"], 3),
                     "success_rate": (
-                        self.reasoning_metrics["successful_reasoning"] / 
+                        self.reasoning_metrics["successful_reasoning"] /
                         max(self.reasoning_metrics["total_sessions"], 1)
                     ) * 100
                 },
@@ -2680,14 +2680,14 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 }
             }
         }
-    
+
     @mcp_resource(
         uri="reasoning://architectures",
         description="Available reasoning architectures and their capabilities"
     )
     async def get_reasoning_architectures(self) -> Dict[str, Any]:
         """Get reasoning architecture information"""
-        
+
         return {
             "reasoning_architectures": {
                 "hierarchical": {
@@ -2727,18 +2727,18 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 }
             }
         }
-    
+
     @mcp_resource(
         uri="reasoning://session-history",
         description="Recent reasoning sessions and their outcomes"
     )
     async def get_session_history(self) -> Dict[str, Any]:
         """Get reasoning session history"""
-        
+
         # Get architecture usage statistics
         arch_usage = self.reasoning_metrics["architecture_usage"]
         total_usage = sum(arch_usage.values())
-        
+
         return {
             "session_history": {
                 "current_active_sessions": len(self.active_reasoning_sessions),
@@ -2755,7 +2755,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "average_confidence": round(self.reasoning_metrics["average_confidence"], 3),
                     "average_time_seconds": round(self.reasoning_metrics["average_reasoning_time"], 3),
                     "success_rate": round(
-                        (self.reasoning_metrics["successful_reasoning"] / 
+                        (self.reasoning_metrics["successful_reasoning"] /
                          max(self.reasoning_metrics["total_sessions"], 1)) * 100, 1
                     )
                 },
@@ -2765,14 +2765,14 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 }
             }
         }
-    
+
     @mcp_resource(
         uri="reasoning://skill-coordination",
         description="Real-time skill coordination status and Grok-4 intelligence metrics"
     )
     async def get_skill_coordination_status(self) -> Dict[str, Any]:
         """Get real-time skill coordination status"""
-        
+
         return {
             "skill_coordination": {
                 "mcp_coordinator_active": self.mcp_skill_coordinator is not None and self.mcp_skill_coordinator.is_running,
@@ -2790,7 +2790,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 },
                 "communication_metrics": {
                     "total_skill_calls": self.skill_communication_metrics["total_skill_calls"],
-                    "success_rate": (self.skill_communication_metrics["successful_skill_calls"] / 
+                    "success_rate": (self.skill_communication_metrics["successful_skill_calls"] /
                                     max(self.skill_communication_metrics["total_skill_calls"], 1)) * 100,
                     "active_coordination_patterns": list(self.skill_communication_metrics["skill_collaboration_patterns"].keys()),
                     "error_recovery_events": self.skill_communication_metrics["skill_error_recovery"]
@@ -2803,7 +2803,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 },
                 "coordination_efficiency": {
                     "average_skill_latency": sum(
-                        sum(latencies) / max(len(latencies), 1) 
+                        sum(latencies) / max(len(latencies), 1)
                         for latencies in self.skill_communication_metrics["skill_call_latency"].values()
                     ) / max(len(self.skill_communication_metrics["skill_call_latency"]), 1),
                     "dependency_chain_optimization": "active" if self.grok_skill_messaging else "basic",
@@ -2811,14 +2811,14 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 }
             }
         }
-    
+
     @mcp_resource(
         uri="reasoning://capabilities",
         description="Reasoning capabilities and supported features"
     )
     async def get_reasoning_capabilities(self) -> Dict[str, Any]:
         """Get reasoning capabilities"""
-        
+
         return {
             "reasoning_capabilities": {
                 "core_features": {
@@ -2885,9 +2885,9 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 }
             }
         }
-    
+
     # ========= MCP Prompt Implementations =========
-    
+
     @mcp_prompt(
         name="reasoning_assistant",
         description="Interactive reasoning assistant for complex problem solving"
@@ -2899,14 +2899,14 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
     ) -> str:
         """
         Reasoning assistant for natural language interactions
-        
+
         Args:
             user_query: User's reasoning question or request
             context: Additional context
         """
         try:
             query_lower = user_query.lower()
-            
+
             if any(word in query_lower for word in ["analyze", "reason", "think", "solve"]):
                 # Check if it's a specific question or general request
                 if "?" in user_query:
@@ -2916,7 +2916,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
 
 🔍 **Multi-Agent Analysis** - Break down the problem using specialized agents
 🧠 **Architecture Selection** - Choose the best reasoning approach:
-   • Hierarchical for complex multi-step problems  
+   • Hierarchical for complex multi-step problems
    • Swarm Intelligence for creative solutions
    • Graph-based for relationship analysis
    • Blackboard for knowledge integration
@@ -2927,13 +2927,13 @@ Would you like me to proceed with reasoning through this question? I can also:
 - Generate hypotheses about the problem
 - Analyze different reasoning approaches
 - Provide step-by-step logical breakdowns"""
-                
+
                 else:
                     return """I'm your Advanced Reasoning Assistant! I can help you:
 
 🎯 **Solve Complex Problems** using multiple reasoning architectures
 🔬 **Generate Hypotheses** for research and analysis
-💭 **Orchestrate Debates** between different perspectives  
+💭 **Orchestrate Debates** between different perspectives
 ⚡ **Analyze Reasoning Chains** for logical consistency
 🌊 **Swarm Intelligence** for creative problem solving
 
@@ -2944,13 +2944,13 @@ Would you like me to proceed with reasoning through this question? I can also:
 - "Analyze this reasoning: If A then B, B is true, therefore A is true"
 
 What complex problem would you like me to help you reason through?"""
-            
+
             elif any(word in query_lower for word in ["hypothesis", "hypotheses", "theory"]):
                 return """I can generate and validate hypotheses for your problem!
 
 **Hypothesis Generation Process:**
 1. **Problem Analysis** - Understand the core question
-2. **Domain Context** - Consider relevant knowledge areas  
+2. **Domain Context** - Consider relevant knowledge areas
 3. **Multi-Engine Generation** - Use logical, probabilistic, and analogical reasoning
 4. **Validation** - Assess plausibility and testability
 
@@ -2962,7 +2962,7 @@ What complex problem would you like me to help you reason through?"""
 **Example:** "Generate hypotheses for why employee satisfaction dropped after the office redesign"
 
 What problem would you like me to generate hypotheses for?"""
-            
+
             elif any(word in query_lower for word in ["debate", "argue", "perspective", "pros", "cons"]):
                 return """I can orchestrate structured debates on complex topics!
 
@@ -2980,7 +2980,7 @@ What problem would you like me to generate hypotheses for?"""
 **Example:** "Debate whether universal basic income would benefit or harm society"
 
 What topic would you like me to orchestrate a debate on?"""
-            
+
             elif any(word in query_lower for word in ["architecture", "approach", "method"]):
                 return """I offer multiple reasoning architectures for different problem types:
 
@@ -2988,7 +2988,7 @@ What topic would you like me to orchestrate a debate on?"""
    • Question decomposition → Evidence gathering → Reasoning → Synthesis
    • Great for research questions and analysis tasks
 
-**🌐 Peer-to-Peer** - Best for creative and optimization problems  
+**🌐 Peer-to-Peer** - Best for creative and optimization problems
    • Swarm intelligence with parallel exploration
    • Emergent solutions from collective intelligence
 
@@ -3005,14 +3005,14 @@ What topic would you like me to orchestrate a debate on?"""
    • Expert system integration
 
 Which architecture interests you, or would you like me to recommend one for your specific problem?"""
-            
+
             else:
                 return """I'm your Advanced Reasoning Assistant with sophisticated multi-agent capabilities!
 
 **🧠 What I Can Do:**
 - **Complex Problem Solving** using multiple reasoning architectures
 - **Hypothesis Generation** with confidence scoring
-- **Multi-Perspective Debates** with structured argumentation  
+- **Multi-Perspective Debates** with structured argumentation
 - **Reasoning Chain Analysis** with optimization suggestions
 - **Swarm Intelligence** for creative and optimization problems
 
@@ -3030,11 +3030,11 @@ Which architecture interests you, or would you like me to recommend one for your
 - "What's the best reasoning approach for [type of problem]?"
 
 What complex reasoning challenge can I help you with today?"""
-                
+
         except Exception as e:
             logger.error(f"Reasoning assistant prompt error: {e}")
             return "I encountered an error. Please rephrase your reasoning request."
-    
+
     @mcp_prompt(
         name="architecture_advisor",
         description="Advisor for choosing optimal reasoning architectures"
@@ -3046,7 +3046,7 @@ What complex reasoning challenge can I help you with today?"""
     ) -> str:
         """
         Architecture advisor for reasoning approach selection
-        
+
         Args:
             problem_description: Description of the problem to solve
             requirements: Specific requirements or constraints
@@ -3054,7 +3054,7 @@ What complex reasoning challenge can I help you with today?"""
         try:
             problem_lower = problem_description.lower()
             requirements = requirements or {}
-            
+
             # Analyze problem characteristics
             is_complex = len(problem_description.split()) > 20
             needs_creativity = any(word in problem_lower for word in ["creative", "innovative", "novel", "brainstorm"])
@@ -3062,9 +3062,9 @@ What complex reasoning challenge can I help you with today?"""
             needs_research = any(word in problem_lower for word in ["research", "investigate", "explore", "study"])
             needs_multiple_views = any(word in problem_lower for word in ["perspective", "opinion", "viewpoint", "debate"])
             has_relationships = any(word in problem_lower for word in ["relationship", "connection", "network", "graph"])
-            
+
             recommendations = []
-            
+
             # Architecture recommendations based on problem analysis
             if needs_creativity:
                 recommendations.append({
@@ -3073,7 +3073,7 @@ What complex reasoning challenge can I help you with today?"""
                     "confidence": 0.9,
                     "features": ["Parallel exploration", "Emergent solutions", "Optimization"]
                 })
-            
+
             if needs_research or is_complex:
                 recommendations.append({
                     "architecture": "Hierarchical",
@@ -3081,7 +3081,7 @@ What complex reasoning challenge can I help you with today?"""
                     "confidence": 0.85,
                     "features": ["Question decomposition", "Evidence gathering", "Systematic analysis"]
                 })
-            
+
             if needs_multiple_views:
                 recommendations.append({
                     "architecture": "Hub-and-Spoke",
@@ -3089,7 +3089,7 @@ What complex reasoning challenge can I help you with today?"""
                     "confidence": 0.8,
                     "features": ["Multiple viewpoints", "Coordinated analysis", "Balanced synthesis"]
                 })
-            
+
             if has_relationships:
                 recommendations.append({
                     "architecture": "Graph-Based",
@@ -3097,7 +3097,7 @@ What complex reasoning challenge can I help you with today?"""
                     "confidence": 0.85,
                     "features": ["Concept mapping", "Relationship discovery", "Semantic reasoning"]
                 })
-            
+
             if needs_analysis and "knowledge" in problem_lower:
                 recommendations.append({
                     "architecture": "Blackboard",
@@ -3105,22 +3105,22 @@ What complex reasoning challenge can I help you with today?"""
                     "confidence": 0.75,
                     "features": ["Knowledge integration", "Expert collaboration", "Incremental building"]
                 })
-            
+
             # Sort by confidence
             recommendations.sort(key=lambda x: x["confidence"], reverse=True)
-            
+
             # Format response
             response = f"""**Architecture Analysis for:** "{problem_description[:100]}{'...' if len(problem_description) > 100 else ''}"
 
 **🎯 Recommended Architectures:**\n"""
-            
+
             for i, rec in enumerate(recommendations[:3], 1):
                 response += f"""
 **{i}. {rec['architecture']}** (Confidence: {rec['confidence']:.0%})
    • **Why:** {rec['reason']}
    • **Features:** {', '.join(rec['features'])}
 """
-            
+
             # Add specific considerations
             response += f"""
 **🔍 Problem Characteristics Detected:**
@@ -3136,13 +3136,13 @@ What complex reasoning challenge can I help you with today?"""
 • **Resource Usage:** {'Peer-to-peer uses more computational resources' if not requirements.get('resource_limited') else 'Hub-and-spoke or Graph-based more efficient'}
 
 Would you like me to proceed with the top recommendation, or would you prefer to explore a specific architecture in detail?"""
-            
+
             return response
-                
+
         except Exception as e:
             logger.error(f"Architecture advisor prompt error: {e}")
             return "I encountered an error analyzing your problem. Please try rephrasing your request."
-    
+
     @mcp_prompt(
         name="debate_moderator",
         description="Moderator for structured multi-agent debates"
@@ -3154,14 +3154,14 @@ Would you like me to proceed with the top recommendation, or would you prefer to
     ) -> str:
         """
         Debate moderator for structured discussions
-        
+
         Args:
             debate_topic: Topic for the debate
             moderation_style: Style of moderation (neutral, socratic, devil's_advocate)
         """
         try:
             moderation_style = moderation_style or "neutral"
-            
+
             if moderation_style == "socratic":
                 return f"""**Socratic Debate Moderation for: "{debate_topic}"**
 
@@ -3190,7 +3190,7 @@ I'll ask each perspective:
 4. **Synthesis** (finding common ground and insights)
 
 Ready to begin? I'll start by asking each perspective to state their position clearly and identify their core assumptions."""
-            
+
             elif moderation_style == "devil's_advocate":
                 return f"""**Devil's Advocate Moderation for: "{debate_topic}"**
 
@@ -3210,7 +3210,7 @@ I'll challenge ALL positions to strengthen the overall reasoning:
 
 **⚔️ Debate Process:**
 1. **Initial Positions** - State your strongest case
-2. **Challenge Round** - I'll attack each position systematically  
+2. **Challenge Round** - I'll attack each position systematically
 3. **Defense & Refinement** - Strengthen your arguments
 4. **Final Challenge** - Last chance to expose weaknesses
 5. **Evolved Positions** - Present your refined thinking
@@ -3218,7 +3218,7 @@ I'll challenge ALL positions to strengthen the overall reasoning:
 **Warning:** I will be relentless in finding flaws and alternatives. This process strengthens reasoning through rigorous testing.
 
 Are you prepared for intensive scrutiny of your positions?"""
-            
+
             else:  # neutral
                 return f"""**Neutral Debate Moderation for: "{debate_topic}"**
 
@@ -3261,7 +3261,7 @@ Welcome to this structured debate! I'll ensure fair, productive discussion.
 • Critical (questioning assumptions)
 
 Ready to begin with opening statements? Each perspective will have equal time and opportunity to present their strongest case."""
-            
+
         except Exception as e:
             logger.error(f"Debate moderator prompt error: {e}")
             return "I encountered an error setting up the debate. Please try again."
@@ -3275,33 +3275,33 @@ Ready to begin with opening statements? Each perspective will have equal time an
                 private_key=self.private_key
             )
             logger.info(f"Trust identity initialized for agent {self.agent_id}")
-            
+
             # Initialize enhanced skills Redis if available
             await self.enhanced_skills.initialize_redis()
-            
+
             # Initialize MCP skill coordination
             await self._initialize_mcp_skill_coordination()
-            
+
             # Initialize blockchain integration if enabled
             if self.blockchain_enabled:
                 logger.info("Blockchain integration is enabled for Reasoning Agent")
                 await self._register_blockchain_handlers()
-            
+
             # Test sub-agent connectivity
             test_results = {}
             for role, agents in self.sub_agent_pool.items():
                 if agents:
                     try:
                         result = await self._query_sub_agent(
-                            agents[0], 
-                            "health_check", 
+                            agents[0],
+                            "health_check",
                             {}
                         )
                         test_results[role.value] = "connected"
                     except Exception as e:
                         logger.warning(f"Sub-agent {role.value} not available, will use internal fallback: {e}")
                         test_results[role.value] = "fallback_available"
-            
+
             return {
                 "agent_id": self.agent_id,
                 "name": self.name,
@@ -3311,31 +3311,31 @@ Ready to begin with opening statements? Each perspective will have equal time an
                 "connectivity_test": test_results,
                 "initialization_time": datetime.utcnow().isoformat()
             }
-            
+
         except Exception as e:
             logger.error(f"Agent initialization failed: {e}")
             raise
-    
+
     async def _register_blockchain_handlers(self):
         """Register blockchain-specific message handlers for reasoning operations"""
         logger.info("Registering blockchain handlers for Reasoning Agent")
-        
+
         # Override the base blockchain message handler
         self._handle_blockchain_message = self._handle_reasoning_blockchain_message
-        
+
     def _handle_reasoning_blockchain_message(self, message: Dict[str, Any]):
         """Handle incoming blockchain messages for reasoning operations"""
         logger.info(f"Reasoning Agent received blockchain message: {message}")
-        
+
         message_type = message.get('messageType', '')
         content = message.get('content', {})
-        
+
         if isinstance(content, str):
             try:
                 content = json.loads(content)
             except:
                 pass
-        
+
         # Handle reasoning-specific blockchain messages
         if message_type == "REASONING_REQUEST":
             asyncio.create_task(self._handle_blockchain_reasoning_request(message, content))
@@ -3346,29 +3346,29 @@ Ready to begin with opening statements? Each perspective will have equal time an
         else:
             # Default handling
             logger.info(f"Received blockchain message type: {message_type}")
-            
+
         # Mark message as delivered
         if self.blockchain_integration and message.get('messageId'):
             try:
                 self.blockchain_integration.mark_message_delivered(message['messageId'])
             except Exception as e:
                 logger.error(f"Failed to mark message as delivered: {e}")
-    
+
     async def _handle_blockchain_reasoning_request(self, message: Dict[str, Any], content: Dict[str, Any]):
         """Handle reasoning request from blockchain"""
         try:
             problem = content.get('problem', '')
             reasoning_type = content.get('reasoning_type', 'logical')
             requester_address = message.get('from')
-            
+
             # Verify trust before processing
             if not self.verify_trust(requester_address):
                 logger.warning(f"Reasoning request from untrusted agent: {requester_address}")
                 return
-            
+
             # Perform reasoning
             reasoning_result = await self._perform_reasoning(problem, reasoning_type)
-            
+
             # Send response via blockchain
             self.send_blockchain_message(
                 to_address=requester_address,
@@ -3382,20 +3382,20 @@ Ready to begin with opening statements? Each perspective will have equal time an
                 },
                 message_type="REASONING_RESPONSE"
             )
-            
+
         except Exception as e:
             logger.error(f"Failed to handle reasoning request: {e}")
-    
+
     async def _handle_blockchain_collaborative_reasoning(self, message: Dict[str, Any], content: Dict[str, Any]):
         """Handle collaborative reasoning request from blockchain"""
         try:
             reasoning_session_id = content.get('session_id')
             current_state = content.get('current_state', {})
             contribution_request = content.get('contribution_type', 'analysis')
-            
+
             # Contribute to collaborative reasoning
             contribution = await self._contribute_to_reasoning(reasoning_session_id, current_state, contribution_request)
-            
+
             # Broadcast contribution to all participants
             participants = content.get('participants', [])
             for participant in participants:
@@ -3410,20 +3410,20 @@ Ready to begin with opening statements? Each perspective will have equal time an
                         },
                         message_type="REASONING_CONTRIBUTION"
                     )
-                    
+
         except Exception as e:
             logger.error(f"Failed to handle collaborative reasoning: {e}")
-    
+
     async def _handle_blockchain_logic_verification(self, message: Dict[str, Any], content: Dict[str, Any]):
         """Handle logic verification request from blockchain"""
         try:
             logical_statement = content.get('statement', '')
             premises = content.get('premises', [])
             requester_address = message.get('from')
-            
+
             # Verify logical validity
             verification_result = await self._verify_logic(logical_statement, premises)
-            
+
             # Send verification response via blockchain
             self.send_blockchain_message(
                 to_address=requester_address,
@@ -3436,19 +3436,19 @@ Ready to begin with opening statements? Each perspective will have equal time an
                 },
                 message_type="LOGIC_VERIFICATION_RESPONSE"
             )
-            
+
         except Exception as e:
             logger.error(f"Failed to handle logic verification: {e}")
-    
+
     # ========= Enhanced Grok-4 Powered Skill Coordination =========
-    
+
     async def _initialize_mcp_skill_coordination(self):
         """Initialize MCP skill coordinator with Grok-4 intelligence"""
         try:
             # Initialize MCP skill coordinator
             self.mcp_skill_coordinator = MCPSkillCoordinator(self)
             self.mcp_skill_client = MCPSkillClient(self)
-            
+
             # Add Grok enhanced intra-skill coordination rules
             if self.grok_intra_skill_messaging:
                 self.mcp_skill_coordinator.state_manager.add_coordination_rule(
@@ -3463,68 +3463,68 @@ Ready to begin with opening statements? Each perspective will have equal time an
                     "grok_intra_skill_optimization",
                     self._grok_intra_skill_optimization_rule
                 )
-            
+
             # Start skill coordinator
             await self.mcp_skill_coordinator.start()
-            
+
             logger.info("MCP skill coordination with Grok-4 intelligence initialized")
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize MCP skill coordination: {e}")
-    
+
     async def _grok_intra_skill_routing_rule(self, message: SkillMessage, skills: Dict[str, Any]) -> bool:
         """Grok powered intra-skill routing optimization rule"""
         if not self.grok_intra_skill_messaging:
             if not self._validate_architecture(architecture):
                 architecture = ReasoningArchitecture.HIERARCHICAL
             return True
-        
+
         try:
             # Get current skill loads for intra-skill routing
             current_loads = {skill_name: skill.load_factor for skill_name, skill in skills.items()}
             available_skills = list(skills.keys())
-            
+
             # Get Grok routing recommendation for intra-skill network
             routing_result = await self.grok_intra_skill_messaging.determine_optimal_intra_skill_route(
                 str(message.params), available_skills, current_loads
             )
-            
+
             # Apply intra-skill routing optimization
             recommended_skill = routing_result.get('recommended_skill')
             routing_confidence = routing_result.get('routing_confidence', 0.5)
-            
+
             # Log intra-skill routing decisions for optimization
             if routing_confidence > 0.7 and recommended_skill != message.receiver_skill:
                 logger.info(f"Grok suggests intra-skill route to {recommended_skill} instead of {message.receiver_skill} (confidence: {routing_confidence})")
-                
+
                 # Update message context with routing optimization
                 message.context = message.context or {}
                 message.context['grok_routing_suggestion'] = recommended_skill
                 message.context['original_route'] = message.receiver_skill
-            
+
             # Update intra-skill routing metrics
             self.skill_communication_metrics["intra_skill_routing_optimizations"] = self.skill_communication_metrics.get("intra_skill_routing_optimizations", 0) + 1
-            
+
             return True
-            
+
         except Exception as e:
             logger.error(f"Grok intra-skill routing rule failed: {e}")
             return True
-    
+
     async def _grok_intra_skill_load_balancing_rule(self, message: SkillMessage, skills: Dict[str, Any]) -> bool:
         """Grok powered intra-skill load balancing rule"""
         if not self.grok_intra_skill_messaging:
             return True
-        
+
         try:
             target_skill = skills.get(message.receiver_skill)
             if not target_skill:
                 return True
-            
+
             # Check intra-skill network load distribution
             network_loads = {name: skill.load_factor for name, skill in skills.items()}
             avg_load = sum(network_loads.values()) / len(network_loads)
-            
+
             # Apply Grok-based load balancing for intra-skill network
             if target_skill.load_factor > 0.8 or target_skill.load_factor > avg_load * 1.5:
                 # Find alternative skills within the same capability domain
@@ -3534,32 +3534,32 @@ Ready to begin with opening statements? Each perspective will have equal time an
                     if any(cap in skill_info.get('provides', []) for cap in target_capabilities)
                     and skills.get(name, {}).load_factor < 0.6
                 ]
-                
+
                 if alternative_skills and message.priority != SkillPriority.CRITICAL:
                     # Use first available alternative for load balancing
                     alternative_skill = alternative_skills[0]
                     logger.info(f"Grok intra-skill load balancing: redirecting from {message.receiver_skill} (load: {target_skill.load_factor}) to {alternative_skill}")
-                    
+
                     # Update message context
                     message.context = message.context or {}
                     message.context['load_balanced'] = True
                     message.context['original_target'] = message.receiver_skill
                     message.receiver_skill = alternative_skill
-            
+
             # Update load balancing metrics
             self.skill_communication_metrics["intra_skill_load_balancing_events"] = self.skill_communication_metrics.get("intra_skill_load_balancing_events", 0) + 1
-            
+
             return True
-            
+
         except Exception as e:
             logger.error(f"Grok intra-skill load balancing rule failed: {e}")
             return True
-    
+
     async def _grok_intra_skill_optimization_rule(self, message: SkillMessage, skills: Dict[str, Any]) -> bool:
         """Grok powered intra-skill message optimization rule"""
         if not self.grok_intra_skill_messaging:
             return True
-        
+
         try:
             # Build context for intra-skill optimization
             optimization_context = {
@@ -3568,36 +3568,36 @@ Ready to begin with opening statements? Each perspective will have equal time an
                 "load_factors": {name: skill.load_factor for name, skill in skills.items()},
                 "queue_size": len(self.mcp_skill_coordinator.message_queue.queues.get(message.priority, [])) if self.mcp_skill_coordinator else 0
             }
-            
+
             # Optimize the message using Grok
             optimized_message = await self.grok_intra_skill_messaging.optimize_intra_skill_message(
                 message, optimization_context
             )
-            
+
             # Apply optimizations if any were made
             if optimized_message.context and optimized_message.context.get('grok_optimized'):
                 logger.debug(f"Grok optimized intra-skill message from {message.sender_skill} to {message.receiver_skill}")
-                
+
                 # Update the original message with optimizations
                 message.params = optimized_message.params
                 message.priority = optimized_message.priority
                 message.context = optimized_message.context
-            
+
             # Update optimization metrics
             self.skill_communication_metrics["intra_skill_optimizations"] = self.skill_communication_metrics.get("intra_skill_optimizations", 0) + 1
-            
+
             return True
-            
+
         except Exception as e:
             logger.error(f"Grok intra-skill optimization rule failed: {e}")
             return True
-    
+
     @skill_depends_on("question_analyzer", "evidence_gatherer")
     @skill_provides("hypothesis_generation", "creative_reasoning")
     async def grok_enhanced_hypothesis_skill(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Grok-4 enhanced hypothesis generation skill"""
         skill_start_time = time.time()
-        
+
         try:
             # Use MCP to coordinate with other skills
             question_analysis = await self.mcp_skill_client.call_skill_tool(
@@ -3605,7 +3605,7 @@ Ready to begin with opening statements? Each perspective will have equal time an
                 "analyze_complexity",
                 {"question": request_data.get("question", "")}
             )
-            
+
             evidence_data = await self.mcp_skill_client.call_skill_tool(
                 "evidence_gatherer",
                 "gather_relevant_evidence",
@@ -3614,7 +3614,7 @@ Ready to begin with opening statements? Each perspective will have equal time an
                     "context": request_data.get("context", {})
                 }
             )
-            
+
             # Enhance with Grok-4 intelligence
             if self.grok_skill_messaging:
                 coordination_plan = await self.grok_skill_messaging.predict_skill_coordination_needs({
@@ -3623,7 +3623,7 @@ Ready to begin with opening statements? Each perspective will have equal time an
                     "evidence": evidence_data,
                     "context": request_data.get("context", {})
                 })
-                
+
                 # Use coordination plan to optimize hypothesis generation
                 hypothesis_request = {
                     "problem": request_data.get("question", ""),
@@ -3637,10 +3637,10 @@ Ready to begin with opening statements? Each perspective will have equal time an
                     "evidence": evidence_data.get("result", []),
                     "complexity": question_analysis.get("result", {}).get("complexity", "medium")
                 }
-            
+
             # Generate hypotheses using enhanced reasoning
             result = await self.hypothesis_generation_mcp(**hypothesis_request)
-            
+
             # Update skill performance metrics
             skill_duration = time.time() - skill_start_time
             await self._update_skill_performance("grok_enhanced_hypothesis_skill", {
@@ -3649,9 +3649,9 @@ Ready to begin with opening statements? Each perspective will have equal time an
                 "hypotheses_generated": len(result.get("hypotheses", [])),
                 "grok_enhanced": self.grok_skill_messaging is not None
             })
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Grok enhanced hypothesis skill failed: {e}")
             await self._update_skill_performance("grok_enhanced_hypothesis_skill", {
@@ -3660,13 +3660,13 @@ Ready to begin with opening statements? Each perspective will have equal time an
                 "error": str(e)
             })
             return {"success": False, "error": str(e)}
-    
+
     @skill_depends_on("hypothesis_generator", "logical_reasoner")
     @skill_provides("debate_moderation", "consensus_building")
     async def grok_enhanced_debate_skill(self, debate_data: Dict[str, Any]) -> Dict[str, Any]:
         """Grok-4 enhanced debate coordination skill"""
         skill_start_time = time.time()
-        
+
         try:
             # Get hypotheses from hypothesis generator
             hypotheses = await self.mcp_skill_client.call_skill_tool(
@@ -3674,14 +3674,14 @@ Ready to begin with opening statements? Each perspective will have equal time an
                 "generate_hypotheses",
                 {"problem": debate_data.get("topic", "")}
             )
-            
+
             # Get logical analysis from reasoning skill
             logical_analysis = await self.mcp_skill_client.call_skill_tool(
                 "logical_reasoner",
                 "analyze_logical_consistency",
                 {"hypotheses": hypotheses.get("result", {}).get("hypotheses", [])}
             )
-            
+
             # Use Grok-4 to optimize debate structure
             if self.grok_skill_messaging:
                 debate_optimization = await self.grok_skill_messaging.predict_skill_coordination_needs({
@@ -3691,7 +3691,7 @@ Ready to begin with opening statements? Each perspective will have equal time an
                     "hypotheses": hypotheses.get("result", {}),
                     "logical_analysis": logical_analysis.get("result", {})
                 })
-                
+
                 # Apply Grok-4 optimizations to debate structure
                 optimized_debate_params = {
                     "topic": debate_data.get("topic", ""),
@@ -3701,10 +3701,10 @@ Ready to begin with opening statements? Each perspective will have equal time an
                 }
             else:
                 optimized_debate_params = debate_data
-            
+
             # Conduct enhanced debate
             result = await self.debate_orchestration_mcp(**optimized_debate_params)
-            
+
             # Update performance metrics
             skill_duration = time.time() - skill_start_time
             await self._update_skill_performance("grok_enhanced_debate_skill", {
@@ -3714,9 +3714,9 @@ Ready to begin with opening statements? Each perspective will have equal time an
                 "rounds_conducted": result.get("debate_results", {}).get("rounds_conducted", 0),
                 "grok_enhanced": self.grok_skill_messaging is not None
             })
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Grok enhanced debate skill failed: {e}")
             await self._update_skill_performance("grok_enhanced_debate_skill", {
@@ -3725,7 +3725,7 @@ Ready to begin with opening statements? Each perspective will have equal time an
                 "error": str(e)
             })
             return {"success": False, "error": str(e)}
-    
+
     async def _update_skill_performance(self, skill_name: str, performance_data: Dict[str, Any]):
         """Update skill performance metrics for Grok-4 analysis"""
         try:
@@ -3733,21 +3733,21 @@ Ready to begin with opening statements? Each perspective will have equal time an
             self.skill_communication_metrics["total_skill_calls"] += 1
             if performance_data.get("success", False):
                 self.skill_communication_metrics["successful_skill_calls"] += 1
-            
+
             # Update skill-specific metrics
             if skill_name not in self.skill_communication_metrics["skill_call_latency"]:
                 self.skill_communication_metrics["skill_call_latency"][skill_name] = []
-            
+
             self.skill_communication_metrics["skill_call_latency"][skill_name].append(performance_data.get("duration", 0))
-            
+
             # Limit history size
             if len(self.skill_communication_metrics["skill_call_latency"][skill_name]) > 100:
                 self.skill_communication_metrics["skill_call_latency"][skill_name] = self.skill_communication_metrics["skill_call_latency"][skill_name][-100:]
-            
+
             # Update Grok-4 performance history
             if self.grok_skill_messaging:
                 await self.grok_skill_messaging.update_skill_performance_history(skill_name, performance_data)
-            
+
         except Exception as e:
             logger.error(f"Failed to update skill performance metrics: {e}")
 
@@ -3756,13 +3756,13 @@ Ready to begin with opening statements? Each perspective will have equal time an
         try:
             # Clear active sessions
             self.active_reasoning_sessions.clear()
-            
+
             # Cleanup Grok intra-skill messaging resources
             if self.grok_intra_skill_messaging:
                 await self.grok_intra_skill_messaging.cleanup()
-            
+
             logger.info("Reasoning Agent shutdown completed")
-            
+
         except Exception as e:
             logger.error(f"Error during shutdown: {e}")
 
@@ -3796,7 +3796,7 @@ Ready to begin with opening statements? Each perspective will have equal time an
                         "question": {"type": "string", "required": True},
                         "architecture": {
                             "type": "string",
-                            "enum": ["hierarchical", "peer_to_peer", "hub_and_spoke", 
+                            "enum": ["hierarchical", "peer_to_peer", "hub_and_spoke",
                                     "blackboard", "graph_based", "hybrid"]
                         },
                         "enable_debate": {"type": "boolean", "default": True}
@@ -3815,7 +3815,7 @@ Ready to begin with opening statements? Each perspective will have equal time an
     def _handle_reasoning_error(self, error: Exception, context: str) -> Dict[str, Any]:
         """Handle reasoning errors explicitly instead of silent failures"""
         logger.error(f"Reasoning error in {context}: {error}")
-        
+
         return {
             "success": False,
             "error": str(error),

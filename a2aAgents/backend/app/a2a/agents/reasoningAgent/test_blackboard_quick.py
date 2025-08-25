@@ -19,22 +19,22 @@ async def quick_test():
     """Quick blackboard test"""
     try:
         from blackboardArchitecture import BlackboardController
-        
+
         print("Quick Blackboard Test")
         print("=" * 40)
-        
+
         controller = BlackboardController()
-        
+
         question = "What causes inflation?"
         print(f"Question: {question}")
-        
+
         result = await controller.reason(question)
-        
+
         print(f"\nAnswer: {result.get('answer', 'No answer')[:150]}...")
         print(f"Confidence: {result.get('confidence', 0.0):.2f}")
         print(f"Iterations: {result.get('iterations', 0)}")
         print(f"Enhanced: {result.get('enhanced', False)}")
-        
+
         # Show knowledge source activity
         if 'blackboard_state' in result:
             state = result['blackboard_state']
@@ -42,9 +42,9 @@ async def quick_test():
             print(f"\nKnowledge Source Activity:")
             for contrib in contributions:
                 print(f"  - {contrib.get('source')}: {contrib.get('action')}")
-        
+
         print("\n✅ Quick test completed!")
-        
+
     except Exception as e:
         print(f"❌ Error: {e}")
 

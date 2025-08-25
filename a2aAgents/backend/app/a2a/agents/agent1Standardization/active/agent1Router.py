@@ -25,7 +25,7 @@ async def json_rpc_handler(request: Request):
     """Handle JSON-RPC 2.0 requests for Agent 1"""
     try:
         body = await request.json()
-        
+
         if "jsonrpc" not in body or body["jsonrpc"] != "2.0":
             return JSONResponse(
                 status_code=400,
@@ -38,25 +38,25 @@ async def json_rpc_handler(request: Request):
                     "id": body.get("id")
                 }
             )
-        
+
         method = body.get("method")
         params = body.get("params", {})
         request_id = body.get("id")
-        
+
         if method == "agent.getCard":
             result = await agent1.get_agent_card()
-        
+
         elif method == "agent.processMessage":
             message = A2AMessage(**params.get("message", {}))
             context_id = params.get("contextId", str(datetime.utcnow().timestamp()))
             priority = params.get("priority", "medium")
             processing_mode = params.get("processing_mode", "auto")
             result = await agent1.process_message(message, context_id, priority, processing_mode)
-        
+
         elif method == "agent.getTaskStatus":
             task_id = params.get("taskId")
             result = await agent1.get_task_status(task_id)
-        
+
         else:
             return JSONResponse(
                 status_code=400,
@@ -69,7 +69,7 @@ async def json_rpc_handler(request: Request):
                     "id": request_id
                 }
             )
-        
+
         return JSONResponse(
             content={
                 "jsonrpc": "2.0",
@@ -77,7 +77,7 @@ async def json_rpc_handler(request: Request):
                 "id": request_id
             }
         )
-        
+
     except Exception as e:
         return JSONResponse(
             status_code=500,
@@ -102,10 +102,10 @@ async def rest_message_handler(request: Request):
         context_id = body.get("contextId", str(datetime.utcnow().timestamp()))
         priority = body.get("priority", "medium")
         processing_mode = body.get("processing_mode", "auto")
-        
+
         result = await agent1.process_message(message, context_id, priority, processing_mode)
         return JSONResponse(content=result)
-        
+
     except Exception as e:
         return JSONResponse(
             status_code=400,
@@ -188,7 +188,7 @@ async def health_check():
             "streaming_enabled": queue_status["capabilities"]["streaming_enabled"],
             "batch_processing_enabled": queue_status["capabilities"]["batch_processing_enabled"]
         }
-    
+
     return {
         "status": "healthy",
         "agent": "Financial Data Standardization Agent",

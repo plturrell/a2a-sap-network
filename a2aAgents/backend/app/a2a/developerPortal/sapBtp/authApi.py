@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 
 
 async def authenticate_user_credentials(
-    username: str, 
-    password: str, 
+    username: str,
+    password: str,
     rbac_service: RBACService
 ) -> Optional[UserInfo]:
     """Authenticate user against database or LDAP"""
@@ -31,22 +31,22 @@ async def authenticate_user_credentials(
         # 1. Corporate LDAP/Active Directory
         # 2. SAP Cloud Identity Services
         # 3. Database with properly hashed passwords
-        
+
         # Development mode authentication (use environment variables)
         import os
         if os.environ.get('DEVELOPMENT_MODE', 'false').lower() == 'true':
             logger.warning("Development mode authentication enabled - not for production use")
-            
+
             # Get dev credentials from environment variables
             dev_username = os.environ.get('DEV_AUTH_USERNAME')
             dev_password = os.environ.get('DEV_AUTH_PASSWORD')
-            
+
             if not dev_username or not dev_password:
                 raise HTTPException(
                     status_code=500,
                     detail="Development mode enabled but DEV_AUTH_USERNAME/DEV_AUTH_PASSWORD not set"
                 )
-            
+
             if username == dev_username and password == dev_password:
                 return UserInfo(
                     user_id="DEV_USER_001",
@@ -56,14 +56,14 @@ async def authenticate_user_credentials(
                     scopes=["read:projects", "write:projects"],
                     tenant_id="dev-tenant"
                 )
-        
+
         # Production: implement real authentication here
         # Example: LDAP authentication
         # ldap_conn = ldap.initialize(os.environ.get('LDAP_SERVER'))
         # ldap_conn.simple_bind_s(f"uid={username},{os.environ.get('LDAP_BASE_DN')}", password)
-        
+
         return None
-        
+
     except Exception as e:
         logger.error(f"Authentication error: {e}")
         return None
@@ -131,16 +131,16 @@ async def get_current_user(
     try:
         token = credentials.credentials
         user_info = await rbac_service.validate_token(token)
-        
+
         if not user_info:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid authentication token",
                 headers={"WWW-Authenticate": "Bearer"}
             )
-        
+
         return user_info
-        
+
     except Exception as e:
         logger.error(f"Authentication error: {e}")
         raise HTTPException(
@@ -164,7 +164,7 @@ async def login(
     try:
         # In a real SAP BTP environment, the Application Router would handle authentication
         # and provide the JWT token. For development, we simulate this process.
-        
+
         if request.token:
             # Token-based login (XSUAA JWT)
             user_info = await rbac_service.validate_token(request.token)
@@ -173,14 +173,14 @@ async def login(
                     success=False,
                     message="Invalid token"
                 )
-            
+
             # Create session
             session_info = await session_service.create_session(
                 user_info=user_info,
                 request=http_request,
                 access_token=request.token
             )
-            
+
             return LoginResponse(
                 success=True,
                 message="Login successful",
@@ -188,34 +188,34 @@ async def login(
                 user_info=user_info,
                 expires_at=session_info.expires_at
             )
-            
+
         elif request.username and request.password:
             # Username/password login (for development only)
             # In production, this would redirect to XSUAA
-            
+
             # Authenticate against user database
             user_info = await authenticate_user_credentials(
                 username=request.username,
                 password=request.password,
                 rbac_service=rbac_service
             )
-            
+
             if not user_info:
                 raise HTTPException(
                     status_code=401,
                     detail="Invalid username or password"
                 )
-            
+
             # Generate production token
             token = await rbac_service.generate_token(user_info)
-            
+
             # Create session
             session_info = await session_service.create_session(
                 user_info=user_info,
                 request=http_request,
                 access_token=token
             )
-            
+
             return LoginResponse(
                 success=True,
                 message="Login successful",
@@ -223,13 +223,13 @@ async def login(
                 user_info=user_info,
                 expires_at=session_info.expires_at
             )
-        
+
         else:
             return LoginResponse(
                 success=False,
                 message="Username/password or token required"
             )
-            
+
     except Exception as e:
         logger.error(f"Login error: {e}")
         return LoginResponse(
@@ -248,12 +248,12 @@ async def logout(
     try:
         # Get session ID from request headers or cookies
         session_id = http_request.headers.get("X-Session-ID")
-        
+
         if session_id:
             await session_service.terminate_session(session_id)
-        
+
         return {"success": True, "message": "Logout successful"}
-        
+
     except Exception as e:
         logger.error(f"Logout error: {e}")
         return {"success": False, "message": "Logout failed"}
@@ -268,12 +268,12 @@ async def get_user_sessions(
     try:
         sessions = await session_service.get_user_sessions(current_user.user_id)
         statistics = await session_service.get_session_statistics()
-        
+
         return SessionResponse(
             sessions=sessions,
             statistics=statistics
         )
-        
+
     except Exception as e:
         logger.error(f"Get sessions error: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve sessions")
@@ -288,12 +288,12 @@ async def terminate_session(
     """Terminate a specific session"""
     try:
         success = await session_service.terminate_session(session_id)
-        
+
         if success:
             return {"success": True, "message": "Session terminated"}
         else:
             raise HTTPException(status_code=404, detail="Session not found")
-            
+
     except HTTPException:
         raise
     except Exception as e:
@@ -310,17 +310,17 @@ async def terminate_all_sessions(
     """Terminate all user sessions except current one"""
     try:
         current_session_id = http_request.headers.get("X-Session-ID")
-        
+
         terminated_count = await session_service.terminate_user_sessions(
             current_user.user_id,
             exclude_session=current_session_id
         )
-        
+
         return TerminateSessionsResponse(
             terminated_count=terminated_count,
             message=f"Terminated {terminated_count} sessions"
         )
-        
+
     except Exception as e:
         logger.error(f"Terminate all sessions error: {e}")
         raise HTTPException(status_code=500, detail="Failed to terminate sessions")
@@ -335,7 +335,7 @@ async def get_user_preferences(
         # In a real implementation, this would fetch from a user preferences database
         # For now, return default preferences
         return UserPreferences()
-        
+
     except Exception as e:
         logger.error(f"Get preferences error: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve preferences")
@@ -350,9 +350,9 @@ async def update_user_preferences(
     try:
         # In a real implementation, this would save to a user preferences database
         logger.info(f"Updated preferences for user {current_user.user_id}: {preferences.dict()}")
-        
+
         return {"success": True, "message": "Preferences updated"}
-        
+
     except Exception as e:
         logger.error(f"Update preferences error: {e}")
         raise HTTPException(status_code=500, detail="Failed to update preferences")
@@ -369,29 +369,29 @@ async def change_password(
         # 1. SAP Cloud Identity Services
         # 2. Corporate Identity Provider (LDAP/Active Directory)
         # 3. External Identity Provider (OAuth/SAML)
-        
+
         # For now, return not implemented for production security
         raise HTTPException(
             status_code=501,
             detail="Password change must be handled by the configured Identity Provider"
         )
-        
+
         # Basic validation for future implementation
         if len(request.new_password) < 8:
             raise HTTPException(
                 status_code=400,
                 detail="New password must be at least 8 characters long"
             )
-        
+
         # In a real implementation, this would:
         # 1. Validate current password with Identity Provider
         # 2. Update password through Identity Provider API
         # 3. Invalidate all existing sessions
-        
+
         logger.info(f"Password change requested for user {current_user.user_id}")
-        
+
         return {"success": True, "message": "Password changed successfully"}
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -428,19 +428,19 @@ async def refresh_token(
     """Refresh authentication token"""
     try:
         session_id = http_request.headers.get("X-Session-ID")
-        
+
         if session_id:
             session_info = await session_service.refresh_session(session_id)
-            
+
             if session_info:
                 return {
                     "success": True,
                     "message": "Token refreshed",
                     "expires_at": session_info.expires_at
                 }
-        
+
         raise HTTPException(status_code=401, detail="Session not found or expired")
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -462,7 +462,7 @@ async def list_all_users(
             "active_sessions": statistics.get("active_sessions", 0),
             "most_active_users": statistics.get("most_active_users", [])
         }
-        
+
     except Exception as e:
         logger.error(f"List users error: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve user list")
@@ -477,7 +477,7 @@ async def list_all_sessions(
     try:
         statistics = await session_service.get_session_statistics()
         return statistics
-        
+
     except Exception as e:
         logger.error(f"List sessions error: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve session list")

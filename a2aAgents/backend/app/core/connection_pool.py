@@ -34,11 +34,11 @@ class PooledConnection:
     use_count: int = 0
     pool_name: str = ""
     db_type: str = ""
-    
+
     def is_stale(self, max_age_seconds: int = 3600) -> bool:
         """Check if connection is too old"""
         return (datetime.utcnow() - self.created_at).total_seconds() > max_age_seconds
-    
+
     def is_idle(self, max_idle_seconds: int = 300) -> bool:
         """Check if connection has been idle too long"""
         return (datetime.utcnow() - self.last_used).total_seconds() > max_idle_seconds
@@ -46,7 +46,7 @@ class PooledConnection:
 
 class ConnectionPool:
     """Generic connection pool with health checks"""
-    
+
     def __init__(
         self,
         name: str,
@@ -64,33 +64,33 @@ class ConnectionPool:
         self.max_age_seconds = max_age_seconds
         self.max_idle_seconds = max_idle_seconds
         self.health_check_interval = health_check_interval
-        
+
         self._pool: List[PooledConnection] = []
         self._available: asyncio.Queue = asyncio.Queue()
         self._lock = asyncio.Lock()
         self._closing = False
         self._connection_factory: Optional[Callable] = None
         self._health_check_task: Optional[asyncio.Task] = None
-        
+
         # Update metrics
         pool_size.labels(pool_name=name, db_type=db_type).set(0)
         active_connections.labels(pool_name=name, db_type=db_type).set(0)
-    
+
     async def initialize(self, connection_factory: Callable):
         """Initialize the pool with minimum connections"""
         self._connection_factory = connection_factory
-        
+
         # Create minimum connections
         for _ in range(self.min_size):
             conn = await self._create_connection()
             if conn:
                 await self._available.put(conn)
-        
+
         # Start health check task
         self._health_check_task = asyncio.create_task(self._health_check_loop())
-        
+
         logger.info(f"Initialized connection pool '{self.name}' with {len(self._pool)} connections")
-    
+
     async def _create_connection(self) -> Optional[PooledConnection]:
         """Create a new connection"""
         try:
@@ -102,13 +102,13 @@ class ConnectionPool:
                 pool_name=self.name,
                 db_type=self.db_type
             )
-            
+
             async with self._lock:
                 self._pool.append(pooled_conn)
                 pool_size.labels(pool_name=self.name, db_type=self.db_type).set(len(self._pool))
-            
+
             return pooled_conn
-            
+
         except Exception as e:
             logger.error(f"Failed to create connection for pool '{self.name}': {e}")
             connection_errors.labels(
@@ -117,13 +117,13 @@ class ConnectionPool:
                 error_type='creation_failed'
             ).inc()
             return None
-    
+
     @asynccontextmanager
     async def acquire(self, timeout: float = 30.0):
         """Acquire a connection from the pool"""
         start_time = time.time()
         conn = None
-        
+
         try:
             # Try to get available connection
             try:
@@ -133,29 +133,29 @@ class ConnectionPool:
                 async with self._lock:
                     if len(self._pool) < self.max_size:
                         conn = await self._create_connection()
-                
+
                 if not conn:
                     raise TimeoutError(f"Could not acquire connection from pool '{self.name}' within {timeout}s")
-            
+
             # Check if connection is still valid
             if conn.is_stale(self.max_age_seconds):
                 await self._close_connection(conn)
                 conn = await self._create_connection()
                 if not conn:
                     raise RuntimeError(f"Failed to create replacement connection for pool '{self.name}'")
-            
+
             # Update metrics
             wait_time = time.time() - start_time
             connection_wait_time.labels(pool_name=self.name, db_type=self.db_type).observe(wait_time)
             connection_acquired.labels(pool_name=self.name, db_type=self.db_type).inc()
             active_connections.labels(pool_name=self.name, db_type=self.db_type).inc()
-            
+
             # Update connection usage
             conn.last_used = datetime.utcnow()
             conn.use_count += 1
-            
+
             yield conn.connection
-            
+
         except Exception as e:
             connection_errors.labels(
                 pool_name=self.name,
@@ -163,14 +163,14 @@ class ConnectionPool:
                 error_type='acquire_failed'
             ).inc()
             raise
-            
+
         finally:
             if conn:
                 # Return connection to pool
                 await self._available.put(conn)
                 connection_released.labels(pool_name=self.name, db_type=self.db_type).inc()
                 active_connections.labels(pool_name=self.name, db_type=self.db_type).dec()
-    
+
     async def _close_connection(self, conn: PooledConnection):
         """Close a connection and remove from pool"""
         try:
@@ -179,15 +179,15 @@ class ConnectionPool:
                     await conn.connection.close()
                 else:
                     conn.connection.close()
-            
+
             async with self._lock:
                 if conn in self._pool:
                     self._pool.remove(conn)
                     pool_size.labels(pool_name=self.name, db_type=self.db_type).set(len(self._pool))
-                    
+
         except Exception as e:
             logger.error(f"Error closing connection in pool '{self.name}': {e}")
-    
+
     async def _health_check_loop(self):
         """Periodic health check of connections"""
         while not self._closing:
@@ -196,11 +196,11 @@ class ConnectionPool:
                 await self._health_check()
             except Exception as e:
                 logger.error(f"Health check failed for pool '{self.name}': {e}")
-    
+
     async def _health_check(self):
         """Check health of all connections"""
         logger.debug(f"Running health check for pool '{self.name}'")
-        
+
         # Get all available connections
         connections_to_check = []
         while not self._available.empty():
@@ -209,7 +209,7 @@ class ConnectionPool:
                 connections_to_check.append(conn)
             except asyncio.QueueEmpty:
                 break
-        
+
         # Check each connection
         healthy_connections = []
         for conn in connections_to_check:
@@ -223,11 +223,11 @@ class ConnectionPool:
                 else:
                     logger.warning(f"Removing unhealthy connection from pool '{self.name}'")
                     await self._close_connection(conn)
-        
+
         # Return healthy connections to pool
         for conn in healthy_connections:
             await self._available.put(conn)
-        
+
         # Ensure minimum pool size
         async with self._lock:
             current_size = len(self._pool)
@@ -236,7 +236,7 @@ class ConnectionPool:
                     new_conn = await self._create_connection()
                     if new_conn:
                         await self._available.put(new_conn)
-    
+
     async def _check_connection_health(self, conn: PooledConnection) -> bool:
         """Check if a specific connection is healthy"""
         try:
@@ -255,32 +255,32 @@ class ConnectionPool:
         except Exception as e:
             logger.debug(f"Connection health check failed: {e}")
             return False
-    
+
     async def close(self):
         """Close all connections and shutdown pool"""
         self._closing = True
-        
+
         if self._health_check_task:
             self._health_check_task.cancel()
             try:
                 await self._health_check_task
             except asyncio.CancelledError:
                 pass
-        
+
         # Close all connections
         async with self._lock:
             for conn in self._pool:
                 await self._close_connection(conn)
-        
+
         logger.info(f"Closed connection pool '{self.name}'")
 
 
 class ConnectionPoolManager:
     """Manages multiple connection pools"""
-    
+
     def __init__(self):
         self.pools: Dict[str, ConnectionPool] = {}
-    
+
     async def create_pool(
         self,
         name: str,
@@ -289,20 +289,20 @@ class ConnectionPoolManager:
         **pool_kwargs
     ) -> ConnectionPool:
         """Create and initialize a new connection pool"""
-        
+
         if name in self.pools:
             raise ValueError(f"Pool '{name}' already exists")
-        
+
         pool = ConnectionPool(name, db_type, **pool_kwargs)
         await pool.initialize(connection_factory)
-        
+
         self.pools[name] = pool
         return pool
-    
+
     def get_pool(self, name: str) -> Optional[ConnectionPool]:
         """Get a connection pool by name"""
         return self.pools.get(name)
-    
+
     async def close_all(self):
         """Close all connection pools"""
         for pool in self.pools.values():

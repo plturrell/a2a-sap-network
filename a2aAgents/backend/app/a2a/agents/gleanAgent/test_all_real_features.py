@@ -17,25 +17,25 @@ async def test_all_real_features():
     """Test all real implementations in GleanAgent"""
     print("🧪 COMPREHENSIVE TEST OF REAL GLEAN AGENT IMPLEMENTATIONS")
     print("=" * 70)
-    
+
     try:
         # Import the agent
         from app.a2a.agents.gleanAgent import GleanAgent
         print("✅ Successfully imported GleanAgent")
-        
+
         # Create agent instance
         agent = GleanAgent()
         print(f"✅ Created agent: {agent.agent_id}")
-        
+
         # Create a comprehensive test project
         test_dir = tempfile.mkdtemp(prefix="glean_comprehensive_test_")
         print(f"\n📁 Created test directory: {test_dir}")
-        
+
         # Create a realistic Python project structure
         (Path(test_dir) / "src").mkdir()
         (Path(test_dir) / "tests").mkdir()
         (Path(test_dir) / "requirements.txt").write_text("requests>=2.25.0\nflask>=2.0.0\npytest>=6.0.0\ncoverage>=5.0.0")
-        
+
         # Main module with various complexity levels
         main_py = Path(test_dir) / "src" / "main.py"
         main_py.write_text('''
@@ -64,24 +64,24 @@ class UserData:
 
 class DatabaseInterface(ABC):
     """Abstract database interface"""
-    
+
     @abstractmethod
     def connect(self) -> bool:
         """Connect to database"""
         pass
-    
-    @abstractmethod  
+
+    @abstractmethod
     def query(self, sql: str) -> List[Dict]:
         """Execute query"""
         pass
 
 class PostgreSQLDatabase(DatabaseInterface):
     """PostgreSQL database implementation"""
-    
+
     def __init__(self, connection_string: str):
         self.connection_string = connection_string
         self.connected = False
-    
+
     def connect(self) -> bool:
         """Connect to PostgreSQL database"""
         try:
@@ -92,12 +92,12 @@ class PostgreSQLDatabase(DatabaseInterface):
         except Exception as e:
             logger.error(f"Connection failed: {e}")
             return False
-    
+
     def query(self, sql: str) -> List[Dict]:
         """Execute SQL query"""
         if not self.connected:
             raise ConnectionError("Not connected to database")
-        
+
         # Simulate query execution
         if "SELECT" in sql.upper():
             return [{"id": 1, "name": "test"}]
@@ -105,19 +105,19 @@ class PostgreSQLDatabase(DatabaseInterface):
 
 class UserService:
     """User management service with high complexity"""
-    
+
     def __init__(self, database: DatabaseInterface):
         self.database = database
         self.cache = {}
         self.user_permissions = {}
-    
+
     def authenticate_user(self, username: str, password: str, remember_me: bool = False) -> Optional[UserData]:
         """
         Complex authentication with multiple validation paths
         """
         if not username or not password:
             return None
-        
+
         # Check cache first
         cache_key = f"user_{username}"
         if cache_key in self.cache:
@@ -126,12 +126,12 @@ class UserService:
                 if remember_me:
                     self._extend_session(cached_user)
                 return cached_user
-        
+
         # Database lookup with complex validation
         try:
             if self.database.connect():
                 users = self.database.query(f"SELECT * FROM users WHERE username = '{username}'")
-                
+
                 for user_record in users:
                     if self._validate_password(password, user_record.get('password_hash', '')):
                         # Check user permissions and status
@@ -153,16 +153,16 @@ class UserService:
                                                     email=user_record['email'],
                                                     active=True
                                                 )
-                                                
+
                                                 # Update cache
                                                 self.cache[cache_key] = user
-                                                
+
                                                 # Log successful authentication
                                                 logger.info(f"User {username} authenticated successfully")
-                                                
+
                                                 if remember_me:
                                                     self._extend_session(user)
-                                                
+
                                                 return user
                                             else:
                                                 logger.warning(f"User {username} login outside allowed hours")
@@ -182,28 +182,28 @@ class UserService:
                 logger.error("Database connection failed during authentication")
         except Exception as e:
             logger.error(f"Authentication error: {e}")
-        
+
         return None
-    
+
     def _validate_password(self, password: str, hash: str) -> bool:
         """Validate password against hash (simplified)"""
         # In real implementation, use proper password hashing
         return len(password) > 6  # Simplified validation
-    
+
     def _validate_cached_user(self, user: UserData) -> bool:
         """Validate cached user is still valid"""
         return user.active
-    
+
     def _extend_session(self, user: UserData) -> None:
         """Extend user session for remember me functionality"""
         # Implementation for session extension
         pass
-    
+
     def _check_ip_restrictions(self, allowed_ips: List[str]) -> bool:
         """Check if current IP is allowed"""
         # Simplified - in real implementation check actual IP
         return len(allowed_ips) == 0 or "127.0.0.1" in allowed_ips
-    
+
     def _check_time_restrictions(self, allowed_hours: List[int]) -> bool:
         """Check if current time is within allowed hours"""
         import datetime
@@ -215,11 +215,11 @@ def process_user_data(data: List[Dict], filters: Dict[str, Any] = None) -> List[
     Process user data with filtering and validation
     """
     processed_users = []
-    
+
     for item in data:
         if not item or not isinstance(item, dict):
             continue
-        
+
         # Apply filters if provided
         if filters:
             skip_item = False
@@ -233,10 +233,10 @@ def process_user_data(data: List[Dict], filters: Dict[str, Any] = None) -> List[
                         if item[filter_key] != filter_value:
                             skip_item = True
                             break
-            
+
             if skip_item:
                 continue
-        
+
         # Validate required fields
         required_fields = ['id', 'name', 'email']
         if all(field in item for field in required_fields):
@@ -250,7 +250,7 @@ def process_user_data(data: List[Dict], filters: Dict[str, Any] = None) -> List[
                 processed_users.append(user)
             except (ValueError, TypeError) as e:
                 logger.warning(f"Failed to process user data: {e}")
-    
+
     return processed_users
 
 # Function with security issues for testing
@@ -258,22 +258,22 @@ def unsafe_function(user_input: str):
     """Function with security vulnerabilities"""
     # SQL injection vulnerability
     query = f"SELECT * FROM users WHERE name = '{user_input}'"
-    
+
     # Command injection vulnerability
     os.system(f"echo {user_input}")
-    
+
     # Hard-coded secret
     api_key = "sk-1234567890abcdef"
-    
+
     # Using eval (dangerous)
     result = eval(user_input)
-    
+
     return result
 
 if __name__ == "__main__":
     db = PostgreSQLDatabase("postgresql://localhost:5432/test")
     service = UserService(db)
-    
+
     # Test authentication
     user = service.authenticate_user("admin", "password123", True)
     if user:
@@ -281,7 +281,7 @@ if __name__ == "__main__":
     else:
         print("Authentication failed")
 ''')
-        
+
         # Test file
         test_py = Path(test_dir) / "tests" / "test_main.py"
         test_py.write_text('''
@@ -316,7 +316,7 @@ def test_database_query():
     """Test database query execution"""
     db = PostgreSQLDatabase("test://connection")
     db.connect()
-    
+
     result = db.query("SELECT * FROM test")
     assert isinstance(result, list)
     assert len(result) > 0
@@ -335,7 +335,7 @@ def test_process_user_data():
         {"id": 2, "name": "User 2", "email": "user2@test.com", "active": False},
         {"id": 3, "name": "User 3", "email": "user3@test.com"}
     ]
-    
+
     users = process_user_data(test_data)
     assert len(users) == 3
     assert all(isinstance(user, UserData) for user in users)
@@ -346,7 +346,7 @@ def test_process_user_data_with_filters():
         {"id": 1, "name": "User 1", "email": "user1@test.com", "active": True},
         {"id": 2, "name": "User 2", "email": "user2@test.com", "active": False}
     ]
-    
+
     filters = {"active": True}
     users = process_user_data(test_data, filters)
     assert len(users) == 1
@@ -355,10 +355,10 @@ def test_process_user_data_with_filters():
 if __name__ == "__main__":
     pytest.main([__file__])
 ''')
-        
+
         print("\n🔬 TESTING REAL IMPLEMENTATIONS:")
         print("-" * 50)
-        
+
         # 1. Test Real Linting
         print("\n1️⃣ Testing Real Linting Implementation:")
         lint_result = await agent._perform_lint_analysis(test_dir, ["*.py"])
@@ -366,7 +366,7 @@ if __name__ == "__main__":
         print(f"   ✅ Issues found: {lint_result.get('total_issues', 0)}")
         print(f"   ✅ Linters used: {list(lint_result.get('linter_results', {}).keys())}")
         print(f"   ✅ Duration: {lint_result.get('duration', 0):.2f}s")
-        
+
         # 2. Test Real Complexity Analysis
         print("\n2️⃣ Testing Real Complexity Analysis (AST-based):")
         complexity_result = await agent.analyze_code_complexity(test_dir)
@@ -376,7 +376,7 @@ if __name__ == "__main__":
         print(f"   ✅ Average complexity: {complexity_result.get('average_complexity', 0):.2f}")
         print(f"   ✅ Max complexity: {complexity_result.get('max_complexity', 0)}")
         print(f"   ✅ High complexity functions: {len(complexity_result.get('high_complexity_functions', []))}")
-        
+
         # 3. Test Real Glean Semantic Analysis
         print("\n3️⃣ Testing Real Glean Semantic Analysis (AST-based):")
         glean_result = await agent._perform_glean_analysis(test_dir)
@@ -386,13 +386,13 @@ if __name__ == "__main__":
         print(f"   ✅ Refactoring opportunities: {len(glean_result.get('refactoring_opportunities', []))}")
         print(f"   ✅ Dead code candidates: {len(glean_result.get('dead_code_candidates', []))}")
         print(f"   ✅ Duration: {glean_result.get('duration', 0):.2f}s")
-        
+
         # 4. Test Real Coverage Analysis
         print("\n4️⃣ Testing Real Coverage Analysis:")
         coverage_result = await agent.analyze_test_coverage(test_dir)
         print(f"   ✅ Overall coverage: {coverage_result.get('overall_coverage', 0):.1f}%")
         print(f"   ✅ Test files found: {coverage_result.get('test_files_count', 0)}")
-        
+
         # 5. Test Real Quality Scoring
         print("\n5️⃣ Testing Real Quality Scoring (Industry Standards):")
         # Create fake analyses data for quality scoring
@@ -410,29 +410,29 @@ if __name__ == "__main__":
             "critical_issues": lint_result.get('critical_issues', 0),
             "test_coverage": coverage_result.get('overall_coverage', 0)
         }
-        
+
         quality_score = agent._calculate_comprehensive_quality_score(summary, analyses)
         print(f"   ✅ Comprehensive Quality Score: {quality_score}/100")
         print(f"   ✅ Based on: Code Quality (40%), Tests (25%), Security (20%), Docs (10%), Architecture (5%)")
-        
+
         # 6. Test Comprehensive Analysis with Real Scoring
         print("\n6️⃣ Testing Full Comprehensive Analysis:")
         full_result = await agent.analyze_project_comprehensive_parallel(
-            test_dir, 
+            test_dir,
             analysis_types=["lint", "complexity", "glean"],
             max_concurrent=3
         )
-        
+
         print(f"   ✅ Analysis ID: {full_result.get('analysis_id', 'N/A')}")
         print(f"   ✅ Duration: {full_result.get('duration', 0):.2f}s")
         print(f"   ✅ Tasks completed: {full_result.get('tasks_completed', 0)}")
-        
+
         if 'summary' in full_result:
             summary = full_result['summary']
             print(f"   ✅ Files analyzed: {summary.get('files_analyzed', 0)}")
             print(f"   ✅ Total issues: {summary.get('total_issues', 0)}")
             print(f"   ✅ Final Quality Score: {summary.get('quality_score', 0)}/100")
-        
+
         print("\n" + "=" * 70)
         print("🎉 ALL REAL IMPLEMENTATIONS WORKING SUCCESSFULLY!")
         print("✅ Real Linting: Using actual pylint, flake8, mypy, bandit")
@@ -441,17 +441,17 @@ if __name__ == "__main__":
         print("✅ Real Coverage: Attempting actual coverage.py execution")
         print("✅ Real Quality Scoring: Industry-standard weighted metrics")
         print("=" * 70)
-        
+
         # Cleanup
         shutil.rmtree(test_dir)
         print(f"\n🧹 Cleaned up test directory")
-        
+
     except Exception as e:
         print(f"\n❌ Error: {type(e).__name__}: {e}")
         import traceback
         traceback.print_exc()
         return False
-    
+
     return True
 
 

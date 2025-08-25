@@ -59,34 +59,34 @@ try:
 except ImportError:
     # Fallback implementations
     class A2AMessage(SecureA2AAgent):
-        
+
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
+        # - Rate limiting and request throttling
         # - Input validation and sanitization
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
         # - Automatic security scanning
-        def __init__(self, **kwargs): 
+        def __init__(self, **kwargs):
             super().__init__()
             pass
     class MessagePart(SecureA2AAgent):
-        
+
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
+        # - Rate limiting and request throttling
         # - Input validation and sanitization
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
         # - Automatic security scanning
-        def __init__(self, **kwargs): 
+        def __init__(self, **kwargs):
             super().__init__()
             pass
     class MessageRole(SecureA2AAgent):
-        
+
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
+        # - Rate limiting and request throttling
         # - Input validation and sanitization
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
@@ -105,20 +105,20 @@ try:
     ResponseMapper = ResponseMapperRegistry
 except ImportError:
     class ResponseMapper(SecureA2AAgent):
-        
+
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
+        # - Rate limiting and request throttling
         # - Input validation and sanitization
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
         # - Automatic security scanning
-        def __init__(self): 
+        def __init__(self):
             super().__init__()
             self._mappers = {}
-            
-        def register(self, content_type): 
-            def decorator(func): 
+
+        def register(self, content_type):
+            def decorator(func):
                 self._mappers[content_type] = func
                 return func
             return decorator
@@ -242,7 +242,7 @@ def get_agent() -> CalcValidationAgentSDK:
 
 
 async def initialize_agent(
-    base_url: str, 
+    base_url: str,
     template_repository_url: Optional[str] = None,
     data_manager_url: Optional[str] = None,
     catalog_manager_url: Optional[str] = None
@@ -281,7 +281,7 @@ async def health_check():
     """Enhanced health check endpoint"""
     try:
         agent = get_agent()
-        
+
         return {
             "status": "healthy",
             "agent": {
@@ -307,7 +307,7 @@ async def health_check():
             "service_registry": {
                 "total_discovered": len(agent.discovered_services),
                 "available": len([s for s in agent.discovered_services.values() if s.metadata.get("health_status") == "healthy"]),
-                "last_discovery": max([s.metadata.get("discovered_at", "1970-01-01T00:00:00Z") 
+                "last_discovery": max([s.metadata.get("discovered_at", "1970-01-01T00:00:00Z")
                                      for s in agent.discovered_services.values()], default="never")
             },
             "a2a_compliance": {
@@ -319,7 +319,7 @@ async def health_check():
             "circuit_breakers": agent.circuit_breaker_manager.get_all_stats() if hasattr(agent, 'circuit_breaker_manager') else {},
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         return JSONResponse(
@@ -345,9 +345,9 @@ async def execute_a2a_task(
         context_id = params.get("contextId", str(uuid.uuid4()))
         skill = params.get("skill")
         parameters = params.get("parameters", {})
-        
+
         logger.info(f"Executing A2A task {task_id} with skill {skill}")
-        
+
         # Create A2A message
         message = A2AMessage(
             role=MessageRole.USER,
@@ -360,14 +360,14 @@ async def execute_a2a_task(
                 )
             ]
         )
-        
+
         if skill == "dynamic_computation_testing":
             result = await agent.handle_computation_testing(message)
         elif skill == "service_discovery":
             result = await agent.handle_service_discovery(message)
         else:
             raise HTTPException(status_code=400, detail=f"Unknown skill: {skill}")
-        
+
         return {
             "id": task_id,
             "result": {
@@ -377,7 +377,7 @@ async def execute_a2a_task(
                 "executionTime": parameters.get("executionTime", "unknown")
             }
         }
-        
+
     except Exception as e:
         logger.error(f"A2A task execution failed: {e}")
         return {
@@ -398,7 +398,7 @@ async def execute_computation_testing(
     """Execute computation quality testing workflow"""
     try:
         agent = get_agent()
-        
+
         # Create test request
         test_request = ComputationTestRequest(
             service_endpoints=request.service_endpoints,
@@ -414,14 +414,14 @@ async def execute_computation_testing(
                 **request.test_config
             }
         )
-        
+
         # Execute testing workflow
         context_id = str(uuid.uuid4())
         result = await agent.execute_computation_testing(
             request_data=test_request.dict(),
             context_id=context_id
         )
-        
+
         return {
             "task_id": context_id,
             "success": result.get("success", False),
@@ -436,7 +436,7 @@ async def execute_computation_testing(
             "processing_stats": result.get("processing_stats", {}),
             "error": result.get("error") if not result.get("success") else None
         }
-        
+
     except Exception as e:
         logger.error(f"Computation testing execution failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -447,13 +447,13 @@ async def discover_services(request: ServiceDiscoveryRequest):
     """Discover computational services"""
     try:
         agent = get_agent()
-        
+
         # Perform service discovery
         discovery_result = await agent.discover_computational_services(
             domain_filter=request.domain_filter,
             service_types=request.service_types
         )
-        
+
         # If endpoint hints provided, also discover those
         if request.endpoint_hints:
             discovered_services = await agent.execute_skill(
@@ -461,11 +461,11 @@ async def discover_services(request: ServiceDiscoveryRequest):
                 request.endpoint_hints,
                 request.domain_filter
             )
-            
+
             discovery_result["newly_discovered"] = [s.dict() for s in discovered_services]
-        
+
         return discovery_result
-        
+
     except Exception as e:
         logger.error(f"Service discovery failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -479,7 +479,7 @@ async def list_discovered_services(
     """List discovered computational services"""
     try:
         agent = get_agent()
-        
+
         services = []
         for service in agent.discovered_services.values():
             # Apply filters
@@ -487,11 +487,11 @@ async def list_discovered_services(
                 continue
             if domain_filter and domain_filter.lower() not in service.endpoint_url.lower():
                 continue
-            
+
             services.append(service.dict())
-        
+
         return services
-        
+
     except Exception as e:
         logger.error(f"Failed to list services: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -505,7 +505,7 @@ async def list_test_templates(
     """List available test templates"""
     try:
         agent = get_agent()
-        
+
         templates = {}
         for template_id, template in agent.test_templates.items():
             # Apply filters
@@ -513,19 +513,19 @@ async def list_test_templates(
                 continue
             if difficulty and template.complexity_level.value != difficulty:
                 continue
-            
+
             templates[template_id] = template.dict()
-        
+
         return {
             "templates": templates,
             "total_count": len(templates),
             "by_computation_type": {
-                comp_type.value: len([t for t in agent.test_templates.values() 
+                comp_type.value: len([t for t in agent.test_templates.values()
                                     if t.computation_type == comp_type])
                 for comp_type in ComputationType
             }
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to list templates: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -536,7 +536,7 @@ async def get_agent_metrics():
     """Get agent performance metrics"""
     try:
         agent = get_agent()
-        
+
         return {
             "processing_stats": agent.processing_stats,
             "discovered_services": len(agent.discovered_services),
@@ -548,7 +548,7 @@ async def get_agent_metrics():
             },
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to get metrics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -564,16 +564,16 @@ async def test_single_service(
     """Test a single discovered service"""
     try:
         agent = get_agent()
-        
+
         # Get the service
         if service_id not in agent.discovered_services:
             raise HTTPException(status_code=404, detail=f"Service {service_id} not found")
-        
+
         service = agent.discovered_services[service_id]
-        
+
         # Load templates for requested computation types
         templates = await agent.execute_skill("template_loading", computation_types)
-        
+
         # Generate test cases
         test_cases = await agent.execute_skill(
             "test_generation",
@@ -584,23 +584,23 @@ async def test_single_service(
                 "timeout_seconds": timeout_seconds
             }
         )
-        
+
         if not test_cases:
             return {
                 "success": False,
                 "error": "No test cases generated for service",
                 "service_id": service_id
             }
-        
+
         # Execute tests
         test_results = await agent.execute_skill("test_execution", test_cases)
-        
+
         # Analyze quality
         quality_analysis = await agent.execute_skill("quality_analysis", test_results, service_id)
-        
+
         # Generate report
         report = await agent.execute_skill("report_generation", quality_analysis, test_results)
-        
+
         return {
             "success": True,
             "service_id": service_id,
@@ -612,7 +612,7 @@ async def test_single_service(
             "quality_report": report.dict(),
             "test_results": [r.dict() for r in test_results[:10]]  # Limit response size
         }
-        
+
     except Exception as e:
         logger.error(f"Single service testing failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -633,15 +633,15 @@ def text_response(data: Any) -> str:
         # Format quality report as text
         reports = data["service_reports"]
         text_parts = []
-        
+
         for report in reports:
             text_parts.append(f"Service: {report.get('service_id', 'Unknown')}")
             text_parts.append(f"Quality Score: {report.get('quality_scores', {}).get('overall', 0.0):.2f}")
             text_parts.append(f"Tests: {report.get('passed_tests', 0)}/{report.get('total_tests', 0)} passed")
             text_parts.append("---")
-        
+
         return "\n".join(text_parts)
-    
+
     return str(data)
 
 

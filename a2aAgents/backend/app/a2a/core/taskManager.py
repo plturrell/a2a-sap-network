@@ -53,7 +53,7 @@ class PersistedTask:
     next_retry_at: Optional[datetime] = None
     error_message: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
-    
+
     def __post_init__(self):
         if self.created_at is None:
             self.created_at = datetime.utcnow()
@@ -65,11 +65,11 @@ class PersistedTask:
 
 class DeadLetterQueue:
     """Dead Letter Queue for failed tasks."""
-    
+
     def __init__(self, db_path: str):
         self.db_path = db_path
         self.init_db()
-    
+
     def init_db(self):
         """Initialize the DLQ database."""
         try:
@@ -90,13 +90,13 @@ class DeadLetterQueue:
                 conn.commit()
         except Exception as e:
             logger.error(f"Failed to initialize DLQ database: {e}")
-    
+
     async def add_message(self, task: PersistedTask, error: str = None):
         """Add a failed task to the dead letter queue."""
         try:
             async with aiosqlite.connect(self.db_path) as conn:
                 await conn.execute("""
-                    INSERT OR REPLACE INTO dlq_messages 
+                    INSERT OR REPLACE INTO dlq_messages
                     (task_id, agent_id, task_type, payload, original_error, retry_count, metadata)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                 """, (
@@ -112,13 +112,13 @@ class DeadLetterQueue:
                 logger.warning(f"Task {task.task_id} added to DLQ after {task.retry_count} retries")
         except Exception as e:
             logger.error(f"Failed to add task to DLQ: {e}")
-    
+
     async def get_messages(self, limit: int = 100) -> List[Dict]:
         """Get messages from the dead letter queue."""
         try:
             async with aiosqlite.connect(self.db_path) as conn:
                 async with conn.execute(
-                    "SELECT * FROM dlq_messages ORDER BY created_at DESC LIMIT ?", 
+                    "SELECT * FROM dlq_messages ORDER BY created_at DESC LIMIT ?",
                     (limit,)
                 ) as cursor:
                     rows = await cursor.fetchall()
@@ -127,7 +127,7 @@ class DeadLetterQueue:
         except Exception as e:
             logger.error(f"Failed to get DLQ messages: {e}")
             return []
-    
+
     async def remove_message(self, task_id: str):
         """Remove a message from the DLQ."""
         try:
@@ -140,7 +140,7 @@ class DeadLetterQueue:
 
 class TaskManager:
     """Production task manager with persistence and recovery."""
-    
+
     def __init__(self, agent_id: str, db_path: Optional[str] = None):
         self.agent_id = agent_id
         self.db_path = db_path or f"/tmp/a2a_tasks_{agent_id}.db"
@@ -148,13 +148,13 @@ class TaskManager:
         self.dlq = DeadLetterQueue(f"{self.db_path}.dlq")
         self.running_tasks: Dict[str, asyncio.Task] = {}
         self.init_db()
-    
+
     def init_db(self):
         """Initialize the task database."""
         try:
             # Ensure directory exists
             Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
-            
+
             with sqlite3.connect(self.db_path) as conn:
                 conn.execute("""
                     CREATE TABLE IF NOT EXISTS tasks (
@@ -175,25 +175,25 @@ class TaskManager:
                         metadata TEXT
                     )
                 """)
-                
+
                 # Create indexes for performance
                 conn.execute("CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)")
                 conn.execute("CREATE INDEX IF NOT EXISTS idx_tasks_agent ON tasks(agent_id)")
                 conn.execute("CREATE INDEX IF NOT EXISTS idx_tasks_type ON tasks(task_type)")
                 conn.execute("CREATE INDEX IF NOT EXISTS idx_tasks_priority ON tasks(priority DESC)")
                 conn.execute("CREATE INDEX IF NOT EXISTS idx_tasks_retry ON tasks(next_retry_at)")
-                
+
                 conn.commit()
                 logger.info(f"Task database initialized: {self.db_path}")
         except Exception as e:
             logger.error(f"Failed to initialize task database: {e}")
             raise
-    
+
     async def save_task(self, task: PersistedTask) -> Dict[str, str]:
         """Save a task to persistent storage."""
         try:
             task.updated_at = datetime.utcnow()
-            
+
             async with aiosqlite.connect(self.db_path) as conn:
                 await conn.execute("""
                     INSERT OR REPLACE INTO tasks (
@@ -219,13 +219,13 @@ class TaskManager:
                     json.dumps(task.metadata or {})
                 ))
                 await conn.commit()
-                
+
                 logger.debug(f"Task {task.task_id} saved with status {task.status.value}")
                 return {"task_id": task.task_id, "status": task.status.value}
         except Exception as e:
             logger.error(f"Failed to save task {task.task_id}: {e}")
             raise
-    
+
     async def get_task(self, task_id: str) -> Optional[PersistedTask]:
         """Get a task by ID."""
         try:
@@ -240,8 +240,8 @@ class TaskManager:
         except Exception as e:
             logger.error(f"Failed to get task {task_id}: {e}")
             return None
-    
-    async def update_task_status(self, task_id: str, status: TaskStatus, 
+
+    async def update_task_status(self, task_id: str, status: TaskStatus,
                                 error_message: Optional[str] = None,
                                 metadata: Optional[Dict] = None):
         """Update task status."""
@@ -250,67 +250,67 @@ class TaskManager:
             if not task:
                 logger.warning(f"Task {task_id} not found for status update")
                 return
-            
+
             task.status = status
             task.updated_at = datetime.utcnow()
-            
+
             if error_message:
                 task.error_message = error_message
-            
+
             if metadata:
                 task.metadata = {**(task.metadata or {}), **metadata}
-            
+
             if status == TaskStatus.PROCESSING:
                 task.started_at = datetime.utcnow()
             elif status in [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED]:
                 task.completed_at = datetime.utcnow()
-            
+
             await self.save_task(task)
-            
+
             # Move to DLQ if failed after max retries
             if status == TaskStatus.FAILED and task.retry_count >= task.max_retries:
                 task.status = TaskStatus.DLQ
                 await self.save_task(task)
                 await self.dlq.add_message(task, error_message)
-            
+
         except Exception as e:
             logger.error(f"Failed to update task status: {e}")
-    
+
     def register_task_handler(self, task_type: str, handler: Callable):
         """Register a handler for a specific task type."""
         self.task_handlers[task_type] = handler
         logger.info(f"Registered handler for task type: {task_type}")
-    
+
     async def process_task(self, task: PersistedTask) -> bool:
         """Process a single task."""
         handler = self.task_handlers.get(task.task_type)
         if not handler:
             logger.error(f"No handler registered for task type: {task.task_type}")
             await self.update_task_status(
-                task.task_id, 
-                TaskStatus.FAILED, 
+                task.task_id,
+                TaskStatus.FAILED,
                 f"No handler for task type: {task.task_type}"
             )
             return False
-        
+
         try:
             await self.update_task_status(task.task_id, TaskStatus.PROCESSING)
-            
+
             # Execute the handler
             result = await handler(task.payload)
-            
+
             await self.update_task_status(
-                task.task_id, 
+                task.task_id,
                 TaskStatus.COMPLETED,
                 metadata={"result": result}
             )
-            
+
             logger.info(f"Task {task.task_id} completed successfully")
             return True
-            
+
         except Exception as e:
             logger.error(f"Task {task.task_id} failed: {e}")
-            
+
             task.retry_count += 1
             if task.retry_count < task.max_retries:
                 # Schedule retry with exponential backoff
@@ -321,29 +321,29 @@ class TaskManager:
                 logger.info(f"Task {task.task_id} scheduled for retry in {retry_delay} seconds")
             else:
                 await self.update_task_status(task.task_id, TaskStatus.FAILED, str(e))
-            
+
             return False
-    
+
     async def recover_tasks(self, agent_id: str) -> List[PersistedTask]:
         """Recover pending and retrying tasks for an agent."""
         try:
             recovered_tasks = []
-            
+
             async with aiosqlite.connect(self.db_path) as conn:
                 # Get pending tasks
                 async with conn.execute("""
-                    SELECT * FROM tasks 
-                    WHERE agent_id = ? AND status IN (?, ?) 
+                    SELECT * FROM tasks
+                    WHERE agent_id = ? AND status IN (?, ?)
                     ORDER BY priority DESC, created_at ASC
                 """, (agent_id, TaskStatus.PENDING.value, TaskStatus.PROCESSING.value)) as cursor:
                     async for row in cursor:
                         task = self._row_to_task(row, cursor.description)
                         recovered_tasks.append(task)
-                
+
                 # Get tasks ready for retry
                 now = datetime.utcnow().isoformat()
                 async with conn.execute("""
-                    SELECT * FROM tasks 
+                    SELECT * FROM tasks
                     WHERE agent_id = ? AND status = ? AND next_retry_at <= ?
                     ORDER BY priority DESC, next_retry_at ASC
                 """, (agent_id, TaskStatus.RETRYING.value, now)) as cursor:
@@ -351,20 +351,20 @@ class TaskManager:
                         task = self._row_to_task(row, cursor.description)
                         task.status = TaskStatus.PENDING  # Reset to pending for processing
                         recovered_tasks.append(task)
-            
+
             logger.info(f"Recovered {len(recovered_tasks)} tasks for agent {agent_id}")
             return recovered_tasks
-            
+
         except Exception as e:
             logger.error(f"Failed to recover tasks: {e}")
             return []
-    
-    async def create_task(self, task_type: str, payload: Dict[str, Any], 
+
+    async def create_task(self, task_type: str, payload: Dict[str, Any],
                          priority: TaskPriority = TaskPriority.NORMAL,
                          max_retries: int = 3) -> str:
         """Create a new task."""
         task_id = str(uuid.uuid4())
-        
+
         task = PersistedTask(
             task_id=task_id,
             agent_id=self.agent_id,
@@ -373,16 +373,16 @@ class TaskManager:
             priority=priority,
             max_retries=max_retries
         )
-        
+
         await self.save_task(task)
         logger.info(f"Created task {task_id} of type {task_type}")
         return task_id
-    
+
     def _row_to_task(self, row, description) -> PersistedTask:
         """Convert database row to PersistedTask object."""
         columns = [desc[0] for desc in description]
         data = dict(zip(columns, row))
-        
+
         return PersistedTask(
             task_id=data['task_id'],
             agent_id=data['agent_id'],
@@ -406,5 +406,5 @@ class TaskManager:
 task_manager = TaskManager("default")
 
 
-# Global DLQ instance  
+# Global DLQ instance
 dlq = task_manager.dlq

@@ -109,7 +109,7 @@ class A2AMCPServer:
     Real MCP Server Implementation for A2A Agents
     Serves the Model Context Protocol over WebSocket and HTTP
     """
-    
+
     def __init__(
         self,
         agent_instance,
@@ -126,7 +126,7 @@ class A2AMCPServer:
         self.websocket_port = websocket_port or int(os.getenv('MCP_WEBSOCKET_PORT', str(self.port + 1000)))
         self.enable_http = enable_http and FASTAPI_AVAILABLE
         self.enable_websocket = enable_websocket and WEBSOCKETS_AVAILABLE
-        
+
         # MCP registry
         self.tools: Dict[str, MCPToolInfo] = {}
         self.resources: Dict[str, MCPResourceInfo] = {}
@@ -134,13 +134,13 @@ class A2AMCPServer:
         self.tool_handlers: Dict[str, Callable] = {}
         self.resource_handlers: Dict[str, Callable] = {}
         self.prompt_handlers: Dict[str, Callable] = {}
-        
+
         # Server state
         self.is_running = False
         self.websocket_server = None
         self.http_app = None
         self.connected_clients: Dict[str, Any] = {}
-        
+
         # Performance metrics
         self.metrics = {
             "requests_handled": 0,
@@ -151,27 +151,27 @@ class A2AMCPServer:
             "start_time": None,
             "last_activity": None
         }
-        
+
         # Discover and register MCP components from agent
         self._discover_mcp_components()
-        
+
         # Initialize servers
         if self.enable_http:
             self._setup_http_server()
-        
+
         logger.info(f"A2A MCP Server initialized for {getattr(agent_instance, 'agent_id', 'unknown')} "
                    f"- Tools: {len(self.tools)}, Resources: {len(self.resources)}, Prompts: {len(self.prompts)}")
-    
+
     def _discover_mcp_components(self):
         """Discover MCP tools, resources, and prompts from agent instance"""
         logger.info("Discovering MCP components from agent...")
-        
+
         for attr_name in dir(self.agent):
             try:
                 attr = getattr(self.agent, attr_name)
                 if not callable(attr):
                     continue
-                
+
                 # Check for MCP tool
                 if hasattr(attr, '_mcp_tool'):
                     tool_info = attr._mcp_tool
@@ -183,7 +183,7 @@ class A2AMCPServer:
                     )
                     self.tool_handlers[tool_info['name']] = attr
                     logger.debug(f"Registered MCP tool: {tool_info['name']}")
-                
+
                 # Check for MCP resource
                 if hasattr(attr, '_mcp_resource'):
                     resource_info = attr._mcp_resource
@@ -195,7 +195,7 @@ class A2AMCPServer:
                     )
                     self.resource_handlers[resource_info['uri']] = attr
                     logger.debug(f"Registered MCP resource: {resource_info['uri']}")
-                
+
                 # Check for MCP prompt
                 if hasattr(attr, '_mcp_prompt'):
                     prompt_info = attr._mcp_prompt
@@ -206,58 +206,58 @@ class A2AMCPServer:
                     )
                     self.prompt_handlers[prompt_info['name']] = attr
                     logger.debug(f"Registered MCP prompt: {prompt_info['name']}")
-                    
+
             except Exception as e:
                 logger.warning(f"Error discovering MCP component {attr_name}: {e}")
-        
+
         logger.info(f"MCP Discovery complete - Tools: {len(self.tools)}, "
                    f"Resources: {len(self.resources)}, Prompts: {len(self.prompts)}")
-    
+
     def _setup_http_server(self):
         """Setup FastAPI HTTP server for MCP"""
         if not FASTAPI_AVAILABLE:
             logger.warning("FastAPI not available - HTTP MCP server disabled")
             return
-        
+
         self.http_app = FastAPI(
             title=f"A2A MCP Server - {getattr(self.agent, 'agent_id', 'unknown')}",
             description="Model Context Protocol server for A2A agent",
             version="1.0.0"
         )
-        
+
         @self.http_app.post("/mcp")
         async def handle_mcp_request(request: Dict[str, Any]):
             """Handle MCP JSON-RPC requests over HTTP"""
             return await self._handle_mcp_request(request)
-        
+
         @self.http_app.get("/mcp/tools")
         async def list_tools():
             """List available MCP tools"""
             return {
                 "tools": [asdict(tool) for tool in self.tools.values()]
             }
-        
+
         @self.http_app.get("/mcp/resources")
         async def list_resources():
             """List available MCP resources"""
             return {
                 "resources": [asdict(resource) for resource in self.resources.values()]
             }
-        
+
         @self.http_app.get("/mcp/prompts")
         async def list_prompts():
             """List available MCP prompts"""
             return {
                 "prompts": [asdict(prompt) for prompt in self.prompts.values()]
             }
-        
+
         @self.http_app.get("/mcp/status")
         async def get_status():
             """Get MCP server status and metrics"""
             uptime = None
             if self.metrics["start_time"]:
                 uptime = (datetime.utcnow() - self.metrics["start_time"]).total_seconds()
-            
+
             return {
                 "status": "running" if self.is_running else "stopped",
                 "agent_id": getattr(self.agent, 'agent_id', 'unknown'),
@@ -272,17 +272,17 @@ class A2AMCPServer:
                     "last_activity": self.metrics["last_activity"].isoformat() if self.metrics["last_activity"] else None
                 }
             }
-        
+
         @self.http_app.websocket("/mcp/ws")
         async def websocket_endpoint(websocket: WebSocket):
             """WebSocket endpoint for MCP"""
             await self._handle_websocket_connection(websocket)
-    
+
     async def _handle_mcp_request(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Handle MCP JSON-RPC request"""
         self.metrics["requests_handled"] += 1
         self.metrics["last_activity"] = datetime.utcnow()
-        
+
         try:
             # Parse request
             request = MCPRequest(
@@ -291,22 +291,22 @@ class A2AMCPServer:
                 id=request_data.get("id"),
                 params=request_data.get("params", {})
             )
-            
+
             # Validate JSON-RPC
             if request.jsonrpc != "2.0":
                 return self._create_error_response(
                     request.id, MCPErrorCode.INVALID_REQUEST, "Invalid JSON-RPC version"
                 )
-            
+
             # Route request
             result = await self._route_mcp_request(request)
-            
+
             return {
                 "jsonrpc": "2.0",
                 "id": request.id,
                 "result": result
             }
-            
+
         except KeyError as e:
             self.metrics["errors"] += 1
             return self._create_error_response(
@@ -318,12 +318,12 @@ class A2AMCPServer:
             return self._create_error_response(
                 request_data.get("id"), MCPErrorCode.INTERNAL_ERROR, str(e)
             )
-    
+
     async def _route_mcp_request(self, request: MCPRequest) -> Any:
         """Route MCP request to appropriate handler"""
         method = request.method
         params = request.params or {}
-        
+
         # MCP Core Methods
         if method == "initialize":
             return await self._handle_initialize(params)
@@ -341,7 +341,7 @@ class A2AMCPServer:
             return await self._handle_get_prompt(params)
         else:
             raise Exception(f"Unknown method: {method}")
-    
+
     async def _handle_initialize(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Handle MCP initialize request"""
         return {
@@ -356,7 +356,7 @@ class A2AMCPServer:
                 "version": "1.0.0"
             }
         }
-    
+
     async def _handle_list_tools(self) -> Dict[str, Any]:
         """Handle tools/list request"""
         return {
@@ -369,26 +369,26 @@ class A2AMCPServer:
                 for tool in self.tools.values()
             ]
         }
-    
+
     async def _handle_call_tool(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Handle tools/call request"""
         tool_name = params.get("name")
         arguments = params.get("arguments", {})
-        
+
         if tool_name not in self.tool_handlers:
             raise Exception(f"Tool not found: {tool_name}")
-        
+
         self.metrics["tools_called"] += 1
-        
+
         try:
             handler = self.tool_handlers[tool_name]
-            
+
             # Call the tool handler
             if inspect.iscoroutinefunction(handler):
                 result = await handler(**arguments)
             else:
                 result = handler(**arguments)
-            
+
             return {
                 "content": [
                     {
@@ -397,19 +397,19 @@ class A2AMCPServer:
                     }
                 ]
             }
-            
+
         except Exception as e:
             logger.error(f"Error executing tool {tool_name}: {e}\n{traceback.format_exc()}")
             return {
                 "content": [
                     {
-                        "type": "text", 
+                        "type": "text",
                         "text": f"Error executing tool: {str(e)}"
                     }
                 ],
                 "isError": True
             }
-    
+
     async def _handle_list_resources(self) -> Dict[str, Any]:
         """Handle resources/list request"""
         return {
@@ -423,28 +423,28 @@ class A2AMCPServer:
                 for resource in self.resources.values()
             ]
         }
-    
+
     async def _handle_read_resource(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Handle resources/read request"""
         uri = params.get("uri")
-        
+
         if uri not in self.resource_handlers:
             raise Exception(f"Resource not found: {uri}")
-        
+
         self.metrics["resources_accessed"] += 1
-        
+
         try:
             handler = self.resource_handlers[uri]
-            
+
             # Call the resource handler
             if inspect.iscoroutinefunction(handler):
                 result = await handler()
             else:
                 result = handler()
-            
+
             # Get resource info for MIME type
             resource_info = self.resources[uri]
-            
+
             return {
                 "contents": [
                     {
@@ -454,11 +454,11 @@ class A2AMCPServer:
                     }
                 ]
             }
-            
+
         except Exception as e:
             logger.error(f"Error reading resource {uri}: {e}\n{traceback.format_exc()}")
             raise
-    
+
     async def _handle_list_prompts(self) -> Dict[str, Any]:
         """Handle prompts/list request"""
         return {
@@ -471,26 +471,26 @@ class A2AMCPServer:
                 for prompt in self.prompts.values()
             ]
         }
-    
+
     async def _handle_get_prompt(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Handle prompts/get request"""
         name = params.get("name")
         arguments = params.get("arguments", {})
-        
+
         if name not in self.prompt_handlers:
             raise Exception(f"Prompt not found: {name}")
-        
+
         self.metrics["prompts_executed"] += 1
-        
+
         try:
             handler = self.prompt_handlers[name]
-            
+
             # Call the prompt handler
             if inspect.iscoroutinefunction(handler):
                 result = await handler(**arguments)
             else:
                 result = handler(**arguments)
-            
+
             return {
                 "description": self.prompts[name].description,
                 "messages": [
@@ -503,11 +503,11 @@ class A2AMCPServer:
                     }
                 ]
             }
-            
+
         except Exception as e:
             logger.error(f"Error executing prompt {name}: {e}\n{traceback.format_exc()}")
             raise
-    
+
     async def _handle_websocket_connection(self, websocket):
         """Handle WebSocket connection for MCP"""
         client_id = str(uuid.uuid4())
@@ -515,11 +515,11 @@ class A2AMCPServer:
             "websocket": websocket,
             "connected_at": datetime.utcnow()
         }
-        
+
         try:
             await websocket.accept()
             logger.info(f"MCP WebSocket client connected: {client_id}")
-            
+
             async for message in websocket.iter_text():
                 try:
                     request_data = json.loads(message)
@@ -536,14 +536,14 @@ class A2AMCPServer:
                         None, MCPErrorCode.INTERNAL_ERROR, str(e)
                     )
                     await websocket.send_text(json.dumps(error_response))
-                    
+
         except Exception as e:
             logger.error(f"WebSocket connection error: {e}")
         finally:
             if client_id in self.connected_clients:
                 del self.connected_clients[client_id]
             logger.info(f"MCP WebSocket client disconnected: {client_id}")
-    
+
     def _create_error_response(self, request_id: Any, error_code: MCPErrorCode, message: str) -> Dict[str, Any]:
         """Create MCP error response"""
         return {
@@ -554,33 +554,33 @@ class A2AMCPServer:
                 "message": message
             }
         }
-    
+
     async def start(self):
         """Start the MCP server"""
         if self.is_running:
             logger.warning("MCP server is already running")
             return
-        
+
         self.is_running = True
         self.metrics["start_time"] = datetime.utcnow()
-        
+
         tasks = []
-        
+
         # Start HTTP server
         if self.enable_http and self.http_app:
             logger.info(f"Starting MCP HTTP server on {self.host}:{self.port}")
             tasks.append(self._start_http_server())
-        
+
         # Start WebSocket server
         if self.enable_websocket and WEBSOCKETS_AVAILABLE:
             logger.info(f"Starting MCP WebSocket server on {self.host}:{self.websocket_port}")
             tasks.append(self._start_websocket_server())
-        
+
         if not tasks:
             logger.error("No transport available - install fastapi and/or websockets")
             self.is_running = False
             return
-        
+
         # Run all servers concurrently
         try:
             await asyncio.gather(*tasks)
@@ -588,12 +588,12 @@ class A2AMCPServer:
             logger.error(f"Error running MCP servers: {e}")
             self.is_running = False
             raise
-    
+
     async def _start_http_server(self):
         """Start HTTP server using uvicorn"""
         if not FASTAPI_AVAILABLE:
             return
-        
+
         config = uvicorn.Config(
             self.http_app,
             host=self.host,
@@ -602,52 +602,52 @@ class A2AMCPServer:
         )
         server = uvicorn.Server(config)
         await server.serve()
-    
+
     async def _start_websocket_server(self):
         """Start WebSocket server"""
         if not WEBSOCKETS_AVAILABLE:
             return
-        
+
         async def handle_websocket(websocket, path):
             # Convert websockets WebSocket to our format
             class WebSocketAdapter:
                 def __init__(self, ws):
                     self.ws = ws
-                
+
                 async def accept(self):
                     pass  # Already accepted by websockets
-                
+
                 async def send_text(self, text):
                     await self.ws.send(text)
-                
+
                 async def iter_text(self):
                     async for message in self.ws:
                         yield message
-            
+
             await self._handle_websocket_connection(WebSocketAdapter(websocket))
-        
+
         self.websocket_server = await websockets.serve(
             handle_websocket,
             self.host,
             self.websocket_port
         )
-        
+
         # Keep server running
         await self.websocket_server.wait_closed()
-    
+
     async def stop(self):
         """Stop the MCP server"""
         if not self.is_running:
             return
-        
+
         logger.info("Stopping MCP server...")
         self.is_running = False
-        
+
         # Close WebSocket server
         if self.websocket_server:
             self.websocket_server.close()
             await self.websocket_server.wait_closed()
-        
+
         # Disconnect all clients
         for client_id, client_info in list(self.connected_clients.items()):
             try:
@@ -655,16 +655,16 @@ class A2AMCPServer:
                     await client_info["websocket"].close()
             except Exception as e:
                 logger.warning(f"Error closing client connection {client_id}: {e}")
-        
+
         self.connected_clients.clear()
         logger.info("MCP server stopped")
-    
+
     def get_metrics(self) -> Dict[str, Any]:
         """Get server metrics"""
         uptime = None
         if self.metrics["start_time"]:
             uptime = (datetime.utcnow() - self.metrics["start_time"]).total_seconds()
-        
+
         return {
             **self.metrics,
             "uptime_seconds": uptime,
@@ -682,32 +682,32 @@ def create_mcp_server(agent_instance, **kwargs) -> A2AMCPServer:
 # Agent mixin for MCP integration
 class MCPServerMixin:
     """Mixin to add MCP server capabilities to A2A agents"""
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.mcp_server: Optional[A2AMCPServer] = None
         self._mcp_config = kwargs.get('mcp_config', {})
-    
+
     def initialize_mcp_server(self, **server_kwargs):
         """Initialize MCP server for this agent"""
         config = {**self._mcp_config, **server_kwargs}
         self.mcp_server = create_mcp_server(self, **config)
         logger.info(f"MCP server initialized for agent {getattr(self, 'agent_id', 'unknown')}")
         return self.mcp_server
-    
+
     async def start_mcp_server(self):
         """Start the MCP server"""
         if not self.mcp_server:
             self.initialize_mcp_server()
-        
+
         if self.mcp_server:
             await self.mcp_server.start()
-    
+
     async def stop_mcp_server(self):
         """Stop the MCP server"""
         if self.mcp_server:
             await self.mcp_server.stop()
-    
+
     def get_mcp_metrics(self) -> Optional[Dict[str, Any]]:
         """Get MCP server metrics"""
         if self.mcp_server:

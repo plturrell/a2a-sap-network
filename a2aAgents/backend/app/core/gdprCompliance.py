@@ -103,16 +103,16 @@ class DataSubjectRequest:
 
 class GDPRComplianceManager:
     """Manages GDPR compliance features"""
-    
+
     def __init__(self):
-        
+
         self.a2a_client = A2ANetworkClient("gdpr_compliance")
         self.consent_records: Dict[str, List[ConsentRecord]] = {}
         self.subject_requests: Dict[str, DataSubjectRequest] = {}
         self.processing_registry: Dict[str, Dict[str, Any]] = {}
-        
+
         logger.info("GDPR Compliance Manager initialized")
-    
+
     async def record_consent(
         self,
         user_id: str,
@@ -126,12 +126,12 @@ class GDPRComplianceManager:
         """Record user consent for data processing"""
         try:
             consent_id = str(uuid.uuid4())
-            
+
             # Calculate expiration if duration specified
             expires_at = None
             if duration_days:
                 expires_at = datetime.utcnow() + timedelta(days=duration_days)
-            
+
             consent = ConsentRecord(
                 consent_id=consent_id,
                 user_id=user_id,
@@ -144,13 +144,13 @@ class GDPRComplianceManager:
                 ip_address=ip_address,
                 user_agent=user_agent
             )
-            
+
             # Store consent record
             if user_id not in self.consent_records:
                 self.consent_records[user_id] = []
-            
+
             self.consent_records[user_id].append(consent)
-            
+
             # Audit log
             await audit_log(
                 event_type=AuditEventType.USER_UPDATED,
@@ -165,14 +165,14 @@ class GDPRComplianceManager:
                     "expires_at": expires_at.isoformat() if expires_at else None
                 }
             )
-            
+
             logger.info(f"Consent recorded for user {user_id}: {consent_id}")
             return consent_id
-            
+
         except Exception as e:
             logger.error(f"Failed to record consent: {e}")
             raise
-    
+
     async def withdraw_consent(
         self,
         user_id: str,
@@ -183,12 +183,12 @@ class GDPRComplianceManager:
         try:
             if user_id not in self.consent_records:
                 raise ValidationError("No consent records found for user")
-            
+
             for consent in self.consent_records[user_id]:
                 if consent.consent_id == consent_id and not consent.withdrawn_at:
                     consent.withdrawn_at = datetime.utcnow()
                     consent.withdrawal_reason = reason
-                    
+
                     # Audit log
                     await audit_log(
                         event_type=AuditEventType.USER_UPDATED,
@@ -200,36 +200,36 @@ class GDPRComplianceManager:
                             "original_purpose": consent.purpose.value
                         }
                     )
-                    
+
                     logger.info(f"Consent withdrawn: {consent_id}")
                     return True
-            
+
             return False
-            
+
         except Exception as e:
             logger.error(f"Failed to withdraw consent: {e}")
             raise
-    
+
     async def get_active_consents(self, user_id: str) -> List[ConsentRecord]:
         """Get all active consents for a user"""
         if user_id not in self.consent_records:
             return []
-        
+
         active_consents = []
         current_time = datetime.utcnow()
-        
+
         for consent in self.consent_records[user_id]:
             # Check if consent is active
             if consent.withdrawn_at:
                 continue
-                
+
             if consent.expires_at and consent.expires_at < current_time:
                 continue
-                
+
             active_consents.append(consent)
-        
+
         return active_consents
-    
+
     async def check_consent(
         self,
         user_id: str,
@@ -238,7 +238,7 @@ class GDPRComplianceManager:
     ) -> Tuple[bool, Optional[ConsentRecord]]:
         """Check if user has given consent for specific processing"""
         active_consents = await self.get_active_consents(user_id)
-        
+
         for consent in active_consents:
             if consent.purpose == purpose:
                 # If data categories specified, check if all are covered
@@ -247,9 +247,9 @@ class GDPRComplianceManager:
                         return True, consent
                 else:
                     return True, consent
-        
+
         return False, None
-    
+
     async def create_subject_request(
         self,
         user_id: str,
@@ -259,7 +259,7 @@ class GDPRComplianceManager:
         """Create a new data subject request"""
         try:
             request_id = str(uuid.uuid4())
-            
+
             request = DataSubjectRequest(
                 request_id=request_id,
                 user_id=user_id,
@@ -269,9 +269,9 @@ class GDPRComplianceManager:
                 verified=False,
                 verification_method=verification_method
             )
-            
+
             self.subject_requests[request_id] = request
-            
+
             # Audit log
             await audit_log(
                 event_type=AuditEventType.USER_UPDATED,
@@ -283,26 +283,26 @@ class GDPRComplianceManager:
                     "verification_method": verification_method
                 }
             )
-            
+
             logger.info(f"GDPR request created: {request_id} ({request_type.value})")
             return request_id
-            
+
         except Exception as e:
             logger.error(f"Failed to create subject request: {e}")
             raise
-    
+
     async def process_access_request(self, request_id: str) -> Dict[str, Any]:
         """Process data access request (Article 15)"""
         request = self.subject_
         # requests\.get(request_id)
         if not request or request.request_type != DataSubjectRight.ACCESS:
             raise ValidationError("Invalid access request")
-        
+
         if not request.verified:
             raise ValidationError("Request must be verified first")
-        
+
         user_id = request.user_id
-        
+
         # Gather all user data
         user_data = {
             "personal_data": await self._get_user_personal_data(user_id),
@@ -314,12 +314,12 @@ class GDPRComplianceManager:
             "consents": await self.get_consent_history(user_id),
             "automated_decisions": await self._get_automated_decisions(user_id)
         }
-        
+
         # Update request
         request.status = "completed"
         request.completed_at = datetime.utcnow()
         request.response_data = user_data
-        
+
         # Audit log
         await audit_log(
             event_type=AuditEventType.DATA_EXPORT,
@@ -328,9 +328,9 @@ class GDPRComplianceManager:
             resource=f"gdpr_request:{request_id}",
             data_classification="personal"
         )
-        
+
         return user_data
-    
+
     async def process_erasure_request(
         self,
         request_id: str,
@@ -341,16 +341,16 @@ class GDPRComplianceManager:
         # requests\.get(request_id)
         if not request or request.request_type != DataSubjectRight.ERASURE:
             raise ValidationError("Invalid erasure request")
-        
+
         if not request.verified:
             raise ValidationError("Request must be verified first")
-        
+
         if not confirm:
             # Return what would be deleted
             return await self._preview_erasure(request.user_id)
-        
+
         user_id = request.user_id
-        
+
         # Perform erasure
         erasure_result = {
             "user_data_erased": await self._erase_user_data(user_id),
@@ -360,12 +360,12 @@ class GDPRComplianceManager:
             "audit_logs_anonymized": await self._anonymize_audit_logs(user_id),
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
         # Update request
         request.status = "completed"
         request.completed_at = datetime.utcnow()
         request.response_data = erasure_result
-        
+
         # Final audit log (will be anonymized)
         await audit_log(
             event_type=AuditEventType.USER_DELETED,
@@ -374,21 +374,21 @@ class GDPRComplianceManager:
             resource=f"gdpr_request:{request_id}",
             outcome="success"
         )
-        
+
         return erasure_result
-    
+
     async def process_portability_request(self, request_id: str) -> Dict[str, Any]:
         """Process data portability request (Article 20)"""
         request = self.subject_
         # requests\.get(request_id)
         if not request or request.request_type != DataSubjectRight.DATA_PORTABILITY:
             raise ValidationError("Invalid portability request")
-        
+
         if not request.verified:
             raise ValidationError("Request must be verified first")
-        
+
         user_id = request.user_id
-        
+
         # Gather portable data (structured, machine-readable format)
         portable_data = {
             "format_version": "1.0",
@@ -406,15 +406,15 @@ class GDPRComplianceManager:
                 for c in await self.get_consent_history(user_id)
             ]
         }
-        
+
         # Update request
         request.status = "completed"
         request.completed_at = datetime.utcnow()
         request.response_data = {"download_url": f"/gdpr/download/{request_id}"}
-        
+
         # Store portable data for download
         # In production, this would be stored securely with expiration
-        
+
         # Audit log
         await audit_log(
             event_type=AuditEventType.DATA_EXPORT,
@@ -423,44 +423,44 @@ class GDPRComplianceManager:
             resource=f"gdpr_request:{request_id}",
             data_classification="personal"
         )
-        
+
         return portable_data
-    
+
     async def verify_request(self, request_id: str, verification_token: str) -> bool:
         """Verify a data subject request"""
         request = self.subject_
         # requests\.get(request_id)
         if not request:
             raise ValidationError("Request not found")
-        
+
         # In production, implement proper verification
         # For now, simple token check
         expected_token = hashlib.sha256(
             f"{request_id}:{request.user_id}".encode()
         ).hexdigest()[:8]
-        
+
         if verification_token == expected_token:
             request.verified = True
             request.status = "processing"
-            
+
             await audit_log(
                 event_type=AuditEventType.USER_UPDATED,
                 user_id=request.user_id,
                 action="gdpr_request_verified",
                 resource=f"gdpr_request:{request_id}"
             )
-            
+
             return True
-        
+
         return False
-    
+
     async def get_consent_history(self, user_id: str) -> List[ConsentRecord]:
         """Get complete consent history for a user"""
         if user_id not in self.consent_records:
             return []
-        
+
         return self.consent_records[user_id]
-    
+
     async def register_processing_activity(
         self,
         activity_name: str,
@@ -473,7 +473,7 @@ class GDPRComplianceManager:
     ) -> str:
         """Register a processing activity (Article 30)"""
         activity_id = str(uuid.uuid4())
-        
+
         self.processing_registry[activity_id] = {
             "activity_id": activity_id,
             "activity_name": activity_name,
@@ -486,10 +486,10 @@ class GDPRComplianceManager:
             "registered_at": datetime.utcnow().isoformat(),
             "last_reviewed": datetime.utcnow().isoformat()
         }
-        
+
         logger.info(f"Processing activity registered: {activity_id}")
         return activity_id
-    
+
     async def check_data_minimization(
         self,
         purpose: ProcessingPurpose,
@@ -505,18 +505,18 @@ class GDPRComplianceManager:
             ProcessingPurpose.LEGAL_COMPLIANCE: ["user_id", "email", "created_at"],
             ProcessingPurpose.RESEARCH: ["anonymized_id"]
         }
-        
+
         minimum_fields = required_fields.get(purpose, [])
         excessive_fields = [f for f in requested_fields if f not in minimum_fields]
-        
+
         return len(excessive_fields) == 0, excessive_fields
-    
+
     # Helper methods for data operations
     async def _get_user_personal_data(self, user_id: str) -> Dict[str, Any]:
         """Get user's personal data"""
         auth_service = get_auth_service()
         user = auth_service.get_user(user_id)
-        
+
         if user:
             return {
                 "user_id": user["user_id"],
@@ -526,35 +526,35 @@ class GDPRComplianceManager:
                 "last_login": user.get("last_login"),
                 "roles": user.get("roles", [])
             }
-        
+
         return {}
-    
+
     async def _get_processing_purposes(self, user_id: str) -> List[str]:
         """Get purposes for which user data is processed"""
         purposes = set()
-        
+
         # Check active consents
         active_consents = await self.get_active_consents(user_id)
         for consent in active_consents:
             purposes.add(consent.purpose.value)
-        
+
         # Add default purposes
         purposes.add(ProcessingPurpose.SERVICE_PROVISION.value)
         purposes.add(ProcessingPurpose.SECURITY.value)
-        
+
         return list(purposes)
-    
+
     async def _get_data_categories(self, user_id: str) -> List[str]:
         """Get categories of data collected about user"""
         categories = ["identity_data", "contact_data", "technical_data", "usage_data"]
-        
+
         # Check for special categories
         active_consents = await self.get_active_consents(user_id)
         for consent in active_consents:
             categories.extend(consent.data_categories)
-        
+
         return list(set(categories))
-    
+
     async def _get_data_recipients(self, user_id: str) -> List[str]:
         """Get list of data recipients/processors"""
         return [
@@ -563,19 +563,19 @@ class GDPRComplianceManager:
             "Analytics platform (anonymized)",
             "Backup service providers"
         ]
-    
+
     async def _get_retention_periods(self, user_id: str) -> Dict[str, int]:
         """Get retention periods for different data types"""
         retention_manager = get_retention_manager()
-        
+
         periods = {}
         for category in DataCategory:
             policies = retention_manager.get_policies_by_category(category)
             if policies:
                 periods[category.value] = min(p.retention_days for p in policies)
-        
+
         return periods
-    
+
     async def _get_data_sources(self, user_id: str) -> List[str]:
         """Get sources of user data"""
         return [
@@ -583,13 +583,13 @@ class GDPRComplianceManager:
             "Automatic collection (technical data)",
             "Third-party integrations (with consent)"
         ]
-    
+
     async def _get_automated_decisions(self, user_id: str) -> List[Dict[str, Any]]:
         """Get info about automated decision-making"""
         # In this implementation, we don't have automated decision-making
         # that significantly affects users
         return []
-    
+
     async def _get_user_activity_data(self, user_id: str) -> Dict[str, Any]:
         """Get user activity data for portability"""
         # This would gather actual activity data
@@ -598,7 +598,7 @@ class GDPRComplianceManager:
             "api_usage": [],
             "feature_usage": []
         }
-    
+
     async def _get_user_preferences(self, user_id: str) -> Dict[str, Any]:
         """Get user preferences for portability"""
         return {
@@ -606,11 +606,11 @@ class GDPRComplianceManager:
             "privacy_settings": {},
             "interface_preferences": {}
         }
-    
+
     async def _get_user_content(self, user_id: str) -> List[Dict[str, Any]]:
         """Get user-generated content for portability"""
         return []
-    
+
     async def _preview_erasure(self, user_id: str) -> Dict[str, Any]:
         """Preview what would be erased"""
         return {
@@ -622,50 +622,50 @@ class GDPRComplianceManager:
             "audit_logs": "anonymized",
             "backup_data": "scheduled_deletion"
         }
-    
+
     async def _erase_user_data(self, user_id: str) -> bool:
         """Erase user's personal data"""
         auth_service = get_auth_service()
-        
+
         # Use the existing delete_user method
         result = auth_service.delete_user(user_id, cascade_data=True)
-        
+
         return result["user_deleted"]
-    
+
     async def _erase_consents(self, user_id: str) -> int:
         """Erase user's consent records"""
         count = len(self.consent_records.get(user_id, []))
-        
+
         if user_id in self.consent_records:
             del self.consent_records[user_id]
-        
+
         return count
-    
+
     async def _revoke_all_sessions(self, user_id: str) -> int:
         """Revoke all user sessions"""
         auth_service = get_auth_service()
-        
+
         # Get all sessions for user
-        sessions = [s for s in auth_service.active_sessions.values() 
+        sessions = [s for s in auth_service.active_sessions.values()
                    if s.get("user_id") == user_id]
-        
+
         # Revoke each session
         for session in sessions:
             auth_service.revoke_token(session.get("jti"))
-        
+
         return len(sessions)
-    
+
     async def _revoke_api_keys(self, user_id: str) -> bool:
         """Revoke user's API keys"""
         # This would integrate with API key management
         return True
-    
+
     async def _anonymize_audit_logs(self, user_id: str) -> int:
         """Anonymize user's audit logs"""
         # Replace user_id with anonymized identifier in audit logs
         # In production, this would update the actual audit log storage
         anonymized_id = hashlib.sha256(user_id.encode()).hexdigest()[:16]
-        
+
         logger.info(f"Audit logs anonymized for user: {anonymized_id}")
         return 0  # Count of anonymized records
 

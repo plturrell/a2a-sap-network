@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class HealthStatus(Enum):
     """Health check status levels"""
     HEALTHY = "healthy"
-    DEGRADED = "degraded"  
+    DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
     CRITICAL = "critical"
 
@@ -59,12 +59,12 @@ class HealthCheckRegistry:
         self.capabilities: List[str] = []
         self.custom_endpoints: Dict[str, Callable] = {}
         self.system_info = self._get_system_info()
-        
+
         # Performance tracking
         self.request_count = 0
         self.error_count = 0
         self.response_times: List[float] = []
-        
+
         logger.info("Health check registry initialized")
 
     def _get_system_info(self) -> Dict[str, Any]:
@@ -98,18 +98,18 @@ class HealthCheckRegistry:
     async def run_health_checks(self) -> Dict[str, HealthCheck]:
         """Run all registered health checks"""
         results = {}
-        
+
         for name, check_func in self.health_checks.items():
             try:
                 start_time = time.time()
-                
+
                 if asyncio.iscoroutinefunction(check_func):
                     check_result = await check_func()
                 else:
                     check_result = check_func()
-                
+
                 response_time = (time.time() - start_time) * 1000
-                
+
                 if isinstance(check_result, HealthCheck):
                     check_result.response_time_ms = response_time
                     results[name] = check_result
@@ -135,7 +135,7 @@ class HealthCheckRegistry:
                         response_time_ms=response_time,
                         message=f"Invalid check result: {type(check_result)}"
                     )
-                    
+
             except Exception as e:
                 results[name] = HealthCheck(
                     name=name,
@@ -144,7 +144,7 @@ class HealthCheckRegistry:
                     message=f"Health check error: {str(e)}"
                 )
                 logger.error(f"Health check failed for {name}: {e}")
-        
+
         return results
 
     def get_system_metrics(self) -> SystemMetrics:
@@ -166,21 +166,21 @@ class HealthCheckRegistry:
         """Determine overall health status from individual checks"""
         if not health_checks:
             return HealthStatus.HEALTHY
-        
+
         statuses = [check.status for check in health_checks.values()]
-        
+
         # If any check is critical, overall is critical
         if HealthStatus.CRITICAL in statuses:
             return HealthStatus.CRITICAL
-        
+
         # If any check is unhealthy, overall is unhealthy
         if HealthStatus.UNHEALTHY in statuses:
             return HealthStatus.UNHEALTHY
-        
+
         # If any check is degraded, overall is degraded
         if HealthStatus.DEGRADED in statuses:
             return HealthStatus.DEGRADED
-        
+
         # All checks are healthy
         return HealthStatus.HEALTHY
 
@@ -206,25 +206,25 @@ def create_health_router() -> APIRouter:
     async def health_check():
         """Main health check endpoint"""
         start_time = time.time()
-        
+
         try:
             registry.request_count += 1
-            
+
             # Run all health checks
             health_checks = await registry.run_health_checks()
-            
+
             # Get system metrics
             system_metrics = registry.get_system_metrics()
-            
+
             # Determine overall status
             overall_status = registry.get_overall_health_status(health_checks)
-            
+
             # Calculate response time
             response_time = (time.time() - start_time) * 1000
             registry.response_times.append(response_time)
             if len(registry.response_times) > 100:
                 registry.response_times = registry.response_times[-100:]
-            
+
             # Build response
             response_data = {
                 "status": overall_status.value,
@@ -249,7 +249,7 @@ def create_health_router() -> APIRouter:
                     for name, check in health_checks.items()
                 }
             }
-            
+
             # Set appropriate HTTP status code
             status_code = {
                 HealthStatus.HEALTHY: 200,
@@ -257,13 +257,13 @@ def create_health_router() -> APIRouter:
                 HealthStatus.UNHEALTHY: 503,
                 HealthStatus.CRITICAL: 503
             }.get(overall_status, 503)
-            
+
             return JSONResponse(content=response_data, status_code=status_code)
-            
+
         except Exception as e:
             registry.error_count += 1
             logger.error(f"Health check endpoint error: {e}")
-            
+
             return JSONResponse(
                 content={
                     "status": "critical",
@@ -279,21 +279,21 @@ def create_health_router() -> APIRouter:
         try:
             health_checks = await registry.run_health_checks()
             overall_status = registry.get_overall_health_status(health_checks)
-            
+
             # Ready if healthy or degraded
             is_ready = overall_status in [HealthStatus.HEALTHY, HealthStatus.DEGRADED]
-            
+
             response_data = {
                 "ready": is_ready,
                 "status": overall_status.value,
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
             return JSONResponse(
                 content=response_data,
                 status_code=200 if is_ready else 503
             )
-            
+
         except Exception as e:
             return JSONResponse(
                 content={
@@ -317,12 +317,12 @@ def create_health_router() -> APIRouter:
     async def metrics_endpoint():
         """Metrics endpoint for monitoring"""
         system_metrics = registry.get_system_metrics()
-        
+
         avg_response_time = (
             sum(registry.response_times) / len(registry.response_times)
             if registry.response_times else 0
         )
-        
+
         return JSONResponse(content={
             "system_metrics": {
                 "cpu_percent": system_metrics.cpu_percent,
@@ -351,13 +351,13 @@ def create_health_router() -> APIRouter:
         try:
             # Get message data
             message_data = await request.json()
-            
+
             # Validate required fields
             required_fields = ['id', 'agent_id', 'payload']
             for field in required_fields:
                 if field not in message_data:
                     raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
-            
+
             # Process message (this would integrate with actual message processing)
             response_data = {
                 "message_id": message_data['id'],
@@ -365,13 +365,13 @@ def create_health_router() -> APIRouter:
                 "timestamp": datetime.utcnow().isoformat(),
                 "processing_time_ms": 0.1  # Mock processing time
             }
-            
+
             # Return appropriate status based on priority
             priority = request.headers.get('X-Message-Priority', 'normal')
             status_code = 200 if priority == 'normal' else 202  # 202 for high priority (async processing)
-            
+
             return JSONResponse(content=response_data, status_code=status_code)
-            
+
         except Exception as e:
             logger.error(f"Message processing error: {e}")
             raise HTTPException(status_code=500, detail=str(e))
@@ -381,13 +381,13 @@ def create_health_router() -> APIRouter:
         """Data replication endpoint"""
         try:
             replication_data = await request.json()
-            
+
             # Validate replication data
             required_fields = ['key', 'data', 'version', 'source_node']
             for field in required_fields:
                 if field not in replication_data:
                     raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
-            
+
             # Process replication (mock implementation)
             response_data = {
                 "key": replication_data['key'],
@@ -395,9 +395,9 @@ def create_health_router() -> APIRouter:
                 "status": "replicated",
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
             return JSONResponse(content=response_data, status_code=201)
-            
+
         except Exception as e:
             logger.error(f"Replication error: {e}")
             raise HTTPException(status_code=500, detail=str(e))
@@ -407,7 +407,7 @@ def create_health_router() -> APIRouter:
         """Data fetch endpoint"""
         try:
             consistency_level = request.headers.get('X-Consistency-Level', 'eventual')
-            
+
             # Mock data fetch (would integrate with actual data store)
             response_data = {
                 "key": key,
@@ -423,9 +423,9 @@ def create_health_router() -> APIRouter:
                 "replicas": ["node1", "node2"],
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
             return JSONResponse(content=response_data, status_code=200)
-            
+
         except Exception as e:
             logger.error(f"Data fetch error: {e}")
             raise HTTPException(status_code=500, detail=str(e))
@@ -440,9 +440,9 @@ def create_health_router() -> APIRouter:
                 "version": 1,  # Mock version
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
             return JSONResponse(content=response_data, status_code=200)
-            
+
         except Exception as e:
             logger.error(f"Version check error: {e}")
             raise HTTPException(status_code=500, detail=str(e))
@@ -452,16 +452,16 @@ def create_health_router() -> APIRouter:
         """Routing table update endpoint"""
         try:
             routing_data = await request.json()
-            
+
             # Process routing update (mock implementation)
             response_data = {
                 "status": "updated",
                 "timestamp": datetime.utcnow().isoformat(),
                 "routes_updated": routing_data.get("routes", {})
             }
-            
+
             return JSONResponse(content=response_data, status_code=200)
-            
+
         except Exception as e:
             logger.error(f"Routing update error: {e}")
             raise HTTPException(status_code=500, detail=str(e))
@@ -471,10 +471,10 @@ def create_health_router() -> APIRouter:
         """Recovery step execution endpoint"""
         try:
             recovery_data = await request.json()
-            
+
             step = recovery_data.get('step')
             parameters = recovery_data.get('parameters', {})
-            
+
             # Mock recovery step execution
             response_data = {
                 "step": step,
@@ -483,9 +483,9 @@ def create_health_router() -> APIRouter:
                 "execution_time_ms": 100,  # Mock execution time
                 "result": "success"
             }
-            
+
             return JSONResponse(content=response_data, status_code=200)
-            
+
         except Exception as e:
             logger.error(f"Recovery execution error: {e}")
             raise HTTPException(status_code=500, detail=str(e))
@@ -497,7 +497,7 @@ def create_health_router() -> APIRouter:
 def register_default_health_checks():
     """Register default health checks"""
     registry = get_health_registry()
-    
+
     def database_check() -> HealthCheck:
         """Database connectivity check"""
         try:
@@ -515,12 +515,12 @@ def register_default_health_checks():
                 response_time_ms=0,
                 message=f"Database connection failed: {str(e)}"
             )
-    
+
     def memory_check() -> HealthCheck:
         """Memory usage check"""
         try:
             memory_percent = psutil.virtual_memory().percent
-            
+
             if memory_percent < 80:
                 status = HealthStatus.HEALTHY
                 message = f"Memory usage OK ({memory_percent:.1f}%)"
@@ -530,7 +530,7 @@ def register_default_health_checks():
             else:
                 status = HealthStatus.UNHEALTHY
                 message = f"Memory usage critical ({memory_percent:.1f}%)"
-            
+
             return HealthCheck(
                 name="memory",
                 status=status,
@@ -545,12 +545,12 @@ def register_default_health_checks():
                 response_time_ms=0,
                 message=f"Memory check failed: {str(e)}"
             )
-    
+
     def disk_check() -> HealthCheck:
         """Disk usage check"""
         try:
             disk_percent = psutil.disk_usage('/').percent
-            
+
             if disk_percent < 85:
                 status = HealthStatus.HEALTHY
                 message = f"Disk usage OK ({disk_percent:.1f}%)"
@@ -560,7 +560,7 @@ def register_default_health_checks():
             else:
                 status = HealthStatus.UNHEALTHY
                 message = f"Disk usage critical ({disk_percent:.1f}%)"
-            
+
             return HealthCheck(
                 name="disk",
                 status=status,
@@ -575,12 +575,12 @@ def register_default_health_checks():
                 response_time_ms=0,
                 message=f"Disk check failed: {str(e)}"
             )
-    
+
     # Register default checks
     registry.register_health_check("database", database_check)
-    registry.register_health_check("memory", memory_check) 
+    registry.register_health_check("memory", memory_check)
     registry.register_health_check("disk", disk_check)
-    
+
     # Register default capabilities
     registry.register_capability("message_processing")
     registry.register_capability("data_replication")

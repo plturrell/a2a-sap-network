@@ -63,11 +63,11 @@ if __name__ == "__main__":
     # Set environment variables
     os.environ["A2A_AGENT_ID"] = "reasoning-agent-9"
     os.environ["A2A_BLOCKCHAIN_URL"] = os.getenv("A2A_BLOCKCHAIN_URL", "http://localhost:8545")
-    
+
     # Run the server
     logger.info("Starting Agent 9 (Reasoning Agent) API Server...")
     logger.info("Server will be available at http://localhost:8086")
-    
+
     uvicorn.run(
         "agent9_server:app",
         host="0.0.0.0",

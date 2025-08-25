@@ -53,25 +53,25 @@ except ImportError as e:
         def __init__(self, base_url, enable_monitoring=True):
             self.base_url = base_url
             self.enable_monitoring = enable_monitoring
-        
+
         def process_request(self, request):
             return f"Mock response from {'transport_layer'}"
-        
+
         def get_status(self):
             return {"status": "running", "service": "transport_layer"}
-    
+
     agent_class = MockAgent
 
 logger = logging.getLogger(__name__)
 
 class StandaloneMCPAgentServer:
     """Standalone MCP server for transport_layer"""
-    
+
     def __init__(self):
         self.name = "mcp_transport_layer_server"
         self.version = "1.0.0"
         self.port = 8104
-        
+
         # Initialize the agent
         try:
             self.agent = agent_class(
@@ -86,16 +86,16 @@ class StandaloneMCPAgentServer:
                 base_url=f"http://localhost:{self.port}",
                 enable_monitoring=True
             )
-        
+
         logger.info(f"Initialized {self.__class__.__name__} on port {self.port}")
-    
+
     async def handle_request(self, request):
         """Handle MCP request"""
         method = request.get("method", "unknown")
         params = request.get("params", {})
-        
+
         # Route to appropriate tool
-        
+
         if method == "mcp_server":
             try:
                 if hasattr(self.agent, 'mcp_server'):
@@ -111,7 +111,7 @@ class StandaloneMCPAgentServer:
                 else:
                     return {"error": "Tool mcp_server not found", "status": "error"}
             except Exception as e:
-                return {"error": f"Error executing mcp_server: {str(e)}", "status": "error"}        
+                return {"error": f"Error executing mcp_server: {str(e)}", "status": "error"}
         if method == "mcp_request":
             try:
                 if hasattr(self.agent, 'mcp_request'):
@@ -128,10 +128,10 @@ class StandaloneMCPAgentServer:
                     return {"error": "Tool mcp_request not found", "status": "error"}
             except Exception as e:
                 return {"error": f"Error executing mcp_request: {str(e)}", "status": "error"}
-        
+
         # Default fallback
         return {"error": f"Unknown method: {method}", "available_tools": [2], "status": "error"}
-    
+
     async def start_server(self):
         """Start the MCP server with production features"""
         try:
@@ -149,7 +149,7 @@ class StandaloneMCPAgentServer:
 
 # A2A Protocol Compliance: All imports must be available
 # No fallback implementations allowed - the agent must have all required dependencies
-            
+
             class MCPHandler(BaseHTTPRequestHandler):
                 def do_GET(self):
                     if self.path == "/health":
@@ -166,12 +166,12 @@ class StandaloneMCPAgentServer:
                     else:
                         self.send_response(404)
                         self.end_headers()
-            
+
             server = HTTPServer(('0.0.0.0', 8104), MCPHandler)
             print(f"Starting basic HTTP server for mcp_transport_layer_server on port 8104")
             server.serve_forever()
             return
-        
+
         app = FastAPI(
             title="mcp_transport_layer_server",
             description="MCP transport layer management",
@@ -179,7 +179,7 @@ class StandaloneMCPAgentServer:
             docs_url=None,  # Disable docs in production
             redoc_url=None  # Disable redoc in production
         )
-        
+
         # Add CORS middleware
         app.add_middleware(
             CORSMiddleware,
@@ -188,7 +188,7 @@ class StandaloneMCPAgentServer:
             allow_methods=["GET", "POST"],
             allow_headers=["Authorization", "Content-Type", "X-API-Key"],
         )
-        
+
         # Global exception handler
         @app.exception_handler(Exception)
         async def global_exception_handler(request: Request, exc: Exception):
@@ -197,17 +197,17 @@ class StandaloneMCPAgentServer:
                 status_code=500,
                 content={"error": "Internal server error", "status": "error"}
             )
-        
+
         # Graceful shutdown handler
         shutdown_event = asyncio.Event()
-        
+
         def signal_handler(signum, frame):
             logger.info(f"Received signal {signum}, shutting down...")
             shutdown_event.set()
-            
+
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)
-        
+
         @app.get("/health")
         async def health_check():
             return {
@@ -217,7 +217,7 @@ class StandaloneMCPAgentServer:
                 "tools": 2,
                 "agent_type": type(self.agent).__name__
             }
-        
+
         @app.get("/info")
         async def service_info():
             return {
@@ -237,7 +237,7 @@ class StandaloneMCPAgentServer:
                     }
                 ]
             }
-        
+
         @app.post("/mcp")
         async def handle_mcp_request(request: dict, auth_info: dict = None):
             """Handle authenticated MCP requests"""
@@ -245,13 +245,13 @@ class StandaloneMCPAgentServer:
                 # Add auth context to request
                 if auth_info:
                     request['_auth'] = auth_info
-                    
+
                 result = await self.handle_request(request)
-                
+
                 # Add correlation ID if present
                 if '_correlation_id' in request:
                     result['_correlation_id'] = request['_correlation_id']
-                    
+
                 return result
             except Exception as e:
                 logger.error(f"Error handling MCP request: {e}")
@@ -260,21 +260,21 @@ class StandaloneMCPAgentServer:
                     "status": "error",
                     "code": 500
                 }
-        
+
         # Startup event
         @app.on_event("startup")
         async def startup():
             logger.info(f"Starting mcp_transport_layer_server on port 8104")
             # Initialize connections, caches, etc.
-            
+
         # Shutdown event
         @app.on_event("shutdown")
         async def shutdown():
             logger.info(f"Shutting down mcp_transport_layer_server")
             # Clean up resources, close connections
-            
+
         print(f"🚀 Starting mcp_transport_layer_server on port 8104")
-        
+
         # Production server configuration
         config = uvicorn.Config(
             app=app,
@@ -286,14 +286,14 @@ class StandaloneMCPAgentServer:
             server_header=False,  # Don't expose server info
             date_header=False,    # Don't expose date for security
         )
-        
+
         server = uvicorn.Server(config)
         await server.serve()
 
 async def main():
     """Main server entry point"""
     logging.basicConfig(level=logging.INFO)
-    
+
     try:
         server = StandaloneMCPAgentServer()
         await server.start_server()

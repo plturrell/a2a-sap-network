@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 # Import types first - these should always be available
 from .types import (
-    A2AMessage, MessagePart, MessageRole, TaskStatus, 
+    A2AMessage, MessagePart, MessageRole, TaskStatus,
     AgentCard, AgentCapability, SkillDefinition
 )
 
@@ -25,7 +25,7 @@ try:
 except ImportError as e:
     logger.warning(f"Decorators not available: {e}")
     def a2a_handler(func): return func
-    def a2a_task(func): return func  
+    def a2a_task(func): return func
     def a2a_skill(func): return func
 
 try:
@@ -72,12 +72,12 @@ __version__ = "1.0.0"
 __all__ = [
     "A2AAgentBase",
     "AgentConfig",
-    "A2AClient", 
+    "A2AClient",
     "a2a_handler",
     "a2a_task",
     "a2a_skill",
     "A2AMessage",
-    "MessagePart", 
+    "MessagePart",
     "MessageRole",
     "TaskStatus",
     "AgentCard",
@@ -87,12 +87,12 @@ __all__ = [
     "validate_message",
     "sign_message",
     "PerformanceMonitorMixin",
-    "SecurityHardenedMixin", 
+    "SecurityHardenedMixin",
     "CachingMixin",
     "TelemetryMixin",
     # MCP components
     "A2AMCPServer",
-    "MCPServerMixin", 
+    "MCPServerMixin",
     "create_mcp_server",
     "mcp_tool",
     "mcp_resource",

@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 
 class AIGoalIntegrationMixin:
     """Mixin to add AI capabilities to orchestrator agent"""
-    
+
     def __init__(self):
         self.ai_optimizer = None
         self.ai_enabled = True
-        
+
     async def initialize_ai_integration(self):
         """Initialize AI integration"""
         try:
@@ -29,10 +29,10 @@ class AIGoalIntegrationMixin:
         except Exception as e:
             logger.error(f"Failed to initialize AI integration: {e}")
             self.ai_enabled = False
-    
+
     async def _register_ai_handlers(self):
         """Register AI-enhanced message handlers"""
-        
+
         @self.secure_handler("predict_goal_completion")
         async def handle_predict_goal_completion(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """AI-powered goal completion prediction"""
@@ -40,12 +40,12 @@ class AIGoalIntegrationMixin:
                 agent_id = data.get("agent_id")
                 if not agent_id:
                     return self.create_secure_response("agent_id is required", status="error")
-                
+
                 if not self.ai_enabled or not self.ai_optimizer:
                     return self.create_secure_response("AI optimization not available", status="error")
-                
+
                 prediction = await self.ai_optimizer.predict_goal_completion(agent_id)
-                
+
                 if prediction:
                     result = {
                         "agent_id": agent_id,
@@ -60,7 +60,7 @@ class AIGoalIntegrationMixin:
                             ]
                         }
                     }
-                    
+
                     # Log blockchain transaction
                     await self._log_blockchain_transaction(
                         operation="predict_goal_completion",
@@ -68,11 +68,11 @@ class AIGoalIntegrationMixin:
                         result_hash=self._hash_data(result),
                         context_id=context_id
                     )
-                    
+
                     return self.create_secure_response(result)
                 else:
                     return self.create_secure_response("Unable to generate prediction", status="error")
-                    
+
             except Exception as e:
                 logger.error(f"Failed to predict goal completion: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -84,12 +84,12 @@ class AIGoalIntegrationMixin:
                 agent_id = data.get("agent_id")
                 if not agent_id:
                     return self.create_secure_response("agent_id is required", status="error")
-                
+
                 if not self.ai_enabled or not self.ai_optimizer:
                     return self.create_secure_response("AI optimization not available", status="error")
-                
+
                 milestones = await self.ai_optimizer.detect_intelligent_milestones(agent_id)
-                
+
                 result = {
                     "agent_id": agent_id,
                     "intelligent_milestones": [
@@ -104,7 +104,7 @@ class AIGoalIntegrationMixin:
                     ],
                     "total_milestones": len(milestones)
                 }
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="detect_intelligent_milestones",
@@ -112,9 +112,9 @@ class AIGoalIntegrationMixin:
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to detect intelligent milestones: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -126,12 +126,12 @@ class AIGoalIntegrationMixin:
                 agent_id = data.get("agent_id")
                 if not agent_id:
                     return self.create_secure_response("agent_id is required", status="error")
-                
+
                 if not self.ai_enabled or not self.ai_optimizer:
                     return self.create_secure_response("AI optimization not available", status="error")
-                
+
                 optimization_result = await self.ai_optimizer.optimize_goal_strategy(agent_id)
-                
+
                 if optimization_result["status"] == "success":
                     # Log blockchain transaction
                     await self._log_blockchain_transaction(
@@ -140,11 +140,11 @@ class AIGoalIntegrationMixin:
                         result_hash=self._hash_data(optimization_result["strategy"]),
                         context_id=context_id
                     )
-                    
+
                     return self.create_secure_response(optimization_result["strategy"])
                 else:
                     return self.create_secure_response(optimization_result["message"], status="error")
-                
+
             except Exception as e:
                 logger.error(f"Failed to optimize goal strategy: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -154,16 +154,16 @@ class AIGoalIntegrationMixin:
             """Get comprehensive AI insights for goal management"""
             try:
                 agent_id = data.get("agent_id")
-                
+
                 if not self.ai_enabled or not self.ai_optimizer:
                     return self.create_secure_response("AI optimization not available", status="error")
-                
+
                 if agent_id:
                     # Agent-specific insights
                     prediction = await self.ai_optimizer.predict_goal_completion(agent_id)
                     milestones = await self.ai_optimizer.detect_intelligent_milestones(agent_id)
                     optimization = await self.ai_optimizer.optimize_goal_strategy(agent_id)
-                    
+
                     result = {
                         "agent_id": agent_id,
                         "ai_insights": {
@@ -185,16 +185,16 @@ class AIGoalIntegrationMixin:
                     total_agents = len(self.agent_goals)
                     ai_predictions = 0
                     avg_confidence = 0.0
-                    
+
                     for aid in self.agent_goals.keys():
                         pred = await self.ai_optimizer.predict_goal_completion(aid)
                         if pred:
                             ai_predictions += 1
                             avg_confidence += pred.confidence_score
-                    
+
                     if ai_predictions > 0:
                         avg_confidence /= ai_predictions
-                    
+
                     result = {
                         "system_ai_insights": {
                             "total_agents_with_goals": total_agents,
@@ -204,7 +204,7 @@ class AIGoalIntegrationMixin:
                             "ml_models_trained": self.ai_optimizer.progress_predictor is not None
                         }
                     }
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="ai_goal_insights",
@@ -212,9 +212,9 @@ class AIGoalIntegrationMixin:
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to get AI goal insights: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -224,10 +224,10 @@ class AIGoalIntegrationMixin:
         try:
             if not self.ai_enabled or not self.ai_optimizer:
                 return
-            
+
             # Get AI prediction for this agent
             prediction = await self.ai_optimizer.predict_goal_completion(agent_id)
-            
+
             if prediction:
                 # Add AI insights to progress data
                 progress_data["ai_insights"] = {
@@ -239,7 +239,7 @@ class AIGoalIntegrationMixin:
                     },
                     "ai_recommendations": prediction.recommended_actions[:3]  # Top 3 recommendations
                 }
-                
+
                 # Detect and add intelligent milestones
                 milestones = await self.ai_optimizer.detect_intelligent_milestones(agent_id)
                 if milestones:
@@ -251,9 +251,9 @@ class AIGoalIntegrationMixin:
                         }
                         for m in milestones[:2]  # Next 2 milestones
                     ]
-                
+
                 logger.debug(f"Enhanced progress tracking with AI insights for {agent_id}")
-                
+
         except Exception as e:
             logger.error(f"Failed to enhance progress tracking with AI for {agent_id}: {e}")
 
@@ -262,17 +262,17 @@ class AIGoalIntegrationMixin:
         try:
             if not self.ai_enabled or not self.ai_optimizer:
                 return {}
-            
+
             ai_analytics = {}
-            
+
             if agent_id:
                 # Agent-specific AI analytics
                 prediction = await self.ai_optimizer.predict_goal_completion(agent_id)
                 milestones = await self.ai_optimizer.detect_intelligent_milestones(agent_id)
-                
+
                 if prediction:
                     days_to_completion = (prediction.predicted_completion_date - datetime.utcnow()).days
-                    
+
                     ai_analytics = {
                         "ai_prediction": {
                             "completion_in_days": days_to_completion,
@@ -290,7 +290,7 @@ class AIGoalIntegrationMixin:
                 total_predictions = 0
                 total_confidence = 0.0
                 high_risk_agents = 0
-                
+
                 for aid in self.agent_goals.keys():
                     pred = await self.ai_optimizer.predict_goal_completion(aid)
                     if pred:
@@ -298,7 +298,7 @@ class AIGoalIntegrationMixin:
                         total_confidence += pred.confidence_score
                         if len(pred.risk_factors) > 2:
                             high_risk_agents += 1
-                
+
                 ai_analytics = {
                     "system_ai_metrics": {
                         "prediction_coverage": f"{total_predictions}/{len(self.agent_goals)}",
@@ -307,9 +307,9 @@ class AIGoalIntegrationMixin:
                         "ai_optimization_active": self.ai_enabled
                     }
                 }
-            
+
             return ai_analytics
-            
+
         except Exception as e:
             logger.error(f"Failed to generate AI-enhanced analytics: {e}")
             return {}
@@ -317,18 +317,18 @@ class AIGoalIntegrationMixin:
 # Integration function to add AI capabilities to existing orchestrator
 def integrate_ai_capabilities(orchestrator_handler):
     """Integrate AI capabilities into existing orchestrator handler"""
-    
+
     # Add AI mixin methods to orchestrator
     ai_mixin = AIGoalIntegrationMixin()
-    
+
     # Copy AI methods to orchestrator
     orchestrator_handler.initialize_ai_integration = ai_mixin.initialize_ai_integration.__get__(orchestrator_handler)
     orchestrator_handler._register_ai_handlers = ai_mixin._register_ai_handlers.__get__(orchestrator_handler)
     orchestrator_handler._enhance_progress_tracking_with_ai = ai_mixin._enhance_progress_tracking_with_ai.__get__(orchestrator_handler)
     orchestrator_handler._ai_enhanced_goal_analytics = ai_mixin._ai_enhanced_goal_analytics.__get__(orchestrator_handler)
-    
+
     # Initialize AI properties
     orchestrator_handler.ai_optimizer = None
     orchestrator_handler.ai_enabled = True
-    
+
     logger.info("AI capabilities integrated into orchestrator handler")

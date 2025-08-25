@@ -94,24 +94,24 @@ ROLE_PERMISSIONS = {
 
 class SecurityConfig:
     """Security configuration constants"""
-    
+
     # JWT Configuration
     JWT_ALGORITHM = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES = 30
     JWT_REFRESH_TOKEN_EXPIRE_DAYS = 7
-    
+
     # Password Configuration
     PASSWORD_MIN_LENGTH = 12
     PASSWORD_SALT_ROUNDS = 12
-    
+
     # Session Configuration
     SESSION_TIMEOUT_MINUTES = 30
     MAX_LOGIN_ATTEMPTS = 5
     LOCKOUT_DURATION_MINUTES = 15
-    
+
     # Encryption Configuration
     ENCRYPTION_KEY_LENGTH = 32
-    
+
     # Rate Limiting
     MAX_REQUESTS_PER_MINUTE = 60
     MAX_REQUESTS_PER_HOUR = 1000
@@ -119,7 +119,7 @@ class SecurityConfig:
 
 class PasswordHasher:
     """Secure password hashing utilities"""
-    
+
     @staticmethod
     def hash_password(password: str) -> str:
         """Hash a password using bcrypt"""
@@ -127,11 +127,11 @@ class PasswordHasher:
             raise A2AAuthenticationError(
                 f"Password must be at least {SecurityConfig.PASSWORD_MIN_LENGTH} characters long"
             )
-        
+
         salt = bcrypt.gensalt(rounds=SecurityConfig.PASSWORD_SALT_ROUNDS)
         hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
         return hashed.decode('utf-8')
-    
+
     @staticmethod
     def verify_password(password: str, hashed: str) -> bool:
         """Verify a password against its hash"""
@@ -140,7 +140,7 @@ class PasswordHasher:
         except Exception as e:
             logger.warning(f"Password verification failed: {e}")
             return False
-    
+
     @staticmethod
     def generate_secure_password(length: int = 16) -> str:
         """Generate a cryptographically secure password"""
@@ -153,12 +153,12 @@ class PasswordHasher:
 
 class TokenManager:
     """JWT token management"""
-    
+
     def __init__(self, secret_key: str):
         if not secret_key or len(secret_key) < 32:
             raise A2AConfigurationError("JWT secret key must be at least 32 characters")
         self.secret_key = secret_key
-    
+
     def create_access_token(
         self,
         user_id: str,
@@ -173,11 +173,11 @@ class TokenManager:
             expire = datetime.utcnow() + timedelta(
                 minutes=SecurityConfig.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
             )
-        
+
         # Use role permissions if specific permissions not provided
         if permissions is None:
             permissions = ROLE_PERMISSIONS.get(role, [])
-        
+
         payload = {
             "sub": user_id,
             "role": role.value,
@@ -186,22 +186,22 @@ class TokenManager:
             "iat": datetime.utcnow(),
             "type": "access"
         }
-        
+
         return jwt.encode(payload, self.secret_key, algorithm=SecurityConfig.JWT_ALGORITHM)
-    
+
     def create_refresh_token(self, user_id: str) -> str:
         """Create JWT refresh token"""
         expire = datetime.utcnow() + timedelta(days=SecurityConfig.JWT_REFRESH_TOKEN_EXPIRE_DAYS)
-        
+
         payload = {
             "sub": user_id,
             "exp": expire,
             "iat": datetime.utcnow(),
             "type": "refresh"
         }
-        
+
         return jwt.encode(payload, self.secret_key, algorithm=SecurityConfig.JWT_ALGORITHM)
-    
+
     def verify_token(self, token: str) -> Dict[str, Any]:
         """Verify and decode JWT token"""
         try:
@@ -215,58 +215,58 @@ class TokenManager:
             raise A2ATokenExpiredError("Token has expired")
         except jwt.InvalidTokenError as e:
             raise A2AInvalidTokenError(f"Invalid token: {str(e)}")
-    
+
     def refresh_access_token(self, refresh_token: str, role: Role) -> str:
         """Create new access token from refresh token"""
         payload = self.verify_token(refresh_token)
-        
+
         if payload.get("type") != "refresh":
             raise A2AInvalidTokenError("Invalid refresh token")
-        
+
         return self.create_access_token(payload["sub"], role)
 
 
 class DataEncryption:
     """Data encryption utilities"""
-    
+
     def __init__(self, encryption_key: Optional[bytes] = None):
         if encryption_key is None:
             encryption_key = self._generate_key()
-        
+
         self.cipher_suite = Fernet(encryption_key)
         self.key = encryption_key
-    
+
     @staticmethod
     def _generate_key() -> bytes:
         """Generate encryption key from password"""
         # Get password and salt from environment variables
         password = os.getenv("ENCRYPTION_PASSWORD")
         salt = os.getenv("ENCRYPTION_SALT")
-        
+
         # Validate required environment variables
         if not password:
             raise ValueError(
                 "ENCRYPTION_PASSWORD environment variable must be set. "
                 "Generate a secure password using: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
             )
-        
+
         if not salt:
             raise ValueError(
                 "ENCRYPTION_SALT environment variable must be set. "
                 "Generate a secure salt using: python -c \"import secrets; print(secrets.token_hex(16))\""
             )
-        
+
         # Validate minimum security requirements
         if len(password) < 16:
             raise ValueError("ENCRYPTION_PASSWORD must be at least 16 characters long")
-        
+
         if len(salt) < 16:
             raise ValueError("ENCRYPTION_SALT must be at least 16 characters long")
-        
+
         # Convert to bytes
         password_bytes = password.encode()
         salt_bytes = salt.encode()
-        
+
         kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
             length=SecurityConfig.ENCRYPTION_KEY_LENGTH,
@@ -275,12 +275,12 @@ class DataEncryption:
         )
         key = base64.urlsafe_b64encode(kdf.derive(password_bytes))
         return key
-    
+
     def encrypt(self, data: str) -> str:
         """Encrypt string data"""
         encrypted_data = self.cipher_suite.encrypt(data.encode())
         return base64.urlsafe_b64encode(encrypted_data).decode()
-    
+
     def decrypt(self, encrypted_data: str) -> str:
         """Decrypt string data"""
         try:
@@ -290,13 +290,13 @@ class DataEncryption:
         except Exception as e:
             logger.error(f"Decryption failed: {e}")
             raise A2AAuthenticationError("Failed to decrypt data")
-    
+
     def encrypt_dict(self, data: Dict[str, Any]) -> str:
         """Encrypt dictionary as JSON"""
         import json
         json_data = json.dumps(data, sort_keys=True)
         return self.encrypt(json_data)
-    
+
     def decrypt_dict(self, encrypted_data: str) -> Dict[str, Any]:
         """Decrypt JSON back to dictionary"""
         import json
@@ -306,7 +306,7 @@ class DataEncryption:
 
 class SecurityHeaders:
     """Security headers middleware"""
-    
+
     @staticmethod
     def get_security_headers() -> Dict[str, str]:
         """Get recommended security headers"""
@@ -329,11 +329,11 @@ class SecurityHeaders:
 
 class RateLimiter:
     """Rate limiting implementation"""
-    
+
     def __init__(self):
         self.requests = {}  # client_id -> list of timestamps
         self.blocked_clients = {}  # client_id -> unblock_time
-    
+
     def is_allowed(
         self,
         client_id: str,
@@ -342,7 +342,7 @@ class RateLimiter:
     ) -> Tuple[bool, Optional[int]]:
         """Check if client is allowed to make request"""
         current_time = time.time()
-        
+
         # Check if client is blocked
         if client_id in self.blocked_clients:
             unblock_time = self.blocked_clients[client_id]
@@ -350,28 +350,28 @@ class RateLimiter:
                 return False, int(unblock_time - current_time)
             else:
                 del self.blocked_clients[client_id]
-        
+
         # Initialize client history if needed
         if client_id not in self.requests:
             self.requests[client_id] = []
-        
+
         # Clean old requests
         cutoff_time = current_time - window_seconds
         self.requests[client_id] = [
             req_time for req_time in self.requests[client_id]
             if req_time > cutoff_time
         ]
-        
+
         # Check rate limit
         if len(self.requests[client_id]) >= max_requests:
             # Block client for window duration
             self.blocked_clients[client_id] = current_time + window_seconds
             return False, window_seconds
-        
+
         # Record this request
         self.requests[client_id].append(current_time)
         return True, None
-    
+
     def reset_client(self, client_id: str):
         """Reset rate limit for specific client"""
         self.requests.pop(client_id, None)
@@ -380,7 +380,7 @@ class RateLimiter:
 
 class SecurityValidator:
     """Input validation and sanitization"""
-    
+
     @staticmethod
     def validate_user_input(
         data: str,
@@ -390,55 +390,55 @@ class SecurityValidator:
         """Validate and sanitize user input"""
         if not isinstance(data, str):
             raise A2AAuthenticationError("Input must be string")
-        
+
         if len(data) > max_length:
             raise A2AAuthenticationError(f"Input too long (max {max_length} characters)")
-        
+
         if allowed_chars and not all(char in allowed_chars for char in data):
             raise A2AAuthenticationError("Input contains invalid characters")
-        
+
         # Basic XSS prevention
         dangerous_patterns = ['<script', 'javascript:', 'onload=', 'onerror=']
         data_lower = data.lower()
-        
+
         for pattern in dangerous_patterns:
             if pattern in data_lower:
                 raise A2AAuthenticationError("Input contains potentially dangerous content")
-        
+
         return data.strip()
-    
+
     @staticmethod
     def validate_email(email: str) -> str:
         """Validate email format"""
         import re
-        
+
         pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if not re.match(pattern, email):
             raise A2AAuthenticationError("Invalid email format")
-        
+
         return email.lower().strip()
-    
+
     @staticmethod
     def validate_password_strength(password: str) -> bool:
         """Validate password meets security requirements"""
         import re
-        
+
         if len(password) < SecurityConfig.PASSWORD_MIN_LENGTH:
             raise A2AAuthenticationError(
                 f"Password must be at least {SecurityConfig.PASSWORD_MIN_LENGTH} characters"
             )
-        
+
         # Check for character variety
         has_upper = bool(re.search(r'[A-Z]', password))
         has_lower = bool(re.search(r'[a-z]', password))
         has_digit = bool(re.search(r'\d', password))
         has_special = bool(re.search(r'[!@#$%^&*(),.?":{}|<>]', password))
-        
+
         if not all([has_upper, has_lower, has_digit, has_special]):
             raise A2AAuthenticationError(
                 "Password must contain uppercase, lowercase, numbers, and special characters"
             )
-        
+
         return True
 
 
@@ -458,23 +458,23 @@ def require_auth(
                 if isinstance(arg, Request):
                     request = arg
                     break
-            
+
             if not request:
                 request = kwargs.get('request')
-            
+
             if not request:
                 raise A2AAuthenticationError("Request object not found")
-            
+
             # Validate token
             auth_header = request.headers.get("Authorization")
             if not auth_header or not auth_header.startswith("Bearer "):
                 raise A2AAuthenticationError("Missing or invalid authorization header")
-            
+
             token = auth_header.split(" ")[1]
-            
+
             # This would normally validate against your token manager
             # For now, we'll assume token validation is done elsewhere
-            
+
             return await func(*args, **kwargs)
         return wrapper
     return decorator
@@ -513,7 +513,7 @@ def mask_sensitive_data(data: str, mask_char: str = "*", visible_chars: int = 4)
     """Mask sensitive data for logging"""
     if len(data) <= visible_chars * 2:
         return mask_char * len(data)
-    
+
     return (
         data[:visible_chars] +
         mask_char * (len(data) - visible_chars * 2) +
@@ -524,20 +524,20 @@ def mask_sensitive_data(data: str, mask_char: str = "*", visible_chars: int = 4)
 def generate_secure_filename(original_filename: str) -> str:
     """Generate secure filename to prevent path traversal"""
     import re
-    
+
     # Remove path separators and dangerous characters
     safe_filename = re.sub(r'[^\w\.-]', '_', original_filename)
-    
+
     # Limit length
     if len(safe_filename) > 255:
         name, ext = os.path.splitext(safe_filename)
         safe_filename = name[:250] + ext
-    
+
     # Add random suffix to prevent conflicts
     timestamp = int(time.time())
     random_suffix = secrets.token_hex(4)
     name, ext = os.path.splitext(safe_filename)
-    
+
     return f"{name}_{timestamp}_{random_suffix}{ext}"
 
 
@@ -545,10 +545,10 @@ def generate_secure_filename(original_filename: str) -> str:
 
 class SecurityAuditor:
     """Security auditing utilities"""
-    
+
     def __init__(self):
         self.audit_log = []
-    
+
     def log_security_event(
         self,
         event_type: str,
@@ -564,10 +564,10 @@ class SecurityAuditor:
             "ip_address": ip_address,
             "details": details or {}
         }
-        
+
         self.audit_log.append(event)
         logger.info(f"Security event: {event_type}", extra=event)
-    
+
     def get_audit_summary(
         self,
         start_time: Optional[datetime] = None,
@@ -578,17 +578,17 @@ class SecurityAuditor:
             start_time = datetime.utcnow() - timedelta(days=7)
         if end_time is None:
             end_time = datetime.utcnow()
-        
+
         filtered_events = [
             event for event in self.audit_log
             if start_time <= datetime.fromisoformat(event["timestamp"]) <= end_time
         ]
-        
+
         event_counts = {}
         for event in filtered_events:
             event_type = event["event_type"]
             event_counts[event_type] = event_counts.get(event_type, 0) + 1
-        
+
         return {
             "period": {
                 "start": start_time.isoformat(),

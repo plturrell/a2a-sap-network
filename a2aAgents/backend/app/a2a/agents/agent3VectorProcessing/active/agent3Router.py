@@ -40,10 +40,10 @@ async def json_rpc_handler(request: Request):
                 "id": None
             }
         )
-    
+
     try:
         body = await request.json()
-        
+
         if "jsonrpc" not in body or body["jsonrpc"] != "2.0":
             return JSONResponse(
                 status_code=400,
@@ -56,35 +56,35 @@ async def json_rpc_handler(request: Request):
                     "id": body.get("id")
                 }
             )
-        
+
         method = body.get("method")
         params = body.get("params", {})
         request_id = body.get("id")
-        
+
         if method == "agent.getCard":
             result = await agent3.get_agent_card()
-        
+
         elif method == "agent.processMessage":
             message = A2AMessage(**params.get("message", {}))
             context_id = params.get("contextId", str(datetime.utcnow().timestamp()))
             result = await agent3.process_message(message, context_id)
-        
+
         elif method == "agent.getTaskStatus":
             task_id = params.get("taskId")
             result = await agent3.get_task_status(task_id)
-        
+
         elif method == "agent.searchVectors":
             # Vector search specific method
             query = params.get("query", "")
             entity_types = params.get("entityTypes", [])
             options = params.get("options", {})
             result = await agent3.search_vectors(query, entity_types, options)
-        
+
         elif method == "agent.queryKnowledgeGraph":
             # SPARQL query method
             sparql_query = params.get("sparqlQuery", "")
             result = await agent3.query_knowledge_graph(sparql_query)
-        
+
         else:
             return JSONResponse(
                 status_code=400,
@@ -97,7 +97,7 @@ async def json_rpc_handler(request: Request):
                     "id": request_id
                 }
             )
-        
+
         return JSONResponse(
             content={
                 "jsonrpc": "2.0",
@@ -105,7 +105,7 @@ async def json_rpc_handler(request: Request):
                 "id": request_id
             }
         )
-        
+
     except Exception as e:
         return JSONResponse(
             status_code=500,
@@ -129,15 +129,15 @@ async def rest_message_handler(request: Request):
             status_code=503,
             content={"error": "Agent 3 not initialized"}
         )
-    
+
     try:
         body = await request.json()
         message = A2AMessage(**body.get("message", {}))
         context_id = body.get("contextId", str(datetime.utcnow().timestamp()))
-        
+
         result = await agent3.process_message(message, context_id)
         return JSONResponse(content=result)
-        
+
     except Exception as e:
         return JSONResponse(
             status_code=400,
@@ -153,7 +153,7 @@ async def get_task_status(task_id: str):
             status_code=503,
             content={"error": "Agent 3 not initialized"}
         )
-    
+
     try:
         status = await agent3.get_task_status(task_id)
         return status
@@ -172,13 +172,13 @@ async def vector_search(request: Request):
             status_code=503,
             content={"error": "Agent 3 not initialized"}
         )
-    
+
     try:
         body = await request.json()
         query = body.get("query", "")
         entity_types = body.get("entityTypes", [])
         options = body.get("options", {})
-        
+
         # Check if agent3 has search_vectors method, if not create a basic implementation
         if hasattr(agent3, 'search_vectors'):
             result = await agent3.search_vectors(query, entity_types, options)
@@ -187,9 +187,9 @@ async def vector_search(request: Request):
                 "error": "Vector search not implemented",
                 "message": "Vector search functionality requires SAP HANA Cloud connection"
             }
-        
+
         return JSONResponse(content=result)
-        
+
     except Exception as e:
         return JSONResponse(
             status_code=500,
@@ -205,11 +205,11 @@ async def sparql_query(request: Request):
             status_code=503,
             content={"error": "Agent 3 not initialized"}
         )
-    
+
     try:
         body = await request.json()
         sparql_query = body.get("query", "")
-        
+
         # Check if agent3 has query_knowledge_graph method
         if hasattr(agent3, 'query_knowledge_graph'):
             result = await agent3.query_knowledge_graph(sparql_query)
@@ -218,9 +218,9 @@ async def sparql_query(request: Request):
                 "error": "Knowledge graph query not implemented",
                 "message": "SPARQL query functionality requires knowledge graph setup"
             }
-        
+
         return JSONResponse(content=result)
-        
+
     except Exception as e:
         return JSONResponse(
             status_code=500,
@@ -236,7 +236,7 @@ async def get_vector_stores():
             status_code=503,
             content={"error": "Agent 3 not initialized"}
         )
-    
+
     try:
         if hasattr(agent3, 'vector_stores') and agent3.vector_stores:
             stores_info = {}
@@ -267,7 +267,7 @@ async def get_knowledge_graph_info():
             status_code=503,
             content={"error": "Agent 3 not initialized"}
         )
-    
+
     try:
         if hasattr(agent3, 'knowledge_graph_store') and agent3.knowledge_graph_store:
             return JSONResponse(content={
@@ -357,7 +357,7 @@ async def health_check():
         hana_status = "available"
     except ImportError:
         hana_status = "not_available"
-    
+
     if not agent3:
         return {
             "status": "unhealthy",
@@ -374,7 +374,7 @@ async def health_check():
                 "knowledge_graph": "inactive"
             }
         }
-    
+
     queue_info = {}
     if agent3.message_queue:
         queue_status = agent3.message_queue.get_queue_status()
@@ -384,10 +384,10 @@ async def health_check():
             "streaming_enabled": queue_status["capabilities"]["streaming_enabled"],
             "batch_processing_enabled": queue_status["capabilities"]["batch_processing_enabled"]
         }
-    
+
     # Check HANA connection
     connection_status = "connected" if agent3.hana_connection else "disconnected"
-    
+
     return {
         "status": "healthy",
         "agent": "SAP HANA Vector Engine Ingestion & Knowledge Graph Agent",

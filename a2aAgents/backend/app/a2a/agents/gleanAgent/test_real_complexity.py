@@ -17,20 +17,20 @@ async def test_real_complexity():
     """Test the real complexity analysis implementation"""
     print("Testing Real Complexity Analysis Implementation")
     print("=" * 60)
-    
+
     try:
         # Import the agent
         from app.a2a.agents.gleanAgent import GleanAgent
         print("✓ Successfully imported GleanAgent")
-        
+
         # Create agent instance
         agent = GleanAgent()
         print(f"✓ Created agent: {agent.agent_id}")
-        
+
         # Create a test directory with complex Python code
         test_dir = tempfile.mkdtemp(prefix="glean_complexity_test_")
         print(f"\n1. Created test directory: {test_dir}")
-        
+
         # Create Python file with various complexity levels
         complex_py = Path(test_dir) / "complex_code.py"
         complex_py.write_text('''
@@ -59,11 +59,11 @@ def moderate_complexity(x, y, z):
 def high_complexity_function(data: List[Dict], threshold: int = 10):
     """Function with high cyclomatic complexity"""
     results = []
-    
+
     for item in data:
         if not item:
             continue
-            
+
         if 'type' in item:
             if item['type'] == 'A':
                 if item.get('value', 0) > threshold:
@@ -92,7 +92,7 @@ def high_complexity_function(data: List[Dict], threshold: int = 10):
             else:
                 # Handle other types
                 pass
-        
+
         # Additional nested conditions
         if 'metadata' in item:
             meta = item['metadata']
@@ -104,20 +104,20 @@ def high_complexity_function(data: List[Dict], threshold: int = 10):
                         results[-1]['priority'] = 'normal'
                     else:
                         results[-1]['priority'] = 'low'
-    
+
     return results
 
 class ComplexClass:
     """Class with multiple methods of varying complexity"""
-    
+
     def __init__(self, config: Dict):
         self.config = config
         self.data = []
-    
+
     def simple_method(self):
         """Simple method"""
         return len(self.data)
-    
+
     def complex_method(self, items):
         """Method with high complexity"""
         for item in items:
@@ -138,7 +138,7 @@ class ComplexClass:
                         self.data.append(item)
                 else:
                     self.data.append({'value': item})
-    
+
     def _handle_special(self, item):
         # More nested logic
         if 'value' in item:
@@ -149,10 +149,10 @@ class ComplexClass:
             else:
                 return item['value']
         return 0
-    
+
     def _handle_normal(self, item):
         return item.get('value', 0)
-    
+
     def _handle_default(self, item):
         return 42
 
@@ -179,48 +179,48 @@ async def async_complex_function(data):
 async def some_async_operation(item):
     return item.get('value', 0) * 2
 ''')
-        
+
         print("\n2. Testing real complexity analysis:")
-        
+
         # Test the real complexity analysis
         complexity_result = await agent.analyze_code_complexity(test_dir, ["*.py"])
-        
+
         print(f"   Files analyzed: {complexity_result.get('files_analyzed', 0)}")
         print(f"   Functions analyzed: {complexity_result.get('functions_analyzed', 0)}")
         print(f"   Classes analyzed: {complexity_result.get('classes_analyzed', 0)}")
         print(f"   Average complexity: {complexity_result.get('average_complexity', 0):.2f}")
         print(f"   Max complexity: {complexity_result.get('max_complexity', 0)}")
         print(f"   Duration: {complexity_result.get('duration', 0):.2f}s")
-        
+
         high_complexity = complexity_result.get('high_complexity_functions', [])
         if high_complexity:
             print(f"\n   High complexity functions ({len(high_complexity)}):")
             for func in high_complexity[:3]:  # Show top 3
                 print(f"     - {func['name']}: complexity {func['complexity']} (line {func['line']})")
-        
+
         if complexity_result.get('complexity_distribution'):
             print(f"\n   Complexity distribution:")
             for range_key, count in complexity_result['complexity_distribution'].items():
                 print(f"     - {range_key}: {count} functions")
-        
+
         recommendations = complexity_result.get('recommendations', [])
         if recommendations:
             print(f"\n   Recommendations:")
             for rec in recommendations[:3]:  # Show first 3
                 print(f"     • {rec}")
-        
+
         print("\n✅ Real complexity analysis test completed!")
-        
+
         # Cleanup
         shutil.rmtree(test_dir)
         print(f"Cleaned up test directory")
-        
+
     except Exception as e:
         print(f"\n❌ Error: {type(e).__name__}: {e}")
         import traceback
         traceback.print_exc()
         return False
-    
+
     return True
 
 

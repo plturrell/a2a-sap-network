@@ -27,7 +27,7 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
     A2A-compliant handler for Agent 9 - Reasoning
     All communication through blockchain messaging only
     """
-    
+
     def __init__(self, agent_sdk: ComprehensiveReasoningAgentSdk):
         """Initialize A2A handler with agent SDK"""
         # Configure secure agent
@@ -70,23 +70,23 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
             rate_limit_requests=100,
             rate_limit_window=60
         )
-        
+
         super().__init__(config)
-        
+
         self.agent_sdk = agent_sdk
-        
+
         # Initialize A2A blockchain client
         self.a2a_client = A2ANetworkClient(
             agent_id=config.agent_id,
             private_key=os.getenv('A2A_PRIVATE_KEY'),
             rpc_url=os.getenv('A2A_RPC_URL', 'http://localhost:8545')
         )
-        
+
         # Register message handlers
         self._register_handlers()
-        
+
         logger.info(f"A2A-compliant handler initialized for {config.agent_name}")
-    
+
     def _register_handlers(self):
         """Register A2A message handlers"""
 
@@ -96,7 +96,7 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
             try:
                 agent_card = await self.agent_sdk.get_agent_card()
                 result = agent_card
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="get_agent_card",
@@ -104,9 +104,9 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to get_agent_card: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -117,7 +117,7 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
             try:
                 # Process JSON-RPC request through agent SDK
                 result = await self.agent_sdk.handle_json_rpc(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="json_rpc",
@@ -125,9 +125,9 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to json_rpc: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -139,7 +139,7 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                 # TODO: Implement create_reasoning_task logic
                 # Example: result = await self.agent_sdk.create_reasoning_task(data)
                 result = {"status": "success", "operation": "create_reasoning_task"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="create_reasoning_task",
@@ -147,9 +147,9 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to create_reasoning_task: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -161,7 +161,7 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                 # TODO: Implement list_reasoning_tasks logic
                 # Example: result = await self.agent_sdk.list_reasoning_tasks(data)
                 result = {"status": "success", "operation": "list_reasoning_tasks"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="list_reasoning_tasks",
@@ -169,9 +169,9 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to list_reasoning_tasks: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -182,10 +182,10 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
             try:
                 # Start reasoning process using logical reasoning skill
                 reasoning_query = data.get("query", "")
-                reasoning_type = data.get("reasoning_type", "deductive") 
+                reasoning_type = data.get("reasoning_type", "deductive")
                 premises = data.get("premises", [])
                 domain = data.get("domain", "general")
-                
+
                 result = await self.agent_sdk.logical_reasoning({
                     "query": reasoning_query,
                     "reasoning_type": reasoning_type,
@@ -193,7 +193,7 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     "premises": premises,
                     "context": data.get("context", {})
                 })
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="start_reasoning",
@@ -201,9 +201,9 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to start_reasoning: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -217,14 +217,14 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                 evidence = data.get("evidence", [])
                 reasoning_type = data.get("reasoning_type", "deductive")
                 chain_id = data.get("chain_id")
-                
+
                 result = await self.agent_sdk.confidence_assessment({
                     "chain_id": chain_id,
                     "conclusion": conclusion,
                     "evidence": evidence,
                     "reasoning_type": reasoning_type
                 })
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="validate_conclusion",
@@ -232,9 +232,9 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to validate_conclusion: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -246,7 +246,7 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                 # TODO: Implement explain_reasoning logic
                 # Example: result = await self.agent_sdk.explain_reasoning(data)
                 result = {"status": "success", "operation": "explain_reasoning"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="explain_reasoning",
@@ -254,9 +254,9 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to explain_reasoning: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -268,7 +268,7 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                 # TODO: Implement add_knowledge logic
                 # Example: result = await self.agent_sdk.add_knowledge(data)
                 result = {"status": "success", "operation": "add_knowledge"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="add_knowledge",
@@ -276,9 +276,9 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to add_knowledge: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -290,7 +290,7 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                 # TODO: Implement validate_knowledge_base logic
                 # Example: result = await self.agent_sdk.validate_knowledge_base(data)
                 result = {"status": "success", "operation": "validate_knowledge_base"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="validate_knowledge_base",
@@ -298,9 +298,9 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to validate_knowledge_base: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -313,13 +313,13 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                 inference_data = data.get("data", [])
                 pattern_type = data.get("pattern_type", "logical")
                 analysis_depth = data.get("analysis_depth", "comprehensive")
-                
+
                 result = await self.agent_sdk.pattern_analysis({
                     "data": inference_data,
                     "pattern_type": pattern_type,
                     "analysis_depth": analysis_depth
                 })
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="generate_inferences",
@@ -327,9 +327,9 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to generate_inferences: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -341,7 +341,7 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                 # TODO: Implement make_decision logic
                 # Example: result = await self.agent_sdk.make_decision(data)
                 result = {"status": "success", "operation": "make_decision"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="make_decision",
@@ -349,9 +349,9 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to make_decision: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -365,7 +365,7 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                 participants = data.get("participant_agents", [])
                 strategy = data.get("strategy", "consensus")
                 domain = data.get("domain", "general")
-                
+
                 if participants:
                     # Use collaborative reasoning for complex problems
                     result = await self.agent_sdk.collaborative_reasoning({
@@ -382,7 +382,7 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                         "domain": domain,
                         "premises": data.get("premises", [])
                     })
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="solve_problem",
@@ -390,9 +390,9 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to solve_problem: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -404,7 +404,7 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                 # TODO: Implement get_dashboard_data logic
                 # Example: result = await self.agent_sdk.get_dashboard_data(data)
                 result = {"status": "success", "operation": "get_dashboard_data"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="get_dashboard_data",
@@ -412,9 +412,9 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to get_dashboard_data: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -426,7 +426,7 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                 # TODO: Implement get_reasoning_options logic
                 # Example: result = await self.agent_sdk.get_reasoning_options(data)
                 result = {"status": "success", "operation": "get_reasoning_options"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="get_reasoning_options",
@@ -434,9 +434,9 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to get_reasoning_options: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -454,7 +454,7 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     "blockchain_connected": await self._check_blockchain_connection()
                 }
                 result = health_status
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="health_check",
@@ -462,20 +462,20 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to health_check: {e}")
                 return self.create_secure_response(str(e), status="error")
-    
+
         # Registry capability handlers
         @self.secure_handler("logical_reasoning")
         async def handle_logical_reasoning(self, message: A2AMessage, context_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
             """Handle logical reasoning operations"""
             try:
                 result = await self.agent_sdk.perform_logical_reasoning(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="logical_reasoning",
@@ -483,9 +483,9 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to logical_reasoning: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -495,7 +495,7 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
             """Handle inference generation"""
             try:
                 result = await self.agent_sdk.generate_inferences_enhanced(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="inference_generation",
@@ -503,9 +503,9 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to inference_generation: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -515,7 +515,7 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
             """Handle decision making operations"""
             try:
                 result = await self.agent_sdk.make_decisions_enhanced(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="decision_making",
@@ -523,9 +523,9 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to decision_making: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -535,7 +535,7 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
             """Handle knowledge synthesis operations"""
             try:
                 result = await self.agent_sdk.synthesize_knowledge_enhanced(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="knowledge_synthesis",
@@ -543,9 +543,9 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to knowledge_synthesis: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -555,7 +555,7 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
             """Handle problem solving operations"""
             try:
                 result = await self.agent_sdk.solve_problems_enhanced(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="problem_solving",
@@ -563,13 +563,13 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to problem_solving: {e}")
                 return self.create_secure_response(str(e), status="error")
-    
+
     async def process_a2a_message(self, message: A2AMessage) -> Dict[str, Any]:
         """
         Main entry point for A2A messages
@@ -579,19 +579,19 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
             # Extract operation from message
             operation = None
             data = {}
-            
+
             if message.parts and len(message.parts) > 0:
                 part = message.parts[0]
                 if part.data:
                     operation = part.data.get("operation")
                     data = part.data.get("data", {})
-            
+
             if not operation:
                 return self.create_secure_response(
                     "No operation specified in message",
                     status="error"
                 )
-            
+
             # Get handler for operation
             handler = self.handlers.get(operation)
             if not handler:
@@ -599,17 +599,17 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                     f"Unknown operation: {operation}",
                     status="error"
                 )
-            
+
             # Create context ID
             context_id = f"{message.sender_id}:{operation}:{datetime.utcnow().timestamp()}"
-            
+
             # Process through handler
             return await handler(message, context_id, data)
-            
+
         except Exception as e:
             logger.error(f"Failed to process A2A message: {e}")
             return self.create_secure_response(str(e), status="error")
-    
+
     async def _log_blockchain_transaction(self, operation: str, data_hash: str, result_hash: str, context_id: str):
         """Log transaction to blockchain for audit trail"""
         try:
@@ -621,33 +621,33 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
                 "context_id": context_id,
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
             # Send to blockchain through A2A client
             await self.a2a_client.log_transaction(transaction_data)
-            
+
         except Exception as e:
             logger.error(f"Failed to log blockchain transaction: {e}")
-    
+
     def _hash_data(self, data: Any) -> str:
         """Create hash of data for blockchain logging"""
         import hashlib
         json_str = json.dumps(data, sort_keys=True, default=str)
         return hashlib.sha256(json_str.encode()).hexdigest()
-    
+
     async def _check_blockchain_connection(self) -> bool:
         """Check if blockchain connection is active"""
         try:
             return await self.a2a_client.is_connected()
         except Exception:
             return False
-    
+
     async def start(self):
         """Start the A2A handler"""
         logger.info(f"Starting A2A handler for {self.config.agent_name}")
-        
+
         # Connect to blockchain
         await self.a2a_client.connect()
-        
+
         # Register agent on blockchain
         await self.a2a_client.register_agent({
             "agent_id": self.config.agent_id,
@@ -655,22 +655,22 @@ class Agent9RouterA2AHandler(SecureA2AAgent):
             "capabilities": list(self.config.allowed_operations),
             "version": self.config.agent_version
         })
-        
+
         logger.info(f"A2A handler started and registered on blockchain")
-    
+
     async def stop(self):
         """Stop the A2A handler"""
         logger.info(f"Stopping A2A handler for {self.config.agent_name}")
-        
+
         # Unregister from blockchain
         await self.a2a_client.unregister_agent(self.config.agent_id)
-        
+
         # Disconnect
         await self.a2a_client.disconnect()
-        
+
         # Parent cleanup
         await self.shutdown()
-        
+
         logger.info(f"A2A handler stopped")
 
 
@@ -686,14 +686,14 @@ To migrate from REST endpoints to A2A messaging:
 
 1. Replace router initialization:
    # OLD: router = APIRouter(...)
-   # NEW: 
+   # NEW:
    handler = create_agent9Router_a2a_handler(agent9Router_sdk)
 
 2. Replace FastAPI app with A2A listener:
    # OLD: app.include_router(router)
    # NEW:
    await handler.start()
-   
+
 3. Process messages through A2A:
    # Messages arrive through blockchain
    result = await handler.process_a2a_message(a2a_message)

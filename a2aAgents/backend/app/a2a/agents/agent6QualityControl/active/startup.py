@@ -57,9 +57,9 @@ async def register_agent(agent: QualityControlManagerAgent, registry_url: str):
     """Register agent with A2A registry"""
     try:
         # A2A Protocol: Use blockchain messaging instead of httpx
-        
+
         agent_card = agent.get_agent_card()
-        
+
         # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
         async with httpx.AsyncClient() as client:
         # httpx\.AsyncClient() as client:
@@ -69,10 +69,10 @@ async def register_agent(agent: QualityControlManagerAgent, registry_url: str):
                 timeout=30.0
             )
             response.raise_for_status()
-            
+
         logger.info(f"✅ Agent registered with registry at {registry_url}")
         return True
-        
+
     except Exception as e:
         logger.error(f"❌ Failed to register agent: {e}")
         return False
@@ -84,10 +84,10 @@ async def health_check_services(agent: QualityControlManagerAgent):
         "Data Manager": agent.data_manager_url,
         "Catalog Manager": agent.catalog_manager_url
     }
-    
+
     healthy_services = []
     unhealthy_services = []
-    
+
     for service_name, service_url in services.items():
         try:
             # A2A Protocol: Use blockchain messaging instead of httpx
@@ -103,11 +103,11 @@ async def health_check_services(agent: QualityControlManagerAgent):
         except Exception as e:
             unhealthy_services.append(service_name)
             logger.error(f"❌ {service_name} health check failed: {e}")
-    
+
     if unhealthy_services:
         logger.warning(f"Some services are unhealthy: {unhealthy_services}")
         logger.info("Agent will start but some features may be limited")
-    
+
     return len(healthy_services) > 0
 
 
@@ -120,7 +120,7 @@ async def start_agent(
 ):
     """Start the Quality Control Manager Agent"""
     logger.info("Starting Quality Control Manager Agent...")
-    
+
     try:
         # Create agent instance
         agent = QualityControlManagerAgent(
@@ -129,59 +129,59 @@ async def start_agent(
             catalog_manager_url=catalog_manager_url,
             enable_monitoring=enable_monitoring
         )
-        
+
         # Initialize agent
         logger.info("Initializing agent...")
         await agent.initialize()
-        
+
         # Health check dependent services
         logger.info("Performing health checks...")
         healthy = await health_check_services(agent)
-        
+
         if not healthy:
             logger.warning("No healthy services found - continuing with limited functionality")
-        
+
         # Register with A2A registry if provided
         if registry_url:
             logger.info("Registering with A2A registry...")
             await register_agent(agent, registry_url)
-        
+
         # Create and configure FastAPI app
         app = agent.create_fastapi_app()
-        
+
         # Add custom endpoints for quality control
         from fastapi import HTTPException
         from pydantic import BaseModel
-        
+
         class QualityAssessmentRequestModel(BaseModel):
             calculation_result: dict
             qa_validation_result: dict
             quality_thresholds: Optional[dict] = None
             workflow_context: Optional[dict] = None
-        
+
         @app.post("/api/v1/assess-quality")
         async def assess_quality_endpoint(request: QualityAssessmentRequestModel):
             """REST endpoint for quality assessment"""
             try:
                 from qualityControlManagerAgent import QualityAssessmentRequest
-                
+
                 assessment_request = QualityAssessmentRequest(
                     calculation_result=request.calculation_result,
                     qa_validation_result=request.qa_validation_result,
                     quality_thresholds=request.quality_thresholds or {},
                     workflow_context=request.workflow_context or {}
                 )
-                
+
                 result = await agent.quality_assessment_skill(assessment_request)
                 return {
                     "success": True,
                     "assessment": result.dict()
                 }
-                
+
             except Exception as e:
                 logger.error(f"Quality assessment endpoint failed: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
-        
+
         @app.post("/api/v1/lean-six-sigma")
         async def lean_six_sigma_endpoint(quality_data: dict, process_data: dict):
             """REST endpoint for Lean Six Sigma analysis"""
@@ -191,11 +191,11 @@ async def start_agent(
                     "success": True,
                     "analysis": result
                 }
-                
+
             except Exception as e:
                 logger.error(f"Lean Six Sigma endpoint failed: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
-        
+
         @app.get("/api/v1/quality-metrics")
         async def quality_metrics_endpoint():
             """Get current quality metrics and statistics"""
@@ -206,14 +206,14 @@ async def start_agent(
                     "sigma_targets": agent.sigma_targets,
                     "assessment_history_count": len(agent.assessment_history)
                 }
-                
+
             except Exception as e:
                 logger.error(f"Quality metrics endpoint failed: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
-        
+
         # Start server
         import uvicorn
-        
+
         # Extract port from base_url
         port = 8008
         try:
@@ -221,13 +221,13 @@ async def start_agent(
                 port = int(base_url.split(":")[-1])
         except:
             pass
-        
+
         logger.info(f"🚀 Starting Quality Control Manager Agent on port {port}")
         logger.info(f"📊 Monitoring enabled: {enable_monitoring}")
         logger.info(f"🔗 Data Manager: {data_manager_url}")
         logger.info(f"📁 Catalog Manager: {catalog_manager_url}")
         logger.info(f"🌐 Agent URL: {base_url}")
-        
+
         # Print available endpoints
         logger.info("📋 Available endpoints:")
         logger.info(f"  • Health: {base_url}/health")
@@ -237,7 +237,7 @@ async def start_agent(
         logger.info(f"  • Lean Six Sigma: {base_url}/api/v1/lean-six-sigma")
         logger.info(f"  • Quality Metrics: {base_url}/api/v1/quality-metrics")
         logger.info(f"  • MCP Tools: {base_url}/mcp/tools")
-        
+
         config = uvicorn.Config(
             app,
             host="0.0.0.0",
@@ -245,10 +245,10 @@ async def start_agent(
             log_level="info",
             access_log=True
         )
-        
+
         server = uvicorn.Server(config)
         await server.serve()
-        
+
     except KeyboardInterrupt:
         logger.info("Received shutdown signal")
     except Exception as e:
@@ -287,49 +287,49 @@ Environment Variables:
   PROMETHEUS_PORT           Prometheus metrics port (default: 8008)
         """
     )
-    
+
     parser.add_argument(
         "--base-url",
         default=os.getenv("QUALITY_CONTROL_BASE_URL"),
         help="Agent base URL (default: http://localhost:8008)"
     )
-    
+
     parser.add_argument(
         "--data-manager-url",
         default=os.getenv("DATA_MANAGER_URL", "http://localhost:8001"),
         help="Data Manager service URL (default: http://localhost:8001)"
     )
-    
+
     parser.add_argument(
         "--catalog-manager-url",
         default=os.getenv("CATALOG_MANAGER_URL", "http://localhost:8002"),
         help="Catalog Manager service URL (default: http://localhost:8002)"
     )
-    
+
     parser.add_argument(
         "--registry-url",
         default=os.getenv("A2A_REGISTRY_URL"),
         help="A2A Registry URL for registration"
     )
-    
+
     parser.add_argument(
         "--no-monitoring",
         action="store_true",
         help="Disable Prometheus monitoring"
     )
-    
+
     parser.add_argument(
         "--log-level",
         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
         default="INFO",
         help="Set logging level (default: INFO)"
     )
-    
+
     args = parser.parse_args()
-    
+
     # Set log level
     logging.getLogger().setLevel(getattr(logging, args.log_level))
-    
+
     # Print startup banner
     print("""
 ╔═══════════════════════════════════════════════════════════════════════════════╗
@@ -343,7 +343,7 @@ Environment Variables:
 ║  • Exposes MCP tools for integration                                        ║
 ╚═══════════════════════════════════════════════════════════════════════════════╝
     """)
-    
+
     # Run agent
     try:
         asyncio.run(start_agent(

@@ -96,7 +96,7 @@ class SLOResult:
 
 class A2ASLOFramework:
     """A2A Service Level Objectives Framework"""
-    
+
     def __init__(
         self,
         agent_id: str,
@@ -106,27 +106,27 @@ class A2ASLOFramework:
         self.agent_id = agent_id
         self.prometheus_client = PrometheusClient(prometheus_config or {})
         self.redis_client = RedisClient(redis_config or RedisConfig())
-        
+
         # SLO/SLI definitions
         self.slis: Dict[str, SLI] = {}
         self.slos: Dict[str, SLO] = {}
-        
+
         # Monitoring state
         self.evaluation_results: Dict[str, SLOResult] = {}
         self.alert_handlers: Dict[AlertLevel, List[Callable]] = {
             level: [] for level in AlertLevel
         }
-        
+
         # Background tasks
         self.monitoring_tasks: List[asyncio.Task] = []
         self.running = False
-        
+
         # Default A2A SLIs and SLOs
         self._initialize_default_slo_sli()
-    
+
     def _initialize_default_slo_sli(self):
         """Initialize default SLO/SLI definitions for A2A agents"""
-        
+
         # === AVAILABILITY SLIs ===
         self.slis["agent_availability"] = SLI(
             name="agent_availability",
@@ -138,7 +138,7 @@ class A2ASLOFramework:
             threshold_direction="upper",
             tags={"component": "agent", "criticality": "high"}
         )
-        
+
         self.slis["service_availability"] = SLI(
             name="service_availability",
             description="Agent service availability",
@@ -148,7 +148,7 @@ class A2ASLOFramework:
             good_total_ratio=True,
             threshold_direction="upper"
         )
-        
+
         # === LATENCY SLIs ===
         self.slis["response_latency_p95"] = SLI(
             name="response_latency_p95",
@@ -158,7 +158,7 @@ class A2ASLOFramework:
             unit="seconds",
             threshold_direction="lower"
         )
-        
+
         self.slis["response_latency_p99"] = SLI(
             name="response_latency_p99",
             description="99th percentile response latency",
@@ -167,7 +167,7 @@ class A2ASLOFramework:
             unit="seconds",
             threshold_direction="lower"
         )
-        
+
         self.slis["task_processing_latency"] = SLI(
             name="task_processing_latency",
             description="Average task processing time",
@@ -176,7 +176,7 @@ class A2ASLOFramework:
             unit="seconds",
             threshold_direction="lower"
         )
-        
+
         # === ERROR RATE SLIs ===
         self.slis["error_rate"] = SLI(
             name="error_rate",
@@ -186,7 +186,7 @@ class A2ASLOFramework:
             unit="ratio",
             threshold_direction="lower"
         )
-        
+
         self.slis["task_failure_rate"] = SLI(
             name="task_failure_rate",
             description="Task failure rate",
@@ -195,7 +195,7 @@ class A2ASLOFramework:
             unit="ratio",
             threshold_direction="lower"
         )
-        
+
         # === THROUGHPUT SLIs ===
         self.slis["request_throughput"] = SLI(
             name="request_throughput",
@@ -205,7 +205,7 @@ class A2ASLOFramework:
             unit="rps",
             threshold_direction="upper"
         )
-        
+
         self.slis["task_throughput"] = SLI(
             name="task_throughput",
             description="Tasks processed per second",
@@ -214,7 +214,7 @@ class A2ASLOFramework:
             unit="tps",
             threshold_direction="upper"
         )
-        
+
         # === QUEUE DEPTH SLIs ===
         self.slis["task_queue_depth"] = SLI(
             name="task_queue_depth",
@@ -224,7 +224,7 @@ class A2ASLOFramework:
             unit="count",
             threshold_direction="lower"
         )
-        
+
         self.slis["message_queue_depth"] = SLI(
             name="message_queue_depth",
             description="Number of pending messages in queue",
@@ -233,7 +233,7 @@ class A2ASLOFramework:
             unit="count",
             threshold_direction="lower"
         )
-        
+
         # === RESOURCE UTILIZATION SLIs ===
         self.slis["cpu_utilization"] = SLI(
             name="cpu_utilization",
@@ -243,7 +243,7 @@ class A2ASLOFramework:
             unit="percentage",
             threshold_direction="lower"
         )
-        
+
         self.slis["memory_utilization"] = SLI(
             name="memory_utilization",
             description="Memory utilization percentage",
@@ -252,7 +252,7 @@ class A2ASLOFramework:
             unit="percentage",
             threshold_direction="lower"
         )
-        
+
         # === A2A SPECIFIC SLIs ===
         self.slis["message_delivery_rate"] = SLI(
             name="message_delivery_rate",
@@ -263,7 +263,7 @@ class A2ASLOFramework:
             good_total_ratio=True,
             threshold_direction="upper"
         )
-        
+
         self.slis["trust_verification_rate"] = SLI(
             name="trust_verification_rate",
             description="Trust verification success rate",
@@ -273,9 +273,9 @@ class A2ASLOFramework:
             good_total_ratio=True,
             threshold_direction="upper"
         )
-        
+
         # === DEFAULT SLOs ===
-        
+
         # High-availability SLO (99.9%)
         self.slos["availability_slo"] = SLO(
             name="availability_slo",
@@ -290,7 +290,7 @@ class A2ASLOFramework:
             },
             tags={"tier": "critical", "team": "platform"}
         )
-        
+
         # Latency SLO (95% of requests < 500ms)
         self.slos["latency_slo"] = SLO(
             name="latency_slo",
@@ -305,7 +305,7 @@ class A2ASLOFramework:
             },
             tags={"tier": "performance", "team": "platform"}
         )
-        
+
         # Error rate SLO (< 0.1% errors)
         self.slos["error_rate_slo"] = SLO(
             name="error_rate_slo",
@@ -320,7 +320,7 @@ class A2ASLOFramework:
             },
             tags={"tier": "reliability", "team": "platform"}
         )
-        
+
         # Task completion SLO (> 99% success rate)
         self.slos["task_completion_slo"] = SLO(
             name="task_completion_slo",
@@ -335,7 +335,7 @@ class A2ASLOFramework:
             },
             tags={"tier": "business", "team": "agents"}
         )
-        
+
         # Queue depth SLO (< 100 pending tasks)
         self.slos["queue_depth_slo"] = SLO(
             name="queue_depth_slo",
@@ -350,7 +350,7 @@ class A2ASLOFramework:
             },
             tags={"tier": "capacity", "team": "platform"}
         )
-        
+
         # Resource utilization SLO (< 80% CPU)
         self.slos["cpu_utilization_slo"] = SLO(
             name="cpu_utilization_slo",
@@ -365,7 +365,7 @@ class A2ASLOFramework:
             },
             tags={"tier": "resource", "team": "platform"}
         )
-        
+
         # A2A message delivery SLO (> 99.5%)
         self.slos["message_delivery_slo"] = SLO(
             name="message_delivery_slo",
@@ -380,12 +380,12 @@ class A2ASLOFramework:
             },
             tags={"tier": "communication", "team": "agents"}
         )
-    
+
     async def initialize(self):
         """Initialize the SLO framework"""
         await self.prometheus_client.initialize()
         await self.redis_client.initialize()
-        
+
         # Start monitoring loops
         self.running = True
         self.monitoring_tasks = [
@@ -394,56 +394,56 @@ class A2ASLOFramework:
             asyncio.create_task(self._alerting_loop()),
             asyncio.create_task(self._metrics_collection_loop())
         ]
-        
+
         logger.info(f"SLO framework initialized for agent {self.agent_id}")
-    
+
     async def shutdown(self):
         """Shutdown the SLO framework"""
         self.running = False
-        
+
         # Cancel monitoring tasks
         for task in self.monitoring_tasks:
             task.cancel()
-        
+
         await asyncio.gather(*self.monitoring_tasks, return_exceptions=True)
-        
+
         await self.prometheus_client.close()
         await self.redis_client.close()
-        
+
         logger.info(f"SLO framework shut down for agent {self.agent_id}")
-    
+
     def register_sli(self, sli: SLI):
         """Register a custom SLI"""
         self.slis[sli.name] = sli
         logger.info(f"Registered SLI: {sli.name}")
-    
+
     def register_slo(self, slo: SLO):
         """Register a custom SLO"""
         self.slos[slo.name] = slo
         logger.info(f"Registered SLO: {slo.name}")
-    
+
     def register_alert_handler(self, level: AlertLevel, handler: Callable):
         """Register an alert handler for a specific level"""
         self.alert_handlers[level].append(handler)
         logger.info(f"Registered alert handler for level: {level}")
-    
+
     @trace_async("evaluate_slo")
     async def evaluate_slo(self, slo_name: str) -> SLOResult:
         """Evaluate a specific SLO"""
         if slo_name not in self.slos:
             raise ValueError(f"SLO {slo_name} not found")
-        
+
         slo = self.slos[slo_name]
-        
+
         add_span_attributes({
             "slo.name": slo_name,
             "slo.target": slo.target,
             "agent.id": self.agent_id
         })
-        
+
         # Query current SLI value
         current_value = await self._query_sli_value(slo.sli)
-        
+
         # Calculate compliance
         if slo.sli.good_total_ratio or slo.sli.threshold_direction == "upper":
             compliance_percentage = (current_value / slo.target) * 100
@@ -451,22 +451,22 @@ class A2ASLOFramework:
         else:
             compliance_percentage = (slo.target / current_value) * 100 if current_value > 0 else 100
             is_compliant = current_value <= slo.target
-        
+
         # Calculate error budget
         error_budget_remaining = self._calculate_error_budget(slo, current_value)
-        
+
         # Calculate burn rate
         burn_rate = await self._calculate_burn_rate(slo, current_value)
-        
+
         # Determine status
         status = self._determine_slo_status(slo, current_value, burn_rate)
-        
+
         # Calculate time to exhaustion
         time_to_exhaustion = self._calculate_time_to_exhaustion(error_budget_remaining, burn_rate)
-        
+
         # Generate alerts
         alerts = await self._generate_slo_alerts(slo, current_value, burn_rate, status)
-        
+
         result = SLOResult(
             slo_name=slo_name,
             current_value=current_value,
@@ -478,32 +478,32 @@ class A2ASLOFramework:
             time_to_exhaustion=time_to_exhaustion,
             alerts=alerts
         )
-        
+
         # Store result
         self.evaluation_results[slo_name] = result
-        
+
         # Store in Redis for historical tracking
         await self._store_slo_result(result)
-        
+
         return result
-    
+
     async def _query_sli_value(self, sli: SLI) -> float:
         """Query the current value of an SLI"""
         try:
             # Query Prometheus
             result = await self.prometheus_client.query(sli.query)
-            
+
             if result and len(result) > 0:
                 value = float(result[0].get('value', [0, 0])[1])
                 return value
             else:
                 logger.warning(f"No data returned for SLI {sli.name}")
                 return 0.0
-                
+
         except Exception as e:
             logger.error(f"Failed to query SLI {sli.name}: {e}")
             return 0.0
-    
+
     def _calculate_error_budget(self, slo: SLO, current_value: float) -> float:
         """Calculate remaining error budget"""
         if slo.sli.good_total_ratio or slo.sli.threshold_direction == "upper":
@@ -520,7 +520,7 @@ class A2ASLOFramework:
                 excess = current_value - slo.target
                 max_excess = slo.target * 0.5  # Allow 50% excess before budget exhausted
                 return max(0, 1.0 - (excess / max_excess))
-    
+
     async def _calculate_burn_rate(self, slo: SLO, current_value: float) -> float:
         """Calculate error budget burn rate"""
         try:
@@ -532,17 +532,17 @@ class A2ASLOFramework:
                 end=datetime.utcnow(),
                 step='5m'
             )
-            
+
             if not historical_result:
                 return 1.0  # Default burn rate
-            
+
             # Calculate average rate over time window
             values = [float(point[1]) for point in historical_result[0].get('values', [])]
             if not values:
                 return 1.0
-            
+
             avg_value = statistics.mean(values)
-            
+
             # Calculate burn rate relative to target
             if slo.sli.good_total_ratio or slo.sli.threshold_direction == "upper":
                 burn_rate = max(0, slo.target - avg_value) / (1.0 - slo.target)
@@ -551,16 +551,16 @@ class A2ASLOFramework:
                     burn_rate = 0.0
                 else:
                     burn_rate = (avg_value - slo.target) / slo.target
-            
+
             return min(burn_rate, 100.0)  # Cap at 100x normal rate
-            
+
         except Exception as e:
             logger.error(f"Failed to calculate burn rate for {slo.name}: {e}")
             return 1.0
-    
+
     def _determine_slo_status(self, slo: SLO, current_value: float, burn_rate: float) -> SLOStatus:
         """Determine SLO status based on current value and burn rate"""
-        
+
         # Check if SLO is breached
         if slo.sli.good_total_ratio or slo.sli.threshold_direction == "upper":
             breached = current_value < slo.target
@@ -568,38 +568,38 @@ class A2ASLOFramework:
         else:
             breached = current_value > slo.target
             warning = current_value > slo.alert_threshold
-        
+
         if breached:
             return SLOStatus.BREACHED
-        
+
         # Check burn rate thresholds
         fast_burn_threshold = slo.burn_rate_thresholds.get("fast", 10.0)
         slow_burn_threshold = slo.burn_rate_thresholds.get("slow", 2.0)
-        
+
         if burn_rate >= fast_burn_threshold:
             return SLOStatus.CRITICAL
         elif burn_rate >= slow_burn_threshold or warning:
             return SLOStatus.WARNING
         else:
             return SLOStatus.HEALTHY
-    
+
     def _calculate_time_to_exhaustion(self, error_budget_remaining: float, burn_rate: float) -> Optional[timedelta]:
         """Calculate time until error budget exhaustion"""
         if burn_rate <= 0 or error_budget_remaining <= 0:
             return None
-        
+
         # Simple calculation - could be more sophisticated
         hours_remaining = (error_budget_remaining / burn_rate) * 24  # Assume 24h baseline
-        
+
         if hours_remaining > 8760:  # More than a year
             return None
-        
+
         return timedelta(hours=hours_remaining)
-    
+
     async def _generate_slo_alerts(self, slo: SLO, current_value: float, burn_rate: float, status: SLOStatus) -> List[Dict[str, Any]]:
         """Generate alerts based on SLO status"""
         alerts = []
-        
+
         if status == SLOStatus.BREACHED:
             alerts.append({
                 "level": AlertLevel.CRITICAL,
@@ -608,7 +608,7 @@ class A2ASLOFramework:
                 "timestamp": datetime.utcnow().isoformat(),
                 "tags": slo.tags
             })
-        
+
         elif status == SLOStatus.CRITICAL:
             alerts.append({
                 "level": AlertLevel.CRITICAL,
@@ -617,7 +617,7 @@ class A2ASLOFramework:
                 "timestamp": datetime.utcnow().isoformat(),
                 "tags": slo.tags
             })
-        
+
         elif status == SLOStatus.WARNING:
             alerts.append({
                 "level": AlertLevel.WARNING,
@@ -626,9 +626,9 @@ class A2ASLOFramework:
                 "timestamp": datetime.utcnow().isoformat(),
                 "tags": slo.tags
             })
-        
+
         return alerts
-    
+
     async def _store_slo_result(self, result: SLOResult):
         """Store SLO result in Redis for historical tracking"""
         try:
@@ -642,41 +642,41 @@ class A2ASLOFramework:
                 "burn_rate": result.burn_rate,
                 "timestamp": result.timestamp.isoformat()
             }
-            
+
             # Store with 7-day expiration
             await self.redis_client.setex(
                 key,
                 timedelta(days=7),
                 json.dumps(data)
             )
-            
+
             # Also add to time series for trending
             ts_key = f"slo_timeseries:{self.agent_id}:{result.slo_name}"
             await self.redis_client.zadd(
                 ts_key,
                 {json.dumps(data): time.time()}
             )
-            
+
             # Keep only last 24 hours of time series data
             cutoff = time.time() - (24 * 60 * 60)
             await self.redis_client.zremrangebyscore(ts_key, 0, cutoff)
-            
+
         except Exception as e:
             logger.error(f"Failed to store SLO result: {e}")
-    
+
     async def _slo_evaluation_loop(self):
         """Background loop to evaluate all SLOs"""
         while self.running:
             try:
                 for slo_name in self.slos:
                     await self.evaluate_slo(slo_name)
-                
+
                 await asyncio.sleep(60)  # Evaluate every minute
-                
+
             except Exception as e:
                 logger.error(f"SLO evaluation loop error: {e}")
                 await asyncio.sleep(60)
-    
+
     async def _burn_rate_monitoring_loop(self):
         """Background loop to monitor burn rates"""
         while self.running:
@@ -685,13 +685,13 @@ class A2ASLOFramework:
                 for slo_name, result in self.evaluation_results.items():
                     if result.burn_rate >= 10.0:  # Fast burn rate
                         await self._trigger_fast_burn_alert(slo_name, result)
-                
+
                 await asyncio.sleep(300)  # Check every 5 minutes
-                
+
             except Exception as e:
                 logger.error(f"Burn rate monitoring error: {e}")
                 await asyncio.sleep(300)
-    
+
     async def _alerting_loop(self):
         """Background loop to process alerts"""
         while self.running:
@@ -699,13 +699,13 @@ class A2ASLOFramework:
                 for slo_name, result in self.evaluation_results.items():
                     for alert in result.alerts:
                         await self._dispatch_alert(alert)
-                
+
                 await asyncio.sleep(30)  # Process alerts every 30 seconds
-                
+
             except Exception as e:
                 logger.error(f"Alerting loop error: {e}")
                 await asyncio.sleep(30)
-    
+
     async def _metrics_collection_loop(self):
         """Background loop to collect SLO framework metrics"""
         while self.running:
@@ -719,7 +719,7 @@ class A2ASLOFramework:
                     "critical_slos": len([r for r in self.evaluation_results.values() if r.status == SLOStatus.CRITICAL]),
                     "breached_slos": len([r for r in self.evaluation_results.values() if r.status == SLOStatus.BREACHED])
                 }
-                
+
                 # Send to Prometheus
                 for metric, value in metrics.items():
                     await self.prometheus_client.gauge(
@@ -727,13 +727,13 @@ class A2ASLOFramework:
                         value,
                         {"agent_id": self.agent_id}
                     )
-                
+
                 await asyncio.sleep(60)  # Collect every minute
-                
+
             except Exception as e:
                 logger.error(f"Metrics collection error: {e}")
                 await asyncio.sleep(60)
-    
+
     async def _trigger_fast_burn_alert(self, slo_name: str, result: SLOResult):
         """Trigger immediate alert for fast burn rate"""
         alert = {
@@ -744,15 +744,15 @@ class A2ASLOFramework:
             "burn_rate": result.burn_rate,
             "time_to_exhaustion": str(result.time_to_exhaustion) if result.time_to_exhaustion else "Unknown"
         }
-        
+
         await self._dispatch_alert(alert)
-    
+
     async def _dispatch_alert(self, alert: Dict[str, Any]):
         """Dispatch alert to registered handlers"""
         try:
             level = AlertLevel(alert["level"])
             handlers = self.alert_handlers.get(level, [])
-            
+
             for handler in handlers:
                 try:
                     if asyncio.iscoroutinefunction(handler):
@@ -761,17 +761,17 @@ class A2ASLOFramework:
                         handler(alert)
                 except Exception as e:
                     logger.error(f"Alert handler failed: {e}")
-            
+
             # Default logging if no handlers
             if not handlers:
                 logger.log(
                     logging.CRITICAL if level == AlertLevel.EMERGENCY else logging.WARNING,
                     f"SLO Alert [{level}]: {alert['title']} - {alert['description']}"
                 )
-        
+
         except Exception as e:
             logger.error(f"Alert dispatch failed: {e}")
-    
+
     async def get_slo_dashboard_data(self) -> Dict[str, Any]:
         """Get comprehensive SLO dashboard data"""
         dashboard_data = {
@@ -786,10 +786,10 @@ class A2ASLOFramework:
             },
             "slos": {}
         }
-        
+
         for slo_name, result in self.evaluation_results.items():
             dashboard_data["summary"][result.status.value] += 1
-            
+
             dashboard_data["slos"][slo_name] = {
                 "status": result.status.value,
                 "current_value": result.current_value,
@@ -800,9 +800,9 @@ class A2ASLOFramework:
                 "time_to_exhaustion": str(result.time_to_exhaustion) if result.time_to_exhaustion else None,
                 "alerts": len(result.alerts)
             }
-        
+
         return dashboard_data
-    
+
     async def get_error_budget_report(self) -> Dict[str, Any]:
         """Generate error budget report"""
         report = {
@@ -810,10 +810,10 @@ class A2ASLOFramework:
             "report_timestamp": datetime.utcnow().isoformat(),
             "error_budgets": {}
         }
-        
+
         for slo_name, result in self.evaluation_results.items():
             slo = self.slos[slo_name]
-            
+
             report["error_budgets"][slo_name] = {
                 "remaining_percentage": result.error_budget_remaining * 100,
                 "burn_rate": result.burn_rate,
@@ -823,7 +823,7 @@ class A2ASLOFramework:
                 "current_value": result.current_value,
                 "status": result.status.value
             }
-        
+
         return report
 
 
@@ -838,13 +838,13 @@ async def initialize_slo_framework(
 ) -> A2ASLOFramework:
     """Initialize SLO framework for an agent"""
     global _slo_frameworks
-    
+
     if agent_id in _slo_frameworks:
         return _slo_frameworks[agent_id]
-    
+
     framework = A2ASLOFramework(agent_id, prometheus_config, redis_config)
     await framework.initialize()
-    
+
     _slo_frameworks[agent_id] = framework
     return framework
 
@@ -857,7 +857,7 @@ async def get_slo_framework(agent_id: str) -> Optional[A2ASLOFramework]:
 async def shutdown_slo_framework(agent_id: str):
     """Shutdown SLO framework for an agent"""
     global _slo_frameworks
-    
+
     if agent_id in _slo_frameworks:
         await _slo_frameworks[agent_id].shutdown()
         del _slo_frameworks[agent_id]

@@ -27,7 +27,7 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
     A2A-compliant handler for Agent 5 - QA Validation
     All communication through blockchain messaging only
     """
-    
+
     def __init__(self, agent_sdk: EnhancedQAValidationAgentMCP):
         """Initialize A2A handler with agent SDK"""
         # Configure secure agent
@@ -62,23 +62,23 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
             rate_limit_requests=100,
             rate_limit_window=60
         )
-        
+
         super().__init__(config)
-        
+
         self.agent_sdk = agent_sdk
-        
+
         # Initialize A2A blockchain client
         self.a2a_client = A2ANetworkClient(
             agent_id=config.agent_id,
             private_key=os.getenv('A2A_PRIVATE_KEY'),
             rpc_url=os.getenv('A2A_RPC_URL', 'http://localhost:8545')
         )
-        
+
         # Register message handlers
         self._register_handlers()
-        
+
         logger.info(f"A2A-compliant handler initialized for {config.agent_name}")
-    
+
     def _register_handlers(self):
         """Register A2A message handlers"""
 
@@ -98,7 +98,7 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                         "factual", "inferential", "comparative", "analytical", "evaluative", "synthetic"
                     ]
                 }
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="get_supported_formats",
@@ -106,9 +106,9 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to get_supported_formats: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -126,7 +126,7 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     "blockchain_connected": await self._check_blockchain_connection()
                 }
                 result = health_status
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="health_check",
@@ -134,9 +134,9 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to health_check: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -152,7 +152,7 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     test_count=data.get("test_count", 20),
                     validation_methods=data.get("validation_methods")
                 )
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="qa_validation",
@@ -160,9 +160,9 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to qa_validation: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -176,7 +176,7 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     validation_methods=data.get("validation_methods"),
                     confidence_threshold=data.get("confidence_threshold", 0.7)
                 )
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="quality_assurance",
@@ -184,9 +184,9 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to quality_assurance: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -200,7 +200,7 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     optimization_strategy=data.get("strategy", "adaptive"),
                     max_batch_size=data.get("batch_size", 100)
                 )
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="test_execution",
@@ -208,9 +208,9 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to test_execution: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -220,7 +220,7 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
             """Handle validation reporting operations"""
             try:
                 result = await self.agent_sdk.get_batch_processing_metrics()
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="validation_reporting",
@@ -228,9 +228,9 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to validation_reporting: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -240,7 +240,7 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
             """Handle compliance checking operations"""
             try:
                 result = await self.agent_sdk.get_semantic_validation_status()
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="compliance_checking",
@@ -248,9 +248,9 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to compliance_checking: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -266,7 +266,7 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     test_count=data.get("test_count", 20),
                     batch_optimization=data.get("batch_optimization", True)
                 )
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="generate_qa_tests",
@@ -274,9 +274,9 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to generate_qa_tests: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -291,7 +291,7 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     confidence_threshold=data.get("confidence_threshold", 0.7),
                     enable_consensus=data.get("enable_consensus", True)
                 )
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="validate_answers",
@@ -299,9 +299,9 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to validate_answers: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -316,7 +316,7 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     max_batch_size=data.get("batch_size", 100),
                     enable_caching=data.get("enable_caching", True)
                 )
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="execute_test_suite",
@@ -324,9 +324,9 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to execute_test_suite: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -336,7 +336,7 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
             """Handle validation report generation"""
             try:
                 result = await self.agent_sdk.get_batch_processing_metrics()
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="generate_validation_report",
@@ -344,9 +344,9 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to generate_validation_report: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -356,7 +356,7 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
             """Handle compliance checking with advanced validation"""
             try:
                 result = await self.agent_sdk.get_semantic_validation_status()
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="check_compliance",
@@ -364,9 +364,9 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to check_compliance: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -380,7 +380,7 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     validation_methods=data.get("validation_methods", ["semantic_similarity", "contextual_analysis"]),
                     confidence_threshold=data.get("confidence_threshold", 0.8)
                 )
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="semantic_validation",
@@ -388,9 +388,9 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to semantic_validation: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -404,7 +404,7 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     optimization_strategy=data.get("strategy", "adaptive"),
                     max_batch_size=data.get("batch_size", 100)
                 )
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="batch_processing",
@@ -412,9 +412,9 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to batch_processing: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -428,7 +428,7 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     task_id=data.get("task_id"),
                     connection_config=data.get("connection_config", {})
                 )
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="websocket_management",
@@ -436,9 +436,9 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to websocket_management: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -448,7 +448,7 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
             """Handle template management operations"""
             try:
                 result = await self.agent_sdk.get_template_capabilities()
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="template_management",
@@ -456,13 +456,13 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to template_management: {e}")
                 return self.create_secure_response(str(e), status="error")
-    
+
     async def process_a2a_message(self, message: A2AMessage) -> Dict[str, Any]:
         """
         Main entry point for A2A messages
@@ -472,19 +472,19 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
             # Extract operation from message
             operation = None
             data = {}
-            
+
             if message.parts and len(message.parts) > 0:
                 part = message.parts[0]
                 if part.data:
                     operation = part.data.get("operation")
                     data = part.data.get("data", {})
-            
+
             if not operation:
                 return self.create_secure_response(
                     "No operation specified in message",
                     status="error"
                 )
-            
+
             # Get handler for operation
             handler = self.handlers.get(operation)
             if not handler:
@@ -492,17 +492,17 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                     f"Unknown operation: {operation}",
                     status="error"
                 )
-            
+
             # Create context ID
             context_id = f"{message.sender_id}:{operation}:{datetime.utcnow().timestamp()}"
-            
+
             # Process through handler
             return await handler(message, context_id, data)
-            
+
         except Exception as e:
             logger.error(f"Failed to process A2A message: {e}")
             return self.create_secure_response(str(e), status="error")
-    
+
     async def _log_blockchain_transaction(self, operation: str, data_hash: str, result_hash: str, context_id: str):
         """Log transaction to blockchain for audit trail"""
         try:
@@ -514,33 +514,33 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
                 "context_id": context_id,
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
             # Send to blockchain through A2A client
             await self.a2a_client.log_transaction(transaction_data)
-            
+
         except Exception as e:
             logger.error(f"Failed to log blockchain transaction: {e}")
-    
+
     def _hash_data(self, data: Any) -> str:
         """Create hash of data for blockchain logging"""
         import hashlib
         json_str = json.dumps(data, sort_keys=True, default=str)
         return hashlib.sha256(json_str.encode()).hexdigest()
-    
+
     async def _check_blockchain_connection(self) -> bool:
         """Check if blockchain connection is active"""
         try:
             return await self.a2a_client.is_connected()
         except Exception:
             return False
-    
+
     async def start(self):
         """Start the A2A handler"""
         logger.info(f"Starting A2A handler for {self.config.agent_name}")
-        
+
         # Connect to blockchain
         await self.a2a_client.connect()
-        
+
         # Register agent on blockchain
         await self.a2a_client.register_agent({
             "agent_id": self.config.agent_id,
@@ -548,22 +548,22 @@ class Agent5QavalidationA2AHandler(SecureA2AAgent):
             "capabilities": list(self.config.allowed_operations),
             "version": self.config.agent_version
         })
-        
+
         logger.info(f"A2A handler started and registered on blockchain")
-    
+
     async def stop(self):
         """Stop the A2A handler"""
         logger.info(f"Stopping A2A handler for {self.config.agent_name}")
-        
+
         # Unregister from blockchain
         await self.a2a_client.unregister_agent(self.config.agent_id)
-        
+
         # Disconnect
         await self.a2a_client.disconnect()
-        
+
         # Parent cleanup
         await self.shutdown()
-        
+
         logger.info(f"A2A handler stopped")
 
 
@@ -579,14 +579,14 @@ To migrate from REST endpoints to A2A messaging:
 
 1. Replace router initialization:
    # OLD: router = APIRouter(...)
-   # NEW: 
+   # NEW:
    handler = create_agent5QaValidation_a2a_handler(agent5QaValidation_sdk)
 
 2. Replace FastAPI app with A2A listener:
    # OLD: app.include_router(router)
    # NEW:
    await handler.start()
-   
+
 3. Process messages through A2A:
    # Messages arrive through blockchain
    result = await handler.process_a2a_message(a2a_message)

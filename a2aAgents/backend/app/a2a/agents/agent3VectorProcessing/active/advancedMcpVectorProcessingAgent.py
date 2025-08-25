@@ -32,7 +32,7 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
     Advanced Vector Processing Agent with comprehensive MCP tool integration
     Handles vector operations, embeddings, similarity search, and cross-agent coordination
     """
-    
+
     def __init__(self, base_url: str):
         super().__init__(
             agent_id="advanced_mcp_vector_processing_agent",
@@ -45,26 +45,26 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-        
-        
+
+
         # Initialize MCP tool providers
         self.performance_tools = MCPPerformanceTools()
         self.validation_tools = MCPValidationTools()
         self.quality_tools = MCPQualityAssessmentTools()
-        
-        
+
+
         # Vector processing state
         self.vector_stores = {}
         self.embedding_models = {}
         self.similarity_indices = {}
         self.clustering_models = {}
         self.processing_pipelines = {}
-        
+
         # Initialize FAISS indices
         self.faiss_indices = {}
-        
+
         logger.info(f"Initialized {self.name} with comprehensive MCP tool integration")
-    
+
     @mcp_tool(
         name="intelligent_vector_processing",
         description="Process vectors with intelligent optimization and quality assessment",
@@ -114,7 +114,7 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
         """
         processing_id = f"vec_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
         start_time = datetime.now().timestamp()
-        
+
         try:
             # Step 1: Validate input vectors using MCP tools
             vector_validation = await self.validation_tools.validate_vector_data(
@@ -122,7 +122,7 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                 expected_dimensions=processing_config.get("expected_dimensions") if processing_config else None,
                 validation_level="comprehensive"
             )
-            
+
             if not vector_validation["is_valid"]:
                 return {
                     "status": "error",
@@ -130,27 +130,27 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                     "validation_details": vector_validation,
                     "processing_id": processing_id
                 }
-            
+
             # Step 2: Analyze vector characteristics
             vector_analysis = await self._analyze_vector_characteristics_mcp(vectors, processing_config)
-            
+
             # Step 3: Optimize processing strategy based on analysis
             optimization_strategy = await self._optimize_processing_strategy_mcp(
                 vectors, operations, vector_analysis, optimization_level
             )
-            
+
             # Step 4: Execute vector operations
             operation_results = await self._execute_vector_operations_mcp(
                 vectors, operations, optimization_strategy, processing_config
             )
-            
+
             # Step 5: Cross-validation with other agents if enabled
             cross_validation_results = {}
             if cross_validation:
                 cross_validation_results = await self._perform_cross_agent_validation_mcp(
                     operation_results, vector_analysis
                 )
-            
+
             # Step 6: Quality assessment using MCP tools
             quality_assessment = await self.quality_tools.assess_vector_processing_quality(
                 original_vectors=vectors,
@@ -159,7 +159,7 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                 quality_requirements=quality_requirements or {},
                 assessment_criteria=["accuracy", "efficiency", "consistency", "completeness"]
             )
-            
+
             # Step 7: Performance measurement
             end_time = datetime.now().timestamp()
             if performance_monitoring:
@@ -178,7 +178,7 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                 )
             else:
                 performance_metrics = {}
-            
+
             return {
                 "status": "success",
                 "processing_id": processing_id,
@@ -199,7 +199,7 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                     "assess_vector_processing_quality"
                 ]
             }
-            
+
         except Exception as e:
             logger.error(f"Intelligent vector processing failed: {e}")
             return {
@@ -207,7 +207,7 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                 "processing_id": processing_id,
                 "error": str(e)
             }
-    
+
     @mcp_tool(
         name="advanced_similarity_search",
         description="Perform advanced similarity search with multiple algorithms and cross-validation",
@@ -253,13 +253,13 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
         """
         search_id = f"sim_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
         start_time = datetime.now().timestamp()
-        
+
         try:
             # Step 1: Validate query vector and search space
             validation_result = await self._validate_similarity_search_inputs_mcp(
                 query_vector, search_space, similarity_metrics
             )
-            
+
             if not validation_result["is_valid"]:
                 return {
                     "status": "error",
@@ -267,37 +267,37 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                     "validation_details": validation_result,
                     "search_id": search_id
                 }
-            
+
             # Step 2: Prepare search indices and optimize for performance
             index_preparation = await self._prepare_similarity_indices_mcp(
                 search_space, similarity_metrics or ["cosine"], search_parameters
             )
-            
+
             # Step 3: Execute similarity search with multiple metrics
             search_results = await self._execute_multi_metric_similarity_search_mcp(
-                query_vector, search_space, similarity_metrics or ["cosine"], 
+                query_vector, search_space, similarity_metrics or ["cosine"],
                 index_preparation, result_count
             )
-            
+
             # Step 4: Cross-metric validation and consensus
             consensus_results = {}
             if cross_metric_validation and len(similarity_metrics or []) > 1:
                 consensus_results = await self._perform_cross_metric_validation_mcp(
                     search_results, query_vector, search_space
                 )
-            
+
             # Step 5: Quality filtering and ranking refinement
             filtered_results = search_results
             if quality_filtering:
                 filtered_results = await self._apply_quality_filtering_mcp(
                     search_results, query_vector, search_space, search_parameters
                 )
-            
+
             # Step 6: Cross-agent validation for specialized domains
             domain_validation = await self._perform_domain_specific_validation_mcp(
                 query_vector, filtered_results, search_parameters
             )
-            
+
             # Step 7: Performance and quality assessment
             end_time = datetime.now().timestamp()
             performance_metrics = await self.performance_tools.measure_performance_metrics(
@@ -312,7 +312,7 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                     "quality_filtering_applied": quality_filtering
                 }
             )
-            
+
             return {
                 "status": "success",
                 "search_id": search_id,
@@ -333,7 +333,7 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                     "domain_specific_validation"
                 ]
             }
-            
+
         except Exception as e:
             logger.error(f"Advanced similarity search failed: {e}")
             return {
@@ -341,7 +341,7 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                 "search_id": search_id,
                 "error": str(e)
             }
-    
+
     @mcp_tool(
         name="intelligent_vector_clustering",
         description="Perform intelligent vector clustering with adaptive algorithm selection",
@@ -378,11 +378,11 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
         """
         clustering_id = f"clust_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
         start_time = datetime.now().timestamp()
-        
+
         try:
             # Step 1: Validate input vectors and analyze characteristics
             vector_validation = await self._validate_clustering_inputs_mcp(vectors, clustering_config)
-            
+
             if not vector_validation["is_valid"]:
                 return {
                     "status": "error",
@@ -390,10 +390,10 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                     "validation_details": vector_validation,
                     "clustering_id": clustering_id
                 }
-            
+
             # Step 2: Analyze vector distribution and characteristics
             distribution_analysis = await self._analyze_vector_distribution_mcp(vectors)
-            
+
             # Step 3: Adaptive algorithm selection based on data characteristics
             algorithm_selection = {}
             if adaptive_selection:
@@ -405,31 +405,31 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                     "selected_algorithm": clustering_config.get("algorithm", "kmeans"),
                     "parameters": clustering_config or {}
                 }
-            
+
             # Step 4: Execute clustering with selected algorithm
             clustering_results = await self._execute_clustering_mcp(
                 vectors, algorithm_selection, performance_tuning
             )
-            
+
             # Step 5: Quality optimization and refinement
             optimized_results = clustering_results
             if quality_optimization:
                 optimized_results = await self._optimize_clustering_quality_mcp(
                     vectors, clustering_results, algorithm_selection
                 )
-            
+
             # Step 6: Cross-validation with statistical measures
             validation_metrics = {}
             if cross_validation:
                 validation_metrics = await self._validate_clustering_quality_mcp(
                     vectors, optimized_results, algorithm_selection
                 )
-            
+
             # Step 7: Cross-agent validation for domain-specific insights
             domain_insights = await self._get_domain_clustering_insights_mcp(
                 vectors, optimized_results, clustering_config
             )
-            
+
             # Step 8: Performance measurement and quality assessment
             end_time = datetime.now().timestamp()
             performance_metrics = await self.performance_tools.measure_performance_metrics(
@@ -444,7 +444,7 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                     "adaptive_selection_used": adaptive_selection
                 }
             )
-            
+
             return {
                 "status": "success",
                 "clustering_id": clustering_id,
@@ -467,7 +467,7 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                     "get_domain_insights"
                 ]
             }
-            
+
         except Exception as e:
             logger.error(f"Intelligent vector clustering failed: {e}")
             return {
@@ -475,7 +475,7 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                 "clustering_id": clustering_id,
                 "error": str(e)
             }
-    
+
     @mcp_resource(
         uri="vector-processing://vector-stores",
         name="Vector Stores Registry",
@@ -501,10 +501,10 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
             "index_types": self._get_index_type_summary(),
             "last_updated": datetime.now().isoformat()
         }
-    
+
     @mcp_resource(
         uri="vector-processing://clustering-models",
-        name="Clustering Models Registry", 
+        name="Clustering Models Registry",
         description="Registry of trained clustering models and their performance"
     )
     async def get_clustering_models(self) -> Dict[str, Any]:
@@ -528,7 +528,7 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
             "performance_summary": self._get_performance_summary(),
             "last_updated": datetime.now().isoformat()
         }
-    
+
     @mcp_prompt(
         name="vector_processing_advisor",
         description="Provide intelligent advice on vector processing strategies and optimization",
@@ -550,29 +550,29 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
         try:
             # Analyze current vector processing state
             current_state = await self._analyze_vector_processing_state_mcp()
-            
+
             # Generate task-specific advice
             advice = await self._generate_vector_processing_advice_mcp(
                 task_type, data_characteristics or {}, performance_requirements or {}, current_state
             )
-            
+
             return advice
-            
+
         except Exception as e:
             logger.error(f"Vector processing advisor failed: {e}")
             return f"I'm having trouble analyzing your vector processing needs. Error: {str(e)}"
-    
+
     # Private helper methods for MCP operations
-    
+
     async def _analyze_vector_characteristics_mcp(
-        self, 
-        vectors: List[List[float]], 
+        self,
+        vectors: List[List[float]],
         config: Optional[Dict[str, Any]]
     ) -> Dict[str, Any]:
         """Analyze vector characteristics using MCP tools"""
-        
+
         vectors_array = np.array(vectors)
-        
+
         analysis = {
             "vector_count": len(vectors),
             "dimensions": len(vectors[0]) if vectors else 0,
@@ -586,15 +586,15 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
             "distribution_type": self._analyze_distribution_type(vectors_array),
             "recommended_algorithms": []
         }
-        
+
         # Add algorithm recommendations based on characteristics
         if analysis["sparsity"] > 0.8:
             analysis["recommended_algorithms"].append("sparse_clustering")
         if analysis["dimensions"] > 1000:
             analysis["recommended_algorithms"].append("dimensionality_reduction")
-        
+
         return analysis
-    
+
     async def _optimize_processing_strategy_mcp(
         self,
         vectors: List[List[float]],
@@ -603,30 +603,30 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
         optimization_level: str
     ) -> Dict[str, Any]:
         """Optimize processing strategy based on vector analysis"""
-        
+
         strategy = {
             "optimization_level": optimization_level,
             "recommended_operations": [],
             "performance_optimizations": [],
             "memory_management": {}
         }
-        
+
         # Optimize based on vector characteristics
         if analysis["dimensions"] > 500:
             strategy["performance_optimizations"].append("use_batch_processing")
             strategy["memory_management"]["batch_size"] = min(1000, len(vectors) // 4)
-        
+
         if "similarity_search" in operations and len(vectors) > 10000:
             strategy["recommended_operations"].append("build_faiss_index")
-        
+
         if "clustering" in operations:
             if analysis["vector_count"] > 50000:
                 strategy["recommended_operations"].append("use_mini_batch_kmeans")
             else:
                 strategy["recommended_operations"].append("use_standard_kmeans")
-        
+
         return strategy
-    
+
     async def _execute_vector_operations_mcp(
         self,
         vectors: List[List[float]],
@@ -635,18 +635,18 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
         config: Optional[Dict[str, Any]]
     ) -> Dict[str, Any]:
         """Execute vector operations with optimization strategy"""
-        
+
         results = {
             "operations_performed": [],
             "results": {},
             "performance_stats": {}
         }
-        
+
         vectors_array = np.array(vectors)
-        
+
         for operation in operations:
             operation_start = datetime.now().timestamp()
-            
+
             try:
                 if operation == "normalize":
                     # L2 normalization
@@ -654,7 +654,7 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                     norms[norms == 0] = 1  # Avoid division by zero
                     normalized = vectors_array / norms
                     results["results"][operation] = normalized.tolist()
-                
+
                 elif operation == "dimensionality_reduction":
                     # PCA for dimensionality reduction
                     target_dims = config.get("target_dimensions", min(50, vectors_array.shape[1] // 2)) if config else 50
@@ -665,12 +665,12 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                         "explained_variance_ratio": pca.explained_variance_ratio_.tolist(),
                         "cumulative_variance": np.cumsum(pca.explained_variance_ratio_).tolist()
                     }
-                
+
                 elif operation == "similarity_matrix":
                     # Compute similarity matrix
                     similarity_matrix = cosine_similarity(vectors_array)
                     results["results"][operation] = similarity_matrix.tolist()
-                
+
                 elif operation == "clustering":
                     # Basic K-means clustering
                     n_clusters = config.get("n_clusters", min(8, len(vectors) // 10)) if config else 5
@@ -684,14 +684,14 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                         }
                     else:
                         results["results"][operation] = {"error": "Not enough vectors for clustering"}
-                
+
                 operation_end = datetime.now().timestamp()
                 results["performance_stats"][operation] = {
                     "duration": operation_end - operation_start,
                     "success": True
                 }
                 results["operations_performed"].append(operation)
-                
+
             except Exception as e:
                 operation_end = datetime.now().timestamp()
                 results["performance_stats"][operation] = {
@@ -700,17 +700,17 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                     "error": str(e)
                 }
                 logger.warning(f"Operation {operation} failed: {e}")
-        
+
         return results
-    
+
     async def _perform_cross_agent_validation_mcp(
-        self, 
-        operation_results: Dict[str, Any], 
+        self,
+        operation_results: Dict[str, Any],
         vector_analysis: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Perform cross-agent validation using MCP"""
         validation_results = {}
-        
+
         try:
             # Request validation from Data Product Agent for data quality
             if "clustering" in operation_results.get("results", {}):
@@ -724,7 +724,7 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                     }
                 )
                 validation_results["data_quality"] = data_quality_validation.get("result", {})
-            
+
             # Request validation from Calculation Agent for numerical accuracy
             if "similarity_matrix" in operation_results.get("results", {}):
                 numerical_validation = await self.mcp_client.call_skill_tool(
@@ -737,12 +737,12 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
                     }
                 )
                 validation_results["numerical_accuracy"] = numerical_validation.get("result", {})
-            
+
         except Exception as e:
             validation_results["error"] = str(e)
-        
+
         return validation_results
-    
+
     def _calculate_sparsity(self, vectors_array: np.ndarray) -> float:
         """Calculate sparsity of vector array"""
         if vectors_array.size == 0:
@@ -750,16 +750,16 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
         zero_elements = np.count_nonzero(vectors_array == 0)
         total_elements = vectors_array.size
         return zero_elements / total_elements
-    
+
     def _analyze_distribution_type(self, vectors_array: np.ndarray) -> str:
         """Analyze the distribution type of vectors"""
         if vectors_array.size == 0:
             return "empty"
-        
+
         # Simple heuristic based on statistics
         means = np.mean(vectors_array, axis=0)
         stds = np.std(vectors_array, axis=0)
-        
+
         # Check if approximately normal (mean near 0, std near 1)
         if np.allclose(means, 0, atol=0.5) and np.allclose(stds, 1, atol=0.5):
             return "approximately_normal"
@@ -767,7 +767,7 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
             return "positive_definite"
         else:
             return "mixed_distribution"
-    
+
     def _get_index_type_summary(self) -> Dict[str, int]:
         """Get summary of index types in vector stores"""
         type_counts = {}
@@ -775,7 +775,7 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
             index_type = store.get("index_type", "unknown")
             type_counts[index_type] = type_counts.get(index_type, 0) + 1
         return type_counts
-    
+
     def _get_algorithm_distribution(self) -> Dict[str, int]:
         """Get distribution of clustering algorithms"""
         algo_counts = {}
@@ -783,12 +783,12 @@ class AdvancedMCPVectorProcessingAgent(SecureA2AAgent):
             algorithm = model.get("algorithm", "unknown")
             algo_counts[algorithm] = algo_counts.get(algorithm, 0) + 1
         return algo_counts
-    
+
     def _get_performance_summary(self) -> Dict[str, float]:
         """Get performance summary of clustering models"""
         if not self.clustering_models:
             return {"average_score": 0, "best_score": 0, "worst_score": 0}
-        
+
         scores = [m.get("performance_score", 0) for m in self.clustering_models.values()]
         return {
             "average_score": np.mean(scores),

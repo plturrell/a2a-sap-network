@@ -40,7 +40,7 @@ class PortalIntegrationManager:
     """
     Manages complete integration of all portal components
     """
-    
+
     def __init__(self, config: Dict[str, Any]):
         self.config = config
         self.app = None
@@ -48,7 +48,7 @@ class PortalIntegrationManager:
         self.agent_builder = None
         self.deployment_pipeline = None
         self.network_client = None
-        
+
         # Integration status
         self.integration_status = {
             "portal_server": False,
@@ -57,45 +57,45 @@ class PortalIntegrationManager:
             "sap_btp_services": False,
             "deployment_pipeline": False
         }
-    
+
     async def initialize(self) -> bool:
         """
         Initialize all portal integration components
         """
         try:
             logger.info("🚀 Starting A2A Developer Portal Integration...")
-            
+
             # Create FastAPI app
             self.app = await self._create_application()
-            
+
             # Initialize portal server
             await self._initialize_portal_server()
-            
+
             # Initialize agent builder
             await self._initialize_agent_builder()
-            
+
             # Initialize A2A network integration
             await self._initialize_network_integration()
-            
+
             # Initialize SAP BTP services
             await self._initialize_sap_btp_services()
-            
+
             # Initialize deployment pipeline
             await self._initialize_deployment_pipeline()
-            
+
             # Setup API routes
             await self._setup_api_routes()
-            
+
             # Validate integration
             await self._validate_integration()
-            
+
             logger.info("✅ Portal integration initialized successfully")
             return True
-            
+
         except Exception as e:
             logger.error(f"❌ Portal integration failed: {e}")
             return False
-    
+
     async def _create_application(self) -> FastAPI:
         """Create and configure FastAPI application"""
         app = FastAPI(
@@ -105,7 +105,7 @@ class PortalIntegrationManager:
             docs_url="/docs",
             redoc_url="/redoc"
         )
-        
+
         # Add CORS middleware
         app.add_middleware(
             CORSMiddleware,
@@ -114,7 +114,7 @@ class PortalIntegrationManager:
             allow_methods=["*"],
             allow_headers=["*"],
         )
-        
+
         # Add security headers middleware
         @app.middleware("http")
         async def add_security_headers(request, call_next):
@@ -123,9 +123,9 @@ class PortalIntegrationManager:
             for header, value in security_headers.items():
                 response.headers[header] = value
             return response
-        
+
         return app
-    
+
     async def _initialize_portal_server(self):
         """Initialize portal server component"""
         try:
@@ -136,7 +136,7 @@ class PortalIntegrationManager:
         except Exception as e:
             logger.error(f"❌ Portal server initialization failed: {e}")
             raise
-    
+
     async def _initialize_agent_builder(self):
         """Initialize enhanced agent builder"""
         try:
@@ -146,7 +146,7 @@ class PortalIntegrationManager:
                 "validation_enabled": True,
                 "auto_deployment": self.config.get("auto_deployment", False)
             }
-            
+
             self.agent_builder = EnhancedAgentBuilder(builder_config)
             await self.agent_builder.initialize()
             self.integration_status["agent_builder"] = True
@@ -154,7 +154,7 @@ class PortalIntegrationManager:
         except Exception as e:
             logger.error(f"❌ Agent builder initialization failed: {e}")
             raise
-    
+
     async def _initialize_network_integration(self):
         """Initialize A2A network integration"""
         try:
@@ -163,33 +163,33 @@ class PortalIntegrationManager:
                 rpc_url=self.config.get("blockchain", {}).get("rpc_url"),
                 websocket_url=self.config.get("blockchain", {}).get("websocket_url")
             )
-            
+
             await initialize_a2a_client(network_config)
             self.integration_status["network_integration"] = True
             logger.info("✅ A2A network integration initialized")
         except Exception as e:
             logger.warning(f"⚠️ A2A network integration failed (optional): {e}")
             # Network integration is optional in development
-    
+
     async def _initialize_sap_btp_services(self):
         """Initialize SAP BTP services"""
         try:
             # Initialize RBAC service
             await initialize_rbac_service(self.config.get("sap_btp", {}).get("rbac", {}))
-            
+
             # Initialize session service
             await initialize_session_service(self.config.get("sap_btp", {}).get("session", {}))
-            
+
             # Initialize destination service (optional)
             if self.config.get("sap_btp", {}).get("destinations"):
                 await initialize_destination_service(self.config.get("sap_btp", {}).get("destinations", {}))
-            
+
             self.integration_status["sap_btp_services"] = True
             logger.info("✅ SAP BTP services initialized")
         except Exception as e:
             logger.warning(f"⚠️ SAP BTP services initialization failed (optional): {e}")
             # SAP BTP is optional in development
-    
+
     async def _initialize_deployment_pipeline(self):
         """Initialize deployment pipeline"""
         try:
@@ -200,7 +200,7 @@ class PortalIntegrationManager:
                 "portal_url": f"http://localhost:{self.config.get('port', 3001)}",
                 "email": self.config.get("email", {})
             }
-            
+
             self.deployment_pipeline = DeploymentPipeline(deployment_config)
             await self.deployment_pipeline.initialize()
             self.integration_status["deployment_pipeline"] = True
@@ -208,7 +208,7 @@ class PortalIntegrationManager:
         except Exception as e:
             logger.error(f"❌ Deployment pipeline initialization failed: {e}")
             raise
-    
+
     async def _setup_api_routes(self):
         """Setup all API routes"""
         try:
@@ -216,24 +216,24 @@ class PortalIntegrationManager:
             self.app.include_router(auth_router, prefix="/api")
             self.app.include_router(network_router, prefix="/api")
             self.app.include_router(notification_router, prefix="/api")
-            
+
             # Portal server routes
             if self.portal_server:
                 self.app.mount("/api/portal", self.portal_server.get_router())
-            
+
             # Agent builder routes
             if self.agent_builder:
                 self.app.mount("/api/agent-builder", self.agent_builder.get_router())
-            
+
             # Deployment pipeline routes
             if self.deployment_pipeline:
                 self.app.mount("/api/deployment", self.deployment_pipeline.get_router())
-            
+
             # Static files
             static_path = Path(__file__).parent / "static"
             if static_path.exists():
                 self.app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
-            
+
             # Root endpoint
             @self.app.get("/", response_class=HTMLResponse)
             async def root():
@@ -256,7 +256,7 @@ class PortalIntegrationManager:
                 </body>
                 </html>
                 """
-            
+
             # Health check endpoint
             @self.app.get("/api/health")
             async def health_check():
@@ -266,28 +266,28 @@ class PortalIntegrationManager:
                     "integration_status": self.integration_status,
                     "version": "1.0.0"
                 }
-            
+
             logger.info("✅ API routes configured")
         except Exception as e:
             logger.error(f"❌ API routes setup failed: {e}")
             raise
-    
+
     async def _validate_integration(self):
         """Validate complete integration"""
         try:
             # Check critical components
             critical_components = ["portal_server", "agent_builder", "deployment_pipeline"]
             failed_components = [comp for comp in critical_components if not self.integration_status[comp]]
-            
+
             if failed_components:
                 raise Exception(f"Critical components failed: {failed_components}")
-            
+
             # Log integration summary
             logger.info("🎯 Integration Summary:")
             for component, status in self.integration_status.items():
                 status_icon = "✅" if status else "❌"
                 logger.info(f"  {status_icon} {component}: {'OK' if status else 'FAILED'}")
-            
+
             logger.info("✅ Portal integration validation completed")
         except Exception as e:
             logger.error(f"❌ Integration validation failed: {e}")
@@ -324,7 +324,7 @@ def create_portal_launcher(config: Dict[str, Any] = None) -> PortalIntegrationMa
             },
             "auto_deployment": os.getenv("AUTO_DEPLOYMENT", "false").lower() == "true"
         }
-    
+
     return PortalIntegrationManager(config)
 
 
@@ -334,12 +334,12 @@ async def launch_portal(config: Dict[str, Any] = None):
     """
     # Create and initialize portal
     portal_launcher = create_portal_launcher(config)
-    
+
     success = await portal_launcher.initialize()
     if not success:
         logger.error("❌ Portal initialization failed")
         return None
-    
+
     return portal_launcher.app
 
 
@@ -352,13 +352,13 @@ async def main():
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
-    
+
     try:
         # Launch portal
         app = await launch_portal()
         if not app:
             sys.exit(1)
-        
+
         # Run server
         config = uvicorn.Config(
             app=app,
@@ -367,15 +367,15 @@ async def main():
             log_level="info",
             reload=os.getenv("PORTAL_RELOAD", "false").lower() == "true"
         )
-        
+
         server = uvicorn.Server(config)
-        
+
         logger.info("🌐 Portal URL: http://localhost:3001")
         logger.info("📚 API Docs: http://localhost:3001/docs")
         logger.info("❤️ Health Check: http://localhost:3001/api/health")
-        
+
         await server.serve()
-        
+
     except KeyboardInterrupt:
         logger.info("✋ Portal stopped by user")
     except Exception as e:

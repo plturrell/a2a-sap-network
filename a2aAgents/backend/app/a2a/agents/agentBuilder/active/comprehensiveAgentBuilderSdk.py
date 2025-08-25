@@ -107,7 +107,7 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
     """
     Comprehensive Agent Builder for creating, configuring, and deploying A2A agents
     """
-    
+
     def __init__(self):
         super().__init__(
             agent_id=create_agent_id("agent-builder"),
@@ -115,27 +115,27 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
             description="Advanced agent creation, configuration, and deployment system",
             version="1.0.0"
         )
-        
+
         # Initialize AI Intelligence Framework
         self.ai_framework = create_ai_intelligence_framework(
             create_enhanced_agent_config("agent_builder")
         )
-        
+
         # Project management
         self.build_projects: Dict[str, BuildProject] = {}
         self.active_builds: Dict[str, asyncio.Task] = {}
-        
+
         # Build environment
         self.workspace_dir = Path("workspace/agent_builds")
         self.templates_dir = Path("templates/agents")
         self.workspace_dir.mkdir(parents=True, exist_ok=True)
         self.templates_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Initialize logger
         self.logger = logger
-        
+
         logger.info("ComprehensiveAgentBuilderSDK initialized")
-    
+
     async def get_agent_card(self) -> Dict[str, Any]:
         """Get agent card information"""
         return {
@@ -154,12 +154,12 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
             "projects_count": len(self.build_projects),
             "active_builds": len(self.active_builds)
         }
-    
+
     async def handle_json_rpc(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Handle JSON-RPC requests"""
         method = data.get("method", "")
         params = data.get("params", {})
-        
+
         if method == "createProject":
             return await self.create_build_project(params.get("name"), params.get("config"))
         elif method == "generateCode":
@@ -168,7 +168,7 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
             return await self.deployment_automation(params)
         else:
             return {"error": f"Unknown method: {method}"}
-    
+
     async def process_message(self, message: Any, context_id: str) -> Dict[str, Any]:
         """Process incoming messages"""
         return {
@@ -176,7 +176,7 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
             "status": "processed",
             "result": "Message processed successfully"
         }
-    
+
     async def get_task_status(self, task_id: str) -> Dict[str, Any]:
         """Get status of a specific task"""
         if task_id in self.active_builds:
@@ -187,7 +187,7 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
                 "done": task.done()
             }
         return {"task_id": task_id, "status": "not_found"}
-    
+
     async def get_queue_status(self) -> Dict[str, Any]:
         """Get queue status"""
         return {
@@ -195,14 +195,14 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
             "active_builds": len(self.active_builds),
             "queue_length": sum(1 for p in self.build_projects.values() if p.status == BuildStatus.DRAFT)
         }
-    
+
     async def get_message_status(self, message_id: str) -> Dict[str, Any]:
         """Get message status"""
         return {
             "message_id": message_id,
             "status": "processed"
         }
-    
+
     async def cancel_message(self, message_id: str) -> Dict[str, Any]:
         """Cancel a message"""
         return {
@@ -229,7 +229,7 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
         """
         try:
             project_id = str(uuid.uuid4())
-            
+
             # Create agent configuration
             configuration = AgentConfiguration(
                 name=agent_config.get("name", project_name),
@@ -243,7 +243,7 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
                 security_settings=agent_config.get("security_settings", {}),
                 performance_requirements=agent_config.get("performance_requirements", {})
             )
-            
+
             # Create build project
             build_project = BuildProject(
                 id=project_id,
@@ -251,32 +251,32 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
                 configuration=configuration,
                 status=BuildStatus.DRAFT
             )
-            
+
             # Create project workspace
             project_dir = self.workspace_dir / project_id
             project_dir.mkdir(exist_ok=True)
             build_project.build_path = str(project_dir)
-            
+
             # Store project
             self.build_projects[project_id] = build_project
-            
+
             logger.info(f"Created build project: {project_name} ({project_id})")
-            
+
             return {
                 "project_id": project_id,
                 "status": "created",
                 "agent_type": configuration.agent_type.value,
                 "framework": configuration.framework.value
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to create build project: {e}")
             raise
-    
+
     async def project_management(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Wrapper for project management to match A2A handler expectations"""
         action = data.get("action", "create")
-        
+
         if action == "create":
             return await self.create_build_project(
                 data.get("project_name", "New Project"),
@@ -332,32 +332,32 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
         try:
             if project_id not in self.build_projects:
                 raise ValueError(f"Build project {project_id} not found")
-            
+
             project = self.build_projects[project_id]
             project.status = BuildStatus.GENERATING
-            
+
             # Generate code files
             generated_files = await self._generate_code_files(project, generation_options or {})
-            
+
             project.generated_files = generated_files
             project.updated_at = datetime.now()
             project.status = BuildStatus.COMPLETED
-            
+
             logger.info(f"Generated code for project: {project_id}")
-            
+
             return {
                 "project_id": project_id,
                 "generated_files": list(generated_files.keys()),
                 "code_size": sum(len(content) for content in generated_files.values()),
                 "status": "generated"
             }
-            
+
         except Exception as e:
             project.status = BuildStatus.FAILED
             project.error_message = str(e)
             logger.error(f"Failed to generate code: {e}")
             raise
-    
+
     async def code_generation(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Wrapper for code generation to match A2A handler expectations"""
         project_id = data.get("project_id")
@@ -384,10 +384,10 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
         try:
             if project_id not in self.build_projects:
                 raise ValueError(f"Build project {project_id} not found")
-            
+
             project = self.build_projects[project_id]
             project.status = BuildStatus.TESTING
-            
+
             # Run different types of tests
             test_results = {
                 "unit_tests": await self._run_unit_tests(project),
@@ -395,31 +395,31 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
                 "performance_tests": await self._run_performance_tests(project),
                 "security_tests": await self._run_security_tests(project)
             }
-            
+
             # Calculate overall test score
             overall_score = self._calculate_test_score(test_results)
-            
+
             project.test_results = {
                 "results": test_results,
                 "overall_score": overall_score,
                 "tested_at": datetime.now().isoformat()
             }
-            
+
             project.updated_at = datetime.now()
-            
+
             logger.info(f"Completed tests for project: {project_id}")
-            
+
             return {
                 "project_id": project_id,
                 "test_results": test_results,
                 "overall_score": overall_score,
                 "status": "tested"
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to run tests: {e}")
             raise
-    
+
     async def agent_testing(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Wrapper for agent testing to match A2A handler expectations"""
         project_id = data.get("project_id")
@@ -446,7 +446,7 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
             agent_name = agent_spec.get("name", "New Agent")
             agent_type = agent_spec.get("type", "assistant")
             capabilities = agent_spec.get("capabilities", [])
-            
+
             # Create build project first
             project_result = await self.create_build_project(
                 f"{agent_name} Project",
@@ -473,9 +473,9 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
                     }
                 }
             )
-            
+
             project_id = project_result["project_id"]
-            
+
             # Generate agent code
             generation_result = await self.generate_agent_code(
                 project_id,
@@ -486,7 +486,7 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
                     "target_registry": "blockchain"
                 }
             )
-            
+
             # Test the generated agent
             test_result = await self.run_agent_tests(
                 project_id,
@@ -496,7 +496,7 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
                     "run_performance_tests": True
                 }
             )
-            
+
             # Create blockchain registration data
             registration_data = {
                 "agent_name": agent_name,
@@ -507,9 +507,9 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
                 "build_project_id": project_id,
                 "test_score": test_result.get("overall_score", 0)
             }
-            
+
             logger.info(f"Created agent: {agent_name} with {len(capabilities)} capabilities")
-            
+
             return {
                 "agent_id": f"agent_{agent_name.lower().replace(' ', '_')}",
                 "project_id": project_id,
@@ -519,7 +519,7 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
                 "registration_data": registration_data,
                 "status": "created"
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to create agent: {e}")
             raise
@@ -543,7 +543,7 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
         try:
             action = template_data.get("action", "list")  # list, create, update, delete, deploy
             template_name = template_data.get("template_name")
-            
+
             if action == "list":
                 # List available templates
                 templates = []
@@ -558,16 +558,16 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
                                 "capabilities_count": len(template.get("capabilities", [])),
                                 "created_at": template.get("created_at", "unknown")
                             })
-                
+
                 return {
                     "templates": templates,
                     "total_count": len(templates)
                 }
-            
+
             elif action == "create":
                 if not template_name:
                     raise ValueError("Template name is required for creation")
-                
+
                 # Create new template
                 template = {
                     "name": template_name,
@@ -581,30 +581,30 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
                     "created_at": datetime.now().isoformat(),
                     "version": "1.0.0"
                 }
-                
+
                 # Save template
                 template_file = self.templates_dir / f"{template_name}.json"
                 with open(template_file, 'w') as f:
                     json.dump(template, f, indent=2)
-                
+
                 return {
                     "template_name": template_name,
                     "status": "created",
                     "file_path": str(template_file)
                 }
-            
+
             elif action == "deploy":
                 if not template_name:
                     raise ValueError("Template name is required for deployment")
-                
+
                 # Load template
                 template_file = self.templates_dir / f"{template_name}.json"
                 if not template_file.exists():
                     raise FileNotFoundError(f"Template {template_name} not found")
-                
+
                 with open(template_file, 'r') as f:
                     template = json.load(f)
-                
+
                 # Deploy agent from template
                 agent_name = template_data.get("agent_name", f"{template_name}_instance")
                 deployment_result = await self.agent_creation({
@@ -615,17 +615,17 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
                     "security_settings": template.get("security_settings", {}),
                     "performance_requirements": template.get("performance_requirements", {})
                 })
-                
+
                 return {
                     "template_name": template_name,
                     "agent_name": agent_name,
                     "deployment_result": deployment_result,
                     "status": "deployed"
                 }
-            
+
             else:
                 raise ValueError(f"Unknown template action: {action}")
-            
+
         except Exception as e:
             logger.error(f"Failed template management: {e}")
             raise
@@ -650,15 +650,15 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
             project_id = deployment_config.get("project_id")
             environment = deployment_config.get("environment", "staging")  # staging, production
             deployment_strategy = deployment_config.get("strategy", "blue_green")  # blue_green, rolling, canary
-            
+
             if not project_id:
                 raise ValueError("Project ID is required for deployment")
-            
+
             if project_id not in self.build_projects:
                 raise ValueError(f"Build project {project_id} not found")
-            
+
             project = self.build_projects[project_id]
-            
+
             # Pre-deployment validation
             validation_checks = {
                 "code_generated": len(project.generated_files) > 0,
@@ -666,26 +666,26 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
                 "security_validated": project.test_results.get("results", {}).get("security_tests", {}).get("security_score", 0) >= 90,
                 "performance_validated": project.test_results.get("results", {}).get("performance_tests", {}).get("response_time_ms", 1000) < 500
             }
-            
+
             if not all(validation_checks.values()):
                 failed_checks = [check for check, passed in validation_checks.items() if not passed]
                 raise ValueError(f"Deployment validation failed: {', '.join(failed_checks)}")
-            
+
             # Generate deployment artifacts
             deployment_artifacts = await self._generate_deployment_artifacts(
                 project, environment, deployment_strategy
             )
-            
+
             # Deploy to environment
             deployment_result = await self._deploy_to_environment(
                 project, deployment_artifacts, environment, deployment_strategy
             )
-            
+
             # Setup monitoring
             monitoring_config = await self._setup_deployment_monitoring(
                 project, environment, deployment_result
             )
-            
+
             # Update project with deployment info
             project.deployment_info = {
                 "environment": environment,
@@ -695,12 +695,12 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
                 "monitoring_enabled": True,
                 "rollback_available": True
             }
-            
+
             project.status = BuildStatus.DEPLOYED
             project.updated_at = datetime.now()
-            
+
             logger.info(f"Successfully deployed project {project_id} to {environment}")
-            
+
             return {
                 "project_id": project_id,
                 "deployment_id": deployment_result["deployment_id"],
@@ -712,7 +712,7 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
                 "rollback_available": True,
                 "status": "deployed"
             }
-            
+
         except Exception as e:
             logger.error(f"Failed deployment automation: {e}")
             raise
@@ -736,23 +736,23 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
         try:
             project_id = config_data.get("project_id")
             config_updates = config_data.get("updates", {})
-            
+
             if not project_id:
                 raise ValueError("Project ID is required for configuration")
-            
+
             if project_id not in self.build_projects:
                 raise ValueError(f"Build project {project_id} not found")
-            
+
             project = self.build_projects[project_id]
             configuration = project.configuration
-            
+
             # Update configuration fields
             if "name" in config_updates:
                 configuration.name = config_updates["name"]
-            
+
             if "description" in config_updates:
                 configuration.description = config_updates["description"]
-            
+
             if "skills" in config_updates:
                 # Validate and update skills
                 new_skills = config_updates["skills"]
@@ -760,32 +760,32 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
                     if not isinstance(skill, dict) or "name" not in skill:
                         raise ValueError(f"Invalid skill format: {skill}")
                 configuration.skills = new_skills
-            
+
             if "security_settings" in config_updates:
                 configuration.security_settings.update(config_updates["security_settings"])
-            
+
             if "performance_requirements" in config_updates:
                 configuration.performance_requirements.update(config_updates["performance_requirements"])
-            
+
             if "dependencies" in config_updates:
                 configuration.dependencies = config_updates["dependencies"]
-            
+
             # Validate configuration
             validation_result = await self._validate_agent_configuration(configuration)
-            
+
             if not validation_result["valid"]:
                 raise ValueError(f"Configuration validation failed: {validation_result['errors']}")
-            
+
             # Regenerate configuration files if needed
             if config_data.get("regenerate_files", False):
                 new_config_file = await self._generate_config_file(project, {})
                 project.generated_files["config.yaml"] = new_config_file
-            
+
             # Update project metadata
             project.updated_at = datetime.now()
-            
+
             logger.info(f"Updated configuration for project {project_id}")
-            
+
             return {
                 "project_id": project_id,
                 "configuration": {
@@ -801,7 +801,7 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
                 "files_regenerated": config_data.get("regenerate_files", False),
                 "status": "configured"
             }
-            
+
         except Exception as e:
             logger.error(f"Failed agent configuration: {e}")
             raise
@@ -815,29 +815,29 @@ class ComprehensiveAgentBuilderSDK(A2AAgentBase,
         Generate all code files for the agent project
         """
         generated_files = {}
-        
+
         # Generate main agent file
         generated_files["agent.py"] = await self._generate_agent_code(project, options)
-        
+
         # Generate configuration files
         generated_files["config.yaml"] = await self._generate_config_file(project, options)
         generated_files["requirements.txt"] = await self._generate_requirements_file(project, options)
-        
+
         # Generate test files
         generated_files["tests/test_agent.py"] = await self._generate_test_code(project, options)
-        
+
         # Generate deployment files
         generated_files["Dockerfile"] = await self._generate_dockerfile(project, options)
-        
+
         # Generate documentation
         generated_files["README.md"] = await self._generate_readme(project, options)
-        
+
         return generated_files
 
     async def _generate_agent_code(self, project: BuildProject, options: Dict[str, Any]) -> str:
         """Generate main agent code"""
         config = project.configuration
-        
+
         template = '''"""
 {agent_name} - Generated by A2A Agent Builder
 {description}
@@ -859,7 +859,7 @@ class {agent_class_name}(A2AAgentBase):
     """
     {description}
     """
-    
+
     def __init__(self):
         super().__init__(
             agent_id=create_agent_id("{agent_id}"),
@@ -867,7 +867,7 @@ class {agent_class_name}(A2AAgentBase):
             description="{description}",
             version="1.0.0"
         )
-        
+
         logger.info("{agent_name} initialized")
 
 {skills_code}
@@ -879,16 +879,16 @@ def get_{agent_instance_name}() -> {agent_class_name}:
     """Get the singleton agent instance"""
     return {agent_instance_name}
 '''
-        
+
         # Generate skills code
         skills_code = ""
         for skill in config.skills:
             skills_code += await self._generate_skill_method(skill)
-        
+
         # Format template
         agent_class_name = self._to_class_name(config.name)
         agent_instance_name = self._to_instance_name(config.name)
-        
+
         return template.format(
             agent_name=config.name,
             description=config.description,
@@ -902,7 +902,7 @@ def get_{agent_instance_name}() -> {agent_class_name}:
         """Generate skill method code"""
         skill_name = skill.get("name", "unknown_skill")
         skill_description = skill.get("description", "")
-        
+
         template = '''
     @a2a_skill(
         name="{skill_name}",
@@ -919,15 +919,15 @@ def get_{agent_instance_name}() -> {agent_class_name}:
         try:
             # TODO: Implement skill logic
             result = {{"status": "success", "data": input_data}}
-            
+
             logger.info(f"Executed skill: {skill_name}")
             return result
-            
+
         except Exception as e:
             logger.error(f"Skill {skill_name} failed: {{e}}")
             raise
 '''
-        
+
         return template.format(
             skill_name=skill_name,
             skill_description=skill_description,
@@ -949,7 +949,7 @@ def get_{agent_instance_name}() -> {agent_class_name}:
             "security": project.configuration.security_settings,
             "performance": project.configuration.performance_requirements
         }
-        
+
         return yaml.dump(config_data, indent=2)
 
     async def _generate_requirements_file(self, project: BuildProject, options: Dict[str, Any]) -> str:
@@ -961,7 +961,7 @@ def get_{agent_instance_name}() -> {agent_class_name}:
             "pyyaml>=6.0",
             "requests>=2.28.0"
         ]
-        
+
         return "\n".join(requirements)
 
     async def _generate_test_code(self, project: BuildProject, options: Dict[str, Any]) -> str:
@@ -976,10 +976,10 @@ import asyncio
 from agent import get_{self._to_instance_name(project.configuration.name)}
 
 class Test{self._to_class_name(project.configuration.name)}:
-    
+
     def setup_method(self):
         self.agent = get_{self._to_instance_name(project.configuration.name)}()
-    
+
     @pytest.mark.asyncio
     async def test_agent_initialization(self):
         assert self.agent.name == "{project.configuration.name}"
@@ -1051,16 +1051,16 @@ agent = get_{self._to_instance_name(project.configuration.name)}()
     def _calculate_test_score(self, test_results: Dict[str, Any]) -> float:
         """Calculate overall test score"""
         scores = []
-        
+
         unit = test_results.get("unit_tests", {})
         if unit:
             unit_score = (unit.get("passed", 0) / max(1, unit.get("passed", 0) + unit.get("failed", 0))) * 100
             scores.append(unit_score)
-        
+
         security = test_results.get("security_tests", {})
         if security:
             scores.append(security.get("security_score", 0))
-        
+
         return sum(scores) / len(scores) if scores else 0
 
     def _to_class_name(self, name: str) -> str:
@@ -1087,7 +1087,7 @@ agent = get_{self._to_instance_name(project.configuration.name)}()
     ) -> Dict[str, str]:
         """Generate deployment-specific artifacts"""
         artifacts = {}
-        
+
         # Docker Compose for environment
         artifacts["docker-compose.yml"] = f'''
 version: '3.8'
@@ -1107,7 +1107,7 @@ services:
       timeout: 10s
       retries: 3
 '''
-        
+
         # Kubernetes deployment
         artifacts["deployment.yaml"] = f'''
 apiVersion: apps/v1
@@ -1135,7 +1135,7 @@ spec:
         - name: A2A_ENABLED
           value: "true"
 '''
-        
+
         return artifacts
 
     async def _deploy_to_environment(
@@ -1147,7 +1147,7 @@ spec:
     ) -> Dict[str, Any]:
         """Deploy agent to target environment"""
         deployment_id = f"deploy_{project.id}_{int(time.time())}"
-        
+
         # Simulate deployment process
         deployment_steps = [
             "validating_artifacts",
@@ -1157,7 +1157,7 @@ spec:
             "running_health_checks",
             "updating_load_balancer"
         ]
-        
+
         return {
             "deployment_id": deployment_id,
             "environment": environment,
@@ -1188,27 +1188,27 @@ spec:
         """Validate agent configuration"""
         errors = []
         warnings = []
-        
+
         # Validate name
         if not config.name or len(config.name.strip()) == 0:
             errors.append("Agent name cannot be empty")
-        
+
         if len(config.name) > 100:
             errors.append("Agent name too long (max 100 characters)")
-        
+
         # Validate skills
         skill_names = [skill.get("name") for skill in config.skills if skill.get("name")]
         if len(skill_names) != len(set(skill_names)):
             errors.append("Duplicate skill names found")
-        
+
         # Validate dependencies
         if len(config.dependencies) > 20:
             warnings.append("Large number of dependencies may impact performance")
-        
+
         # Validate security settings
         if not config.security_settings.get("enable_authentication", True):
             warnings.append("Authentication disabled - security risk")
-        
+
         return {
             "valid": len(errors) == 0,
             "errors": errors,

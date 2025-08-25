@@ -11,7 +11,7 @@ from enum import Enum
 
 # Import A2A SDK components
 from app.a2a.sdk import (
-    A2AAgentBase, a2a_handler, 
+    A2AAgentBase, a2a_handler,
     A2AMessage, MessageRole, create_agent_id
 )
 from app.a2a.sdk.mixins import (
@@ -37,19 +37,19 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
     Pure A2A agent for reasoning tasks
     Uses MCP protocol to discover and call reasoning skills
     """
-    
+
     def __init__(self, name: str = "ReasoningAgent", **kwargs):
         super().__init__(name=name, **kwargs)
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-        
-        
-        
+
+
+
         # Available MCP skills (discovered via MCP)
         self.available_skills = {}
-        
+
         # Agent metadata
         self.agent_type = "reasoning"
         self.capabilities = {
@@ -58,18 +58,18 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             "debate_orchestration": True,
             "chain_analysis": True
         }
-        
+
         logger.info(f"Initialized {name} as pure A2A agent with MCP client")
-    
+
     async def initialize(self):
         """Initialize agent and discover MCP skills"""
         await super().initialize()
-        
+
         # Discover available MCP skills
         await self._discover_mcp_skills()
-        
+
         logger.info(f"Agent initialized with {len(self.available_skills)} discovered skills")
-    
+
     async def _discover_mcp_skills(self):
         """Discover available MCP skills via protocol"""
         try:
@@ -81,17 +81,17 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "debate_orchestration",
                 "reasoning_chain_analysis"
             ]
-            
+
             for skill_name in skill_endpoints:
                 # Check if skill is available via MCP
                 skill_info = await self.mcp_client.discover_skill(skill_name)
                 if skill_info:
                     self.available_skills[skill_name] = skill_info
                     logger.info(f"Discovered MCP skill: {skill_name}")
-        
+
         except Exception as e:
             logger.error(f"Error discovering MCP skills: {e}")
-    
+
     @a2a_handler(role=MessageRole.REASONING)
     async def handle_reasoning_request(self, message: A2AMessage) -> Dict[str, Any]:
         """
@@ -103,7 +103,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             question = content.get("question", "")
             architecture = content.get("architecture", ReasoningArchitecture.HIERARCHICAL.value)
             context = content.get("context", {})
-            
+
             # Call appropriate MCP skill
             if "advanced_reasoning" in self.available_skills:
                 result = await self.mcp_client.call_skill(
@@ -112,7 +112,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     reasoning_architecture=architecture,
                     context=context
                 )
-                
+
                 return {
                     "success": True,
                     "result": result,
@@ -125,7 +125,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "error": "Advanced reasoning skill not available",
                     "agent_id": self.agent_id
                 }
-                
+
         except Exception as e:
             logger.error(f"Error handling reasoning request: {e}")
             return {
@@ -133,7 +133,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "error": str(e),
                 "agent_id": self.agent_id
             }
-    
+
     @a2a_handler(role=MessageRole.HYPOTHESIS)
     async def handle_hypothesis_request(self, message: A2AMessage) -> Dict[str, Any]:
         """Handle hypothesis generation requests"""
@@ -141,14 +141,14 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             content = message.content
             problem = content.get("problem", "")
             domain = content.get("domain")
-            
+
             if "hypothesis_generation" in self.available_skills:
                 result = await self.mcp_client.call_skill(
                     "hypothesis_generation",
                     problem=problem,
                     domain=domain
                 )
-                
+
                 return {
                     "success": True,
                     "result": result,
@@ -160,7 +160,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "error": "Hypothesis generation skill not available",
                     "agent_id": self.agent_id
                 }
-                
+
         except Exception as e:
             logger.error(f"Error handling hypothesis request: {e}")
             return {
@@ -168,7 +168,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "error": str(e),
                 "agent_id": self.agent_id
             }
-    
+
     @a2a_handler(role=MessageRole.DEBATE)
     async def handle_debate_request(self, message: A2AMessage) -> Dict[str, Any]:
         """Handle debate orchestration requests"""
@@ -176,14 +176,14 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             content = message.content
             topic = content.get("topic", "")
             max_rounds = content.get("max_rounds", 5)
-            
+
             if "debate_orchestration" in self.available_skills:
                 result = await self.mcp_client.call_skill(
                     "debate_orchestration",
                     topic=topic,
                     max_rounds=max_rounds
                 )
-                
+
                 return {
                     "success": True,
                     "result": result,
@@ -195,7 +195,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "error": "Debate orchestration skill not available",
                     "agent_id": self.agent_id
                 }
-                
+
         except Exception as e:
             logger.error(f"Error handling debate request: {e}")
             return {
@@ -203,20 +203,20 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "error": str(e),
                 "agent_id": self.agent_id
             }
-    
+
     @a2a_handler(role=MessageRole.ANALYSIS)
     async def handle_analysis_request(self, message: A2AMessage) -> Dict[str, Any]:
         """Handle reasoning chain analysis requests"""
         try:
             content = message.content
             reasoning_steps = content.get("reasoning_steps", [])
-            
+
             if "reasoning_chain_analysis" in self.available_skills:
                 result = await self.mcp_client.call_skill(
                     "reasoning_chain_analysis",
                     reasoning_steps=reasoning_steps
                 )
-                
+
                 return {
                     "success": True,
                     "result": result,
@@ -228,7 +228,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                     "error": "Chain analysis skill not available",
                     "agent_id": self.agent_id
                 }
-                
+
         except Exception as e:
             logger.error(f"Error handling analysis request: {e}")
             return {
@@ -236,7 +236,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
                 "error": str(e),
                 "agent_id": self.agent_id
             }
-    
+
     async def get_status(self) -> Dict[str, Any]:
         """Get agent status"""
         return {
@@ -247,7 +247,7 @@ class ReasoningAgent(SecureA2AAgent, PerformanceMonitorMixin, SecurityHardenedMi
             "capabilities": self.capabilities,
             "uptime": (datetime.utcnow() - self.start_time).total_seconds()
         }
-    
+
     async def shutdown(self):
         """Clean shutdown"""
         logger.info(f"Shutting down {self.name}")

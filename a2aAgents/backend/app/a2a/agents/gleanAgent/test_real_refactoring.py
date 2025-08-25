@@ -17,20 +17,20 @@ async def test_real_refactoring():
     """Test the real AST-based refactoring implementation"""
     print("Testing Real AST-Based Refactoring Analysis")
     print("=" * 60)
-    
+
     try:
         # Import the agent
         from app.a2a.agents.gleanAgent import GleanAgent
         print("✓ Successfully imported GleanAgent")
-        
+
         # Create agent instance
         agent = GleanAgent()
         print(f"✓ Created agent: {agent.agent_id}")
-        
+
         # Create a test directory with code that needs refactoring
         test_dir = tempfile.mkdtemp(prefix="glean_refactoring_test_")
         print(f"\n1. Created test directory: {test_dir}")
-        
+
         # Create Python file with various refactoring opportunities
         problematic_py = Path(test_dir) / "refactoring_candidates.py"
         problematic_py.write_text('''
@@ -43,15 +43,15 @@ import re
 
 class DataProcessor:
     """Data processing class with many refactoring opportunities"""
-    
+
     def __init__(self, config):
         self.config = config
         self.cache = {}
         self.results = []
-    
+
     # Long parameter list example
-    def process_user_data(self, user_id, name, email, age, country, city, 
-                         preferences, settings, metadata, validation_rules, 
+    def process_user_data(self, user_id, name, email, age, country, city,
+                         preferences, settings, metadata, validation_rules,
                          transformation_rules, output_format):
         """Function with too many parameters"""
         if user_id and name and email and age and country and city and preferences and settings:
@@ -73,13 +73,13 @@ class DataProcessor:
                                         }
                                         return result
         return None
-    
+
     def very_long_function_that_does_too_many_things(self, data):
         """This function is way too long and does multiple things"""
         # Step 1: Validate input
         if not data:
             return None
-        
+
         # Step 2: Parse data
         parsed = []
         for item in data:
@@ -90,7 +90,7 @@ class DataProcessor:
                     parsed.append(json.loads(item))
                 except:
                     pass
-        
+
         # Step 3: Transform data
         transformed = []
         for item in parsed:
@@ -113,17 +113,17 @@ class DataProcessor:
                         "role": "admin"
                     }
                     transformed.append(admin_data)
-        
+
         # Step 4: Validate transformed data
         validated = []
         for item in transformed:
             if "id" in item and "name" in item:
                 if item["id"] and item["name"]:
                     validated.append(item)
-        
+
         # Step 5: Sort results
         validated.sort(key=lambda x: x.get("name", ""))
-        
+
         # Step 6: Generate report
         report = {
             "total_processed": len(validated),
@@ -131,19 +131,19 @@ class DataProcessor:
             "status": "success",
             "data": validated
         }
-        
+
         # Step 7: Cache results
         cache_key = f"processed_{len(data)}_{42}"  # Magic number
         self.cache[cache_key] = report
-        
+
         return report
-    
+
     def complex_condition_example(self, user, settings, permissions):
         # Complex boolean condition that should be extracted
         if user.active and user.verified and not user.banned and user.age >= 18 and user.country in ["US", "UK"] and settings.notifications_enabled and permissions.can_access and permissions.level > 5:
             return True
         return False
-    
+
     def nested_loops_example(self, data):
         """Example with nested loops"""
         results = []
@@ -154,7 +154,7 @@ class DataProcessor:
                         if value > 100:  # Magic number
                             results.append(value)
         return results
-    
+
     def bare_except_example(self):
         """Example with bare except clause"""
         try:
@@ -163,7 +163,7 @@ class DataProcessor:
             return result
         except:  # Bare except - catches everything
             return None
-    
+
     def magic_numbers_example(self, data):
         """Function with many magic numbers"""
         filtered = [x for x in data if x > 50]  # Magic number
@@ -188,9 +188,9 @@ def buggy_function():
 
 class GodClass:
     """Class with too many methods - God Object anti-pattern"""
-    
+
     def method1(self): pass
-    def method2(self): pass  
+    def method2(self): pass
     def method3(self): pass
     def method4(self): pass
     def method5(self): pass
@@ -214,36 +214,36 @@ class GodClass:
 # Long line example that exceeds the recommended line length limit and should be broken down into multiple lines for better readability
 long_line_variable = "This is a very long string that exceeds the recommended line length and should be broken into multiple lines"
 ''')
-        
+
         print("\n2. Testing real AST-based refactoring analysis:")
-        
+
         # Test the real refactoring analysis
         refactoring_result = await agent.analyze_code_refactoring(str(problematic_py), max_suggestions=20)
-        
+
         print(f"   File analyzed: {refactoring_result.get('file_path', 'unknown')}")
         print(f"   Total suggestions: {refactoring_result.get('total_suggestions', 0)}")
-        
+
         summary = refactoring_result.get('summary', {})
         print(f"   Critical priority: {summary.get('critical_priority', 0)}")
         print(f"   High priority: {summary.get('high_priority', 0)}")
         print(f"   Medium priority: {summary.get('medium_priority', 0)}")
         print(f"   Low priority: {summary.get('low_priority', 0)}")
-        
+
         # Show metrics
         if 'metrics' in refactoring_result:
             metrics = refactoring_result['metrics']
             print(f"\n   Refactoring Metrics:")
             print(f"     - Priority Score: {metrics.get('refactoring_priority_score', 0)}")
             print(f"     - Maintainability Index: {metrics.get('maintainability_index', 0)}/100")
-            
+
             node_counts = metrics.get('node_counts', {})
             print(f"     - Functions: {node_counts.get('functions', 0)}")
             print(f"     - Classes: {node_counts.get('classes', 0)}")
-            
+
             suggestions_by_type = metrics.get('suggestions_by_type', {})
             if suggestions_by_type:
                 print(f"     - Suggestion Types: {dict(suggestions_by_type)}")
-        
+
         # Show top suggestions
         suggestions = refactoring_result.get('suggestions', [])
         if suggestions:
@@ -255,7 +255,7 @@ long_line_variable = "This is a very long string that exceeds the recommended li
                 if suggestion.get('code_example'):
                     print(f"        Example: {suggestion['code_example']}")
                 print()
-        
+
         print("✅ Real AST-based refactoring analysis test completed!")
         print("\nKey AST Features Demonstrated:")
         print("  ✓ Function parameter counting (long parameter lists)")
@@ -270,17 +270,17 @@ long_line_variable = "This is a very long string that exceeds the recommended li
         print("  ✓ Star import detection")
         print("  ✓ Magic number identification")
         print("  ✓ Technical debt marker scanning")
-        
+
         # Cleanup
         shutil.rmtree(test_dir)
         print(f"\nCleaned up test directory")
-        
+
     except Exception as e:
         print(f"\n❌ Error: {type(e).__name__}: {e}")
         import traceback
         traceback.print_exc()
         return False
-    
+
     return True
 
 

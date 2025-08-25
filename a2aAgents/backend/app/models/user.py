@@ -9,7 +9,7 @@ from datetime import datetime
 
 class User(BaseModel):
     """User model for authentication and authorization"""
-    
+
     id: str
     username: Optional[str] = None
     email: Optional[str] = None
@@ -17,29 +17,29 @@ class User(BaseModel):
     scopes: List[str] = []
     created_at: Optional[datetime] = None
     last_active: Optional[datetime] = None
-    
+
     @validator('tier')
     def validate_tier(cls, v):
         valid_tiers = {'anonymous', 'authenticated', 'premium', 'admin'}
         if v not in valid_tiers:
             raise ValueError(f'Invalid tier. Must be one of: {valid_tiers}')
         return v
-    
+
     @validator('scopes')
     def validate_scopes(cls, v):
         # Ensure scopes is always a list
         if isinstance(v, str):
             return [v]
         return v or []
-    
+
     def has_scope(self, scope: str) -> bool:
         """Check if user has specific scope"""
         return scope in self.scopes
-    
+
     def is_admin(self) -> bool:
         """Check if user has admin privileges"""
         return self.tier == "admin" or "admin" in self.scopes
-    
+
     def is_premium(self) -> bool:
         """Check if user has premium access"""
         return self.tier in ["premium", "admin"]

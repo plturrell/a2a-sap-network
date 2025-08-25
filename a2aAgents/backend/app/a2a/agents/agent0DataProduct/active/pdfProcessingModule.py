@@ -60,22 +60,22 @@ logger = logging.getLogger(__name__)
 
 class EnhancedPDFProcessor(SecureA2AAgent):
     """Enhanced PDF processor with streaming, OCR, and advanced extraction"""
-    
+
     # Security features provided by SecureA2AAgent:
     # - JWT authentication and authorization
-    # - Rate limiting and request throttling  
+    # - Rate limiting and request throttling
     # - Input validation and sanitization
     # - Audit logging and compliance tracking
     # - Encrypted communication channels
     # - Automatic security scanning
-    
+
     def __init__(self, max_concurrent_files: int = 5, chunk_size: int = 1024*1024):
-        
+
         super().__init__()
         self.throttler = Throttler(rate_limit=max_concurrent_files)
         self.chunk_size = chunk_size
         self.temp_dir = tempfile.mkdtemp(prefix="a2a_pdf_")
-        
+
         # Initialize Grok client for AI-powered analysis
         self.grok_client = None
         if GROK_AVAILABLE:
@@ -90,14 +90,14 @@ class EnhancedPDFProcessor(SecureA2AAgent):
             except Exception as e:
                 logger.warning(f"Failed to initialize Grok client: {e}")
                 self.grok_client = None
-        
+
     async def extract_pdf_tables(self, pdf_path: str, use_ocr: bool = False) -> List[Dict[str, Any]]:
         """Extract tables from PDF with multiple methods"""
         if not PDF_LIBRARIES_AVAILABLE:
             raise RuntimeError("PDF libraries not available")
-            
+
         tables = []
-        
+
         try:
             # Method 1: Camelot (best for well-formatted tables)
             camelot_tables = camelot.read_pdf(pdf_path, pages='all', flavor='lattice')
@@ -110,7 +110,7 @@ class EnhancedPDFProcessor(SecureA2AAgent):
                     "accuracy": table.accuracy,
                     "whitespace": table.whitespace
                 })
-                
+
             # Method 2: Tabula (good for stream tables)
             if not tables:  # Fallback if camelot fails
                 tabula_tables = tabula.read_pdf(pdf_path, pages='all', multiple_tables=True)
@@ -123,31 +123,31 @@ class EnhancedPDFProcessor(SecureA2AAgent):
                         "accuracy": 0.8,  # Default estimate
                         "whitespace": 0.1
                     })
-                    
+
             # Method 3: OCR-based extraction if enabled
             if use_ocr and OCR_AVAILABLE and not tables:
                 ocr_tables = await self._extract_tables_ocr(pdf_path)
                 tables.extend(ocr_tables)
-                
+
         except Exception as e:
             logger.error(f"Table extraction failed: {e}")
-            
+
         return tables
-    
+
     async def extract_pdf_text(self, pdf_path: str, use_ocr: bool = False) -> str:
         """Extract text from PDF with fallback methods"""
         if not PDF_LIBRARIES_AVAILABLE:
             raise RuntimeError("PDF libraries not available")
-            
+
         text_content = ""
-        
+
         try:
             # Method 1: PyMuPDF (fastest)
             doc = fitz.open(pdf_path)
             for page in doc:
                 text_content += page.get_text()
             doc.close()
-            
+
             # Method 2: pdfplumber (better formatting)
             if not text_content.strip():
                 with pdfplumber.open(pdf_path) as pdf:
@@ -155,28 +155,28 @@ class EnhancedPDFProcessor(SecureA2AAgent):
                         page_text = page.extract_text()
                         if page_text:
                             text_content += page_text + "\n"
-                            
+
             # Method 3: OCR fallback
             if use_ocr and OCR_AVAILABLE and not text_content.strip():
                 text_content = await self._extract_text_ocr(pdf_path)
-                
+
         except Exception as e:
             logger.error(f"Text extraction failed: {e}")
-            
+
         return text_content
-    
+
     async def extract_pdf_metadata(self, pdf_path: str) -> Dict[str, Any]:
         """Extract comprehensive PDF metadata"""
         if not PDF_LIBRARIES_AVAILABLE:
             raise RuntimeError("PDF libraries not available")
-            
+
         metadata = {
             "file_info": {},
             "document_info": {},
             "structure_info": {},
             "security_info": {}
         }
-        
+
         try:
             # File-level metadata
             file_stats = os.stat(pdf_path)
@@ -186,7 +186,7 @@ class EnhancedPDFProcessor(SecureA2AAgent):
                 "modified": datetime.fromtimestamp(file_stats.st_mtime).isoformat(),
                 "file_path": pdf_path
             }
-            
+
             # Document metadata using PyMuPDF
             doc = fitz.open(pdf_path)
             doc_metadata = doc.metadata
@@ -199,7 +199,7 @@ class EnhancedPDFProcessor(SecureA2AAgent):
                 "creation_date": doc_metadata.get("creationDate", ""),
                 "modification_date": doc_metadata.get("modDate", "")
             }
-            
+
             # Structure information
             metadata["structure_info"] = {
                 "page_count": doc.page_count,
@@ -209,44 +209,44 @@ class EnhancedPDFProcessor(SecureA2AAgent):
                 "is_encrypted": doc.needs_pass,
                 "pdf_version": doc.pdf_version()
             }
-            
+
             # Security information
             metadata["security_info"] = {
                 "is_encrypted": doc.needs_pass,
                 "permissions": doc.permissions if hasattr(doc, 'permissions') else {},
                 "is_linearized": doc.is_pdf and hasattr(doc, 'is_fast_web_view')
             }
-            
+
             doc.close()
-            
+
         except Exception as e:
             logger.error(f"Metadata extraction failed: {e}")
-            
+
         return metadata
-    
+
     async def extract_pdf_forms(self, pdf_path: str) -> Dict[str, Any]:
         """Extract PDF form fields and data"""
         if not PDF_LIBRARIES_AVAILABLE:
             raise RuntimeError("PDF libraries not available")
-            
+
         form_data = {
             "has_forms": False,
             "form_fields": [],
             "filled_fields": {},
             "form_structure": {}
         }
-        
+
         try:
             # Using PyMuPDF for form extraction
             doc = fitz.open(pdf_path)
-            
+
             if doc.is_form_pdf:
                 form_data["has_forms"] = True
-                
+
                 for page_num in range(doc.page_count):
                     page = doc[page_num]
                     widgets = page.widgets()
-                    
+
                     for widget in widgets:
                         field_info = {
                             "field_name": widget.field_name,
@@ -257,29 +257,29 @@ class EnhancedPDFProcessor(SecureA2AAgent):
                             "is_required": widget.field_flags & 2 != 0
                         }
                         form_data["form_fields"].append(field_info)
-                        
+
                         if widget.field_value:
                             form_data["filled_fields"][widget.field_name] = widget.field_value
-            
+
             doc.close()
-            
+
         except Exception as e:
             logger.error(f"Form extraction failed: {e}")
-            
+
         return form_data
-    
+
     async def stream_large_pdf(self, pdf_path: str, chunk_pages: int = 10) -> AsyncGenerator[Dict[str, Any], None]:
         """Stream processing for large PDF files"""
         if not PDF_LIBRARIES_AVAILABLE:
             raise RuntimeError("PDF libraries not available")
-            
+
         try:
             doc = fitz.open(pdf_path)
             total_pages = doc.page_count
-            
+
             for start_page in range(0, total_pages, chunk_pages):
                 end_page = min(start_page + chunk_pages, total_pages)
-                
+
                 chunk_data = {
                     "chunk_info": {
                         "start_page": start_page + 1,
@@ -292,12 +292,12 @@ class EnhancedPDFProcessor(SecureA2AAgent):
                     "images": [],
                     "metadata": {}
                 }
-                
+
                 # Extract content from chunk
                 for page_num in range(start_page, end_page):
                     page = doc[page_num]
                     chunk_data["text_content"] += page.get_text()
-                    
+
                     # Extract images
                     image_list = page.get_images()
                     for img_index, img in enumerate(image_list):
@@ -308,33 +308,33 @@ class EnhancedPDFProcessor(SecureA2AAgent):
                             "width": img[2],
                             "height": img[3]
                         })
-                
+
                 yield chunk_data
-                
+
                 # Throttle to prevent memory issues
                 await asyncio.sleep(0.1)
-            
+
             doc.close()
-            
+
         except Exception as e:
             logger.error(f"PDF streaming failed: {e}")
             yield {"error": str(e)}
-    
+
     async def _extract_tables_ocr(self, pdf_path: str) -> List[Dict[str, Any]]:
         """Extract tables using OCR"""
         if not OCR_AVAILABLE:
             return []
-            
+
         tables = []
         try:
             # Convert PDF to images
             images = convert_from_path(pdf_path)
-            
+
             for page_num, image in enumerate(images):
                 # Use Tesseract to extract text with table structure
                 custom_config = r'--oem 3 --psm 6 -c tessedit_create_tsv=1'
                 tsv_data = pytesseract.image_to_data(image, config=custom_config, output_type=pytesseract.Output.DICT)
-                
+
                 # Process TSV data to identify table structures
                 table_data = self._process_ocr_table_data(tsv_data)
                 if table_data:
@@ -346,34 +346,34 @@ class EnhancedPDFProcessor(SecureA2AAgent):
                         "accuracy": 0.7,  # OCR typically less accurate
                         "whitespace": 0.2
                     })
-                    
+
         except Exception as e:
             logger.error(f"OCR table extraction failed: {e}")
-            
+
         return tables
-    
+
     async def _extract_text_ocr(self, pdf_path: str) -> str:
         """Extract text using OCR"""
         if not OCR_AVAILABLE:
             return ""
-            
+
         text_content = ""
         try:
             images = convert_from_path(pdf_path)
-            
+
             for image in images:
                 text_content += pytesseract.image_to_string(image) + "\n"
-                
+
         except Exception as e:
             logger.error(f"OCR text extraction failed: {e}")
-            
+
         return text_content
-    
+
     async def analyze_pdf_content_with_grok(self, text_content: str, tables: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Analyze PDF content using Grok AI for enhanced insights"""
         if not self.grok_client:
             return {"analysis": "Grok client not available", "insights": [], "quality_score": 0.5}
-        
+
         try:
             # Prepare content summary for analysis
             content_summary = {
@@ -382,25 +382,25 @@ class EnhancedPDFProcessor(SecureA2AAgent):
                 "text_preview": text_content[:1000] if text_content else "",
                 "table_preview": tables[:2] if tables else []
             }
-            
+
             # Use Grok to analyze content structure and quality
             analysis_prompt = f"""
             Analyze this PDF content and provide insights:
-            
+
             Content Summary: {content_summary}
-            
+
             Provide analysis including:
             1. Content type and structure assessment
             2. Data quality indicators
             3. Key insights and patterns
             4. Extraction completeness score (0-1)
             5. Recommended processing improvements
-            
+
             Return as JSON with fields: content_type, quality_score, insights, recommendations
             """
-            
+
             result = await self.grok_client.decompose_question(analysis_prompt)
-            
+
             if result.get("success"):
                 decomposition = result.get("decomposition", {})
                 return {
@@ -414,41 +414,41 @@ class EnhancedPDFProcessor(SecureA2AAgent):
                 }
             else:
                 return {"analysis": "Grok analysis failed", "quality_score": 0.5}
-                
+
         except Exception as e:
             logger.error(f"Grok PDF analysis failed: {e}")
             return {"analysis": f"Analysis error: {e}", "quality_score": 0.5}
-    
+
     def _process_ocr_table_data(self, tsv_data: Dict) -> List[Dict[str, Any]]:
         """Process OCR TSV data to extract table structure"""
         rows = {}
-        
+
         for i, text in enumerate(tsv_data['text']):
             if text.strip():
                 top = tsv_data['top'][i]
                 left = tsv_data['left'][i]
-                
+
                 # Group by approximate row (top position)
                 row_key = round(top / 20) * 20  # Group within 20 pixels
-                
+
                 if row_key not in rows:
                     rows[row_key] = []
-                    
+
                 rows[row_key].append({
                     'text': text,
                     'left': left,
                     'confidence': tsv_data['conf'][i]
                 })
-        
+
         # Convert to table format
         table_data = []
         for row_key in sorted(rows.keys()):
             row_cells = sorted(rows[row_key], key=lambda x: x['left'])
             row_data = {f"col_{i}": cell['text'] for i, cell in enumerate(row_cells)}
             table_data.append(row_data)
-            
+
         return table_data
-    
+
     async def cleanup(self):
         """Cleanup temporary files"""
         try:

@@ -16,7 +16,7 @@ async def test_clean_architecture():
     """Test the clean architecture separation"""
     print("Testing Clean A2A/MCP Architecture")
     print("=" * 50)
-    
+
     # Test 1: Import clean agent
     print("\n1. Testing clean agent import...")
     try:
@@ -29,7 +29,7 @@ async def test_clean_architecture():
     except Exception as e:
         print(f"   ❌ Failed: {e}")
         return
-    
+
     # Test 2: Check MCP skills are separate
     print("\n2. Testing MCP skills separation...")
     try:
@@ -39,40 +39,40 @@ async def test_clean_architecture():
             print(f"      - {skill_name}: {skill_info['category']} ({skill_info['complexity']})")
     except Exception as e:
         print(f"   ❌ Failed: {e}")
-    
+
     # Test 3: Verify skills have MCP decorators
     print("\n3. Testing MCP skill decorators...")
     try:
         from skills import advanced_reasoning, hypothesis_generation
-        
+
         has_mcp_decorator = hasattr(advanced_reasoning, '_mcp_tool')
         print(f"   - advanced_reasoning has @mcp_tool: {has_mcp_decorator}")
-        
+
         has_mcp_decorator = hasattr(hypothesis_generation, '_mcp_tool')
         print(f"   - hypothesis_generation has @mcp_tool: {has_mcp_decorator}")
-        
+
         print("   ✅ Skills properly decorated")
     except Exception as e:
         print(f"   ❌ Failed: {e}")
-    
+
     # Test 4: Check agent doesn't contain skills
     print("\n4. Verifying agent doesn't contain skills...")
     agent_methods = [m for m in dir(agent) if not m.startswith('_')]
     skill_methods = ['advanced_reasoning', 'hypothesis_generation', 'debate_orchestration']
-    
+
     contamination = [m for m in skill_methods if m in agent_methods]
     if contamination:
         print(f"   ❌ Agent contains skills: {contamination}")
     else:
         print("   ✅ Agent is clean - no skill implementations")
-    
+
     # Test 5: Architecture summary
     print("\n5. Architecture Summary:")
     print("   ✅ A2A Agent: Pure orchestration via A2A protocol")
     print("   ✅ MCP Skills: Separate modules exposed via MCP protocol")
     print("   ✅ Communication: Agent uses MCP client to call skills")
     print("   ✅ Separation: No direct skill implementations in agent")
-    
+
     print("\n✨ Clean architecture validated!")
 
 

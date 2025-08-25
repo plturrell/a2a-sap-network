@@ -36,20 +36,20 @@ import networkx as nx
 
 class BlockchainOnlyEnforcer:
     """Enforces blockchain-only communication - no HTTP fallbacks"""
-    
+
     def __init__(self):
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
         self.blockchain_required = True
-    
+
     async def call(self, func, *args, **kwargs):
         """Execute function only if blockchain is available"""
         if not await self._check_blockchain():
             raise RuntimeError("A2A Protocol: Blockchain connection required")
         return await func(*args, **kwargs)
-    
+
     async def _check_blockchain(self):
         """Check blockchain availability"""
         # Implementation depends on blockchain client
@@ -179,7 +179,7 @@ class VectorMetrics:
 
 class CorruptionDetector:
     """Advanced corruption detection for vector data"""
-    
+
     def __init__(self):
         # Initialize security features
         self._init_security_features()
@@ -192,25 +192,25 @@ class CorruptionDetector:
             self._check_zero_vectors,
             self._check_statistical_outliers
         ]
-    
+
     def detect_corruption(self, vectors: List[List[float]], metadata: Dict[str, Any] = None) -> Dict[str, Any]:
         """
         Comprehensive corruption detection for vector data
-        
+
         Args:
             vectors: List of vector embeddings to check
             metadata: Optional metadata for context-aware detection
-            
+
         Returns:
             Dictionary with corruption analysis results
         """
         if not vectors:
             return {"corrupted": False, "issues": [], "confidence": 1.0}
-        
+
         issues = []
         total_checks = len(self.corruption_patterns)
         passed_checks = 0
-        
+
         try:
             # Run all corruption detection patterns
             for pattern_check in self.corruption_patterns:
@@ -227,11 +227,11 @@ class CorruptionDetector:
                         "passed": False,
                         "error": str(e)
                     })
-            
+
             # Calculate overall corruption confidence
             confidence = passed_checks / total_checks if total_checks > 0 else 0.0
             is_corrupted = confidence < 0.7  # Less than 70% of checks passed
-            
+
             return {
                 "corrupted": is_corrupted,
                 "confidence": confidence,
@@ -240,7 +240,7 @@ class CorruptionDetector:
                 "checks_passed": passed_checks,
                 "total_checks": total_checks
             }
-            
+
         except Exception as e:
             logger.error(f"Corruption detection failed: {e}")
             return {
@@ -249,15 +249,15 @@ class CorruptionDetector:
                 "error": str(e),
                 "issues": [{"check": "general", "error": str(e)}]
             }
-    
+
     def _check_dimension_consistency(self, vectors: List[List[float]], metadata: Dict[str, Any] = None) -> Dict[str, Any]:
         """Check if all vectors have consistent dimensions"""
         if not vectors:
             return {"check": "dimension_consistency", "passed": True}
-        
+
         expected_dim = len(vectors[0])
         inconsistent_vectors = []
-        
+
         for i, vector in enumerate(vectors):
             if len(vector) != expected_dim:
                 inconsistent_vectors.append({
@@ -265,9 +265,9 @@ class CorruptionDetector:
                     "expected_dim": expected_dim,
                     "actual_dim": len(vector)
                 })
-        
+
         passed = len(inconsistent_vectors) == 0
-        
+
         return {
             "check": "dimension_consistency",
             "passed": passed,
@@ -275,15 +275,15 @@ class CorruptionDetector:
             "inconsistent_count": len(inconsistent_vectors),
             "inconsistent_vectors": inconsistent_vectors[:10]  # Limit to first 10
         }
-    
+
     def _check_value_ranges(self, vectors: List[List[float]], metadata: Dict[str, Any] = None) -> Dict[str, Any]:
         """Check if vector values are within reasonable ranges"""
         if not vectors:
             return {"check": "value_ranges", "passed": True}
-        
+
         # Flatten all values for analysis
         all_values = [val for vector in vectors for val in vector]
-        
+
         if NUMPY_AVAILABLE:
             arr = np.array(all_values)
             min_val = float(np.min(arr))
@@ -296,14 +296,14 @@ class CorruptionDetector:
             mean_val = sum(all_values) / len(all_values)
             variance = sum((x - mean_val)**2 for x in all_values) / len(all_values)
             std_val = variance ** 0.5
-        
+
         # Check for unreasonable ranges (common for corrupted data)
         extreme_range = max_val - min_val > 1000  # Very large range
         extreme_values = abs(min_val) > 100 or abs(max_val) > 100  # Very large absolute values
         high_variance = std_val > 50  # Very high standard deviation
-        
+
         passed = not (extreme_range or extreme_values or high_variance)
-        
+
         return {
             "check": "value_ranges",
             "passed": passed,
@@ -320,16 +320,16 @@ class CorruptionDetector:
                 "high_variance": high_variance
             }
         }
-    
+
     def _check_nan_inf_values(self, vectors: List[List[float]], metadata: Dict[str, Any] = None) -> Dict[str, Any]:
         """Check for NaN or infinite values"""
         if not vectors:
             return {"check": "nan_inf_values", "passed": True}
-        
+
         nan_count = 0
         inf_count = 0
         problematic_vectors = []
-        
+
         for i, vector in enumerate(vectors):
             vector_issues = []
             for j, val in enumerate(vector):
@@ -339,15 +339,15 @@ class CorruptionDetector:
                 elif abs(val) == float('inf'):
                     inf_count += 1
                     vector_issues.append(f"Inf at index {j}")
-            
+
             if vector_issues and len(problematic_vectors) < 10:
                 problematic_vectors.append({
                     "vector_index": i,
                     "issues": vector_issues
                 })
-        
+
         passed = nan_count == 0 and inf_count == 0
-        
+
         return {
             "check": "nan_inf_values",
             "passed": passed,
@@ -355,34 +355,34 @@ class CorruptionDetector:
             "inf_count": inf_count,
             "problematic_vectors": problematic_vectors
         }
-    
+
     def _check_zero_vectors(self, vectors: List[List[float]], metadata: Dict[str, Any] = None) -> Dict[str, Any]:
         """Check for suspiciously high number of zero vectors"""
         if not vectors:
             return {"check": "zero_vectors", "passed": True}
-        
+
         zero_vectors = 0
         near_zero_vectors = 0
-        
+
         for vector in vectors:
             if NUMPY_AVAILABLE:
                 arr = np.array(vector)
                 magnitude = float(np.linalg.norm(arr))
             else:
                 magnitude = sum(x*x for x in vector) ** 0.5
-            
+
             if magnitude == 0.0:
                 zero_vectors += 1
             elif magnitude < 1e-6:  # Very small magnitude
                 near_zero_vectors += 1
-        
+
         total_vectors = len(vectors)
         zero_ratio = zero_vectors / total_vectors
         near_zero_ratio = near_zero_vectors / total_vectors
-        
+
         # Fail if more than 20% are zero or more than 50% are near-zero
         passed = zero_ratio < 0.2 and (zero_ratio + near_zero_ratio) < 0.5
-        
+
         return {
             "check": "zero_vectors",
             "passed": passed,
@@ -391,12 +391,12 @@ class CorruptionDetector:
             "zero_ratio": zero_ratio,
             "near_zero_ratio": near_zero_ratio
         }
-    
+
     def _check_statistical_outliers(self, vectors: List[List[float]], metadata: Dict[str, Any] = None) -> Dict[str, Any]:
         """Check for statistical outliers in vector magnitudes"""
         if not vectors or len(vectors) < 10:  # Need sufficient data for outlier detection
             return {"check": "statistical_outliers", "passed": True}
-        
+
         # Calculate vector magnitudes
         magnitudes = []
         for vector in vectors:
@@ -406,7 +406,7 @@ class CorruptionDetector:
             else:
                 magnitude = sum(x*x for x in vector) ** 0.5
             magnitudes.append(magnitude)
-        
+
         if NUMPY_AVAILABLE:
             arr = np.array(magnitudes)
             q25 = float(np.percentile(arr, 25))
@@ -414,7 +414,7 @@ class CorruptionDetector:
             iqr = q75 - q25
             lower_bound = q25 - 1.5 * iqr
             upper_bound = q75 + 1.5 * iqr
-            
+
             outliers = np.sum((arr < lower_bound) | (arr > upper_bound))
         else:
             # Manual percentile calculation
@@ -427,14 +427,14 @@ class CorruptionDetector:
             iqr = q75 - q25
             lower_bound = q25 - 1.5 * iqr
             upper_bound = q75 + 1.5 * iqr
-            
+
             outliers = sum(1 for mag in magnitudes if mag < lower_bound or mag > upper_bound)
-        
+
         outlier_ratio = outliers / len(magnitudes)
-        
+
         # Fail if more than 30% are outliers (indicating possible corruption)
         passed = outlier_ratio < 0.3
-        
+
         return {
             "check": "statistical_outliers",
             "passed": passed,
@@ -451,7 +451,7 @@ class CorruptionDetector:
 
 class HANAConnectionManager:
     """Advanced HANA connection management with retry and circuit breaking"""
-    
+
     def __init__(self, config: Dict[str, Any], max_retries: int = 3):
         # Initialize security features
         self._init_security_features()
@@ -474,16 +474,16 @@ class HANAConnectionManager:
             "last_successful_connection": None,
             "last_error": None
         }
-    
+
     async def get_connection(self) -> Optional[Any]:
         """
         Get a database connection with advanced retry logic and circuit breaking
-        
+
         Returns:
             Database connection or None if all attempts fail
         """
         self.connection_metrics["total_attempts"] += 1
-        
+
         try:
             # Try to get connection through circuit breaker
             connection = await self.circuit_breaker.call(self._create_connection)
@@ -491,29 +491,29 @@ class HANAConnectionManager:
                 self.connection_metrics["successful_connections"] += 1
                 self.connection_metrics["last_successful_connection"] = datetime.utcnow()
                 return connection
-            
+
         except CircuitBreakerOpenError:
             self.connection_metrics["circuit_breaker_trips"] += 1
             logger.warning("HANA connection circuit breaker is open")
-            
+
         except Exception as e:
             self.connection_metrics["failed_connections"] += 1
             self.connection_metrics["last_error"] = str(e)
             logger.error(f"HANA connection failed: {e}")
-        
+
         return None
-    
+
     async def _create_connection(self) -> Optional[Any]:
         """Create a new HANA connection with retry logic"""
         if not HANA_AVAILABLE:
             raise Exception("HANA libraries not available")
-        
+
         last_exception = None
-        
+
         for attempt in range(self.max_retries):
             try:
                 logger.info(f"HANA connection attempt {attempt + 1}/{self.max_retries}")
-                
+
                 # Create connection
                 connection = dbapi.connect(
                     address=self.config.get("address", "localhost"),
@@ -524,34 +524,34 @@ class HANAConnectionManager:
                     encrypt=self.config.get("encrypt", True),
                     sslValidateCertificate=self.config.get("sslValidateCertificate", False)
                 )
-                
+
                 # Test connection
                 cursor = connection.cursor()
                 cursor.execute("SELECT 1 FROM DUMMY")
                 cursor.fetchone()
                 cursor.close()
-                
+
                 logger.info("✅ HANA connection established successfully")
                 return connection
-                
+
             except Exception as e:
                 last_exception = e
                 logger.warning(f"HANA connection attempt {attempt + 1} failed: {e}")
-                
+
                 if attempt < self.max_retries - 1:
                     delay = self.retry_delays[min(attempt, len(self.retry_delays) - 1)]
                     logger.info(f"Retrying HANA connection in {delay} seconds...")
                     await asyncio.sleep(delay)
-        
+
         logger.error(f"All HANA connection attempts failed. Last error: {last_exception}")
         raise last_exception
-    
+
     def get_metrics(self) -> Dict[str, Any]:
         """Get connection metrics for monitoring"""
         return {
             **self.connection_metrics,
             "success_rate": (
-                self.connection_metrics["successful_connections"] / 
+                self.connection_metrics["successful_connections"] /
                 max(self.connection_metrics["total_attempts"], 1)
             ),
             "circuit_breaker_state": self.circuit_breaker.state.name,
@@ -564,7 +564,7 @@ class HANAConnectionManager:
 
 class MemoryManagedVectorStore:
     """Memory-managed vector store with chunking and streaming support"""
-    
+
     def __init__(self, config: VectorProcessingConfig):
         # Initialize security features
         self._init_security_features()
@@ -577,46 +577,46 @@ class MemoryManagedVectorStore:
         self.chunk_files = []  # Files for chunked storage
         self.memory_mapped_files = {}  # Memory-mapped file handles
         self.compression_enabled = config.compression != CompressionMethod.NONE
-        
+
         # Create storage directory
         self.storage_dir = Path("/tmp/vector_processing")
         self.storage_dir.mkdir(exist_ok=True)
-    
+
     def estimate_memory_usage(self, vectors: List[List[float]]) -> int:
         """Estimate memory usage for vectors in bytes"""
         if not vectors:
             return 0
-        
+
         # Estimate: each float is 8 bytes, plus overhead
         vector_size = len(vectors[0]) * 8  # 8 bytes per float
         total_vectors = len(vectors)
         overhead = total_vectors * 64  # Estimated overhead per vector
-        
+
         return total_vectors * vector_size + overhead
-    
+
     async def store_vectors(
-        self, 
-        vectors: List[List[float]], 
+        self,
+        vectors: List[List[float]],
         metadata_list: List[Dict[str, Any]] = None,
         use_streaming: bool = False
     ) -> Dict[str, Any]:
         """
         Store vectors with intelligent memory management
-        
+
         Args:
             vectors: List of vector embeddings
             metadata_list: Optional metadata for each vector
             use_streaming: Whether to use streaming storage for large datasets
-            
+
         Returns:
             Storage result with metrics
         """
         if not vectors:
             return {"success": True, "stored_count": 0}
-        
+
         start_time = time.time()
         estimated_memory = self.estimate_memory_usage(vectors)
-        
+
         try:
             # Choose storage strategy based on size and configuration
             if use_streaming or estimated_memory > self.config.max_memory_usage_mb * 1024 * 1024:
@@ -625,9 +625,9 @@ class MemoryManagedVectorStore:
                 result = await self._store_vectors_memory_mapped(vectors, metadata_list)
             else:
                 result = await self._store_vectors_in_memory(vectors, metadata_list)
-            
+
             processing_time = (time.time() - start_time) * 1000
-            
+
             return {
                 "success": True,
                 "stored_count": len(vectors),
@@ -637,7 +637,7 @@ class MemoryManagedVectorStore:
                 "compression_used": self.compression_enabled,
                 **result
             }
-            
+
         except Exception as e:
             logger.error(f"Vector storage failed: {e}")
             return {
@@ -645,108 +645,108 @@ class MemoryManagedVectorStore:
                 "error": str(e),
                 "stored_count": 0
             }
-    
+
     async def _store_vectors_in_memory(
-        self, 
-        vectors: List[List[float]], 
+        self,
+        vectors: List[List[float]],
         metadata_list: List[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Store vectors in memory"""
         stored_count = 0
-        
+
         for i, vector in enumerate(vectors):
             vector_id = str(uuid4())
-            
+
             # Compress if enabled
             if self.compression_enabled:
                 vector_data = self._compress_vector(vector)
             else:
                 vector_data = vector
-            
+
             self.vectors[vector_id] = vector_data
-            
+
             if metadata_list and i < len(metadata_list):
                 self.metadata[vector_id] = metadata_list[i]
-            
+
             stored_count += 1
-        
+
         return {
             "strategy": "in_memory",
             "stored_count": stored_count,
             "total_in_memory": len(self.vectors)
         }
-    
+
     async def _store_vectors_streaming(
-        self, 
-        vectors: List[List[float]], 
+        self,
+        vectors: List[List[float]],
         metadata_list: List[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Store vectors using streaming to disk"""
         chunk_size = self.config.batch_size
         chunks_written = 0
         total_stored = 0
-        
+
         for i in range(0, len(vectors), chunk_size):
             chunk_vectors = vectors[i:i + chunk_size]
             chunk_metadata = metadata_list[i:i + chunk_size] if metadata_list else None
-            
+
             chunk_file = self.storage_dir / f"chunk_{chunks_written}_{uuid4().hex[:8]}.dat"
-            
+
             chunk_data = {
                 "vectors": chunk_vectors,
                 "metadata": chunk_metadata,
                 "count": len(chunk_vectors),
                 "created_at": datetime.utcnow().isoformat()
             }
-            
+
             # Write chunk to disk with compression
             await self._write_chunk_to_disk(chunk_file, chunk_data)
-            
+
             self.chunk_files.append(str(chunk_file))
             chunks_written += 1
             total_stored += len(chunk_vectors)
-            
+
             # Force garbage collection after each chunk
             gc.collect()
-        
+
         return {
             "strategy": "streaming",
             "stored_count": total_stored,
             "chunks_written": chunks_written,
             "chunk_files": len(self.chunk_files)
         }
-    
+
     async def _store_vectors_memory_mapped(
-        self, 
-        vectors: List[List[float]], 
+        self,
+        vectors: List[List[float]],
         metadata_list: List[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Store vectors using memory mapping"""
         mmap_file = self.storage_dir / f"mmap_{uuid4().hex[:8]}.dat"
-        
+
         # Prepare data for memory mapping
         if NUMPY_AVAILABLE:
             # Use numpy for efficient memory mapping
             vector_array = np.array(vectors, dtype=np.float32)
-            
+
             # Create memory-mapped file
             mmap_array = np.memmap(
-                str(mmap_file), 
-                dtype=np.float32, 
-                mode='w+', 
+                str(mmap_file),
+                dtype=np.float32,
+                mode='w+',
                 shape=vector_array.shape
             )
-            
+
             # Copy data to memory-mapped array
             mmap_array[:] = vector_array[:]
             mmap_array.flush()
-            
+
             self.memory_mapped_files[str(mmap_file)] = {
                 "shape": vector_array.shape,
                 "dtype": str(vector_array.dtype),
                 "metadata": metadata_list
             }
-            
+
         else:
             # Fallback without numpy
             serialized_data = {
@@ -754,21 +754,21 @@ class MemoryManagedVectorStore:
                 "metadata": metadata_list,
                 "shape": [len(vectors), len(vectors[0]) if vectors else 0]
             }
-            
+
             async with aiofiles.open(mmap_file, 'wb') as f:
                 if self.compression_enabled:
                     compressed_data = gzip.compress(pickle.dumps(serialized_data))
                     await f.write(compressed_data)
                 else:
                     await f.write(pickle.dumps(serialized_data))
-        
+
         return {
             "strategy": "memory_mapped",
             "stored_count": len(vectors),
             "mmap_file": str(mmap_file),
             "file_size_mb": mmap_file.stat().st_size / (1024 * 1024)
         }
-    
+
     async def _write_chunk_to_disk(self, chunk_file: Path, chunk_data: Dict[str, Any]):
         """Write chunk data to disk with compression"""
         try:
@@ -776,17 +776,17 @@ class MemoryManagedVectorStore:
                 # Compress the chunk data
                 serialized = pickle.dumps(chunk_data)
                 compressed_data = gzip.compress(serialized)
-                
+
                 async with aiofiles.open(chunk_file, 'wb') as f:
                     await f.write(compressed_data)
             else:
                 async with aiofiles.open(chunk_file, 'w') as f:
                     await f.write(json.dumps(chunk_data, default=str))
-                    
+
         except Exception as e:
             logger.error(f"Failed to write chunk to disk: {e}")
             raise
-    
+
     def _compress_vector(self, vector: List[float]) -> bytes:
         """Compress a single vector"""
         if self.config.compression == CompressionMethod.GZIP:
@@ -803,17 +803,17 @@ class MemoryManagedVectorStore:
                 return struct.pack(f'{len(quantized)}h', *quantized)
         else:
             return pickle.dumps(vector)
-    
+
     async def search_vectors(
-        self, 
-        query_vector: List[float], 
+        self,
+        query_vector: List[float],
         top_k: int = 10,
         filters: Dict[str, Any] = None
     ) -> List[Dict[str, Any]]:
         """Search vectors with memory-efficient approach"""
         try:
             results = []
-            
+
             # Search in-memory vectors
             for vector_id, stored_vector in self.vectors.items():
                 # Decompress if needed
@@ -821,12 +821,12 @@ class MemoryManagedVectorStore:
                     vector = self._decompress_vector(stored_vector)
                 else:
                     vector = stored_vector
-                
+
                 # Calculate similarity
                 similarity = self._calculate_similarity(query_vector, vector)
-                
+
                 metadata = self.metadata.get(vector_id, {})
-                
+
                 # Apply filters
                 if self._passes_filters(metadata, filters):
                     results.append({
@@ -834,51 +834,51 @@ class MemoryManagedVectorStore:
                         "similarity": similarity,
                         "metadata": metadata
                     })
-            
+
             # Search chunked vectors if any
             if self.chunk_files:
                 chunk_results = await self._search_chunked_vectors(query_vector, filters)
                 results.extend(chunk_results)
-            
+
             # Sort by similarity and return top-k
             results.sort(key=lambda x: x["similarity"], reverse=True)
             return results[:top_k]
-            
+
         except Exception as e:
             logger.error(f"Vector search failed: {e}")
             return []
-    
+
     async def _search_chunked_vectors(
-        self, 
-        query_vector: List[float], 
+        self,
+        query_vector: List[float],
         filters: Dict[str, Any] = None
     ) -> List[Dict[str, Any]]:
         """Search vectors stored in chunks"""
         results = []
-        
+
         for chunk_file in self.chunk_files:
             try:
                 chunk_data = await self._read_chunk_from_disk(Path(chunk_file))
-                
+
                 for i, vector in enumerate(chunk_data["vectors"]):
                     similarity = self._calculate_similarity(query_vector, vector)
-                    
+
                     metadata = {}
                     if chunk_data.get("metadata") and i < len(chunk_data["metadata"]):
                         metadata = chunk_data["metadata"][i]
-                    
+
                     if self._passes_filters(metadata, filters):
                         results.append({
                             "vector_id": f"chunk_{chunk_file}_{i}",
                             "similarity": similarity,
                             "metadata": metadata
                         })
-                        
+
             except Exception as e:
                 logger.warning(f"Failed to search chunk {chunk_file}: {e}")
-        
+
         return results
-    
+
     async def _read_chunk_from_disk(self, chunk_file: Path) -> Dict[str, Any]:
         """Read chunk data from disk with decompression"""
         try:
@@ -891,11 +891,11 @@ class MemoryManagedVectorStore:
                 async with aiofiles.open(chunk_file, 'r') as f:
                     content = await f.read()
                 return json.loads(content)
-                
+
         except Exception as e:
             logger.error(f"Failed to read chunk from disk: {e}")
             raise
-    
+
     def _decompress_vector(self, compressed_vector: bytes) -> List[float]:
         """Decompress a vector"""
         if self.config.compression == CompressionMethod.GZIP:
@@ -910,12 +910,12 @@ class MemoryManagedVectorStore:
                 return [x / 32767.0 for x in quantized]
         else:
             return pickle.loads(compressed_vector)
-    
+
     def _calculate_similarity(self, vec1: List[float], vec2: List[float]) -> float:
         """Calculate cosine similarity between vectors"""
         if len(vec1) != len(vec2):
             return 0.0
-        
+
         if NUMPY_AVAILABLE:
             a = np.array(vec1)
             b = np.array(vec2)
@@ -925,29 +925,29 @@ class MemoryManagedVectorStore:
             dot_product = sum(a * b for a, b in zip(vec1, vec2))
             magnitude1 = sum(a * a for a in vec1) ** 0.5
             magnitude2 = sum(b * b for b in vec2) ** 0.5
-            
+
             if magnitude1 == 0 or magnitude2 == 0:
                 return 0.0
-            
+
             return dot_product / (magnitude1 * magnitude2)
-    
+
     def _passes_filters(self, metadata: Dict[str, Any], filters: Dict[str, Any]) -> bool:
         """Check if metadata passes filters"""
         if not filters:
             return True
-        
+
         for key, value in filters.items():
             if key not in metadata or metadata[key] != value:
                 return False
-        
+
         return True
-    
+
     def get_storage_stats(self) -> Dict[str, Any]:
         """Get storage statistics"""
         total_memory_vectors = len(self.vectors)
         total_chunk_files = len(self.chunk_files)
         total_mmap_files = len(self.memory_mapped_files)
-        
+
         # Estimate memory usage
         memory_usage = 0
         for vector in self.vectors.values():
@@ -955,7 +955,7 @@ class MemoryManagedVectorStore:
                 memory_usage += len(vector)
             else:
                 memory_usage += len(vector) * 8  # 8 bytes per float
-        
+
         return {
             "in_memory_vectors": total_memory_vectors,
             "chunk_files": total_chunk_files,
@@ -985,7 +985,7 @@ class NetworkXDocumentedOperations:
     Comprehensive documentation and implementation of NetworkX operations
     for knowledge graph management with detailed explanations
     """
-    
+
     def __init__(self, graph: nx.DiGraph = None):
         # Initialize security features
         self._init_security_features()
@@ -993,22 +993,22 @@ class NetworkXDocumentedOperations:
         self._init_input_validation()
         self.graph = graph or nx.DiGraph()
         self.operation_history = []
-        
+
     def add_node_with_documentation(
-        self, 
-        node_id: str, 
+        self,
+        node_id: str,
         **attributes
     ) -> Dict[str, Any]:
         """
         Add a node to the knowledge graph with comprehensive documentation
-        
+
         NetworkX Operation: graph.add_node()
         Purpose: Adds a single node to the graph with optional attributes
-        
+
         Args:
             node_id: Unique identifier for the node
             **attributes: Arbitrary key-value pairs for node properties
-            
+
         Returns:
             Operation result with documentation
         """
@@ -1017,11 +1017,11 @@ class NetworkXDocumentedOperations:
             if node_id in self.graph:
                 existing_attrs = self.graph.nodes[node_id]
                 logger.info(f"Node {node_id} already exists, updating attributes")
-                
+
                 # Merge attributes
                 merged_attrs = {**existing_attrs, **attributes}
                 self.graph.nodes[node_id].update(merged_attrs)
-                
+
                 operation_result = {
                     "operation": "update_node",
                     "node_id": node_id,
@@ -1032,27 +1032,27 @@ class NetworkXDocumentedOperations:
             else:
                 # Add new node
                 self.graph.add_node(node_id, **attributes)
-                
+
                 operation_result = {
                     "operation": "add_node",
                     "node_id": node_id,
                     "action": "added_new_node",
                     "attributes": dict(attributes)
                 }
-            
+
             # Record operation for audit trail
             self.operation_history.append({
                 **operation_result,
                 "timestamp": datetime.utcnow().isoformat(),
                 "graph_size_after": self.graph.number_of_nodes()
             })
-            
+
             return {
                 "success": True,
                 **operation_result,
                 "graph_statistics": self._get_graph_statistics()
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to add node {node_id}: {e}")
             return {
@@ -1061,7 +1061,7 @@ class NetworkXDocumentedOperations:
                 "operation": "add_node",
                 "node_id": node_id
             }
-    
+
     def add_edge_with_documentation(
         self,
         source_node: str,
@@ -1070,15 +1070,15 @@ class NetworkXDocumentedOperations:
     ) -> Dict[str, Any]:
         """
         Add an edge between two nodes with comprehensive documentation
-        
+
         NetworkX Operation: graph.add_edge()
         Purpose: Creates a directed edge from source to target with optional attributes
-        
+
         Args:
             source_node: Source node identifier
             target_node: Target node identifier
             **edge_attributes: Edge properties (weight, relationship_type, etc.)
-            
+
         Returns:
             Operation result with documentation
         """
@@ -1087,19 +1087,19 @@ class NetworkXDocumentedOperations:
             if source_node not in self.graph:
                 self.graph.add_node(source_node)
                 logger.info(f"Auto-created source node: {source_node}")
-            
+
             if target_node not in self.graph:
                 self.graph.add_node(target_node)
                 logger.info(f"Auto-created target node: {target_node}")
-            
+
             # Check if edge already exists
             edge_exists = self.graph.has_edge(source_node, target_node)
-            
+
             if edge_exists:
                 existing_attrs = dict(self.graph[source_node][target_node])
                 merged_attrs = {**existing_attrs, **edge_attributes}
                 self.graph[source_node][target_node].update(merged_attrs)
-                
+
                 operation_result = {
                     "operation": "update_edge",
                     "source_node": source_node,
@@ -1110,7 +1110,7 @@ class NetworkXDocumentedOperations:
                 }
             else:
                 self.graph.add_edge(source_node, target_node, **edge_attributes)
-                
+
                 operation_result = {
                     "operation": "add_edge",
                     "source_node": source_node,
@@ -1118,20 +1118,20 @@ class NetworkXDocumentedOperations:
                     "action": "added_new_edge",
                     "attributes": dict(edge_attributes)
                 }
-            
+
             # Record operation
             self.operation_history.append({
                 **operation_result,
                 "timestamp": datetime.utcnow().isoformat(),
                 "graph_edges_after": self.graph.number_of_edges()
             })
-            
+
             return {
                 "success": True,
                 **operation_result,
                 "graph_statistics": self._get_graph_statistics()
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to add edge {source_node} -> {target_node}: {e}")
             return {
@@ -1141,7 +1141,7 @@ class NetworkXDocumentedOperations:
                 "source_node": source_node,
                 "target_node": target_node
             }
-    
+
     def find_shortest_path_with_documentation(
         self,
         source: str,
@@ -1150,16 +1150,16 @@ class NetworkXDocumentedOperations:
     ) -> Dict[str, Any]:
         """
         Find shortest path between two nodes with comprehensive documentation
-        
+
         NetworkX Operation: nx.shortest_path()
         Purpose: Computes the shortest path between source and target nodes
         Algorithm: Uses Dijkstra's algorithm if weights provided, BFS otherwise
-        
+
         Args:
             source: Starting node
             target: Destination node
             weight: Edge attribute to use as weight (optional)
-            
+
         Returns:
             Shortest path with detailed analysis
         """
@@ -1170,14 +1170,14 @@ class NetworkXDocumentedOperations:
                     "error": f"Source node '{source}' not found in graph",
                     "available_nodes": list(self.graph.nodes())[:10]  # Sample nodes
                 }
-            
+
             if target not in self.graph:
                 return {
                     "success": False,
                     "error": f"Target node '{target}' not found in graph",
                     "available_nodes": list(self.graph.nodes())[:10]
                 }
-            
+
             # Calculate shortest path
             if weight:
                 # Weighted shortest path using Dijkstra's algorithm
@@ -1203,10 +1203,10 @@ class NetworkXDocumentedOperations:
                         "error": f"No path exists between {source} and {target}",
                         "path_exists": False
                     }
-            
+
             # Analyze path properties
             path_analysis = self._analyze_path(path, weight)
-            
+
             operation_result = {
                 "success": True,
                 "operation": "shortest_path",
@@ -1219,15 +1219,15 @@ class NetworkXDocumentedOperations:
                 "weight_attribute": weight,
                 "path_analysis": path_analysis
             }
-            
+
             # Record operation
             self.operation_history.append({
                 **operation_result,
                 "timestamp": datetime.utcnow().isoformat()
             })
-            
+
             return operation_result
-            
+
         except Exception as e:
             logger.error(f"Shortest path calculation failed: {e}")
             return {
@@ -1237,15 +1237,15 @@ class NetworkXDocumentedOperations:
                 "source": source,
                 "target": target
             }
-    
+
     def find_connected_components_with_documentation(self) -> Dict[str, Any]:
         """
         Find connected components with comprehensive documentation
-        
+
         NetworkX Operation: nx.weakly_connected_components()
         Purpose: Finds all weakly connected components in a directed graph
         Algorithm: Uses DFS to identify components where all nodes are reachable
-        
+
         Returns:
             Connected components analysis with detailed statistics
         """
@@ -1254,20 +1254,20 @@ class NetworkXDocumentedOperations:
             if isinstance(self.graph, nx.DiGraph):
                 components = list(nx.weakly_connected_components(self.graph))
                 component_type = "weakly_connected"
-                
+
                 # Also calculate strongly connected components
                 strong_components = list(nx.strongly_connected_components(self.graph))
             else:
                 components = list(nx.connected_components(self.graph))
                 component_type = "connected"
                 strong_components = components  # Same for undirected graphs
-            
+
             # Analyze components
             component_analysis = []
             for i, component in enumerate(components):
                 component_nodes = list(component)
                 subgraph = self.graph.subgraph(component_nodes)
-                
+
                 analysis = {
                     "component_id": i,
                     "size": len(component_nodes),
@@ -1278,10 +1278,10 @@ class NetworkXDocumentedOperations:
                     "edge_count": subgraph.number_of_edges()
                 }
                 component_analysis.append(analysis)
-            
+
             # Sort components by size (largest first)
             component_analysis.sort(key=lambda x: x["size"], reverse=True)
-            
+
             operation_result = {
                 "success": True,
                 "operation": "connected_components",
@@ -1293,15 +1293,15 @@ class NetworkXDocumentedOperations:
                 "component_analysis": component_analysis,
                 "graph_statistics": self._get_graph_statistics()
             }
-            
+
             # Record operation
             self.operation_history.append({
                 **operation_result,
                 "timestamp": datetime.utcnow().isoformat()
             })
-            
+
             return operation_result
-            
+
         except Exception as e:
             logger.error(f"Connected components analysis failed: {e}")
             return {
@@ -1309,53 +1309,53 @@ class NetworkXDocumentedOperations:
                 "error": str(e),
                 "operation": "connected_components"
             }
-    
+
     def calculate_centrality_measures_with_documentation(
         self,
         centrality_types: List[str] = None
     ) -> Dict[str, Any]:
         """
         Calculate various centrality measures with comprehensive documentation
-        
+
         NetworkX Operations: Various centrality algorithms
         Purpose: Identify important nodes based on different centrality metrics
-        
+
         Centrality Types:
         - degree: Based on number of connections
         - betweenness: Based on shortest paths passing through node
         - closeness: Based on average distance to all other nodes
         - eigenvector: Based on connections to important nodes
         - pagerank: Based on PageRank algorithm
-        
+
         Args:
             centrality_types: List of centrality measures to calculate
-            
+
         Returns:
             Centrality analysis with detailed explanations
         """
         if centrality_types is None:
             centrality_types = ["degree", "betweenness", "closeness", "pagerank"]
-        
+
         try:
             centrality_results = {}
-            
+
             for centrality_type in centrality_types:
                 try:
                     if centrality_type == "degree":
                         # Degree Centrality: Normalized degree of each node
                         centrality = nx.degree_centrality(self.graph)
                         description = "Measures the fraction of nodes connected to each node"
-                        
+
                     elif centrality_type == "betweenness":
                         # Betweenness Centrality: Fraction of shortest paths passing through node
                         centrality = nx.betweenness_centrality(self.graph)
                         description = "Measures how often a node lies on shortest paths between other nodes"
-                        
+
                     elif centrality_type == "closeness":
                         # Closeness Centrality: Reciprocal of average distance to other nodes
                         centrality = nx.closeness_centrality(self.graph)
                         description = "Measures how close a node is to all other nodes in the graph"
-                        
+
                     elif centrality_type == "eigenvector":
                         # Eigenvector Centrality: Based on eigenvector of adjacency matrix
                         try:
@@ -1365,19 +1365,19 @@ class NetworkXDocumentedOperations:
                             # Fallback for graphs where eigenvector centrality fails
                             centrality = nx.degree_centrality(self.graph)
                             description = "Eigenvector centrality failed, using degree centrality as fallback"
-                            
+
                     elif centrality_type == "pagerank":
                         # PageRank: Google's PageRank algorithm
                         centrality = nx.pagerank(self.graph)
                         description = "Measures importance based on PageRank algorithm"
-                        
+
                     else:
                         logger.warning(f"Unknown centrality type: {centrality_type}")
                         continue
-                    
+
                     # Analyze centrality distribution
                     centrality_values = list(centrality.values())
-                    
+
                     if NUMPY_AVAILABLE:
                         mean_centrality = float(np.mean(centrality_values))
                         std_centrality = float(np.std(centrality_values))
@@ -1389,10 +1389,10 @@ class NetworkXDocumentedOperations:
                         min_centrality = min(centrality_values)
                         variance = sum((x - mean_centrality)**2 for x in centrality_values) / len(centrality_values)
                         std_centrality = variance ** 0.5
-                    
+
                     # Find most central nodes
                     top_nodes = sorted(centrality.items(), key=lambda x: x[1], reverse=True)[:10]
-                    
+
                     centrality_results[centrality_type] = {
                         "description": description,
                         "values": centrality,
@@ -1405,14 +1405,14 @@ class NetworkXDocumentedOperations:
                         "top_nodes": top_nodes,
                         "node_count": len(centrality)
                     }
-                    
+
                 except Exception as e:
                     logger.warning(f"Failed to calculate {centrality_type} centrality: {e}")
                     centrality_results[centrality_type] = {
                         "error": str(e),
                         "description": f"Failed to calculate {centrality_type} centrality"
                     }
-            
+
             operation_result = {
                 "success": True,
                 "operation": "centrality_analysis",
@@ -1420,15 +1420,15 @@ class NetworkXDocumentedOperations:
                 "results": centrality_results,
                 "graph_statistics": self._get_graph_statistics()
             }
-            
+
             # Record operation
             self.operation_history.append({
                 **operation_result,
                 "timestamp": datetime.utcnow().isoformat()
             })
-            
+
             return operation_result
-            
+
         except Exception as e:
             logger.error(f"Centrality analysis failed: {e}")
             return {
@@ -1436,49 +1436,49 @@ class NetworkXDocumentedOperations:
                 "error": str(e),
                 "operation": "centrality_analysis"
             }
-    
+
     def _analyze_path(self, path: List[str], weight: str = None) -> Dict[str, Any]:
         """Analyze properties of a path"""
         if not path or len(path) < 2:
             return {"valid_path": False}
-        
+
         analysis = {
             "valid_path": True,
             "node_types": {},
             "edge_attributes": [],
             "path_weight": 0.0
         }
-        
+
         # Analyze nodes in path
         for node in path:
             node_attrs = dict(self.graph.nodes.get(node, {}))
             node_type = node_attrs.get("entity_type", "unknown")
             analysis["node_types"][node_type] = analysis["node_types"].get(node_type, 0) + 1
-        
+
         # Analyze edges in path
         for i in range(len(path) - 1):
             source, target = path[i], path[i + 1]
             edge_attrs = dict(self.graph[source][target])
             analysis["edge_attributes"].append(edge_attrs)
-            
+
             if weight and weight in edge_attrs:
                 analysis["path_weight"] += edge_attrs[weight]
-        
+
         return analysis
-    
+
     def _safe_diameter_calculation(self, graph) -> Optional[int]:
         """Safely calculate diameter, handling disconnected graphs"""
         try:
             if graph.number_of_nodes() <= 1:
                 return 0
-            
+
             if nx.is_connected(graph.to_undirected()):
                 return nx.diameter(graph.to_undirected())
             else:
                 return None  # Disconnected graph has no diameter
         except:
             return None
-    
+
     def _get_graph_statistics(self) -> Dict[str, Any]:
         """Get comprehensive graph statistics"""
         return {
@@ -1488,7 +1488,7 @@ class NetworkXDocumentedOperations:
             "is_directed": isinstance(self.graph, nx.DiGraph),
             "operation_count": len(self.operation_history)
         }
-    
+
     def get_operation_history(self, limit: int = 100) -> List[Dict[str, Any]]:
         """Get recent operation history for debugging and audit"""
         return self.operation_history[-limit:]
@@ -1499,7 +1499,7 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
     Enhanced Vector Processing Agent with MCP Integration
     Agent 3: Complete implementation addressing all 8-point deductions
     """
-    
+
     def __init__(self, base_url: str, hana_config: Dict[str, Any] = None, enable_monitoring: bool = True):
 
         # Initialize security features
@@ -1516,22 +1516,22 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
             base_url=base_url
         )
         PerformanceOptimizationMixin.__init__(self)
-        
+
         self.enable_monitoring = enable_monitoring
         self.hana_config = hana_config or {}
-        
+
         # Initialize configuration
         self.config = VectorProcessingConfig()
-        
+
         # Initialize components
         self.corruption_detector = CorruptionDetector()
         self.hana_manager = HANAConnectionManager(self.hana_config) if self.hana_config else None
         self.vector_store = MemoryManagedVectorStore(self.config)
         self.graph_operations = NetworkXDocumentedOperations()
-        
+
         # Metrics tracking
         self.metrics = VectorMetrics()
-        
+
         # Prometheus metrics with error handling
         self.prometheus_metrics = {}
         if PROMETHEUS_AVAILABLE:
@@ -1546,40 +1546,40 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                 logger.info("✅ Prometheus metrics initialized for vector processing")
             except Exception as e:
                 logger.warning(f"⚠️ Failed to initialize Prometheus metrics: {e}")
-        
+
         # Circuit breakers for external dependencies
         self.hana_breaker = CircuitBreaker(
             failure_threshold=3,
             timeout=60,
             expected_exception=Exception
         )
-        
+
         self.embedding_breaker = CircuitBreaker(
             failure_threshold=5,
             timeout=30,
             expected_exception=Exception
         )
-        
+
         # Processing state
         self.vector_cache = OrderedDict()
         self.knowledge_graph = nx.DiGraph() if NETWORKX_AVAILABLE else {}
         self.processing_queue = asyncio.Queue()
         self.is_processing = False
-        
+
         logger.info(f"✅ Enhanced Vector Processing Agent MCP initialized")
-    
+
     async def initialize(self) -> None:
         """Initialize agent with comprehensive error handling"""
         logger.info("Initializing Enhanced Vector Processing Agent MCP...")
-        
+
         try:
             # Initialize base agent
             await super().initialize()
-            
+
             # Create output directory
             self.output_dir = os.getenv("VECTOR_PROCESSING_OUTPUT_DIR", "/tmp/vector_processing_data")
             os.makedirs(self.output_dir, exist_ok=True)
-            
+
             # Enable performance monitoring
             if self.enable_monitoring:
                 alert_thresholds = AlertThresholds(
@@ -1589,12 +1589,12 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     error_rate_threshold=0.03,
                     queue_size_threshold=25
                 )
-                
+
                 self.enable_performance_monitoring(
                     alert_thresholds=alert_thresholds,
                     metrics_port=8005
                 )
-            
+
             # Start Prometheus metrics server with error handling
             if PROMETHEUS_AVAILABLE and self.prometheus_metrics:
                 try:
@@ -1603,7 +1603,7 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     logger.info(f"✅ Prometheus metrics server started on port {port}")
                 except Exception as e:
                     logger.warning(f"⚠️ Failed to start Prometheus server: {e}")
-            
+
             # Initialize HANA connection with retry
             if self.hana_manager:
                 try:
@@ -1619,7 +1619,7 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                 except Exception as e:
                     logger.warning(f"⚠️ HANA initialization failed: {e}")
                     self.hana_connection = None
-            
+
             # Initialize trust system with graceful degradation
             try:
                 self.trust_contract = get_trust_contract()
@@ -1630,32 +1630,32 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
             except Exception as e:
                 logger.warning(f"⚠️ Trust system initialization failed: {e}")
                 self.trust_contract = None
-            
+
             # Start background processing
             asyncio.create_task(self._background_processor())
-            
+
             # Initialize blockchain integration if enabled
             if self.blockchain_enabled:
                 logger.info("Blockchain integration is enabled for Vector Processing Agent")
                 await self._register_blockchain_handlers()
-            
+
             logger.info("✅ Enhanced Vector Processing Agent MCP initialization complete")
-            
+
         except Exception as e:
             logger.error(f"❌ Initialization failed: {e}")
             raise
-    
+
     async def shutdown(self) -> None:
         """Clean shutdown with resource cleanup"""
         logger.info("Shutting down Enhanced Vector Processing Agent MCP...")
-        
+
         try:
             # Stop processing
             self.is_processing = False
-            
+
             # Save state
             await self._save_agent_state()
-            
+
             # Close HANA connections
             if hasattr(self, 'hana_connection') and self.hana_connection:
                 try:
@@ -1663,39 +1663,39 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     logger.info("✅ HANA connection closed")
                 except Exception as e:
                     logger.warning(f"⚠️ Error closing HANA connection: {e}")
-            
+
             # Cleanup performance monitoring
             if hasattr(self, '_performance_monitor') and self._performance_monitor:
                 self._performance_monitor.stop_monitoring()
-            
+
             # Call parent shutdown
             await super().shutdown()
-            
+
             logger.info("✅ Enhanced Vector Processing Agent MCP shutdown complete")
-            
+
         except Exception as e:
             logger.error(f"❌ Shutdown error: {e}")
-    
+
     async def _register_blockchain_handlers(self):
         """Register blockchain-specific message handlers for vector processing"""
         logger.info("Registering blockchain handlers for Vector Processing Agent")
-        
+
         # Override the base blockchain message handler
         self._handle_blockchain_message = self._handle_vector_blockchain_message
-        
+
     def _handle_vector_blockchain_message(self, message: Dict[str, Any]):
         """Handle incoming blockchain messages for vector processing operations"""
         logger.info(f"Vector Processing Agent received blockchain message: {message}")
-        
+
         message_type = message.get('messageType', '')
         content = message.get('content', {})
-        
+
         if isinstance(content, str):
             try:
                 content = json.loads(content)
             except:
                 pass
-        
+
         # Handle vector processing-specific blockchain messages
         if message_type == "AI_READY_DATA":
             asyncio.create_task(self._handle_blockchain_ai_ready_data(message, content))
@@ -1706,14 +1706,14 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
         else:
             # Default handling
             logger.info(f"Received blockchain message type: {message_type}")
-            
+
         # Mark message as delivered
         if self.blockchain_integration and message.get('messageId'):
             try:
                 self.blockchain_integration.mark_message_delivered(message['messageId'])
             except Exception as e:
                 logger.error(f"Failed to mark message as delivered: {e}")
-    
+
     async def _handle_blockchain_ai_ready_data(self, message: Dict[str, Any], content: Dict[str, Any]):
         """Handle AI-ready data notification from blockchain"""
         try:
@@ -1721,13 +1721,13 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
             features = content.get('features', [])
             metadata = content.get('metadata', {})
             requester_address = message.get('from')
-            
+
             logger.info(f"Received AI-ready data for vector processing")
-            
+
             # Automatically generate vectors if suitable
             if self._should_auto_vectorize(prepared_data, features):
                 vector_result = await self._generate_vectors_from_data(prepared_data, features, metadata)
-                
+
                 # Notify calculation agents if successful
                 if vector_result.get('success'):
                     calc_agents = self.get_agent_by_capability("calculation_validation")
@@ -1743,25 +1743,25 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                             },
                             message_type="VECTORS_GENERATED"
                         )
-                    
+
         except Exception as e:
             logger.error(f"Failed to handle AI-ready data: {e}")
-    
+
     async def _handle_blockchain_vector_request(self, message: Dict[str, Any], content: Dict[str, Any]):
         """Handle vector generation request from blockchain"""
         try:
             data_to_vectorize = content.get('data', {})
             vector_type = content.get('vector_type', 'embedding')
             requester_address = message.get('from')
-            
+
             # Verify trust before processing
             if not self.verify_trust(requester_address):
                 logger.warning(f"Vector request from untrusted agent: {requester_address}")
                 return
-            
+
             # Generate vectors
             vector_result = await self._generate_vectors(data_to_vectorize, vector_type)
-            
+
             # Send response via blockchain
             self.send_blockchain_message(
                 to_address=requester_address,
@@ -1775,20 +1775,20 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                 },
                 message_type="VECTOR_GENERATION_RESPONSE"
             )
-            
+
         except Exception as e:
             logger.error(f"Failed to handle vector generation request: {e}")
-    
+
     async def _handle_blockchain_similarity_search(self, message: Dict[str, Any], content: Dict[str, Any]):
         """Handle similarity search request from blockchain"""
         try:
             query_vector = content.get('query_vector', [])
             search_params = content.get('search_params', {})
             requester_address = message.get('from')
-            
+
             # Perform similarity search
             search_result = await self._perform_similarity_search(query_vector, search_params)
-            
+
             # Send search results via blockchain
             self.send_blockchain_message(
                 to_address=requester_address,
@@ -1801,19 +1801,19 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                 },
                 message_type="SIMILARITY_SEARCH_RESPONSE"
             )
-            
+
         except Exception as e:
             logger.error(f"Failed to handle similarity search request: {e}")
-    
+
     def _should_auto_vectorize(self, data: Dict[str, Any], features: List[Any]) -> bool:
         """Determine if data should be automatically vectorized"""
         # Auto-vectorize for data with features and reasonable size
-        return (len(features) > 0 and 
-                len(str(data)) > 50 and 
+        return (len(features) > 0 and
+                len(str(data)) > 50 and
                 len(str(data)) < 100000)  # Not too large
-    
+
     # MCP Tools Implementation
-    
+
     @mcp_tool(
         name="process_vector_data",
         description="Process vector data with advanced memory management and corruption detection",
@@ -1863,9 +1863,9 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
         compression_method: str = "gzip"
     ) -> Dict[str, Any]:
         """Process vector data with advanced memory management and corruption detection"""
-        
+
         start_time = time.time()
-        
+
         try:
             # Validate input
             if not vectors:
@@ -1874,49 +1874,49 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     "error": "No vectors provided",
                     "error_type": "validation_error"
                 }
-            
+
             # Update configuration
             original_mode = self.config.mode
             original_compression = self.config.compression
-            
+
             self.config.mode = VectorProcessingMode(processing_mode)
             self.config.compression = CompressionMethod(compression_method)
             self.config.enable_corruption_detection = enable_corruption_detection
-            
+
             # Corruption detection
             corruption_result = None
             if enable_corruption_detection:
                 logger.info("🔍 Running corruption detection...")
                 corruption_result = self.corruption_detector.detect_corruption(vectors, metadata)
-                
+
                 if corruption_result["corrupted"]:
                     logger.warning(f"⚠️ Corruption detected: confidence {corruption_result['confidence']:.3f}")
                     self.metrics.corrupted_vectors += len([issue for issue in corruption_result["issues"] if not issue.get("passed", True)])
-                    
+
                     if self.prometheus_metrics.get('corrupted_vectors'):
                         self.prometheus_metrics['corrupted_vectors'].labels(agent_id=self.agent_id).inc(
                             self.metrics.corrupted_vectors
                         )
-            
+
             # Estimate memory requirements
             estimated_memory = self.vector_store.estimate_memory_usage(vectors)
             use_streaming = estimated_memory > self.config.max_memory_usage_mb * 1024 * 1024
-            
+
             logger.info(f"📊 Processing {len(vectors)} vectors (estimated {estimated_memory / (1024*1024):.1f} MB)")
-            
+
             # Process vectors
             storage_result = await self.vector_store.store_vectors(
                 vectors=vectors,
                 metadata_list=metadata,
                 use_streaming=use_streaming
             )
-            
+
             # Update metrics
             self.metrics.total_vectors += len(vectors)
             self.metrics.processed_vectors += storage_result.get("stored_count", 0)
             self.metrics.processing_time_ms = (time.time() - start_time) * 1000
             self.metrics.memory_usage_mb = psutil.virtual_memory().used / (1024 * 1024)
-            
+
             # Update Prometheus metrics
             if self.prometheus_metrics.get('vectors_processed'):
                 self.prometheus_metrics['vectors_processed'].labels(agent_id=self.agent_id).inc(len(vectors))
@@ -1924,11 +1924,11 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                 self.prometheus_metrics['processing_time'].labels(agent_id=self.agent_id).observe(time.time() - start_time)
             if self.prometheus_metrics.get('memory_usage'):
                 self.prometheus_metrics['memory_usage'].labels(agent_id=self.agent_id).set(self.metrics.memory_usage_mb)
-            
+
             # Restore original configuration
             self.config.mode = original_mode
             self.config.compression = original_compression
-            
+
             return {
                 "success": True,
                 "processed_count": storage_result.get("stored_count", 0),
@@ -1946,7 +1946,7 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     "corruption_detected": corruption_result["corrupted"] if corruption_result else False
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"❌ Vector processing failed: {e}")
             return {
@@ -1955,7 +1955,7 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                 "error_type": type(e).__name__,
                 "processing_time_ms": (time.time() - start_time) * 1000
             }
-    
+
     @mcp_tool(
         name="search_vectors",
         description="Search vectors with optimized similarity search and HANA integration",
@@ -2004,9 +2004,9 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
         similarity_threshold: float = 0.0
     ) -> Dict[str, Any]:
         """Search vectors with optimized similarity search"""
-        
+
         start_time = time.time()
-        
+
         try:
             # Validate query vector
             if not query_vector or len(query_vector) == 0:
@@ -2015,10 +2015,10 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     "error": "Invalid query vector",
                     "error_type": "validation_error"
                 }
-            
+
             results = []
             search_strategies_used = []
-            
+
             # Choose search strategy based on mode and availability
             if search_mode == "hana" and self.hana_connection:
                 # HANA-only search
@@ -2030,28 +2030,28 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
 # A2A REMOVED:                     # Fallback to memory search
                     results = await self.vector_store.search_vectors(query_vector, top_k, filters)
 # A2A REMOVED:                     search_strategies_used.append("memory_fallback")
-            
+
             elif search_mode == "memory":
                 # Memory-only search
                 results = await self.vector_store.search_vectors(query_vector, top_k, filters)
                 search_strategies_used.append("memory")
-            
+
             else:  # hybrid mode
 # A2A REMOVED:                 # Try HANA first, fallback to memory
                 if self.hana_connection:
                     try:
                         hana_results = await self._search_hana_vectors(query_vector, top_k, filters)
                         search_strategies_used.append("hana")
-                        
+
                         # Get additional results from memory if needed
                         if len(hana_results) < top_k:
                             memory_results = await self.vector_store.search_vectors(
-                                query_vector, 
-                                top_k - len(hana_results), 
+                                query_vector,
+                                top_k - len(hana_results),
                                 filters
                             )
                             search_strategies_used.append("memory_supplement")
-                            
+
                             # Combine and deduplicate results
                             combined_results = hana_results + memory_results
                             # Sort by similarity and take top_k
@@ -2059,7 +2059,7 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                             results = combined_results[:top_k]
                         else:
                             results = hana_results
-                            
+
                     except Exception as e:
                         logger.warning(f"HANA search failed, using memory: {e}")
                         results = await self.vector_store.search_vectors(query_vector, top_k, filters)
@@ -2067,16 +2067,16 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                 else:
                     results = await self.vector_store.search_vectors(query_vector, top_k, filters)
                     search_strategies_used.append("memory")
-            
+
             # Apply similarity threshold
             if similarity_threshold > 0.0:
                 results = [r for r in results if r.get("similarity", 0) >= similarity_threshold]
-            
+
             # Update search metrics
             self.metrics.cache_hits += 1 if results else 0
-            
+
             search_time = (time.time() - start_time) * 1000
-            
+
             return {
                 "success": True,
                 "results": results,
@@ -2092,7 +2092,7 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                 "hana_available": self.hana_connection is not None,
                 "memory_stats": self.vector_store.get_storage_stats()
             }
-            
+
         except Exception as e:
             logger.error(f"❌ Vector search failed: {e}")
             return {
@@ -2101,7 +2101,7 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                 "error_type": type(e).__name__,
                 "search_time_ms": (time.time() - start_time) * 1000
             }
-    
+
     @mcp_tool(
         name="manage_knowledge_graph",
         description="Manage knowledge graph with comprehensive NetworkX operations",
@@ -2148,9 +2148,9 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
         graph_query: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """Manage knowledge graph with comprehensive NetworkX operations"""
-        
+
         start_time = time.time()
-        
+
         try:
             if not NETWORKX_AVAILABLE:
                 return {
@@ -2158,55 +2158,55 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     "error": "NetworkX not available for graph operations",
                     "fallback_available": False
                 }
-            
+
             result = None
-            
+
             if operation == "add_node":
                 if not node_data:
                     return {"success": False, "error": "Node data required for add_node operation"}
-                
+
                 node_id = node_data.get("node_id", str(uuid4()))
                 attributes = {k: v for k, v in node_data.items() if k != "node_id"}
-                
+
                 result = self.graph_operations.add_node_with_documentation(node_id, **attributes)
-            
+
             elif operation == "add_edge":
                 if not edge_data:
                     return {"success": False, "error": "Edge data required for add_edge operation"}
-                
+
                 source = edge_data.get("source_node")
                 target = edge_data.get("target_node")
-                
+
                 if not source or not target:
                     return {"success": False, "error": "Source and target nodes required for add_edge"}
-                
+
                 attributes = {k: v for k, v in edge_data.items() if k not in ["source_node", "target_node"]}
-                
+
                 result = self.graph_operations.add_edge_with_documentation(source, target, **attributes)
-            
+
             elif operation == "find_path":
                 if not path_query:
                     return {"success": False, "error": "Path query required for find_path operation"}
-                
+
                 source = path_query.get("source")
                 target = path_query.get("target")
                 weight = path_query.get("weight")
-                
+
                 if not source or not target:
                     return {"success": False, "error": "Source and target required for path finding"}
-                
+
                 result = self.graph_operations.find_shortest_path_with_documentation(source, target, weight)
-            
+
             elif operation == "centrality_analysis":
                 result = self.graph_operations.calculate_centrality_measures_with_documentation(centrality_types)
-            
+
             elif operation == "connected_components":
                 result = self.graph_operations.find_connected_components_with_documentation()
-            
+
             elif operation == "query_graph":
                 # General graph query operations
                 query_type = graph_query.get("query_type", "statistics") if graph_query else "statistics"
-                
+
                 if query_type == "statistics":
                     result = {
                         "success": True,
@@ -2214,16 +2214,16 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                         "statistics": self.graph_operations._get_graph_statistics(),
                         "operation_history_count": len(self.graph_operations.get_operation_history())
                     }
-                
+
                 elif query_type == "neighbors":
                     node_id = graph_query.get("node_id")
                     if not node_id:
                         return {"success": False, "error": "Node ID required for neighbors query"}
-                    
+
                     if node_id in self.graph_operations.graph:
                         neighbors = list(self.graph_operations.graph.neighbors(node_id))
                         predecessors = list(self.graph_operations.graph.predecessors(node_id)) if isinstance(self.graph_operations.graph, nx.DiGraph) else []
-                        
+
                         result = {
                             "success": True,
                             "operation": "neighbors_query",
@@ -2235,13 +2235,13 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                         }
                     else:
                         result = {"success": False, "error": f"Node {node_id} not found in graph"}
-                
+
                 else:
                     result = {"success": False, "error": f"Unknown query type: {query_type}"}
-            
+
             else:
                 return {"success": False, "error": f"Unknown operation: {operation}"}
-            
+
             # Add timing information
             if result and isinstance(result, dict):
                 result["processing_time_ms"] = (time.time() - start_time) * 1000
@@ -2249,9 +2249,9 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     "nodes": self.graph_operations.graph.number_of_nodes(),
                     "edges": self.graph_operations.graph.number_of_edges()
                 }
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"❌ Knowledge graph operation failed: {e}")
             return {
@@ -2261,7 +2261,7 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                 "operation": operation,
                 "processing_time_ms": (time.time() - start_time) * 1000
             }
-    
+
     @mcp_tool(
         name="optimize_memory_usage",
         description="Optimize memory usage for large vector collections",
@@ -2296,17 +2296,17 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
         force_cleanup: bool = False
     ) -> Dict[str, Any]:
         """Optimize memory usage for large vector collections"""
-        
+
         start_time = time.time()
-        
+
         try:
             # Get current memory usage
             memory_before = psutil.virtual_memory()
             memory_before_mb = memory_before.used / (1024 * 1024)
-            
+
             optimizations_applied = []
             memory_saved_mb = 0.0
-            
+
             if optimization_strategy == "compress":
                 # Apply compression to in-memory vectors
                 compressed_count = 0
@@ -2315,23 +2315,23 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                         compressed = self.vector_store._compress_vector(vector_data)
                         self.vector_store.vectors[vector_id] = compressed
                         compressed_count += 1
-                
+
                 optimizations_applied.append(f"Compressed {compressed_count} vectors")
-            
+
             elif optimization_strategy == "chunk":
                 # Move in-memory vectors to chunked storage
                 if self.vector_store.vectors:
                     vectors_to_chunk = list(self.vector_store.vectors.values())
                     metadata_to_chunk = [self.vector_store.metadata.get(vid, {}) for vid in self.vector_store.vectors.keys()]
-                    
+
                     # Clear in-memory storage
                     self.vector_store.vectors.clear()
                     self.vector_store.metadata.clear()
-                    
+
                     # Store as chunks
                     chunk_result = await self.vector_store._store_vectors_streaming(vectors_to_chunk, metadata_to_chunk)
                     optimizations_applied.append(f"Chunked {len(vectors_to_chunk)} vectors")
-            
+
             elif optimization_strategy == "memory_map":
                 # Convert to memory-mapped storage
                 if self.vector_store.vectors:
@@ -2340,53 +2340,53 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                         if isinstance(vector_data, bytes):
                             vector_data = self.vector_store._decompress_vector(vector_data)
                         vectors_to_mmap.append(vector_data)
-                    
+
                     metadata_to_mmap = list(self.vector_store.metadata.values())
-                    
+
                     # Clear in-memory storage
                     self.vector_store.vectors.clear()
                     self.vector_store.metadata.clear()
-                    
+
                     # Store as memory-mapped
                     mmap_result = await self.vector_store._store_vectors_memory_mapped(vectors_to_mmap, metadata_to_mmap)
                     optimizations_applied.append(f"Memory-mapped {len(vectors_to_mmap)} vectors")
-            
+
             elif optimization_strategy == "garbage_collect":
                 # Force garbage collection
                 gc.collect()
                 optimizations_applied.append("Forced garbage collection")
-            
+
             # Additional cleanup if forced or memory usage too high
             current_memory = psutil.virtual_memory()
             current_memory_mb = current_memory.used / (1024 * 1024)
-            
+
             if force_cleanup or current_memory_mb > target_memory_mb:
                 # Clear vector cache
                 if hasattr(self, 'vector_cache'):
                     cache_size_before = len(self.vector_cache)
                     self.vector_cache.clear()
                     optimizations_applied.append(f"Cleared vector cache ({cache_size_before} entries)")
-                
+
                 # Limit operation history
                 if hasattr(self.graph_operations, 'operation_history'):
                     history_before = len(self.graph_operations.operation_history)
                     self.graph_operations.operation_history = self.graph_operations.operation_history[-100:]
                     optimizations_applied.append(f"Trimmed operation history ({history_before} -> 100)")
-                
+
                 # Force another garbage collection
                 gc.collect()
                 optimizations_applied.append("Additional garbage collection")
-            
+
             # Calculate memory savings
             memory_after = psutil.virtual_memory()
             memory_after_mb = memory_after.used / (1024 * 1024)
             memory_saved_mb = memory_before_mb - memory_after_mb
-            
+
             # Update metrics
             self.metrics.memory_usage_mb = memory_after_mb
             if self.prometheus_metrics.get('memory_usage'):
                 self.prometheus_metrics['memory_usage'].labels(agent_id=self.agent_id).set(memory_after_mb)
-            
+
             return {
                 "success": True,
                 "optimization_strategy": optimization_strategy,
@@ -2401,7 +2401,7 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                 "storage_stats": self.vector_store.get_storage_stats(),
                 "processing_time_ms": (time.time() - start_time) * 1000
             }
-            
+
         except Exception as e:
             logger.error(f"❌ Memory optimization failed: {e}")
             return {
@@ -2410,9 +2410,9 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                 "error_type": type(e).__name__,
                 "processing_time_ms": (time.time() - start_time) * 1000
             }
-    
+
     # MCP Resources Implementation
-    
+
     @mcp_resource(
         uri="vectorprocessing://metrics",
         name="Vector Processing Metrics",
@@ -2424,12 +2424,12 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
             # Get current system metrics
             memory_info = psutil.virtual_memory()
             cpu_percent = psutil.cpu_percent(interval=0.1)
-            
+
             # Get HANA connection metrics
             hana_metrics = {}
             if self.hana_manager:
                 hana_metrics = self.hana_manager.get_metrics()
-            
+
             return {
                 "collection_timestamp": datetime.utcnow().isoformat(),
                 "processing_metrics": {
@@ -2460,14 +2460,14 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     "parallel_workers": self.config.parallel_workers
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"❌ Failed to get vector processing metrics: {e}")
             return {
                 "error": str(e),
                 "timestamp": datetime.utcnow().isoformat()
             }
-    
+
     @mcp_resource(
         uri="vectorprocessing://hana-status",
         name="HANA Connection Status",
@@ -2482,10 +2482,10 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     "message": "HANA manager not initialized",
                     "hana_available": HANA_AVAILABLE
                 }
-            
+
             # Get connection metrics
             metrics = self.hana_manager.get_metrics()
-            
+
             # Test current connection if available
             connection_test = {"status": "unknown", "test_time_ms": 0}
             if hasattr(self, 'hana_connection') and self.hana_connection:
@@ -2495,7 +2495,7 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     cursor.execute("SELECT 1 FROM DUMMY")
                     cursor.fetchone()
                     cursor.close()
-                    
+
                     connection_test = {
                         "status": "healthy",
                         "test_time_ms": (time.time() - test_start) * 1000
@@ -2506,7 +2506,7 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                         "error": str(e),
                         "test_time_ms": (time.time() - test_start) * 1000
                     }
-            
+
             return {
                 "status_timestamp": datetime.utcnow().isoformat(),
                 "hana_available": HANA_AVAILABLE,
@@ -2524,14 +2524,14 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     "password": "***" if self.hana_config.get('password') else None
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"❌ Failed to get HANA status: {e}")
             return {
                 "error": str(e),
                 "timestamp": datetime.utcnow().isoformat()
             }
-    
+
     @mcp_resource(
         uri="vectorprocessing://knowledge-graph",
         name="Knowledge Graph Status",
@@ -2546,9 +2546,9 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     "error": "NetworkX not available",
                     "fallback_mode": True
                 }
-            
+
             graph_stats = self.graph_operations._get_graph_statistics()
-            
+
             # Get additional graph analysis
             analysis = {}
             if graph_stats["nodes"] > 0:
@@ -2557,14 +2557,14 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     if isinstance(self.graph_operations.graph, nx.DiGraph):
                         weakly_connected = list(nx.weakly_connected_components(self.graph_operations.graph))
                         strongly_connected = list(nx.strongly_connected_components(self.graph_operations.graph))
-                        
+
                         analysis["connectivity"] = {
                             "weakly_connected_components": len(weakly_connected),
                             "strongly_connected_components": len(strongly_connected),
                             "largest_weak_component": max(len(c) for c in weakly_connected) if weakly_connected else 0,
                             "largest_strong_component": max(len(c) for c in strongly_connected) if strongly_connected else 0
                         }
-                    
+
                     # Degree analysis
                     degrees = dict(self.graph_operations.graph.degree())
                     if degrees:
@@ -2582,16 +2582,16 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                                 "max_degree": max(degree_values),
                                 "min_degree": min(degree_values)
                             }
-                    
+
                     # Top nodes by degree
                     analysis["top_nodes_by_degree"] = sorted(degrees.items(), key=lambda x: x[1], reverse=True)[:10]
-                    
+
                 except Exception as e:
                     analysis["analysis_error"] = str(e)
-            
+
             # Get recent operations
             recent_operations = self.graph_operations.get_operation_history(20)
-            
+
             return {
                 "status_timestamp": datetime.utcnow().isoformat(),
                 "networkx_available": NETWORKX_AVAILABLE,
@@ -2605,14 +2605,14 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     "edges": graph_stats["edges"]
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"❌ Failed to get knowledge graph status: {e}")
             return {
                 "error": str(e),
                 "timestamp": datetime.utcnow().isoformat()
             }
-    
+
     @mcp_resource(
         uri="vectorprocessing://corruption-analysis",
         name="Vector Corruption Analysis",
@@ -2629,10 +2629,10 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                 "corruption_confidence_distribution": [],
                 "last_24h_checks": 0
             }
-            
+
             # Analyze recent corruption detection results (would be stored in a real implementation)
             # For now, provide configuration and capability information
-            
+
             return {
                 "analysis_timestamp": datetime.utcnow().isoformat(),
                 "corruption_detection": {
@@ -2667,38 +2667,38 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     )
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"❌ Failed to get corruption analysis: {e}")
             return {
                 "error": str(e),
                 "timestamp": datetime.utcnow().isoformat()
             }
-    
+
     # Helper Methods
-    
+
     async def _search_hana_vectors(
-        self, 
-        query_vector: List[float], 
-        top_k: int, 
+        self,
+        query_vector: List[float],
+        top_k: int,
         filters: Dict[str, Any] = None
     ) -> List[Dict[str, Any]]:
         """Search vectors in HANA database"""
         try:
             cursor = self.hana_connection.cursor()
-            
+
             # Build SQL query with filters
             where_conditions = []
             params = [str(query_vector), top_k]
-            
+
             if filters:
                 for key, value in filters.items():
                     if key in ["entity_type", "source_agent"]:
                         where_conditions.append(f"{key.upper()} = ?")
                         params.insert(-1, value)
-            
+
             where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
-            
+
             # Execute vector similarity search
             query_sql = f"""
                 SELECT DOC_ID, CONTENT, METADATA, ENTITY_TYPE,
@@ -2708,15 +2708,15 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                 ORDER BY SIMILARITY_SCORE DESC
                 LIMIT ?
             """
-            
+
             cursor.execute(query_sql, params)
             results = cursor.fetchall()
-            
+
             search_results = []
             for row in results:
                 doc_id, content, metadata_json, entity_type, score = row
                 metadata = json.loads(metadata_json) if metadata_json else {}
-                
+
                 search_results.append({
                     "vector_id": doc_id,
                     "similarity": float(score),
@@ -2725,18 +2725,18 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     "entity_type": entity_type,
                     "source": "hana"
                 })
-            
+
             cursor.close()
             return search_results
-            
+
         except Exception as e:
             logger.error(f"HANA vector search failed: {e}")
             raise
-    
+
     async def _background_processor(self):
         """Background task processor for maintenance"""
         self.is_processing = True
-        
+
         while self.is_processing:
             try:
                 # Process queued items
@@ -2746,21 +2746,21 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     self.processing_queue.task_done()
                 except asyncio.TimeoutError:
                     continue
-                
+
                 # Periodic maintenance
                 await self._periodic_maintenance()
-                
+
             except Exception as e:
                 logger.error(f"❌ Background processor error: {e}")
                 await asyncio.sleep(5)  # Wait before retrying
-    
+
     async def _periodic_maintenance(self):
         """Perform periodic maintenance tasks"""
         try:
             # Update metrics
             memory_info = psutil.virtual_memory()
             self.metrics.memory_usage_mb = memory_info.used / (1024 * 1024)
-            
+
             # Check memory usage and optimize if needed
             if memory_info.percent > 90:
                 logger.warning(f"High memory usage: {memory_info.percent}%")
@@ -2768,7 +2768,7 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                     optimization_strategy="garbage_collect",
                     force_cleanup=True
                 )
-            
+
             # Test HANA connection health
             if hasattr(self, 'hana_connection') and self.hana_connection:
                 try:
@@ -2787,10 +2787,10 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                                 logger.info("✅ HANA connection restored")
                         except Exception as reconnect_error:
                             logger.error(f"Failed to restore HANA connection: {reconnect_error}")
-            
+
         except Exception as e:
             logger.warning(f"⚠️ Periodic maintenance warning: {e}")
-    
+
     async def _save_agent_state(self):
         """Save agent state to persistent storage"""
         try:
@@ -2803,32 +2803,32 @@ class EnhancedVectorProcessingAgentMCP(SecureA2AAgent, PerformanceOptimizationMi
                 "graph_statistics": self.graph_operations._get_graph_statistics() if NETWORKX_AVAILABLE else {},
                 "last_saved": datetime.utcnow().isoformat()
             }
-            
+
             state_file = os.path.join(self.output_dir, "agent_state.json")
-            
+
             # Use thread executor for file I/O
             def write_state():
                 with open(state_file, 'w') as f:
                     json.dump(state_data, f, indent=2, default=str)
-            
+
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(None, write_state)
-            
+
             logger.info(f"💾 Agent state saved")
-            
+
         except Exception as e:
             logger.error(f"❌ Failed to save agent state: {e}")
 
 
 # Create the enhanced agent instance function for easier import
 def create_enhanced_vector_processing_agent(
-    base_url: str, 
-    hana_config: Dict[str, Any] = None, 
+    base_url: str,
+    hana_config: Dict[str, Any] = None,
     enable_monitoring: bool = True
 ) -> EnhancedVectorProcessingAgentMCP:
     """Factory function to create enhanced vector processing agent"""
     return EnhancedVectorProcessingAgentMCP(
-        base_url=base_url, 
-        hana_config=hana_config, 
+        base_url=base_url,
+        hana_config=hana_config,
         enable_monitoring=enable_monitoring
     )

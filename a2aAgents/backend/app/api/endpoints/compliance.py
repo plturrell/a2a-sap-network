@@ -73,7 +73,7 @@ async def create_audit_event(
 ) -> Dict[str, Any]:
     """
     Manually create an audit event
-    
+
     - For administrative or special audit logging
     - Requires admin privileges
     """
@@ -81,7 +81,7 @@ async def create_audit_event(
         # Check admin permissions
         if "admin" not in current_user.get("permissions", []):
             raise HTTPException(status_code=403, detail="Admin permission required")
-        
+
         # Create audit event
         event_id = await audit_log(
             event_type=request.event_type,
@@ -93,13 +93,13 @@ async def create_audit_event(
             details=request.details,
             data_classification=request.data_classification
         )
-        
+
         return {
             "status": "success",
             "event_id": event_id,
             "message": "Audit event created successfully"
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to create audit event: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -118,7 +118,7 @@ async def query_audit_events(
 ) -> Dict[str, Any]:
     """
     Query audit events with various filters
-    
+
     - Supports filtering by time range, event type, user, etc.
     - Returns events in reverse chronological order
     """
@@ -127,12 +127,12 @@ async def query_audit_events(
         if "admin" not in current_user.get("permissions", []):
             # Non-admin users can only see their own events
             user_id = current_user["user_id"]
-        
+
         audit_logger = get_audit_logger()
-        
+
         # Convert single event_type to list
         event_types = [event_type] if event_type else None
-        
+
         events = await audit_logger.query_audit_events(
             start_time=start_time,
             end_time=end_time,
@@ -142,12 +142,12 @@ async def query_audit_events(
             risk_level=risk_level,
             limit=limit
         )
-        
+
         return {
             "count": len(events),
             "events": events
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to query audit events: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -160,7 +160,7 @@ async def verify_audit_event(
 ) -> Dict[str, Any]:
     """
     Verify the integrity of a specific audit event
-    
+
     - Checks the cryptographic checksum
     - Ensures the event hasn't been tampered with
     """
@@ -168,17 +168,17 @@ async def verify_audit_event(
         # Check admin permissions
         if "admin" not in current_user.get("permissions", []):
             raise HTTPException(status_code=403, detail="Admin permission required")
-        
+
         audit_logger = get_audit_logger()
         is_valid = await audit_logger.verify_audit_integrity(event_id)
-        
+
         return {
             "event_id": event_id,
             "integrity_valid": is_valid,
             "verified_at": datetime.utcnow().isoformat(),
             "verified_by": current_user["user_id"]
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to verify audit event: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -191,7 +191,7 @@ async def generate_compliance_report(
 ) -> Dict[str, Any]:
     """
     Generate compliance report for specified framework
-    
+
     - Supports SOX, GDPR, SOC2, and other frameworks
     - Analyzes audit events for compliance requirements
     """
@@ -199,18 +199,18 @@ async def generate_compliance_report(
         # Check admin permissions
         if "admin" not in current_user.get("permissions", []):
             raise HTTPException(status_code=403, detail="Admin permission required")
-        
+
         # Validate date range
         if request.end_date <= request.start_date:
             raise HTTPException(status_code=400, detail="End date must be after start date")
-        
+
         # Limit report period (max 1 year)
         max_period = timedelta(days=365)
         if request.end_date - request.start_date > max_period:
             raise HTTPException(status_code=400, detail="Report period cannot exceed 365 days")
-        
+
         compliance_reporter = get_compliance_reporter()
-        
+
         # Generate report based on framework
         if request.framework == ComplianceFramework.SOX:
             report = await compliance_reporter.generate_sox_report(
@@ -232,7 +232,7 @@ async def generate_compliance_report(
                 end_time=request.end_date,
                 compliance_framework=request.framework
             )
-            
+
             report = {
                 "report_type": f"{request.framework.value}_compliance",
                 "period": {
@@ -245,11 +245,11 @@ async def generate_compliance_report(
                 },
                 "events": events
             }
-        
+
         # Add report metadata
         report["generated_at"] = datetime.utcnow().isoformat()
         report["generated_by"] = current_user["user_id"]
-        
+
         # Log report generation
         await audit_log(
             event_type=AuditEventType.ADMIN_ACTION,
@@ -263,9 +263,9 @@ async def generate_compliance_report(
                 "events_analyzed": report.get("summary", {}).get("total_events", 0)
             }
         )
-        
+
         return report
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -279,7 +279,7 @@ async def list_compliance_frameworks(
 ) -> Dict[str, Any]:
     """
     List supported compliance frameworks
-    
+
     - Returns all available frameworks with descriptions
     """
     frameworks = {
@@ -319,7 +319,7 @@ async def list_compliance_frameworks(
             "focus_areas": ["identify", "protect", "detect", "respond", "recover"]
         }
     }
-    
+
     return {
         "frameworks": frameworks,
         "count": len(frameworks)
@@ -334,7 +334,7 @@ async def validate_compliance_rules(
 ) -> Dict[str, Any]:
     """
     Validate an event or action against compliance rules
-    
+
     - Checks if the event complies with specified framework rules
     - Returns validation results with any violations
     - Can be used for pre-event validation (preventive) or post-event audit
@@ -350,7 +350,7 @@ async def validate_compliance_rules(
             "warnings": [],
             "recommendations": []
         }
-        
+
         # Validate based on framework
         if framework == ComplianceFramework.SOX:
             _validate_sox_rules(event_data, validation_results)
@@ -366,7 +366,7 @@ async def validate_compliance_rules(
             _validate_iso27001_rules(event_data, validation_results)
         elif framework == ComplianceFramework.NIST:
             _validate_nist_rules(event_data, validation_results)
-        
+
         # Log validation event
         await audit_log(
             event_type=AuditEventType.ADMIN_ACTION,
@@ -381,9 +381,9 @@ async def validate_compliance_rules(
                 "warnings_count": len(validation_results["warnings"])
             }
         )
-        
+
         return validation_results
-        
+
     except Exception as e:
         logger.error(f"Failed to validate compliance rules: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -393,7 +393,7 @@ def _validate_sox_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
     """Validate SOX compliance rules"""
     violations = []
     warnings = []
-    
+
     # Rule 1: Financial data changes require dual approval
     if event_data.get("event_type") == "financial_data_change":
         if not event_data.get("approvals") or len(event_data.get("approvals", [])) < 2:
@@ -402,19 +402,19 @@ def _validate_sox_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
                 "description": "Financial data changes require dual approval",
                 "severity": "critical"
             })
-    
+
     # Rule 2: Segregation of duties
     if event_data.get("event_type") in ["permission_grant", "role_assignment"]:
         user_id = event_data.get("user_id")
         granted_permissions = event_data.get("permissions", [])
-        
+
         # Check for conflicting permissions
         conflicting_pairs = [
             (["financial_write", "financial_approve"], "Cannot grant both write and approve permissions"),
             (["user_create", "audit_delete"], "Cannot grant both user creation and audit deletion"),
             (["system_config", "audit_read"], "System configuration should not have audit read access")
         ]
-        
+
         for pair, message in conflicting_pairs:
             if all(perm in granted_permissions for perm in pair):
                 violations.append({
@@ -422,7 +422,7 @@ def _validate_sox_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
                     "description": f"Segregation of duties violation: {message}",
                     "severity": "high"
                 })
-    
+
     # Rule 3: Audit trail retention
     if event_data.get("event_type") == "audit_delete":
         retention_days = event_data.get("retention_days", float('inf'))
@@ -432,7 +432,7 @@ def _validate_sox_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
                 "description": "Audit records must be retained for at least 7 years",
                 "severity": "critical"
             })
-    
+
     # Rule 4: Change management documentation
     if event_data.get("event_type") in ["config_change", "system_update"]:
         if not event_data.get("change_ticket") or not event_data.get("approval_record"):
@@ -441,7 +441,7 @@ def _validate_sox_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
                 "description": "System changes should have associated change tickets and approval records",
                 "severity": "medium"
             })
-    
+
     results["violations"].extend(violations)
     results["warnings"].extend(warnings)
     results["is_compliant"] = len(violations) == 0
@@ -451,7 +451,7 @@ def _validate_gdpr_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
     """Validate GDPR compliance rules"""
     violations = []
     warnings = []
-    
+
     # Rule 1: Lawful basis for data processing
     if event_data.get("event_type") in ["data_collection", "data_processing"]:
         if not event_data.get("lawful_basis"):
@@ -460,7 +460,7 @@ def _validate_gdpr_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
                 "description": "Data processing must have a documented lawful basis",
                 "severity": "critical"
             })
-    
+
     # Rule 2: Consent management
     if event_data.get("event_type") == "personal_data_collection":
         consent = event_data.get("consent", {})
@@ -470,30 +470,30 @@ def _validate_gdpr_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
                 "description": "Personal data collection requires explicit consent with timestamp",
                 "severity": "high"
             })
-        
+
         if not consent.get("withdrawal_mechanism"):
             warnings.append({
                 "rule": "GDPR-003",
                 "description": "Consent should include clear withdrawal mechanism",
                 "severity": "medium"
             })
-    
+
     # Rule 3: Data minimization
     if event_data.get("event_type") == "data_collection":
         collected_fields = event_data.get("fields", [])
         purpose = event_data.get("purpose", "")
-        
+
         # Check for excessive data collection
         sensitive_fields = ["ssn", "credit_card", "health_data", "biometric"]
         unnecessary_sensitive = [f for f in collected_fields if f in sensitive_fields and f not in purpose]
-        
+
         if unnecessary_sensitive:
             violations.append({
                 "rule": "GDPR-004",
                 "description": f"Data minimization violation: Collecting unnecessary sensitive data: {unnecessary_sensitive}",
                 "severity": "high"
             })
-    
+
     # Rule 4: Right to erasure
     if event_data.get("event_type") == "erasure_request":
         if event_data.get("response_days", 31) > 30:
@@ -502,7 +502,7 @@ def _validate_gdpr_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
                 "description": "Erasure requests must be fulfilled within 30 days",
                 "severity": "medium"
             })
-    
+
     # Rule 5: Data breach notification
     if event_data.get("event_type") == "data_breach":
         notification_hours = event_data.get("notification_hours", 73)
@@ -512,11 +512,11 @@ def _validate_gdpr_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
                 "description": "Data breaches must be reported within 72 hours",
                 "severity": "critical"
             })
-    
+
     results["violations"].extend(violations)
     results["warnings"].extend(warnings)
     results["is_compliant"] = len(violations) == 0
-    
+
     # Add GDPR-specific recommendations
     if event_data.get("event_type") in ["data_collection", "data_processing"]:
         results["recommendations"].append({
@@ -529,7 +529,7 @@ def _validate_soc2_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
     """Validate SOC2 compliance rules"""
     violations = []
     warnings = []
-    
+
     # Security criteria
     if event_data.get("event_type") == "access_attempt":
         if not event_data.get("authentication_method"):
@@ -538,7 +538,7 @@ def _validate_soc2_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
                 "description": "All access attempts must use authenticated methods",
                 "severity": "high"
             })
-    
+
     # Availability criteria
     if event_data.get("event_type") == "system_downtime":
         if not event_data.get("incident_response_time"):
@@ -547,7 +547,7 @@ def _validate_soc2_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
                 "description": "System downtime should have documented incident response times",
                 "severity": "medium"
             })
-    
+
     # Processing integrity criteria
     if event_data.get("event_type") == "data_processing":
         if not event_data.get("validation_checks"):
@@ -556,7 +556,7 @@ def _validate_soc2_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
                 "description": "Data processing should include validation checks",
                 "severity": "medium"
             })
-    
+
     # Confidentiality criteria
     if event_data.get("event_type") == "data_access":
         data_classification = event_data.get("data_classification", "")
@@ -566,7 +566,7 @@ def _validate_soc2_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
                 "description": "Confidential data access must use encryption",
                 "severity": "high"
             })
-    
+
     results["violations"].extend(violations)
     results["warnings"].extend(warnings)
     results["is_compliant"] = len(violations) == 0
@@ -575,7 +575,7 @@ def _validate_soc2_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
 def _validate_hipaa_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
     """Validate HIPAA compliance rules"""
     violations = []
-    
+
     # PHI access controls
     if event_data.get("event_type") == "phi_access":
         if not event_data.get("access_justification"):
@@ -584,7 +584,7 @@ def _validate_hipaa_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
                 "description": "PHI access requires documented justification",
                 "severity": "critical"
             })
-    
+
     # Minimum necessary standard
     if event_data.get("event_type") == "phi_disclosure":
         if not event_data.get("minimum_necessary_assessment"):
@@ -593,7 +593,7 @@ def _validate_hipaa_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
                 "description": "PHI disclosure must follow minimum necessary standard",
                 "severity": "high"
             })
-    
+
     results["violations"].extend(violations)
     results["is_compliant"] = len(violations) == 0
 
@@ -601,7 +601,7 @@ def _validate_hipaa_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
 def _validate_pci_dss_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
     """Validate PCI DSS compliance rules"""
     violations = []
-    
+
     # Cardholder data protection
     if event_data.get("event_type") == "card_data_storage":
         if not event_data.get("encryption") or event_data.get("encryption_type") != "AES256":
@@ -610,7 +610,7 @@ def _validate_pci_dss_rules(event_data: Dict[str, Any], results: Dict[str, Any])
                 "description": "Cardholder data must be encrypted with AES256",
                 "severity": "critical"
             })
-    
+
     results["violations"].extend(violations)
     results["is_compliant"] = len(violations) == 0
 
@@ -618,7 +618,7 @@ def _validate_pci_dss_rules(event_data: Dict[str, Any], results: Dict[str, Any])
 def _validate_iso27001_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
     """Validate ISO27001 compliance rules"""
     warnings = []
-    
+
     # Risk assessment requirement
     if event_data.get("event_type") == "security_control_change":
         if not event_data.get("risk_assessment"):
@@ -627,14 +627,14 @@ def _validate_iso27001_rules(event_data: Dict[str, Any], results: Dict[str, Any]
                 "description": "Security control changes should include risk assessment",
                 "severity": "medium"
             })
-    
+
     results["warnings"].extend(warnings)
 
 
 def _validate_nist_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
     """Validate NIST Cybersecurity Framework rules"""
     warnings = []
-    
+
     # Continuous monitoring
     if event_data.get("event_type") == "security_event":
         if not event_data.get("detection_time"):
@@ -643,7 +643,7 @@ def _validate_nist_rules(event_data: Dict[str, Any], results: Dict[str, Any]):
                 "description": "Security events should have detection time metrics",
                 "severity": "low"
             })
-    
+
     results["warnings"].extend(warnings)
 
 
@@ -654,7 +654,7 @@ async def get_audit_statistics(
 ) -> Dict[str, Any]:
     """
     Get audit statistics and metrics
-    
+
     - Event counts by type and risk level
     - Compliance framework coverage
     - User activity metrics
@@ -662,44 +662,44 @@ async def get_audit_statistics(
     try:
         # Check admin permissions for full stats
         is_admin = "admin" in current_user.get("permissions", [])
-        
+
         audit_logger = get_audit_logger()
-        
+
         # Get events for the specified period
         start_date = datetime.utcnow() - timedelta(days=days)
         end_date = datetime.utcnow()
-        
+
         events = await audit_logger.query_audit_events(
             start_time=start_date,
             end_time=end_date,
             user_id=None if is_admin else current_user["user_id"],
             limit=10000
         )
-        
+
         # Calculate statistics
         event_counts = {}
         risk_counts = {"low": 0, "medium": 0, "high": 0, "critical": 0}
         user_activity = {}
         compliance_coverage = {}
-        
+
         for event in events:
             # Event type counts
             event_type = event["event_type"]
             event_counts[event_type] = event_counts.get(event_type, 0) + 1
-            
+
             # Risk level counts
             risk_level = event.get("risk_level", "low")
             risk_counts[risk_level] = risk_counts.get(risk_level, 0) + 1
-            
+
             # User activity (admin only)
             if is_admin and event.get("user_id"):
                 user_id = event["user_id"]
                 user_activity[user_id] = user_activity.get(user_id, 0) + 1
-            
+
             # Compliance framework coverage
             for framework in event.get("compliance_tags", []):
                 compliance_coverage[framework] = compliance_coverage.get(framework, 0) + 1
-        
+
         stats = {
             "period": {
                 "days": days,
@@ -715,17 +715,17 @@ async def get_audit_statistics(
             "risk_distribution": risk_counts,
             "compliance_coverage": compliance_coverage
         }
-        
+
         # Add user activity for admins only
         if is_admin:
             stats["user_activity"] = dict(sorted(
-                user_activity.items(), 
-                key=lambda x: x[1], 
+                user_activity.items(),
+                key=lambda x: x[1],
                 reverse=True
             )[:10])  # Top 10 most active users
-        
+
         return stats
-        
+
     except Exception as e:
         logger.error(f"Failed to get audit statistics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -739,20 +739,20 @@ async def list_retention_policies(
 ) -> Dict[str, Any]:
     """
     List all data retention policies
-    
+
     - Can filter by data category or compliance framework
     - Shows policy details and current status
     """
     try:
         retention_manager = get_retention_manager()
-        
+
         if category:
             policies = retention_manager.get_policies_by_category(category)
         elif framework:
             policies = retention_manager.get_policies_by_framework(framework)
         else:
             policies = list(retention_manager.policies.values())
-        
+
         # Convert to response format
         policies_data = []
         for policy in policies:
@@ -770,12 +770,12 @@ async def list_retention_policies(
                 "created_at": policy.created_at.isoformat(),
                 "updated_at": policy.updated_at.isoformat()
             })
-        
+
         return {
             "count": len(policies_data),
             "policies": policies_data
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to list retention policies: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -788,7 +788,7 @@ async def create_retention_policy(
 ) -> Dict[str, Any]:
     """
     Create a new data retention policy
-    
+
     - Requires admin permissions
     - Validates retention requirements
     """
@@ -796,9 +796,9 @@ async def create_retention_policy(
         # Check admin permissions
         if "admin" not in current_user.get("permissions", []):
             raise HTTPException(status_code=403, detail="Admin permission required")
-        
+
         retention_manager = get_retention_manager()
-        
+
         # Create policy
         policy = RetentionPolicy(
             policy_id=f"custom_{request.name.lower().replace(' ', '_')}_{datetime.utcnow().timestamp()}",
@@ -812,9 +812,9 @@ async def create_retention_policy(
             grace_period_days=request.grace_period_days,
             notification_days_before=request.notification_days_before
         )
-        
+
         policy_id = retention_manager.add_policy(policy)
-        
+
         # Log action
         await audit_log(
             event_type=AuditEventType.CONFIG_CHANGED,
@@ -827,13 +827,13 @@ async def create_retention_policy(
                 "retention_days": request.retention_days
             }
         )
-        
+
         return {
             "status": "success",
             "policy_id": policy_id,
             "message": "Retention policy created successfully"
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -849,7 +849,7 @@ async def update_retention_policy(
 ) -> Dict[str, Any]:
     """
     Update an existing retention policy
-    
+
     - Requires admin permissions
     - Cannot reduce retention below compliance requirements
     """
@@ -857,14 +857,14 @@ async def update_retention_policy(
         # Check admin permissions
         if "admin" not in current_user.get("permissions", []):
             raise HTTPException(status_code=403, detail="Admin permission required")
-        
+
         retention_manager = get_retention_manager()
-        
+
         # Check if policy exists
         existing_policy = retention_manager.get_policy(policy_id)
         if not existing_policy:
             raise HTTPException(status_code=404, detail="Policy not found")
-        
+
         # Update policy
         updated_policy = RetentionPolicy(
             policy_id=policy_id,
@@ -879,9 +879,9 @@ async def update_retention_policy(
             notification_days_before=request.notification_days_before,
             created_at=existing_policy.created_at
         )
-        
+
         retention_manager.add_policy(updated_policy)
-        
+
         # Log action
         await audit_log(
             event_type=AuditEventType.CONFIG_CHANGED,
@@ -897,13 +897,13 @@ async def update_retention_policy(
                 }
             }
         )
-        
+
         return {
             "status": "success",
             "policy_id": policy_id,
             "message": "Retention policy updated successfully"
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -919,7 +919,7 @@ async def apply_retention_policies(
 ) -> Dict[str, Any]:
     """
     Apply data retention policies
-    
+
     - Can run in dry-run mode to preview actions
     - Can apply specific policy or all policies
     - Returns detailed execution results
@@ -928,16 +928,16 @@ async def apply_retention_policies(
         # Check admin permissions
         if "admin" not in current_user.get("permissions", []):
             raise HTTPException(status_code=403, detail="Admin permission required")
-        
+
         retention_manager = get_retention_manager()
-        
+
         # Apply policies
         if policy_id:
             # Apply single policy
             policy = retention_manager.get_policy(policy_id)
             if not policy:
                 raise HTTPException(status_code=404, detail="Policy not found")
-            
+
             result = await retention_manager._apply_single_policy(policy, dry_run)
             results = {
                 "policies_evaluated": 1,
@@ -952,9 +952,9 @@ async def apply_retention_policies(
             # Apply all policies
             results = await retention_manager.apply_retention_policies(dry_run)
             results["dry_run"] = dry_run
-        
+
         return results
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -968,20 +968,20 @@ async def check_retention_compliance(
 ) -> Dict[str, Any]:
     """
     Check if retention policies meet compliance requirements
-    
+
     - Validates policies against known compliance standards
     - Returns any violations or gaps
     """
     try:
         retention_manager = get_retention_manager()
         violations = retention_manager.validate_compliance_requirements()
-        
+
         return {
             "compliant": len(violations) == 0,
             "violations": violations,
             "checked_at": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to check retention compliance: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -1001,7 +1001,7 @@ async def list_data_categories(
         }
         for category in DataCategory
     ]
-    
+
     return {
         "categories": categories,
         "count": len(categories)
@@ -1022,7 +1022,7 @@ async def list_retention_actions(
         }
         for action in RetentionAction
     ]
-    
+
     return {
         "actions": actions,
         "count": len(actions)
@@ -1036,7 +1036,7 @@ async def generate_enhanced_compliance_report(
 ) -> Dict[str, Any]:
     """
     Generate comprehensive compliance report with analysis and recommendations
-    
+
     - Supports all major compliance frameworks
     - Includes detailed analysis and risk assessment
     - Provides actionable recommendations
@@ -1046,18 +1046,18 @@ async def generate_enhanced_compliance_report(
         # Check admin permissions
         if "admin" not in current_user.get("permissions", []):
             raise HTTPException(status_code=403, detail="Admin permission required")
-        
+
         # Validate date range
         if request.end_date <= request.start_date:
             raise HTTPException(status_code=400, detail="End date must be after start date")
-        
+
         # Limit report period (max 1 year)
         max_period = timedelta(days=365)
         if request.end_date - request.start_date > max_period:
             raise HTTPException(status_code=400, detail="Report period cannot exceed 365 days")
-        
+
         enhanced_reporter = get_enhanced_compliance_reporter()
-        
+
         # Generate report (async)
         request_id = await enhanced_reporter.generate_comprehensive_report(
             framework=request.framework,
@@ -1067,7 +1067,7 @@ async def generate_enhanced_compliance_report(
             format=request.format,
             include_recommendations=request.include_recommendations
         )
-        
+
         return {
             "status": "accepted",
             "request_id": request_id,
@@ -1075,7 +1075,7 @@ async def generate_enhanced_compliance_report(
             "framework": request.framework.value,
             "estimated_completion": "5-10 minutes"
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -1090,23 +1090,23 @@ async def get_report_status(
 ) -> Dict[str, Any]:
     """
     Get compliance report generation status and results
-    
+
     - Returns generation progress
     - Provides download link when complete
     - Includes report metadata
     """
     try:
         enhanced_reporter = get_enhanced_compliance_reporter()
-        
+
         report_request = await enhanced_reporter.get_report_status(request_id)
         if not report_request:
             raise HTTPException(status_code=404, detail="Report request not found")
-        
+
         # Check permissions (only creator can view)
         if report_request.requested_by != current_user["user_id"]:
             # Could check admin permissions here
             raise HTTPException(status_code=403, detail="Not authorized to view this report")
-        
+
         response = {
             "request_id": request_id,
             "status": report_request.status.value,
@@ -1119,17 +1119,17 @@ async def get_report_status(
                 "duration_days": (report_request.end_date - report_request.start_date).days
             }
         }
-        
+
         if report_request.status == ReportStatus.COMPLETED:
             response["completed_at"] = report_request.completed_at.isoformat()
             response["download_url"] = f"/admin/reports/{request_id}/download"
             response["metadata"] = report_request.metadata
-            
+
         elif report_request.status == ReportStatus.FAILED:
             response["error_message"] = report_request.error_message
-        
+
         return response
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -1146,25 +1146,25 @@ async def list_compliance_reports(
 ) -> Dict[str, Any]:
     """
     List compliance reports
-    
+
     - Shows user's reports or all reports (admin)
     - Supports filtering by framework and status
     - Includes report metadata and status
     """
     try:
         enhanced_reporter = get_enhanced_compliance_reporter()
-        
+
         reports = await enhanced_reporter.list_reports(
             framework=framework,
             status=status,
             limit=limit
         )
-        
+
         # Filter to user's reports unless admin
         is_admin = "admin" in current_user.get("permissions", [])
         if not is_admin:
             reports = [r for r in reports if r.requested_by == current_user["user_id"]]
-        
+
         # Convert to response format
         report_list = []
         for report in reports:
@@ -1179,12 +1179,12 @@ async def list_compliance_reports(
                 "period_days": (report.end_date - report.start_date).days,
                 "metadata": report.metadata
             })
-        
+
         return {
             "count": len(report_list),
             "reports": report_list
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to list reports: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -1197,30 +1197,30 @@ async def download_compliance_report(
 ):
     """
     Download completed compliance report
-    
+
     - Returns report file in requested format
     - Validates user permissions
     - Logs download activity
     """
     try:
         enhanced_reporter = get_enhanced_compliance_reporter()
-        
+
         report_request = await enhanced_reporter.get_report_status(request_id)
         if not report_request:
             raise HTTPException(status_code=404, detail="Report not found")
-        
+
         # Check permissions
         if report_request.requested_by != current_user["user_id"]:
             raise HTTPException(status_code=403, detail="Not authorized")
-        
+
         # Check if report is complete
         if report_request.status != ReportStatus.COMPLETED:
             raise HTTPException(status_code=400, detail="Report not yet complete")
-        
+
         # Check if file exists
         if not report_request.file_path or not Path(report_request.file_path).exists():
             raise HTTPException(status_code=404, detail="Report file not found")
-        
+
         # Log download
         await audit_log(
             event_type=AuditEventType.DATA_EXPORT,
@@ -1232,18 +1232,18 @@ async def download_compliance_report(
                 "format": report_request.format.value
             }
         )
-        
+
         # Return file download
         from fastapi.responses import FileResponse
-        
+
         filename = f"{report_request.framework.value}_report_{request_id[:8]}.{report_request.format.value}"
-        
+
         return FileResponse(
             path=report_request.file_path,
             filename=filename,
             media_type="application/octet-stream"
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -1258,19 +1258,19 @@ async def delete_compliance_report(
 ) -> Dict[str, Any]:
     """
     Delete a compliance report
-    
+
     - Removes report file and tracking record
     - Only creator or admin can delete
     - Logs deletion activity
     """
     try:
         enhanced_reporter = get_enhanced_compliance_reporter()
-        
+
         success = await enhanced_reporter.delete_report(request_id, current_user["user_id"])
-        
+
         if not success:
             raise HTTPException(status_code=404, detail="Report not found or not authorized")
-        
+
         # Log deletion
         await audit_log(
             event_type=AuditEventType.DATA_DELETE,
@@ -1278,12 +1278,12 @@ async def delete_compliance_report(
             action="delete_compliance_report",
             resource=f"report:{request_id}"
         )
-        
+
         return {
             "status": "success",
             "message": "Report deleted successfully"
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -1311,7 +1311,7 @@ async def list_report_formats(
         }
         for format in ReportFormat
     ]
-    
+
     return {
         "formats": formats,
         "count": len(formats)

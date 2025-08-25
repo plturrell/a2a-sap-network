@@ -36,12 +36,12 @@ logger = logging.getLogger(__name__)
 
 async def create_agent_manager_app():
     """Create and configure the Agent Manager FastAPI application"""
-    
+
     # Initialize the Agent Manager
     agent_id = "agent_manager"
     agent_name = "Agent Manager"
     base_url = os.getenv("A2A_AGENT_BASE_URL", os.getenv("SERVICE_BASE_URL"))
-    
+
     # Agent Manager capabilities
     capabilities = {
         "streaming": True,
@@ -57,7 +57,7 @@ async def create_agent_manager_app():
         "workflowOrchestration": True,
         "systemMonitoring": True
     }
-    
+
     # Agent Manager skills
     skills = [
         {
@@ -70,7 +70,7 @@ async def create_agent_manager_app():
         },
         {
             "id": "trust-contract-management",
-            "name": "Trust Contract Management", 
+            "name": "Trust Contract Management",
             "description": "Create and manage trust contracts between agents",
             "tags": ["trust", "contracts", "delegation"],
             "inputModes": ["application/json"],
@@ -93,7 +93,7 @@ async def create_agent_manager_app():
             "outputModes": ["application/json"]
         }
     ]
-    
+
     # Create the Agent Manager instance
     agent_manager = AgentManagerAgent(
         agent_id=agent_id,
@@ -102,17 +102,17 @@ async def create_agent_manager_app():
         capabilities=capabilities,
         skills=skills
     )
-    
+
     # Set the agent instance in the router module
     agent_manager_router.agent_manager = agent_manager
-    
+
     # Create FastAPI app
     app = FastAPI(
         title="Agent Manager A2A Agent",
         description="Orchestrates A2A ecosystem registration, trust contracts, and workflow management",
         version="2.0.0"
     )
-    
+
     # Add CORS middleware
     app.add_middleware(
         CORSMiddleware,
@@ -121,10 +121,10 @@ async def create_agent_manager_app():
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    
+
     # Include the Agent Manager router
     app.include_router(agent_manager_router.router)
-    
+
     # Add root endpoint
     @app.get("/")
     async def root():
@@ -134,36 +134,36 @@ async def create_agent_manager_app():
             "protocol_version": "0.2.9",
             "status": "operational"
         }
-    
+
     # Health check endpoint at root level
     @app.get("/health")
     async def health():
         return await agent_manager_router.health_check()
-    
+
     logger.info(f"Agent Manager initialized:")
     logger.info(f"  - Agent ID: {agent_id}")
     logger.info(f"  - Agent Name: {agent_name}")
     logger.info(f"  - Base URL: {base_url}")
     logger.info(f"  - Capabilities: {len(capabilities)} features")
     logger.info(f"  - Skills: {len(skills)} skills")
-    
+
     return app
 
 
 def main():
     """Main entry point for the Agent Manager launcher"""
     logger.info("Starting Agent Manager A2A Agent...")
-    
+
     # Get configuration from environment
     host = os.getenv("AGENT_MANAGER_HOST", "0.0.0.0")
     port = int(os.getenv("AGENT_MANAGER_PORT", "8005"))
     log_level = os.getenv("LOG_LEVEL", "info")
-    
+
     # Create the app
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     app = loop.run_until_complete(create_agent_manager_app())
-    
+
     logger.info(f"Agent Manager starting on {host}:{port}")
     logger.info("Available endpoints:")
     logger.info("  - Agent Card: GET /.well-known/agent.json")
@@ -175,7 +175,7 @@ def main():
     logger.info("  - Trust Contracts: POST /a2a/agent_manager/v1/trust/contracts")
     logger.info("  - Workflows: POST /a2a/agent_manager/v1/workflows")
     logger.info("  - System Health: GET /a2a/agent_manager/v1/system/health")
-    
+
     # Start the server
     uvicorn.run(
         app,

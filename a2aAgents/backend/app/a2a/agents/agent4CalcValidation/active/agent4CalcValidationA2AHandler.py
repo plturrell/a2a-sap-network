@@ -27,7 +27,7 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
     A2A-compliant handler for Agent 4: Computation Quality Testing
     All communication through blockchain messaging only
     """
-    
+
     def __init__(self, agent_sdk: ComprehensiveCalcValidationSDK):
         """Initialize A2A handler with agent SDK"""
         # Configure secure agent
@@ -62,23 +62,23 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
             rate_limit_requests=100,
             rate_limit_window=60
         )
-        
+
         super().__init__(config)
-        
+
         self.agent_sdk = agent_sdk
-        
+
         # Initialize A2A blockchain client
         self.a2a_client = A2ANetworkClient(
             agent_id=config.agent_id,
             private_key=os.getenv('A2A_PRIVATE_KEY'),
             rpc_url=os.getenv('A2A_RPC_URL', 'http://localhost:8545')
         )
-        
+
         # Register message handlers
         self._register_handlers()
-        
+
         logger.info(f"A2A-compliant handler initialized for {config.agent_name}")
-    
+
     def _register_handlers(self):
         """Register A2A message handlers"""
 
@@ -95,7 +95,7 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
                     "blockchain_connected": await self._check_blockchain_connection()
                 }
                 result = health_status
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="health_check",
@@ -103,9 +103,9 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to health_check: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -117,7 +117,7 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
                 # TODO: Implement get_supported_formats logic
                 # Example: result = await self.agent_sdk.get_supported_formats(data)
                 result = {"status": "success", "operation": "get_supported_formats"}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="get_supported_formats",
@@ -125,9 +125,9 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to get_supported_formats: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -138,7 +138,7 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
             """Handle comprehensive calculation validation"""
             try:
                 result = await self.agent_sdk.calculation_validation(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="calculation_validation",
@@ -146,9 +146,9 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to calculation_validation: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -158,7 +158,7 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
             """Handle numerical verification operations"""
             try:
                 result = await self.agent_sdk.numerical_verification(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="numerical_verification",
@@ -166,9 +166,9 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to numerical_verification: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -178,7 +178,7 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
             """Handle statistical analysis operations"""
             try:
                 result = await self.agent_sdk.statistical_analysis(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="statistical_analysis",
@@ -186,9 +186,9 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to statistical_analysis: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -198,7 +198,7 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
             """Handle accuracy checking operations"""
             try:
                 result = await self.agent_sdk.accuracy_checking(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="accuracy_checking",
@@ -206,9 +206,9 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to accuracy_checking: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -218,7 +218,7 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
             """Handle error detection operations"""
             try:
                 result = await self.agent_sdk.error_detection(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="error_detection",
@@ -226,9 +226,9 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to error_detection: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -239,7 +239,7 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
             """Handle calculation validation with comprehensive methods"""
             try:
                 result = await self.agent_sdk.validate_expression(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="validate_calculation",
@@ -247,9 +247,9 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to validate_calculation: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -259,7 +259,7 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
             """Handle numerical verification with precision analysis"""
             try:
                 result = await self.agent_sdk.numerical_verification(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="verify_numerical",
@@ -267,9 +267,9 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to verify_numerical: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -279,7 +279,7 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
             """Handle statistical analysis with distribution testing"""
             try:
                 result = await self.agent_sdk.statistical_analysis(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="analyze_statistical",
@@ -287,9 +287,9 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to analyze_statistical: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -299,7 +299,7 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
             """Handle accuracy checking with error bound analysis"""
             try:
                 result = await self.agent_sdk.accuracy_checking(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="check_accuracy",
@@ -307,9 +307,9 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to check_accuracy: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -319,7 +319,7 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
             """Handle error detection with pattern analysis"""
             try:
                 result = await self.agent_sdk.error_detection(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="detect_errors",
@@ -327,9 +327,9 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to detect_errors: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -339,7 +339,7 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
             """Handle symbolic mathematical validation"""
             try:
                 result = await self.agent_sdk.symbolic_validation(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="symbolic_validation",
@@ -347,9 +347,9 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to symbolic_validation: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -359,7 +359,7 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
             """Handle Monte Carlo statistical verification"""
             try:
                 result = await self.agent_sdk.monte_carlo_validation(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="monte_carlo_verification",
@@ -367,9 +367,9 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to monte_carlo_verification: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -379,7 +379,7 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
             """Handle mathematical proof generation and verification"""
             try:
                 result = await self.agent_sdk.generate_mathematical_proof(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="mathematical_proof",
@@ -387,9 +387,9 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to mathematical_proof: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -399,7 +399,7 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
             """Handle precision and error analysis"""
             try:
                 result = await self.agent_sdk.precision_analysis(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="precision_analysis",
@@ -407,13 +407,13 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to precision_analysis: {e}")
                 return self.create_secure_response(str(e), status="error")
-    
+
     async def process_a2a_message(self, message: A2AMessage) -> Dict[str, Any]:
         """
         Main entry point for A2A messages
@@ -423,19 +423,19 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
             # Extract operation from message
             operation = None
             data = {}
-            
+
             if message.parts and len(message.parts) > 0:
                 part = message.parts[0]
                 if part.data:
                     operation = part.data.get("operation")
                     data = part.data.get("data", {})
-            
+
             if not operation:
                 return self.create_secure_response(
                     "No operation specified in message",
                     status="error"
                 )
-            
+
             # Get handler for operation
             handler = self.handlers.get(operation)
             if not handler:
@@ -443,17 +443,17 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
                     f"Unknown operation: {operation}",
                     status="error"
                 )
-            
+
             # Create context ID
             context_id = f"{message.sender_id}:{operation}:{datetime.utcnow().timestamp()}"
-            
+
             # Process through handler
             return await handler(message, context_id, data)
-            
+
         except Exception as e:
             logger.error(f"Failed to process A2A message: {e}")
             return self.create_secure_response(str(e), status="error")
-    
+
     async def _log_blockchain_transaction(self, operation: str, data_hash: str, result_hash: str, context_id: str):
         """Log transaction to blockchain for audit trail"""
         try:
@@ -465,33 +465,33 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
                 "context_id": context_id,
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
             # Send to blockchain through A2A client
             await self.a2a_client.log_transaction(transaction_data)
-            
+
         except Exception as e:
             logger.error(f"Failed to log blockchain transaction: {e}")
-    
+
     def _hash_data(self, data: Any) -> str:
         """Create hash of data for blockchain logging"""
         import hashlib
         json_str = json.dumps(data, sort_keys=True, default=str)
         return hashlib.sha256(json_str.encode()).hexdigest()
-    
+
     async def _check_blockchain_connection(self) -> bool:
         """Check if blockchain connection is active"""
         try:
             return await self.a2a_client.is_connected()
         except Exception:
             return False
-    
+
     async def start(self):
         """Start the A2A handler"""
         logger.info(f"Starting A2A handler for {self.config.agent_name}")
-        
+
         # Connect to blockchain
         await self.a2a_client.connect()
-        
+
         # Register agent on blockchain
         await self.a2a_client.register_agent({
             "agent_id": self.config.agent_id,
@@ -499,22 +499,22 @@ class Agent4CalcvalidationA2AHandler(SecureA2AAgent):
             "capabilities": list(self.config.allowed_operations),
             "version": self.config.agent_version
         })
-        
+
         logger.info(f"A2A handler started and registered on blockchain")
-    
+
     async def stop(self):
         """Stop the A2A handler"""
         logger.info(f"Stopping A2A handler for {self.config.agent_name}")
-        
+
         # Unregister from blockchain
         await self.a2a_client.unregister_agent(self.config.agent_id)
-        
+
         # Disconnect
         await self.a2a_client.disconnect()
-        
+
         # Parent cleanup
         await self.shutdown()
-        
+
         logger.info(f"A2A handler stopped")
 
 
@@ -530,14 +530,14 @@ To migrate from REST endpoints to A2A messaging:
 
 1. Replace router initialization:
    # OLD: router = APIRouter(...)
-   # NEW: 
+   # NEW:
    handler = create_agent4CalcValidation_a2a_handler(agent4CalcValidation_sdk)
 
 2. Replace FastAPI app with A2A listener:
    # OLD: app.include_router(router)
    # NEW:
    await handler.start()
-   
+
 3. Process messages through A2A:
    # Messages arrive through blockchain
    result = await handler.process_a2a_message(a2a_message)

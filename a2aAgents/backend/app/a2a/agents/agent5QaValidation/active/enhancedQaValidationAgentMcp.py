@@ -148,14 +148,14 @@ class WebSocketConnection:
     reconnect_delay: float = 5.0
     message_queue: deque = field(default_factory=deque)
     error_count: int = 0
-    
+
     def __post_init__(self):
         if not self.message_queue:
             self.message_queue = deque(maxlen=1000)
 
 class EnhancedWebSocketManager:
     """Advanced WebSocket connection management with error recovery"""
-    
+
     def __init__(self):
         self.connections: Dict[str, WebSocketConnection] = {}
         self.connection_pool: Dict[str, Set[str]] = defaultdict(set)  # task_id -> connection_ids
@@ -169,28 +169,28 @@ class EnhancedWebSocketManager:
             "messages_sent": 0,
             "messages_failed": 0
         }
-    
+
     async def start(self):
         """Start WebSocket management tasks"""
         self.heartbeat_task = asyncio.create_task(self._heartbeat_loop())
         self.cleanup_task = asyncio.create_task(self._cleanup_loop())
         logger.info("WebSocket manager started")
-    
+
     async def stop(self):
         """Stop WebSocket management tasks"""
         if self.heartbeat_task:
             self.heartbeat_task.cancel()
         if self.cleanup_task:
             self.cleanup_task.cancel()
-        
+
         # Close all connections
         await self._close_all_connections()
         logger.info("WebSocket manager stopped")
-    
+
     async def register_connection(self, task_id: str, websocket: Any) -> str:
         """Register new WebSocket connection with enhanced tracking"""
         connection_id = f"ws_{uuid.uuid4().hex[:8]}"
-        
+
         connection = WebSocketConnection(
             connection_id=connection_id,
             websocket=websocket,
@@ -198,147 +198,147 @@ class EnhancedWebSocketManager:
             state=WebSocketConnectionState.CONNECTED,
             connected_at=datetime.utcnow()
         )
-        
+
         self.connections[connection_id] = connection
         self.connection_pool[task_id].add(connection_id)
         self.stats["total_connections"] += 1
         self.stats["active_connections"] += 1
-        
+
         logger.info(f"WebSocket connection registered: {connection_id} for task {task_id}")
-        
+
         # Start connection monitoring
         asyncio.create_task(self._monitor_connection(connection_id))
-        
+
         return connection_id
-    
+
     async def unregister_connection(self, connection_id: str):
         """Unregister WebSocket connection"""
         if connection_id in self.connections:
             connection = self.connections[connection_id]
             task_id = connection.task_id
-            
+
             # Remove from pool
             if task_id in self.connection_pool:
                 self.connection_pool[task_id].discard(connection_id)
                 if not self.connection_pool[task_id]:
                     del self.connection_pool[task_id]
-            
+
             # Close connection
             try:
                 await connection.websocket.close()
             except:
                 pass
-            
+
             del self.connections[connection_id]
             self.stats["active_connections"] -= 1
-            
+
             logger.info(f"WebSocket connection unregistered: {connection_id}")
-    
+
     async def send_message(self, task_id: str, message: Dict[str, Any], reliable: bool = True) -> bool:
         """Send message to all connections for a task with enhanced error handling"""
         if task_id not in self.connection_pool:
             logger.warning(f"No WebSocket connections for task {task_id}")
             return False
-        
+
         connection_ids = list(self.connection_pool[task_id])
         success_count = 0
-        
+
         for connection_id in connection_ids:
             if connection_id in self.connections:
                 success = await self._send_to_connection(connection_id, message, reliable)
                 if success:
                     success_count += 1
-        
+
         return success_count > 0
-    
+
     async def _send_to_connection(self, connection_id: str, message: Dict[str, Any], reliable: bool) -> bool:
         """Send message to specific connection with retry logic"""
         if connection_id not in self.connections:
             return False
-        
+
         connection = self.connections[connection_id]
-        
+
         if connection.state != WebSocketConnectionState.CONNECTED:
             if reliable:
                 # Queue message for later delivery
                 connection.message_queue.append(message)
             return False
-        
+
         try:
             message_str = json.dumps(message)
             await connection.websocket.send(message_str)
             self.stats["messages_sent"] += 1
             return True
-            
+
         except websockets.exceptions.ConnectionClosed:
             logger.warning(f"WebSocket connection closed: {connection_id}")
             connection.state = WebSocketConnectionState.DISCONNECTED
             if reliable:
                 await self._attempt_reconnection(connection_id)
             return False
-            
+
         except Exception as e:
             logger.error(f"Failed to send WebSocket message to {connection_id}: {e}")
             connection.error_count += 1
             self.stats["messages_failed"] += 1
-            
+
             if connection.error_count > 3:
                 connection.state = WebSocketConnectionState.ERROR
                 if reliable:
                     await self._attempt_reconnection(connection_id)
-            
+
             return False
-    
+
     async def _attempt_reconnection(self, connection_id: str):
         """Attempt to reconnect a failed WebSocket connection"""
         if connection_id not in self.connections:
             return
-        
+
         connection = self.connections[connection_id]
-        
+
         if connection.retry_count >= connection.max_retries:
             logger.error(f"Max reconnection attempts reached for {connection_id}")
             await self.unregister_connection(connection_id)
             return
-        
+
         connection.state = WebSocketConnectionState.RECONNECTING
         connection.retry_count += 1
         self.stats["reconnections"] += 1
-        
+
         # Exponential backoff
         delay = connection.reconnect_delay * (2 ** (connection.retry_count - 1))
         await asyncio.sleep(min(delay, 60))  # Cap at 60 seconds
-        
+
         logger.info(f"Attempting reconnection {connection.retry_count} for {connection_id}")
-        
+
         # In a real implementation, this would attempt to re-establish the WebSocket connection
         # For now, we'll simulate a failed reconnection and mark for cleanup
         connection.state = WebSocketConnectionState.ERROR
-    
+
     async def _monitor_connection(self, connection_id: str):
         """Monitor individual connection health"""
         while connection_id in self.connections:
             connection = self.connections[connection_id]
-            
+
             if connection.state == WebSocketConnectionState.CONNECTED:
                 try:
                     # Send ping to check connection
                     await connection.websocket.ping()
                     connection.last_ping = datetime.utcnow()
-                    
+
                 except websockets.exceptions.ConnectionClosed:
                     connection.state = WebSocketConnectionState.DISCONNECTED
                     break
                 except Exception as e:
                     logger.error(f"Connection health check failed for {connection_id}: {e}")
                     connection.error_count += 1
-                    
+
                     if connection.error_count > 5:
                         connection.state = WebSocketConnectionState.ERROR
                         break
-            
+
             await asyncio.sleep(connection.heartbeat_interval)
-    
+
     async def _heartbeat_loop(self):
         """Send periodic heartbeats to all connections"""
         while True:
@@ -349,63 +349,63 @@ class EnhancedWebSocketManager:
                     "timestamp": current_time.isoformat(),
                     "server_time": current_time.timestamp()
                 }
-                
+
                 for connection_id in list(self.connections.keys()):
                     if connection_id in self.connections:
                         connection = self.connections[connection_id]
                         if connection.state == WebSocketConnectionState.CONNECTED:
                             await self._send_to_connection(connection_id, heartbeat_message, False)
-                
+
                 await asyncio.sleep(30)  # Send heartbeat every 30 seconds
-                
+
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.error(f"Heartbeat loop error: {e}")
                 await asyncio.sleep(5)
-    
+
     async def _cleanup_loop(self):
         """Clean up failed and stale connections"""
         while True:
             try:
                 current_time = datetime.utcnow()
                 stale_connections = []
-                
+
                 for connection_id, connection in self.connections.items():
                     # Mark stale connections (no activity for 5 minutes)
                     if connection.last_ping and (current_time - connection.last_ping).seconds > 300:
                         stale_connections.append(connection_id)
-                    
+
                     # Mark error connections for removal
                     elif connection.state == WebSocketConnectionState.ERROR:
                         stale_connections.append(connection_id)
-                
+
                 # Remove stale connections
                 for connection_id in stale_connections:
                     await self.unregister_connection(connection_id)
                     self.stats["failed_connections"] += 1
-                
+
                 await asyncio.sleep(60)  # Cleanup every minute
-                
+
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.error(f"Cleanup loop error: {e}")
                 await asyncio.sleep(30)
-    
+
     async def _close_all_connections(self):
         """Close all WebSocket connections"""
         connection_ids = list(self.connections.keys())
         for connection_id in connection_ids:
             await self.unregister_connection(connection_id)
-    
+
     def get_stats(self) -> Dict[str, Any]:
         """Get WebSocket connection statistics"""
         return {
             **self.stats,
             "active_tasks": len(self.connection_pool),
             "connections_per_task": {
-                task_id: len(conn_ids) 
+                task_id: len(conn_ids)
                 for task_id, conn_ids in self.connection_pool.items()
             }
         }
@@ -424,14 +424,14 @@ class QuestionTemplate:
     semantic_patterns: List[str] = field(default_factory=list)
     validation_rules: Dict[str, Any] = field(default_factory=dict)
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def validate_variables(self, context: Dict[str, Any]) -> bool:
         """Validate that all required variables are present"""
         for var in self.variables:
             if var not in context:
                 return False
         return True
-    
+
     def apply_constraints(self, context: Dict[str, Any]) -> bool:
         """Apply template constraints to context"""
         for constraint, rule in self.constraints.items():
@@ -454,12 +454,12 @@ class QuestionTemplate:
 
 class SophisticatedTemplateEngine:
     """Advanced template engine with semantic capabilities"""
-    
+
     def __init__(self):
         self.templates: Dict[str, QuestionTemplate] = {}
         self.template_categories: Dict[str, List[str]] = defaultdict(list)
         self.semantic_groups: Dict[str, List[str]] = defaultdict(list)
-        
+
         # Initialize NLTK data if available
         if SEMANTIC_AVAILABLE:
             try:
@@ -470,10 +470,10 @@ class SophisticatedTemplateEngine:
                 self.stop_words = set(stopwords.words('english'))
             except:
                 logger.warning("NLTK initialization failed")
-    
+
     def load_templates(self, template_data: Dict[str, Any]):
         """Load sophisticated question templates"""
-        
+
         # Factual question templates
         factual_templates = [
             QuestionTemplate(
@@ -510,7 +510,7 @@ class SophisticatedTemplateEngine:
                 validation_rules={"partial_match": True, "min_coverage": 0.7}
             )
         ]
-        
+
         # Inferential question templates
         inferential_templates = [
             QuestionTemplate(
@@ -536,7 +536,7 @@ class SophisticatedTemplateEngine:
                 validation_rules={"causal_validity": True, "logical_chain": True}
             )
         ]
-        
+
         # Comparative question templates
         comparative_templates = [
             QuestionTemplate(
@@ -562,7 +562,7 @@ class SophisticatedTemplateEngine:
                 validation_rules={"ranking_logic": True, "justification_required": True}
             )
         ]
-        
+
         # Analytical question templates
         analytical_templates = [
             QuestionTemplate(
@@ -588,34 +588,34 @@ class SophisticatedTemplateEngine:
                 validation_rules={"pattern_validity": True, "dimensional_analysis": True}
             )
         ]
-        
+
         # Store all templates
         all_templates = factual_templates + inferential_templates + comparative_templates + analytical_templates
-        
+
         for template in all_templates:
             self.templates[template.template_id] = template
             self.template_categories[template.question_type.value].append(template.template_id)
-            
+
             # Group by semantic patterns
             for pattern in template.semantic_patterns:
                 self.semantic_groups[pattern].append(template.template_id)
-    
+
     def generate_question(self, template_id: str, context: Dict[str, Any]) -> Optional[Tuple[str, Dict[str, Any]]]:
         """Generate question from template with enhanced validation"""
         if template_id not in self.templates:
             return None
-        
+
         template = self.templates[template_id]
-        
+
         # Validate variables and constraints
         if not template.validate_variables(context):
             logger.warning(f"Missing variables for template {template_id}")
             return None
-        
+
         if not template.apply_constraints(context):
             logger.warning(f"Context violates constraints for template {template_id}")
             return None
-        
+
         # Generate question using Jinja2 if available
         try:
             if JINJA2_AVAILABLE:
@@ -623,7 +623,7 @@ class SophisticatedTemplateEngine:
                 question = jinja_template.render(**context)
             else:
                 question = template.template_text.format(**context)
-            
+
             # Generate metadata
             question_metadata = {
                 "template_id": template_id,
@@ -634,17 +634,17 @@ class SophisticatedTemplateEngine:
                 "validation_rules": template.validation_rules,
                 "generated_at": datetime.utcnow().isoformat()
             }
-            
+
             return question, question_metadata
-            
+
         except Exception as e:
             logger.error(f"Failed to generate question from template {template_id}: {e}")
             return None
-    
+
     def find_templates_by_pattern(self, pattern: str) -> List[str]:
         """Find templates matching semantic pattern"""
         return self.semantic_groups.get(pattern, [])
-    
+
     def get_templates_by_complexity(self, complexity: TemplateComplexity) -> List[str]:
         """Get templates by complexity level"""
         return [tid for tid, template in self.templates.items() if template.complexity == complexity]
@@ -652,7 +652,7 @@ class SophisticatedTemplateEngine:
 # Advanced Semantic Validation System
 class AdvancedSemanticValidator:
     """Sophisticated semantic validation with multiple algorithms"""
-    
+
     def __init__(self):
         self.validation_methods = {
             ValidationMethod.EXACT_MATCH: self._exact_match_validation,
@@ -662,7 +662,7 @@ class AdvancedSemanticValidator:
             ValidationMethod.CONTEXTUAL_ANALYSIS: self._contextual_analysis_validation,
             ValidationMethod.MULTI_MODAL: self._multi_modal_validation
         }
-        
+
         # Initialize semantic models if available
         if SENTENCE_TRANSFORMERS_AVAILABLE:
             try:
@@ -672,14 +672,14 @@ class AdvancedSemanticValidator:
                 logger.warning("Failed to load SentenceTransformer model")
         else:
             self.sentence_model = None
-        
+
         if SEMANTIC_AVAILABLE:
             self.tfidf_vectorizer = TfidfVectorizer(max_features=1000, stop_words='english')
             self.lemmatizer = WordNetLemmatizer()
         else:
             self.tfidf_vectorizer = None
             self.lemmatizer = None
-    
+
     async def validate_answer(
         self,
         question: str,
@@ -689,7 +689,7 @@ class AdvancedSemanticValidator:
         context: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """Comprehensive answer validation using multiple methods"""
-        
+
         validation_results = {
             "overall_score": 0.0,
             "confidence": 0.0,
@@ -698,7 +698,7 @@ class AdvancedSemanticValidator:
             "explanation": "",
             "details": {}
         }
-        
+
         method_scores = []
         method_weights = {
             ValidationMethod.EXACT_MATCH: 0.2,
@@ -708,7 +708,7 @@ class AdvancedSemanticValidator:
             ValidationMethod.CONTEXTUAL_ANALYSIS: 0.15,
             ValidationMethod.MULTI_MODAL: 0.05
         }
-        
+
         # Apply each validation method
         for method in validation_methods:
             if method in self.validation_methods:
@@ -717,34 +717,34 @@ class AdvancedSemanticValidator:
                         question, expected_answer, actual_answer, context
                     )
                     validation_results["method_results"][method.value] = method_result
-                    
+
                     # Weight the score
                     weighted_score = method_result["score"] * method_weights.get(method, 0.1)
                     method_scores.append(weighted_score)
-                    
+
                 except Exception as e:
                     logger.error(f"Validation method {method.value} failed: {e}")
                     validation_results["method_results"][method.value] = {
                         "score": 0.0,
                         "error": str(e)
                     }
-        
+
         # Calculate overall score
         if method_scores:
             validation_results["overall_score"] = sum(method_scores)
             validation_results["confidence"] = self._calculate_confidence(validation_results["method_results"])
             validation_results["consensus"] = self._check_consensus(validation_results["method_results"])
             validation_results["explanation"] = self._generate_explanation(validation_results["method_results"])
-        
+
         return validation_results
-    
+
     async def _exact_match_validation(self, question: str, expected: str, actual: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """Exact string matching validation"""
         normalized_expected = expected.lower().strip()
         normalized_actual = actual.lower().strip()
-        
+
         exact_match = normalized_expected == normalized_actual
-        
+
         return {
             "score": 1.0 if exact_match else 0.0,
             "match_type": "exact",
@@ -754,12 +754,12 @@ class AdvancedSemanticValidator:
                 "length_difference": abs(len(expected) - len(actual))
             }
         }
-    
+
     async def _semantic_similarity_validation(self, question: str, expected: str, actual: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """Semantic similarity validation using embeddings"""
         if not self.sentence_model and not SEMANTIC_AVAILABLE:
             return {"score": 0.0, "error": "Semantic models not available"}
-        
+
         try:
             if self.sentence_model:
                 # Use SentenceTransformers
@@ -771,7 +771,7 @@ class AdvancedSemanticValidator:
                 similarity = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
             else:
                 similarity = self._simple_similarity(expected, actual)
-            
+
             return {
                 "score": float(similarity),
                 "similarity_type": "semantic",
@@ -781,23 +781,23 @@ class AdvancedSemanticValidator:
                     "confidence": min(1.0, similarity * 1.2)
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Semantic similarity validation failed: {e}")
             return {"score": 0.0, "error": str(e)}
-    
+
     async def _fuzzy_matching_validation(self, question: str, expected: str, actual: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """Fuzzy string matching validation"""
         try:
             # Implement Levenshtein distance-based fuzzy matching
             distance = self._levenshtein_distance(expected.lower(), actual.lower())
             max_len = max(len(expected), len(actual))
-            
+
             if max_len == 0:
                 similarity = 1.0
             else:
                 similarity = 1.0 - (distance / max_len)
-            
+
             return {
                 "score": max(0.0, similarity),
                 "match_type": "fuzzy",
@@ -808,29 +808,29 @@ class AdvancedSemanticValidator:
                     "threshold_met": similarity > 0.6
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Fuzzy matching validation failed: {e}")
             return {"score": 0.0, "error": str(e)}
-    
+
     async def _knowledge_graph_validation(self, question: str, expected: str, actual: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """Knowledge graph-based validation"""
         # Placeholder for knowledge graph integration
         # In a real implementation, this would query a knowledge graph
-        
+
         try:
             # Simulate knowledge graph lookup
             entities_expected = self._extract_entities(expected)
             entities_actual = self._extract_entities(actual)
-            
+
             entity_overlap = len(set(entities_expected) & set(entities_actual))
             total_entities = len(set(entities_expected) | set(entities_actual))
-            
+
             if total_entities == 0:
                 entity_score = 0.0
             else:
                 entity_score = entity_overlap / total_entities
-            
+
             return {
                 "score": entity_score,
                 "match_type": "knowledge_graph",
@@ -842,24 +842,24 @@ class AdvancedSemanticValidator:
                     "graph_consistency": True  # Placeholder
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Knowledge graph validation failed: {e}")
             return {"score": 0.0, "error": str(e)}
-    
+
     async def _contextual_analysis_validation(self, question: str, expected: str, actual: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """Context-aware validation"""
         try:
             # Analyze question context
             question_context = self._analyze_question_context(question)
-            
+
             # Check answer relevance to context
             expected_relevance = self._calculate_relevance(expected, question_context)
             actual_relevance = self._calculate_relevance(actual, question_context)
-            
+
             # Context consistency score
             consistency_score = min(expected_relevance, actual_relevance)
-            
+
             return {
                 "score": consistency_score,
                 "match_type": "contextual",
@@ -871,38 +871,38 @@ class AdvancedSemanticValidator:
                     "context_alignment": abs(expected_relevance - actual_relevance) < 0.3
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Contextual analysis validation failed: {e}")
             return {"score": 0.0, "error": str(e)}
-    
+
     async def _multi_modal_validation(self, question: str, expected: str, actual: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """Multi-modal validation combining multiple approaches"""
         try:
             # Combine multiple validation signals
             signals = []
-            
+
             # Lexical similarity
             lexical_sim = self._simple_similarity(expected, actual)
             signals.append(("lexical", lexical_sim, 0.3))
-            
+
             # Length similarity
             len_sim = 1.0 - abs(len(expected) - len(actual)) / max(len(expected), len(actual), 1)
             signals.append(("length", len_sim, 0.2))
-            
+
             # Word overlap
             expected_words = set(expected.lower().split())
             actual_words = set(actual.lower().split())
             word_overlap = len(expected_words & actual_words) / len(expected_words | actual_words) if expected_words | actual_words else 0
             signals.append(("word_overlap", word_overlap, 0.3))
-            
+
             # Structure similarity
             structure_sim = self._structure_similarity(expected, actual)
             signals.append(("structure", structure_sim, 0.2))
-            
+
             # Weighted combination
             total_score = sum(score * weight for _, score, weight in signals)
-            
+
             return {
                 "score": total_score,
                 "match_type": "multi_modal",
@@ -912,32 +912,32 @@ class AdvancedSemanticValidator:
                     "signal_count": len(signals)
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Multi-modal validation failed: {e}")
             return {"score": 0.0, "error": str(e)}
-    
+
     def _simple_similarity(self, text1: str, text2: str) -> float:
         """Simple Jaccard similarity fallback"""
         words1 = set(text1.lower().split())
         words2 = set(text2.lower().split())
-        
+
         if not words1 or not words2:
             return 0.0
-        
+
         intersection = words1 & words2
         union = words1 | words2
-        
+
         return len(intersection) / len(union) if union else 0.0
-    
+
     def _levenshtein_distance(self, s1: str, s2: str) -> int:
         """Calculate Levenshtein distance between two strings"""
         if len(s1) < len(s2):
             return self._levenshtein_distance(s2, s1)
-        
+
         if len(s2) == 0:
             return len(s1)
-        
+
         previous_row = list(range(len(s2) + 1))
         for i, c1 in enumerate(s1):
             current_row = [i + 1]
@@ -947,84 +947,84 @@ class AdvancedSemanticValidator:
                 substitutions = previous_row[j] + (c1 != c2)
                 current_row.append(min(insertions, deletions, substitutions))
             previous_row = current_row
-        
+
         return previous_row[-1]
-    
+
     def _extract_entities(self, text: str) -> List[str]:
         """Extract named entities from text (simplified)"""
         # Simplified entity extraction - in practice would use NER
         words = text.split()
         entities = []
-        
+
         for word in words:
             # Simple heuristic: capitalized words might be entities
             if word.istitle() and len(word) > 2:
                 entities.append(word.lower())
-        
+
         return entities
-    
+
     def _analyze_question_context(self, question: str) -> Dict[str, Any]:
         """Analyze question context for validation"""
         question_words = question.lower().split()
-        
+
         # Identify question type
         question_type = "factual"
         if any(word in question_words for word in ["how", "why", "analyze", "compare"]):
             question_type = "analytical"
         elif any(word in question_words for word in ["what", "who", "when", "where"]):
             question_type = "factual"
-        
+
         # Identify domain indicators
         domain_indicators = []
         technical_terms = ["api", "protocol", "version", "format", "data", "system"]
         for term in technical_terms:
             if term in question_words:
                 domain_indicators.append(term)
-        
+
         return {
             "question_type": question_type,
             "domain_indicators": domain_indicators,
             "word_count": len(question_words),
             "complexity": "high" if len(question_words) > 10 else "low"
         }
-    
+
     def _calculate_relevance(self, answer: str, context: Dict[str, Any]) -> float:
         """Calculate answer relevance to question context"""
         answer_words = set(answer.lower().split())
         context_words = set()
-        
+
         # Collect context words
         for indicators in context.get("domain_indicators", []):
             context_words.update(indicators.lower().split())
-        
+
         if not context_words or not answer_words:
             return 0.5  # Neutral relevance
-        
+
         overlap = answer_words & context_words
         return len(overlap) / len(context_words) if context_words else 0.5
-    
+
     def _structure_similarity(self, text1: str, text2: str) -> float:
         """Calculate structural similarity between texts"""
         # Compare sentence structure, punctuation patterns, etc.
         punct1 = [c for c in text1 if c in '.,!?;:']
         punct2 = [c for c in text2 if c in '.,!?;:']
-        
+
         if len(punct1) == 0 and len(punct2) == 0:
             return 1.0
-        
+
         if len(punct1) == 0 or len(punct2) == 0:
             return 0.0
-        
+
         # Simple punctuation pattern similarity
         return 1.0 - abs(len(punct1) - len(punct2)) / max(len(punct1), len(punct2))
-    
+
     def _calculate_confidence(self, method_results: Dict[str, Any]) -> float:
         """Calculate overall confidence based on method agreement"""
         scores = [result.get("score", 0.0) for result in method_results.values() if "error" not in result]
-        
+
         if not scores:
             return 0.0
-        
+
         # Confidence based on score variance (lower variance = higher confidence)
         mean_score = statistics.mean(scores)
         if len(scores) > 1:
@@ -1032,26 +1032,26 @@ class AdvancedSemanticValidator:
             confidence = max(0.0, 1.0 - variance)
         else:
             confidence = mean_score
-        
+
         return min(1.0, confidence)
-    
+
     def _check_consensus(self, method_results: Dict[str, Any]) -> bool:
         """Check if validation methods reach consensus"""
         scores = [result.get("score", 0.0) for result in method_results.values() if "error" not in result]
-        
+
         if len(scores) < 2:
             return True
-        
+
         # Consensus if all scores are within 0.3 of each other
         max_score = max(scores)
         min_score = min(scores)
-        
+
         return (max_score - min_score) <= 0.3
-    
+
     def _generate_explanation(self, method_results: Dict[str, Any]) -> str:
         """Generate human-readable explanation of validation results"""
         explanations = []
-        
+
         for method, result in method_results.items():
             if "error" in result:
                 explanations.append(f"{method}: failed ({result['error']})")
@@ -1063,13 +1063,13 @@ class AdvancedSemanticValidator:
                     explanations.append(f"{method}: moderate confidence ({score:.2f})")
                 else:
                     explanations.append(f"{method}: low confidence ({score:.2f})")
-        
+
         return "; ".join(explanations)
 
 # Batch Processing Optimization
 class OptimizedBatchProcessor:
     """Enhanced batch processing with performance optimization"""
-    
+
     def __init__(self, max_batch_size: int = 100, max_concurrent_batches: int = 5):
         self.max_batch_size = max_batch_size
         self.max_concurrent_batches = max_concurrent_batches
@@ -1082,7 +1082,7 @@ class OptimizedBatchProcessor:
             "cache_hits": 0,
             "cache_misses": 0
         }
-    
+
     async def process_test_cases_batch(
         self,
         test_cases: List[Dict[str, Any]],
@@ -1090,7 +1090,7 @@ class OptimizedBatchProcessor:
         optimization_strategy: str = "adaptive"
     ) -> List[Dict[str, Any]]:
         """Process test cases in optimized batches"""
-        
+
         if optimization_strategy == "adaptive":
             batch_size = self._calculate_adaptive_batch_size(test_cases)
         elif optimization_strategy == "fixed":
@@ -1099,32 +1099,32 @@ class OptimizedBatchProcessor:
             batch_size = self._calculate_memory_based_batch_size()
         else:
             batch_size = self.max_batch_size
-        
+
         # Split into batches
         batches = [test_cases[i:i + batch_size] for i in range(0, len(test_cases), batch_size)]
-        
+
         # Process batches concurrently
         semaphore = asyncio.Semaphore(self.max_concurrent_batches)
-        
+
         async def process_batch(batch: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             async with semaphore:
                 return await self._process_single_batch(batch, validation_function)
-        
+
         start_time = time.time()
         batch_tasks = [process_batch(batch) for batch in batches]
         batch_results = await asyncio.gather(*batch_tasks)
-        
+
         # Flatten results
         all_results = []
         for batch_result in batch_results:
             all_results.extend(batch_result)
-        
+
         # Update statistics
         processing_time = time.time() - start_time
         self._update_batch_stats(len(test_cases), len(batches), processing_time)
-        
+
         return all_results
-    
+
     async def _process_single_batch(
         self,
         batch: List[Dict[str, Any]],
@@ -1132,26 +1132,26 @@ class OptimizedBatchProcessor:
     ) -> List[Dict[str, Any]]:
         """Process a single batch of test cases"""
         results = []
-        
+
         for test_case in batch:
             # Check cache first
             cache_key = self._generate_cache_key(test_case)
-            
+
             if cache_key in self.result_cache:
                 self.batch_stats["cache_hits"] += 1
                 results.append(self.result_cache[cache_key])
                 continue
-            
+
             # Process test case
             try:
                 result = await validation_function(test_case)
-                
+
                 # Cache result
                 self.result_cache[cache_key] = result
                 self.batch_stats["cache_misses"] += 1
-                
+
                 results.append(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to process test case: {e}")
                 results.append({
@@ -1159,35 +1159,35 @@ class OptimizedBatchProcessor:
                     "error": str(e),
                     "success": False
                 })
-        
+
         return results
-    
+
     def _calculate_adaptive_batch_size(self, test_cases: List[Dict[str, Any]]) -> int:
         """Calculate adaptive batch size based on test case complexity"""
         if not test_cases:
             return self.max_batch_size
-        
+
         # Estimate complexity based on test case attributes
         total_complexity = 0
         for test_case in test_cases[:10]:  # Sample first 10
             complexity = 1
-            
+
             # Factor in question length
             question = test_case.get("question", "")
             complexity += len(question) / 100
-            
+
             # Factor in validation methods
             validation_methods = test_case.get("validation_methods", [])
             complexity += len(validation_methods) * 0.5
-            
+
             # Factor in semantic analysis requirements
             if "semantic" in str(test_case).lower():
                 complexity += 2
-            
+
             total_complexity += complexity
-        
+
         avg_complexity = total_complexity / min(len(test_cases), 10)
-        
+
         # Adjust batch size based on complexity
         if avg_complexity > 5:
             return max(10, self.max_batch_size // 4)
@@ -1195,13 +1195,13 @@ class OptimizedBatchProcessor:
             return max(25, self.max_batch_size // 2)
         else:
             return self.max_batch_size
-    
+
     def _calculate_memory_based_batch_size(self) -> int:
         """Calculate batch size based on available memory"""
         try:
             memory = psutil.virtual_memory()
             available_gb = memory.available / (1024 ** 3)
-            
+
             if available_gb > 8:
                 return self.max_batch_size
             elif available_gb > 4:
@@ -1210,10 +1210,10 @@ class OptimizedBatchProcessor:
                 return self.max_batch_size // 4
             else:
                 return max(10, self.max_batch_size // 8)
-                
+
         except:
             return self.max_batch_size // 2
-    
+
     def _generate_cache_key(self, test_case: Dict[str, Any]) -> str:
         """Generate cache key for test case"""
         key_components = [
@@ -1222,24 +1222,24 @@ class OptimizedBatchProcessor:
             str(test_case.get("validation_methods", [])),
             str(test_case.get("difficulty", ""))
         ]
-        
+
         return hashlib.md5("|".join(key_components).encode()).hexdigest()
-    
+
     def _update_batch_stats(self, total_items: int, batch_count: int, processing_time: float):
         """Update batch processing statistics"""
         self.batch_stats["total_processed"] += total_items
         self.batch_stats["batches_processed"] += batch_count
-        
+
         # Update average batch time
         current_avg = self.batch_stats["average_batch_time"]
         new_avg = ((current_avg * (self.batch_stats["batches_processed"] - batch_count)) + processing_time) / self.batch_stats["batches_processed"]
         self.batch_stats["average_batch_time"] = new_avg
-    
+
     def get_batch_stats(self) -> Dict[str, Any]:
         """Get batch processing statistics"""
         cache_total = self.batch_stats["cache_hits"] + self.batch_stats["cache_misses"]
         hit_rate = self.batch_stats["cache_hits"] / cache_total if cache_total > 0 else 0.0
-        
+
         return {
             **self.batch_stats,
             "cache_hit_rate": hit_rate,
@@ -1250,20 +1250,20 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
     """
     Enhanced QA Validation Agent with MCP Integration
     Score: 100/100 - All issues addressed
-    
+
     Fixes implemented:
     1. WebSocket Implementation (-5 points) -> FIXED
        - Enhanced connection management (+3)
        - Improved error handling for dropped connections (+2)
-    
+
     2. Test Generation Complexity (-4 points) -> FIXED
        - Sophisticated question templates (+2)
        - Advanced semantic validation algorithms (+2)
-    
+
     3. Performance Optimization (-2 points) -> FIXED
        - Optimized batch processing of test cases (+2)
     """
-    
+
     def __init__(
         self,
         base_url: str,
@@ -1280,28 +1280,28 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
             base_url=base_url
         )
         PerformanceOptimizationMixin.__init__(self)
-        
+
         self.enable_monitoring = enable_monitoring
         self.enable_advanced_validation = enable_advanced_validation
-        
+
         # Enhanced components
         self.websocket_manager = EnhancedWebSocketManager()
         self.template_engine = SophisticatedTemplateEngine()
         self.semantic_validator = AdvancedSemanticValidator()
         self.batch_processor = OptimizedBatchProcessor()
-        
+
         # Storage
         self.test_suites = {}
         self.question_templates = {}
         self.validation_cache = {}
         self.performance_metrics = defaultdict(list)
-        
+
         # Enhanced monitoring
         if enable_monitoring and PROMETHEUS_AVAILABLE:
             self._setup_enhanced_metrics()
-        
+
         logger.info(f"Enhanced QA Validation Agent initialized with MCP support")
-    
+
     def _setup_enhanced_metrics(self):
         """Setup enhanced Prometheus metrics"""
         self.websocket_connections = Gauge(
@@ -1309,19 +1309,19 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
             'Active WebSocket connections',
             ['agent_id']
         )
-        
+
         self.template_complexity_distribution = Histogram(
             'qa_validation_template_complexity',
             'Distribution of template complexity',
             ['agent_id', 'complexity_level']
         )
-        
+
         self.validation_method_performance = Histogram(
             'qa_validation_method_duration',
             'Performance of validation methods',
             ['agent_id', 'method']
         )
-        
+
         self.batch_processing_efficiency = Histogram(
             'qa_validation_batch_efficiency',
             'Batch processing efficiency metrics',
@@ -1331,25 +1331,25 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
     async def initialize(self) -> None:
         """Initialize the enhanced agent"""
         logger.info("Initializing Enhanced QA Validation Agent...")
-        
+
         # Setup storage
         storage_path = os.getenv("QA_VALIDATION_STORAGE_PATH", "/tmp/qa_validation_enhanced")
         os.makedirs(storage_path, exist_ok=True)
         self.storage_path = storage_path
-        
+
         # Start WebSocket manager
         await self.websocket_manager.start()
-        
+
         # Load sophisticated templates
         await self._load_sophisticated_templates()
-        
+
         # Initialize trust system
         await self._initialize_trust_system()
-        
+
         # Setup monitoring
         if self.enable_monitoring:
             await self._setup_monitoring()
-        
+
         logger.info("Enhanced QA Validation Agent initialization complete")
 
     async def _load_sophisticated_templates(self):
@@ -1357,16 +1357,16 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
         try:
             # Load template data (could be from files, database, etc.)
             template_data = {}  # This would be loaded from configuration
-            
+
             self.template_engine.load_templates(template_data)
-            
+
             logger.info(f"Loaded {len(self.template_engine.templates)} sophisticated templates")
-            
+
         except Exception as e:
             logger.error(f"Failed to load sophisticated templates: {e}")
 
     # ========= MCP Tools =========
-    
+
     @mcp_tool("generate_sophisticated_qa_tests")
     async def generate_sophisticated_qa_tests_mcp(
         self,
@@ -1378,7 +1378,7 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
     ) -> Dict[str, Any]:
         """
         Generate sophisticated QA tests with advanced templates
-        
+
         Args:
             content_data: Source content for generating questions
             template_complexity: Complexity level (basic, intermediate, advanced, expert)
@@ -1394,14 +1394,14 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                     "error": "Content data is required",
                     "error_type": "invalid_input"
                 }
-            
+
             if test_count <= 0 or test_count > 1000:
                 return {
                     "success": False,
                     "error": "Test count must be between 1 and 1000",
                     "error_type": "invalid_test_count"
                 }
-            
+
             # Validate template complexity
             try:
                 complexity = TemplateComplexity(template_complexity)
@@ -1411,11 +1411,11 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                     "error": f"Invalid template complexity: {template_complexity}",
                     "error_type": "invalid_complexity"
                 }
-            
+
             # Set default validation methods
             if validation_methods is None:
                 validation_methods = ["exact_match", "semantic_similarity", "fuzzy_matching"]
-            
+
             # Validate validation methods
             valid_methods = [method.value for method in ValidationMethod]
             invalid_methods = [method for method in validation_methods if method not in valid_methods]
@@ -1425,7 +1425,7 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                     "error": f"Invalid validation methods: {invalid_methods}",
                     "error_type": "invalid_validation_methods"
                 }
-            
+
             # Generate sophisticated QA tests
             start_time = time.time()
             qa_tests = await self._generate_sophisticated_tests(
@@ -1435,20 +1435,20 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                 validation_methods=[ValidationMethod(method) for method in validation_methods]
             )
             generation_time = time.time() - start_time
-            
+
             # Apply batch optimization if enabled
             if batch_optimization and qa_tests:
                 optimized_tests = await self._optimize_test_batch(qa_tests)
             else:
                 optimized_tests = qa_tests
-            
+
             # Update metrics
             if self.enable_monitoring and PROMETHEUS_AVAILABLE:
                 self.template_complexity_distribution.labels(
                     agent_id=self.agent_id,
                     complexity_level=complexity.value
                 ).observe(len(optimized_tests))
-            
+
             response = {
                 "success": True,
                 "tests_generated": len(optimized_tests),
@@ -1459,9 +1459,9 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                 "batch_optimized": batch_optimization,
                 "quality_metrics": self._calculate_test_quality_metrics(optimized_tests)
             }
-            
+
             return response
-            
+
         except Exception as e:
             logger.error(f"Sophisticated QA test generation failed: {e}")
             return {
@@ -1480,7 +1480,7 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
     ) -> Dict[str, Any]:
         """
         Validate QA answers using advanced semantic algorithms
-        
+
         Args:
             qa_pairs: List of question-answer pairs to validate
             validation_methods: Validation methods to apply
@@ -1495,18 +1495,18 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                     "error": "QA pairs are required",
                     "error_type": "invalid_input"
                 }
-            
+
             if not 0.0 <= confidence_threshold <= 1.0:
                 return {
                     "success": False,
                     "error": "Confidence threshold must be between 0.0 and 1.0",
                     "error_type": "invalid_threshold"
                 }
-            
+
             # Set default validation methods
             if validation_methods is None:
                 validation_methods = ["semantic_similarity", "contextual_analysis", "fuzzy_matching"]
-            
+
             # Convert to ValidationMethod enums
             try:
                 method_enums = [ValidationMethod(method) for method in validation_methods]
@@ -1516,17 +1516,17 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                     "error": f"Invalid validation method: {str(e)}",
                     "error_type": "invalid_validation_method"
                 }
-            
+
             # Validate answers semantically
             start_time = time.time()
             validation_results = []
-            
+
             for qa_pair in qa_pairs:
                 question = qa_pair.get("question", "")
                 expected_answer = qa_pair.get("expected_answer", "")
                 actual_answer = qa_pair.get("actual_answer", "")
                 context = qa_pair.get("context", {})
-                
+
                 if not all([question, expected_answer, actual_answer]):
                     validation_results.append({
                         "qa_id": qa_pair.get("id", "unknown"),
@@ -1534,7 +1534,7 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                         "error": "Missing required fields (question, expected_answer, actual_answer)"
                     })
                     continue
-                
+
                 # Perform semantic validation
                 validation_result = await self.semantic_validator.validate_answer(
                     question=question,
@@ -1543,15 +1543,15 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                     validation_methods=method_enums,
                     context=context
                 )
-                
+
                 # Apply confidence threshold
                 passes_threshold = validation_result["overall_score"] >= confidence_threshold
-                
+
                 # Check consensus if enabled
                 consensus_check = True
                 if enable_consensus:
                     consensus_check = validation_result["consensus"]
-                
+
                 validation_results.append({
                     "qa_id": qa_pair.get("id", f"qa_{len(validation_results)}"),
                     "success": True,
@@ -1562,13 +1562,13 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                     "method_results": validation_result["method_results"],
                     "explanation": validation_result["explanation"]
                 })
-            
+
             validation_time = time.time() - start_time
-            
+
             # Calculate summary statistics
             successful_validations = [r for r in validation_results if r["success"]]
             passing_validations = [r for r in successful_validations if r.get("passes_threshold", False)]
-            
+
             response = {
                 "success": True,
                 "total_validations": len(validation_results),
@@ -1583,7 +1583,7 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                 "consensus_enabled": enable_consensus,
                 "results": validation_results
             }
-            
+
             # Update metrics
             if self.enable_monitoring and PROMETHEUS_AVAILABLE:
                 for method in validation_methods:
@@ -1591,9 +1591,9 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                         agent_id=self.agent_id,
                         method=method
                     ).observe(validation_time / len(validation_methods))
-            
+
             return response
-            
+
         except Exception as e:
             logger.error(f"Semantic validation failed: {e}")
             return {
@@ -1612,7 +1612,7 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
     ) -> Dict[str, Any]:
         """
         Optimize batch processing of QA test cases
-        
+
         Args:
             test_data: Test cases to process in batches
             optimization_strategy: Strategy (adaptive, fixed, memory_based)
@@ -1627,14 +1627,14 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                     "error": "Test data is required",
                     "error_type": "invalid_input"
                 }
-            
+
             if max_batch_size <= 0 or max_batch_size > 1000:
                 return {
                     "success": False,
                     "error": "Max batch size must be between 1 and 1000",
                     "error_type": "invalid_batch_size"
                 }
-            
+
             valid_strategies = ["adaptive", "fixed", "memory_based"]
             if optimization_strategy not in valid_strategies:
                 return {
@@ -1642,37 +1642,37 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                     "error": f"Invalid optimization strategy. Valid options: {valid_strategies}",
                     "error_type": "invalid_strategy"
                 }
-            
+
             # Configure batch processor
             self.batch_processor.max_batch_size = max_batch_size
-            
+
             # Define validation function for batch processing
             async def validation_function(test_case: Dict[str, Any]) -> Dict[str, Any]:
                 # Simulate test case processing
                 question = test_case.get("question", "")
                 expected_answer = test_case.get("expected_answer", "")
-                
+
                 # Apply basic validation (would be more sophisticated in practice)
                 if enable_caching:
                     cache_key = f"{question}_{expected_answer}"
                     if cache_key in self.validation_cache:
                         return self.validation_cache[cache_key]
-                
+
                 # Simulate processing time
                 await asyncio.sleep(0.01)
-                
+
                 result = {
                     "test_id": test_case.get("test_id", str(uuid.uuid4())),
                     "processed": True,
                     "score": random.uniform(0.6, 1.0),
                     "processing_time": 0.01
                 }
-                
+
                 if enable_caching:
                     self.validation_cache[cache_key] = result
-                
+
                 return result
-            
+
             # Process batches with optimization
             start_time = time.time()
             processed_results = await self.batch_processor.process_test_cases_batch(
@@ -1681,17 +1681,17 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                 optimization_strategy=optimization_strategy
             )
             processing_time = time.time() - start_time
-            
+
             # Get batch statistics
             batch_stats = self.batch_processor.get_batch_stats()
-            
+
             # Update metrics
             if self.enable_monitoring and PROMETHEUS_AVAILABLE:
                 self.batch_processing_efficiency.labels(
                     agent_id=self.agent_id,
                     strategy=optimization_strategy
                 ).observe(processing_time)
-            
+
             response = {
                 "success": True,
                 "total_processed": len(processed_results),
@@ -1707,9 +1707,9 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                     "cache_hit_rate": batch_stats.get("cache_hit_rate", 0.0)
                 }
             }
-            
+
             return response
-            
+
         except Exception as e:
             logger.error(f"Batch processing optimization failed: {e}")
             return {
@@ -1727,7 +1727,7 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
     ) -> Dict[str, Any]:
         """
         Manage WebSocket connections with enhanced error handling
-        
+
         Args:
             action: Action to perform (status, close, broadcast, stats)
             task_id: Task ID for connection management
@@ -1742,14 +1742,14 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                     "error": f"Invalid action. Valid options: {valid_actions}",
                     "error_type": "invalid_action"
                 }
-            
+
             if action == "status":
                 # Get connection status
                 if task_id:
                     if task_id in self.websocket_manager.connection_pool:
                         connection_ids = self.websocket_manager.connection_pool[task_id]
                         connections_info = []
-                        
+
                         for conn_id in connection_ids:
                             if conn_id in self.websocket_manager.connections:
                                 conn = self.websocket_manager.connections[conn_id]
@@ -1761,7 +1761,7 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                                     "error_count": conn.error_count,
                                     "last_ping": conn.last_ping.isoformat() if conn.last_ping else None
                                 })
-                        
+
                         return {
                             "success": True,
                             "task_id": task_id,
@@ -1787,13 +1787,13 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                             "retry_count": conn.retry_count,
                             "error_count": conn.error_count
                         })
-                    
+
                     return {
                         "success": True,
                         "total_connections": len(all_connections),
                         "connections": all_connections
                     }
-            
+
             elif action == "close":
                 # Close connections for a task
                 if not task_id:
@@ -1802,21 +1802,21 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                         "error": "Task ID is required for close action",
                         "error_type": "missing_task_id"
                     }
-                
+
                 closed_count = 0
                 if task_id in self.websocket_manager.connection_pool:
                     connection_ids = list(self.websocket_manager.connection_pool[task_id])
-                    
+
                     for conn_id in connection_ids:
                         await self.websocket_manager.unregister_connection(conn_id)
                         closed_count += 1
-                
+
                 return {
                     "success": True,
                     "task_id": task_id,
                     "connections_closed": closed_count
                 }
-            
+
             elif action == "broadcast":
                 # Broadcast message to task connections
                 if not task_id:
@@ -1825,7 +1825,7 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                         "error": "Task ID is required for broadcast action",
                         "error_type": "missing_task_id"
                     }
-                
+
                 message = connection_config.get("message", {}) if connection_config else {}
                 if not message:
                     return {
@@ -1833,37 +1833,37 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                         "error": "Message is required for broadcast action",
                         "error_type": "missing_message"
                     }
-                
+
                 success = await self.websocket_manager.send_message(task_id, message, reliable=True)
-                
+
                 return {
                     "success": success,
                     "task_id": task_id,
                     "message_sent": success,
                     "broadcast_time": datetime.utcnow().isoformat()
                 }
-            
+
             elif action == "stats":
                 # Get WebSocket statistics
                 stats = self.websocket_manager.get_stats()
-                
+
                 return {
                     "success": True,
                     "websocket_stats": stats,
                     "collected_at": datetime.utcnow().isoformat()
                 }
-            
+
             elif action == "health_check":
                 # Perform health check on connections
                 healthy_connections = 0
                 unhealthy_connections = 0
-                
+
                 for conn in self.websocket_manager.connections.values():
                     if conn.state == WebSocketConnectionState.CONNECTED:
                         healthy_connections += 1
                     else:
                         unhealthy_connections += 1
-                
+
                 return {
                     "success": True,
                     "health_status": "healthy" if unhealthy_connections == 0 else "degraded",
@@ -1872,7 +1872,7 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                     "total_connections": healthy_connections + unhealthy_connections,
                     "check_time": datetime.utcnow().isoformat()
                 }
-            
+
         except Exception as e:
             logger.error(f"WebSocket connection management failed: {e}")
             return {
@@ -1882,21 +1882,21 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
             }
 
     # ========= MCP Resources =========
-    
+
     @mcp_resource("qavalidation://websocket-status")
     async def get_websocket_status(self) -> Dict[str, Any]:
         """Get WebSocket connection status and health metrics"""
         try:
             stats = self.websocket_manager.get_stats()
-            
+
             # Calculate health metrics
             total_connections = stats["active_connections"]
             connection_states = {}
-            
+
             for conn in self.websocket_manager.connections.values():
                 state = conn.state.value
                 connection_states[state] = connection_states.get(state, 0) + 1
-            
+
             # Determine overall health
             if total_connections == 0:
                 health_status = "no_connections"
@@ -1906,7 +1906,7 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                 health_status = "healthy"
             else:
                 health_status = "mixed"
-            
+
             return {
                 "websocket_status": {
                     "health_status": health_status,
@@ -1926,7 +1926,7 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                     "error_recovery": True
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to get WebSocket status: {e}")
             return {"error": str(e)}
@@ -1941,21 +1941,21 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                 "question_type_distribution": {},
                 "semantic_pattern_distribution": {}
             }
-            
+
             # Analyze template distribution
             for template in self.template_engine.templates.values():
                 # Complexity distribution
                 complexity = template.complexity.value
                 template_stats["complexity_distribution"][complexity] = template_stats["complexity_distribution"].get(complexity, 0) + 1
-                
+
                 # Question type distribution
                 q_type = template.question_type.value
                 template_stats["question_type_distribution"][q_type] = template_stats["question_type_distribution"].get(q_type, 0) + 1
-                
+
                 # Semantic pattern distribution
                 for pattern in template.semantic_patterns:
                     template_stats["semantic_pattern_distribution"][pattern] = template_stats["semantic_pattern_distribution"].get(pattern, 0) + 1
-            
+
             return {
                 "template_capabilities": {
                     "template_statistics": template_stats,
@@ -1978,7 +1978,7 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                     "comparative_analysis": True
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to get template capabilities: {e}")
             return {"error": str(e)}
@@ -2020,7 +2020,7 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                     "embedding_dimensions": 384 if SENTENCE_TRANSFORMERS_AVAILABLE else None
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to get semantic validation status: {e}")
             return {"error": str(e)}
@@ -2030,7 +2030,7 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
         """Get batch processing optimization metrics and performance"""
         try:
             batch_stats = self.batch_processor.get_batch_stats()
-            
+
             return {
                 "batch_processing_metrics": {
                     "processing_statistics": batch_stats,
@@ -2050,13 +2050,13 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                 },
                 "optimization_recommendations": self._generate_optimization_recommendations(batch_stats)
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to get batch processing metrics: {e}")
             return {"error": str(e)}
 
     # ========= Helper Methods =========
-    
+
     async def _generate_sophisticated_tests(
         self,
         content_data: Dict[str, Any],
@@ -2065,32 +2065,32 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
         validation_methods: List[ValidationMethod]
     ) -> List[Dict[str, Any]]:
         """Generate sophisticated QA tests using advanced templates"""
-        
+
         # Get templates matching complexity
         suitable_templates = self.template_engine.get_templates_by_complexity(complexity)
-        
+
         if not suitable_templates:
             # Fallback to all templates
             suitable_templates = list(self.template_engine.templates.keys())
-        
+
         generated_tests = []
-        
+
         for i in range(test_count):
             # Select template
             template_id = random.choice(suitable_templates)
-            
+
             # Prepare context from content data
             context = self._prepare_template_context(content_data, i)
-            
+
             # Generate question
             question_result = self.template_engine.generate_question(template_id, context)
-            
+
             if question_result:
                 question, metadata = question_result
-                
+
                 # Generate expected answer (simplified)
                 expected_answer = self._generate_expected_answer(context, metadata)
-                
+
                 test = {
                     "test_id": f"sophisticated_test_{i}",
                     "question": question,
@@ -2100,11 +2100,11 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                     "context": context,
                     "complexity": complexity.value
                 }
-                
+
                 generated_tests.append(test)
-        
+
         return generated_tests
-    
+
     def _prepare_template_context(self, content_data: Dict[str, Any], index: int) -> Dict[str, Any]:
         """Prepare context for template generation"""
         # Extract entities and attributes from content
@@ -2133,13 +2133,13 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
             "dimension1": "accuracy",
             "dimension2": "speed"
         }
-        
+
         return context
-    
+
     def _generate_expected_answer(self, context: Dict[str, Any], metadata: Dict[str, Any]) -> str:
         """Generate expected answer based on context and template metadata"""
         question_type = metadata.get("question_type", "factual")
-        
+
         if question_type == "factual":
             return f"The {context.get('attribute', 'property')} of {context.get('entity', 'entity')} is well-defined."
         elif question_type == "inferential":
@@ -2150,7 +2150,7 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
             return f"The relationship between {context.get('component1', 'component1')} and {context.get('component2', 'component2')} is synergistic."
         else:
             return "The answer depends on the specific context and requirements."
-    
+
     async def _optimize_test_batch(self, tests: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Optimize test batch for better performance"""
         # Sort by complexity and question type for better batching
@@ -2158,17 +2158,17 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
             t.get("complexity", "medium"),
             t.get("template_metadata", {}).get("question_type", "factual")
         ))
-        
+
         return optimized_tests
-    
+
     def _calculate_test_quality_metrics(self, tests: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Calculate quality metrics for generated tests"""
         if not tests:
             return {}
-        
+
         complexities = [test.get("complexity", "medium") for test in tests]
         question_types = [test.get("template_metadata", {}).get("question_type", "factual") for test in tests]
-        
+
         return {
             "complexity_distribution": {complexity: complexities.count(complexity) for complexity in set(complexities)},
             "question_type_distribution": {q_type: question_types.count(q_type) for q_type in set(question_types)},
@@ -2176,16 +2176,16 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
             "diversity_score": len(set(question_types)) / len(tests),
             "coverage_score": min(1.0, len(set(complexities)) / 4)  # 4 complexity levels
         }
-    
+
     def _calculate_optimization_score(self, batch_stats: Dict[str, Any]) -> float:
         """Calculate batch processing optimization score"""
         # Combine various efficiency metrics
         cache_score = batch_stats.get("cache_hit_rate", 0.0) * 0.4
         throughput_score = min(1.0, batch_stats.get("total_processed", 0) / 1000) * 0.3
         efficiency_score = min(1.0, 1.0 / max(batch_stats.get("average_batch_time", 1.0), 0.1)) * 0.3
-        
+
         return cache_score + throughput_score + efficiency_score
-    
+
     def _get_memory_usage(self) -> float:
         """Get current memory usage in MB"""
         try:
@@ -2193,28 +2193,28 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
             return process.memory_info().rss / (1024 * 1024)
         except:
             return 0.0
-    
+
     def _generate_optimization_recommendations(self, batch_stats: Dict[str, Any]) -> List[str]:
         """Generate optimization recommendations based on batch statistics"""
         recommendations = []
-        
+
         hit_rate = batch_stats.get("cache_hit_rate", 0.0)
         if hit_rate < 0.5:
             recommendations.append("Consider increasing cache size to improve hit rate")
-        
+
         avg_time = batch_stats.get("average_batch_time", 0.0)
         if avg_time > 5.0:
             recommendations.append("Batch processing time is high, consider reducing batch size")
-        
+
         total_processed = batch_stats.get("total_processed", 0)
         if total_processed > 10000:
             recommendations.append("High processing volume detected, consider implementing result archiving")
-        
+
         if not recommendations:
             recommendations.append("Batch processing performance is optimal")
-        
+
         return recommendations
-    
+
     async def _initialize_trust_system(self):
         """Initialize trust system"""
         try:
@@ -2242,14 +2242,14 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
     async def shutdown(self) -> None:
         """Shutdown the agent gracefully"""
         logger.info("Shutting down Enhanced QA Validation Agent...")
-        
+
         try:
             # Stop WebSocket manager
             await self.websocket_manager.stop()
-            
+
             # Save state
             await self._save_agent_state()
-            
+
             logger.info("Agent shutdown completed successfully")
         except Exception as e:
             logger.error(f"Error during agent shutdown: {e}")
@@ -2263,7 +2263,7 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
                 "batch_stats": self.batch_processor.get_batch_stats(),
                 "validation_cache_size": len(self.validation_cache)
             }
-            
+
             state_file = os.path.join(self.storage_path, "agent_state.json")
             if AIOFILES_AVAILABLE:
                 async with aiofiles.open(state_file, 'w') as f:
@@ -2271,7 +2271,7 @@ class EnhancedQAValidationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin)
             else:
                 with open(state_file, 'w') as f:
                     json.dump(state_data, f, default=str, indent=2)
-            
+
             logger.info("Agent state saved successfully")
         except Exception as e:
             logger.error(f"Failed to save agent state: {e}")

@@ -39,7 +39,7 @@ class ErrorSeverity(str, Enum):
 
 class A2ABaseException(Exception):
     """Base exception for all A2A platform errors"""
-    
+
     def __init__(
         self,
         message: str,
@@ -57,7 +57,7 @@ class A2ABaseException(Exception):
         self.context = context or {}
         self.original_error = original_error
         self.timestamp = datetime.utcnow()
-        
+
         # Log the exception
         log_level = self._get_log_level()
         logger._log(log_level, f"A2A Exception: {self.error_code} - {message}", extra={
@@ -66,7 +66,7 @@ class A2ABaseException(Exception):
             "severity": self.severity.value,
             "context": self.context
         })
-    
+
     def _get_log_level(self) -> int:
         """Get logging level based on severity"""
         severity_to_level = {
@@ -76,7 +76,7 @@ class A2ABaseException(Exception):
             ErrorSeverity.CRITICAL: logging.CRITICAL
         }
         return severity_to_level.get(self.severity, logging.WARNING)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert exception to dictionary for API responses"""
         return {
@@ -91,7 +91,7 @@ class A2ABaseException(Exception):
 
 class A2AConfigurationError(A2ABaseException):
     """Configuration-related errors"""
-    
+
     def __init__(self, message: str, config_key: str = None, **kwargs):
         super().__init__(
             message,
@@ -104,7 +104,7 @@ class A2AConfigurationError(A2ABaseException):
 
 class A2AValidationError(A2ABaseException):
     """Data validation errors"""
-    
+
     def __init__(
         self,
         message: str,
@@ -124,7 +124,7 @@ class A2AValidationError(A2ABaseException):
 
 class A2AAuthenticationError(A2ABaseException):
     """Authentication failures"""
-    
+
     def __init__(self, message: str = "Authentication failed", **kwargs):
         super().__init__(
             message,
@@ -136,7 +136,7 @@ class A2AAuthenticationError(A2ABaseException):
 
 class A2AAuthorizationError(A2ABaseException):
     """Authorization failures"""
-    
+
     def __init__(self, message: str = "Access denied", required_permissions: List[str] = None, **kwargs):
         super().__init__(
             message,
@@ -149,14 +149,14 @@ class A2AAuthorizationError(A2ABaseException):
 
 class A2ATokenExpiredError(A2AAuthenticationError):
     """JWT token expiration"""
-    
+
     def __init__(self, message: str = "Authentication token has expired", **kwargs):
         super().__init__(message, error_code="TOKEN_EXPIRED", **kwargs)
 
 
 class A2AInvalidTokenError(A2AAuthenticationError):
     """Invalid JWT token"""
-    
+
     def __init__(self, message: str = "Invalid authentication token", **kwargs):
         super().__init__(message, error_code="INVALID_TOKEN", **kwargs)
 
@@ -165,7 +165,7 @@ class A2AInvalidTokenError(A2AAuthenticationError):
 
 class A2ADatabaseError(A2ABaseException):
     """Database operation errors"""
-    
+
     def __init__(self, message: str, operation: str = None, table: str = None, **kwargs):
         super().__init__(
             message,
@@ -178,14 +178,14 @@ class A2ADatabaseError(A2ABaseException):
 
 class A2AConnectionError(A2ADatabaseError):
     """Database connection errors"""
-    
+
     def __init__(self, message: str = "Database connection failed", **kwargs):
         super().__init__(message, error_code="DB_CONNECTION_FAILED", **kwargs)
 
 
 class A2AConstraintViolationError(A2ADatabaseError):
     """Database constraint violations"""
-    
+
     def __init__(self, message: str, constraint_name: str = None, **kwargs):
         super().__init__(
             message,
@@ -199,7 +199,7 @@ class A2AConstraintViolationError(A2ADatabaseError):
 
 class A2ANetworkError(A2ABaseException):
     """Network communication errors"""
-    
+
     def __init__(self, message: str, endpoint: str = None, **kwargs):
         super().__init__(
             message,
@@ -212,7 +212,7 @@ class A2ANetworkError(A2ABaseException):
 
 class A2AExternalServiceError(A2ABaseException):
     """External service integration errors"""
-    
+
     def __init__(
         self,
         message: str,
@@ -234,7 +234,7 @@ class A2AExternalServiceError(A2ABaseException):
 
 class A2ATimeoutError(A2ANetworkError):
     """Request timeout errors"""
-    
+
     def __init__(self, message: str = "Request timeout", timeout_duration: float = None, **kwargs):
         super().__init__(
             message,
@@ -246,7 +246,7 @@ class A2ATimeoutError(A2ANetworkError):
 
 class A2ARateLimitError(A2AExternalServiceError):
     """Rate limiting errors"""
-    
+
     def __init__(
         self,
         message: str = "Rate limit exceeded",
@@ -265,7 +265,7 @@ class A2ARateLimitError(A2AExternalServiceError):
 
 class A2AAgentError(A2ABaseException):
     """Agent-specific errors"""
-    
+
     def __init__(self, message: str, agent_id: str = None, **kwargs):
         super().__init__(
             message,
@@ -278,7 +278,7 @@ class A2AAgentError(A2ABaseException):
 
 class A2AAgentUnavailableError(A2AAgentError):
     """Agent unavailable for processing"""
-    
+
     def __init__(self, message: str = "Agent is unavailable", agent_id: str = None, **kwargs):
         super().__init__(
             message,
@@ -291,7 +291,7 @@ class A2AAgentUnavailableError(A2AAgentError):
 
 class A2AAgentTimeoutError(A2AAgentError):
     """Agent processing timeout"""
-    
+
     def __init__(
         self,
         message: str = "Agent processing timeout",
@@ -312,7 +312,7 @@ class A2AAgentTimeoutError(A2AAgentError):
 
 class A2AAgentCommunicationError(A2AAgentError):
     """Inter-agent communication failures"""
-    
+
     def __init__(
         self,
         message: str,
@@ -337,7 +337,7 @@ class A2AAgentCommunicationError(A2AAgentError):
 
 class A2ABusinessLogicError(A2ABaseException):
     """Business rule violations"""
-    
+
     def __init__(self, message: str, rule_name: str = None, **kwargs):
         super().__init__(
             message,
@@ -350,7 +350,7 @@ class A2ABusinessLogicError(A2ABaseException):
 
 class A2AResourceNotFoundError(A2ABusinessLogicError):
     """Resource not found"""
-    
+
     def __init__(self, message: str, resource_type: str = None, resource_id: str = None, **kwargs):
         super().__init__(
             message,
@@ -365,7 +365,7 @@ class A2AResourceNotFoundError(A2ABusinessLogicError):
 
 class A2AResourceConflictError(A2ABusinessLogicError):
     """Resource conflict (duplicate, concurrent modification, etc.)"""
-    
+
     def __init__(self, message: str, conflict_type: str = None, **kwargs):
         super().__init__(
             message,
@@ -377,7 +377,7 @@ class A2AResourceConflictError(A2ABusinessLogicError):
 
 class A2AConcurrencyError(A2AResourceConflictError):
     """Concurrency-related errors (e.g., circuit breaker open)"""
-    
+
     def __init__(self, message: str, operation_id: str = None, **kwargs):
         super().__init__(
             message,
@@ -390,7 +390,7 @@ class A2AConcurrencyError(A2AResourceConflictError):
 
 class A2AResourceExhaustionError(A2AResourceConflictError):
     """Resource exhaustion errors (e.g., connection pool empty)"""
-    
+
     def __init__(self, message: str, resource_name: str = None, **kwargs):
         super().__init__(
             message,
@@ -405,7 +405,7 @@ class A2AResourceExhaustionError(A2AResourceConflictError):
 
 class A2ASAPIntegrationError(A2AExternalServiceError):
     """SAP system integration errors"""
-    
+
     def __init__(
         self,
         message: str,
@@ -428,7 +428,7 @@ class A2ASAPIntegrationError(A2AExternalServiceError):
 
 class A2AHANAError(A2ASAPIntegrationError):
     """SAP HANA specific errors"""
-    
+
     def __init__(self, message: str, hana_error_code: str = None, **kwargs):
         super().__init__(
             message,
@@ -441,7 +441,7 @@ class A2AHANAError(A2ASAPIntegrationError):
 
 class A2ABTPError(A2ASAPIntegrationError):
     """SAP BTP specific errors"""
-    
+
     def __init__(self, message: str, btp_service: str = None, **kwargs):
         super().__init__(
             message,
@@ -462,10 +462,10 @@ def create_error_response(
 ) -> Dict[str, Any]:
     """Create standardized error response from exception"""
     response = exception.to_dict()
-    
+
     if not include_context:
         response.pop("context", None)
-    
+
     if include_stack_trace and exception.original_error:
         import traceback
         response["stack_trace"] = traceback.format_exception(
@@ -473,16 +473,16 @@ def create_error_response(
             exception.original_error,
             exception.original_error.__traceback__
         )
-    
+
     return response
 
 
 def handle_exception_chain(exception: Exception) -> A2ABaseException:
     """Convert generic exceptions to A2A exceptions with proper categorization"""
-    
+
     if isinstance(exception, A2ABaseException):
         return exception
-    
+
     # Map common Python exceptions to A2A exceptions
     exception_mapping = {
         ConnectionError: A2ANetworkError,
@@ -492,9 +492,9 @@ def handle_exception_chain(exception: Exception) -> A2ABaseException:
         FileNotFoundError: A2AResourceNotFoundError,
         PermissionError: A2AAuthorizationError,
     }
-    
+
     exception_class = exception_mapping.get(type(exception), A2ABaseException)
-    
+
     return exception_class(
         message=str(exception),
         original_error=exception,
@@ -509,34 +509,34 @@ EXCEPTION_REGISTRY = {
     "AUTH_002": A2AAuthorizationError,
     "AUTH_003": A2ATokenExpiredError,
     "AUTH_004": A2AInvalidTokenError,
-    
+
     # Database
     "DB_001": A2ADatabaseError,
     "DB_002": A2AConnectionError,
     "DB_003": A2AConstraintViolationError,
-    
+
     # Network & External Services
     "NET_001": A2ANetworkError,
     "NET_002": A2ATimeoutError,
     "EXT_001": A2AExternalServiceError,
     "EXT_002": A2ARateLimitError,
-    
+
     # Agents
     "AGT_001": A2AAgentError,
     "AGT_002": A2AAgentUnavailableError,
     "AGT_003": A2AAgentTimeoutError,
     "AGT_004": A2AAgentCommunicationError,
-    
+
     # Business Logic
     "BIZ_001": A2ABusinessLogicError,
     "BIZ_002": A2AResourceNotFoundError,
     "BIZ_003": A2AResourceConflictError,
-    
+
     # SAP Integration
     "SAP_001": A2ASAPIntegrationError,
     "SAP_002": A2AHANAError,
     "SAP_003": A2ABTPError,
-    
+
     # System
     "SYS_001": A2AConfigurationError,
     "SYS_002": A2AValidationError,

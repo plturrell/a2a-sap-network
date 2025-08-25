@@ -131,11 +131,11 @@ SERVICE_REGISTRY = get_service_registry()
 
 class RateLimiter:
     """Token bucket rate limiter with Redis backend"""
-    
+
     def __init__(self):
         self.buckets: Dict[str, Dict[str, Any]] = {}
         self._lock = asyncio.Lock()
-    
+
     async def check_rate_limit(
         self,
         key: str,
@@ -145,7 +145,7 @@ class RateLimiter:
         """Check if request is within rate limits"""
         async with self._lock:
             now = time.time()
-            
+
             if key not in self.buckets:
                 self.buckets[key] = {
                     "tokens": limit.burst_size,
@@ -155,50 +155,50 @@ class RateLimiter:
                     "hour_count": 0,
                     "hour_window": now
                 }
-            
+
             bucket = self.buckets[key]
-            
+
             # Refill tokens
             time_passed = now - bucket["last_refill"]
             refill_rate = limit.requests_per_minute / 60.0
             new_tokens = time_passed * refill_rate
             bucket["tokens"] = min(limit.burst_size, bucket["tokens"] + new_tokens)
             bucket["last_refill"] = now
-            
+
             # Check minute window
             if now - bucket["minute_window"] > 60:
                 bucket["minute_count"] = 0
                 bucket["minute_window"] = now
-            
+
             # Check hour window
             if now - bucket["hour_window"] > 3600:
                 bucket["hour_count"] = 0
                 bucket["hour_window"] = now
-            
+
             # Check limits
             if bucket["tokens"] < cost:
                 return False, {
                     "limit": "burst",
                     "retry_after": int((cost - bucket["tokens"]) / refill_rate)
                 }
-            
+
             if bucket["minute_count"] + cost > limit.requests_per_minute:
                 return False, {
                     "limit": "minute",
                     "retry_after": 60 - int(now - bucket["minute_window"])
                 }
-            
+
             if bucket["hour_count"] + cost > limit.requests_per_hour:
                 return False, {
                     "limit": "hour",
                     "retry_after": 3600 - int(now - bucket["hour_window"])
                 }
-            
+
             # Deduct tokens
             bucket["tokens"] -= cost
             bucket["minute_count"] += cost
             bucket["hour_count"] += cost
-            
+
             return True, {
                 "tokens_remaining": int(bucket["tokens"]),
                 "requests_remaining_minute": limit.requests_per_minute - bucket["minute_count"],
@@ -208,14 +208,14 @@ class RateLimiter:
 
 class CircuitBreaker:
     """Circuit breaker for service protection"""
-    
+
     def __init__(self, threshold: int = 5, timeout: int = 60):
         self.threshold = threshold
         self.timeout = timeout
         self.failures: Dict[str, List[float]] = {}
         self.open_until: Dict[str, float] = {}
         self._lock = asyncio.Lock()
-    
+
     async def is_open(self, service: str) -> bool:
         """Check if circuit is open for a service"""
         async with self._lock:
@@ -227,29 +227,29 @@ class CircuitBreaker:
                     del self.open_until[service]
                     self.failures[service] = []
             return False
-    
+
     async def record_success(self, service: str):
         """Record successful request"""
         async with self._lock:
             if service in self.failures:
                 self.failures[service] = []
-    
+
     async def record_failure(self, service: str):
         """Record failed request"""
         async with self._lock:
             now = time.time()
-            
+
             if service not in self.failures:
                 self.failures[service] = []
-            
+
             # Remove old failures
             self.failures[service] = [
                 f for f in self.failures[service]
                 if now - f < 60  # Consider failures in last minute
             ]
-            
+
             self.failures[service].append(now)
-            
+
             # Check if we should open circuit
             if len(self.failures[service]) >= self.threshold:
                 self.open_until[service] = now + self.timeout
@@ -258,21 +258,21 @@ class CircuitBreaker:
 
 class APIGateway:
     """Main API Gateway class"""
-    
+
     def __init__(self, config: GatewayConfig):
         self.config = config
         self.rate_limiter = RateLimiter()
         self.circuit_breakers: Dict[str, CircuitBreaker] = {}
         self.http_client = # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
         # httpx\.AsyncClient(timeout=30.0)
-        
+
         # Initialize circuit breakers
         for service_name, service_config in config.services.items():
             self.circuit_breakers[service_name] = CircuitBreaker(
                 threshold=service_config.circuit_breaker_threshold,
                 timeout=service_config.circuit_breaker_timeout
             )
-    
+
     @trace_async("gateway_route_request")
     async def route_request(
         self,
@@ -282,7 +282,7 @@ class APIGateway:
         user_id: Optional[str] = None
     ) -> JSONResponse:
         """Route request to appropriate service"""
-        
+
         # Add trace attributes
         add_span_attributes({
             "gateway.service": service_name,
@@ -290,20 +290,20 @@ class APIGateway:
             "gateway.method": request.method,
             "gateway.user_id": user_id or "anonymous"
         })
-        
+
         # Check if service exists
         if service_name not in self.config.services:
             raise HTTPException(status_code=404, detail=f"Service {service_name} not found")
-        
+
         service_config = self.config.services[service_name]
-        
+
         # Check circuit breaker
         if await self.circuit_breakers[service_name].is_open(service_name):
             raise HTTPException(
                 status_code=503,
                 detail=f"Service {service_name} is temporarily unavailable"
             )
-        
+
         # Prepare request - sanitize path to prevent traversal attacks
         # Remove any path traversal sequences
         safe_path = path.replace("../", "").replace("..\\", "")
@@ -312,24 +312,24 @@ class APIGateway:
             safe_path = f"/{safe_path}"
         # Remove double slashes
         safe_path = safe_path.replace("//", "/")
-        
+
         target_url = f"{service_config.base_url}{safe_path}"
-        
+
         # Forward headers with trace context
         headers = dict(request.headers)
         headers.update(get_trace_headers())
-        
+
         # Add gateway headers
         headers["X-Forwarded-For"] = request.client.host
         headers["X-Forwarded-Proto"] = request.url.scheme
         headers["X-Gateway-Request-Id"] = request.state.request_id
-        
+
         if user_id:
             headers["X-User-Id"] = user_id
-        
+
         # Get request body
         body = await request.body()
-        
+
         # Make request with retries
         for attempt in range(service_config.retry_attempts):
             try:
@@ -340,38 +340,38 @@ class APIGateway:
                     content=body,
                     timeout=service_config.timeout
                 )
-                
+
                 # Record success
                 await self.circuit_breakers[service_name].record_success(service_name)
-                
+
                 # Return response
                 return JSONResponse(
                     content=response.json() if response.headers.get("content-type", "").startswith("application/json") else response.text,
                     status_code=response.status_code,
                     headers=dict(response.headers)
                 )
-                
+
             except Exception as e:
                 logger.error(f"Request to {service_name} failed (attempt {attempt + 1}): {e}")
                 await self.circuit_breakers[service_name].record_failure(service_name)
-                
+
                 if attempt == service_config.retry_attempts - 1:
                     raise HTTPException(
                         status_code=502,
                         detail=f"Failed to connect to {service_name}"
                     )
-                
+
                 # Exponential backoff
                 await asyncio.sleep(2 ** attempt)
-    
+
     async def check_service_health(self, service_name: str) -> Dict[str, Any]:
         """Check health of a specific service"""
         if service_name not in self.config.services:
             return {"status": "unknown", "error": "Service not found"}
-        
+
         service_config = self.config.services[service_name]
         health_url = f"{service_config.base_url}{service_config.health_endpoint}"
-        
+
         try:
             response = await self.http_client.get(health_url, timeout=5.0)
             if response.status_code == 200:
@@ -390,18 +390,18 @@ class APIGateway:
                 "status": "unhealthy",
                 "error": str(e)
             }
-    
+
     async def get_all_service_health(self) -> Dict[str, Any]:
         """Get health status of all services"""
         health_checks = {}
-        
+
         tasks = [
             self.check_service_health(service_name)
             for service_name in self.config.services
         ]
-        
+
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         for service_name, result in zip(self.config.services.keys(), results):
             if isinstance(result, Exception):
                 health_checks[service_name] = {
@@ -410,13 +410,13 @@ class APIGateway:
                 }
             else:
                 health_checks[service_name] = result
-        
+
         # Overall status
         all_healthy = all(
             check.get("status") == "healthy"
             for check in health_checks.values()
         )
-        
+
         return {
             "overall_status": "healthy" if all_healthy else "degraded",
             "services": health_checks,

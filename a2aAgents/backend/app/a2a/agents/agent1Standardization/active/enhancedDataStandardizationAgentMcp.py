@@ -108,14 +108,14 @@ class StandardizationMetrics:
     avg_processing_time: float = 0.0
     memory_usage_mb: float = 0.0
     cpu_usage_percent: float = 0.0
-    
+
     def update_average_time(self, new_time: float):
         """Update rolling average processing time"""
         if self.total_processed == 0:
             self.avg_processing_time = new_time
         else:
             self.avg_processing_time = (
-                (self.avg_processing_time * self.total_processed + new_time) / 
+                (self.avg_processing_time * self.total_processed + new_time) /
                 (self.total_processed + 1)
             )
 
@@ -134,7 +134,7 @@ class BatchProcessingConfig:
 
 class EnhancedCache:
     """Enhanced cache with comprehensive error handling and multiple strategies"""
-    
+
     def __init__(self, strategy: CacheStrategy = CacheStrategy.LRU, max_size: int = 10000):
 
         # Initialize security features
@@ -147,32 +147,32 @@ class EnhancedCache:
         self.access_counts = defaultdict(int)
         self.ttl_data = {}
         self.lock = asyncio.Lock()
-        
+
     async def get(self, key: str) -> Optional[Any]:
         """Get value from cache with error handling"""
         async with self.lock:
             try:
                 if key not in self.cache:
                     return None
-                
+
                 # Check TTL if applicable
                 if self.strategy == CacheStrategy.TTL and key in self.ttl_data:
                     if datetime.utcnow() > self.ttl_data[key]:
                         del self.cache[key]
                         del self.ttl_data[key]
                         return None
-                
+
                 # Update access patterns
                 value = self.cache.pop(key)
                 self.cache[key] = value  # Move to end (LRU)
                 self.access_counts[key] += 1
-                
+
                 return value
-                
+
             except Exception as e:
                 logger.error(f"Cache get error for key {key}: {e}")
                 return None
-    
+
     async def set(self, key: str, value: Any, ttl: int = None) -> bool:
         """Set value in cache with error handling"""
         async with self.lock:
@@ -180,19 +180,19 @@ class EnhancedCache:
                 # Enforce size limit
                 if len(self.cache) >= self.max_size and key not in self.cache:
                     await self._evict()
-                
+
                 self.cache[key] = value
                 self.access_counts[key] = 1
-                
+
                 if ttl and self.strategy == CacheStrategy.TTL:
                     self.ttl_data[key] = datetime.utcnow() + timedelta(seconds=ttl)
-                
+
                 return True
-                
+
             except Exception as e:
                 logger.error(f"Cache set error for key {key}: {e}")
                 return False
-    
+
     async def _evict(self):
         """Evict items based on strategy"""
         try:
@@ -207,20 +207,20 @@ class EnhancedCache:
             elif self.strategy == CacheStrategy.ADAPTIVE:
                 # Adaptive strategy based on access patterns
                 await self._adaptive_evict()
-                
+
         except Exception as e:
             logger.error(f"Cache eviction error: {e}")
-    
+
     async def _adaptive_evict(self):
         """Adaptive eviction based on access patterns and age"""
         # Implement sophisticated eviction logic
         candidates = []
         now = datetime.utcnow()
-        
+
         for key in list(self.cache.keys())[:self.max_size // 4]:  # Consider 25% for eviction
             score = self.access_counts[key] / (1 + (now - self.ttl_data.get(key, now)).total_seconds())
             candidates.append((score, key))
-        
+
         # Evict lowest scoring item
         if candidates:
             candidates.sort()
@@ -230,7 +230,7 @@ class EnhancedCache:
                 del self.access_counts[key]
             if key in self.ttl_data:
                 del self.ttl_data[key]
-    
+
     async def clear(self):
         """Clear cache with error handling"""
         async with self.lock:
@@ -244,7 +244,7 @@ class EnhancedCache:
 
 class ConnectionPool:
     """Connection pool for external services"""
-    
+
     def __init__(self, service_url: str, max_connections: int = 10):
 
         # Initialize security features
@@ -256,14 +256,14 @@ class ConnectionPool:
         self.pool = asyncio.Queue(maxsize=max_connections)
         self.active_connections = 0
         self.lock = asyncio.Lock()
-        
+
     async def acquire(self) -> httpx.AsyncClient:
         """Acquire connection from pool"""
         try:
             # Try to get existing connection
             if not self.pool.empty():
                 return await self.pool.get()
-            
+
             # Create new connection if under limit
             async with self.lock:
                 if self.active_connections < self.max_connections:
@@ -279,16 +279,16 @@ class ConnectionPool:
                     # )
                     self.active_connections += 1
                     return client
-            
+
             # Wait for available connection
             return await self.pool.get()
-            
+
         except Exception as e:
             logger.error(f"Connection pool acquire error: {e}")
             # Fallback to new connection
             return # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
         # httpx\.AsyncClient(base_url=self.service_url, timeout=30.0)
-    
+
     async def release(self, client: httpx.AsyncClient):
         """Release connection back to pool"""
         try:
@@ -304,7 +304,7 @@ class ConnectionPool:
                 await client.aclose()
             except:
                 pass
-    
+
     async def close_all(self):
         """Close all connections"""
         while not self.pool.empty():
@@ -335,7 +335,7 @@ def get_trust_contract():
 class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizationMixin):
     """
     Enhanced Data Standardization Agent with MCP Integration
-    
+
     Features:
     - MCP tools for standardization operations
     - Advanced batch processing optimization
@@ -346,11 +346,11 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
     - Consistent async patterns
     - Standardized error responses
     """
-    
+
     def __init__(self, base_url: str, enable_monitoring: bool = True):
         """
         Initialize the enhanced Data Standardization Agent
-        
+
         Args:
             base_url: Base URL for the agent's API endpoints
             enable_monitoring: Enable performance monitoring
@@ -370,46 +370,46 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             base_url=base_url
         )
         PerformanceOptimizationMixin.__init__(self)
-        
+
         self.enable_monitoring = enable_monitoring
-        
+
         # Enhanced standardizers with real implementations
         self.standardizers = self._initialize_standardizers()
-        
+
         # Statistics tracking
         self.metrics = StandardizationMetrics()
-        
+
         # Enhanced cache with error handling
         self.cache = EnhancedCache(strategy=CacheStrategy.ADAPTIVE)
-        
+
         # Batch processing configuration
         self.batch_config = BatchProcessingConfig()
-        
+
         # Connection pools for external services
         self.connection_pools = {}
         self._initialize_connection_pools()
-        
+
         # Schema registry
         self.schema_registry = {}
         self.catalog_manager_url = os.getenv("CATALOG_MANAGER_URL")
-        
+
         # Trust system components
         self.trust_identity = None
         self.trust_contract = None
         self.trusted_agents = set()
-        
+
         # Memory management
         self.memory_monitor = MemoryMonitor()
-        
+
         # Task tracker
         self.task_tracker = AgentTaskTracker(
             agent_id=self.agent_id,
             agent_name=self.name
         )
-        
+
         # Background tasks
         self.background_tasks = []
-        
+
         # Circuit breakers for external services
         self.circuit_breakers = {
             "catalog_manager": CircuitBreaker(
@@ -421,17 +421,17 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                 timeout=30
             )
         }
-        
+
         # Process pool for CPU-intensive operations
         self.process_pool = None
-        
+
         # Private key for trust system - Required for production
         self.private_key = os.getenv("AGENT_PRIVATE_KEY")
         if not self.private_key:
             raise ValueError("AGENT_PRIVATE_KEY environment variable is required for trust system operation")
-        
+
         logger.info(f"Initialized Enhanced Data Standardization Agent MCP v5.0.0")
-    
+
     def _initialize_standardizers(self) -> Dict[str, Any]:
         """Initialize enhanced standardizers with real implementations"""
         return {
@@ -442,7 +442,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             "measure": EnhancedMeasureStandardizer(),
             "product": EnhancedProductStandardizer()
         }
-    
+
     def _initialize_connection_pools(self):
         """Initialize connection pools for external services"""
         services = {
@@ -450,14 +450,14 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             "enrichment_service": os.getenv("ENRICHMENT_SERVICE_URL"),
             "validation_service": os.getenv("VALIDATION_SERVICE_URL")
         }
-        
+
         for name, url in services.items():
             self.connection_pools[name] = ConnectionPool(url, max_connections=10)
-    
+
     # ==========================================
     # MCP Tools for Standardization Operations
     # ==========================================
-    
+
     @mcp_tool(
         name="standardize_data",
         description="Standardize financial data to L4 hierarchical structure with optimization",
@@ -483,18 +483,18 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                                   options: Dict[str, Any] = None) -> Dict[str, Any]:
         """
         Standardize data via MCP tool with advanced optimization
-        
+
         This method provides optimized standardization with multiple processing modes,
         validation, enrichment, and caching capabilities.
         """
         try:
             options = options or {}
             mode = StandardizationMode(options.get("mode", "batch"))
-            
+
             # Start performance tracking
             start_time = time.time()
             initial_memory = self.memory_monitor.get_current_usage()
-            
+
             # Check cache if enabled
             if options.get("cache_results", True):
                 cache_key = self._generate_cache_key(data_type, items)
@@ -507,7 +507,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                         "result": cached_result
                     }
                 self.metrics.cache_misses += 1
-            
+
             # Process based on mode
             if mode == StandardizationMode.SINGLE:
                 result = await self._standardize_single(data_type, items, options)
@@ -517,24 +517,24 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                 result = await self._standardize_streaming(data_type, items, options)
             elif mode == StandardizationMode.PARALLEL:
                 result = await self._standardize_parallel(data_type, items, options)
-            
+
             # Update metrics
             processing_time = time.time() - start_time
             self.metrics.update_average_time(processing_time)
             self.metrics.total_processed += len(items)
             self.metrics.successful += result.get("successful_records", 0)
             self.metrics.failed += result.get("failed_records", 0)
-            
+
             # Memory usage
             final_memory = self.memory_monitor.get_current_usage()
             self.metrics.memory_usage_mb = final_memory - initial_memory
-            
+
             # Cache successful result
             if options.get("cache_results", True) and result.get("success"):
                 await self.cache.set(cache_key, result, ttl=1800)  # 30 minutes
-            
+
             logger.info(f"✅ Standardized {len(items)} {data_type} items in {processing_time:.2f}s")
-            
+
             return {
                 "success": True,
                 "result": result,
@@ -544,12 +544,12 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                     "mode": mode.value
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Standardization failed: {e}")
             self.metrics.failed += len(items)
             return {"success": False, "error": str(e)}
-    
+
     @mcp_tool(
         name="validate_standardization",
         description="Validate standardized data against L4 schema requirements",
@@ -567,17 +567,17 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                                          validation_level: str = "comprehensive") -> Dict[str, Any]:
         """
         Validate standardized data via MCP tool
-        
+
         Performs multi-level validation to ensure data meets L4 hierarchical standards.
         """
         try:
             validator = self.standardizers.get(data_type)
             if not validator:
                 return {"success": False, "error": f"Unknown data type: {data_type}"}
-            
+
             validation_results = []
             valid_count = 0
-            
+
             for item in standardized_items:
                 if validation_level == "basic":
                     is_valid = await validator.validate_basic(item)
@@ -585,18 +585,18 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                     is_valid = await validator.validate_comprehensive(item)
                 elif validation_level == "strict":
                     is_valid = await validator.validate_strict(item)
-                
+
                 validation_results.append({
                     "item_id": item.get("id", "unknown"),
                     "valid": is_valid,
                     "validation_level": validation_level
                 })
-                
+
                 if is_valid:
                     valid_count += 1
-            
+
             success_rate = valid_count / len(standardized_items) if standardized_items else 0
-            
+
             return {
                 "success": True,
                 "validation_results": validation_results,
@@ -608,11 +608,11 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                     "validation_level": validation_level
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Validation failed: {e}")
             return {"success": False, "error": str(e)}
-    
+
     @mcp_tool(
         name="enrich_standardized_data",
         description="Enrich standardized data with additional context and relationships",
@@ -630,19 +630,19 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                                          enrichment_sources: List[str] = None) -> Dict[str, Any]:
         """
         Enrich standardized data via MCP tool
-        
+
         Adds additional context, relationships, and metadata to standardized data.
         """
         try:
             enrichment_sources = enrichment_sources or ["internal", "reference_data"]
             enriched_items = []
-            
+
             # Get connection pool for enrichment service
             enrichment_pool = self.connection_pools.get("enrichment_service")
-            
+
             for item in standardized_items:
                 enriched_item = item.copy()
-                
+
                 for source in enrichment_sources:
                     if source == "internal":
                         # Use internal enrichment logic
@@ -658,20 +658,20 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                             )
                         except CircuitBreakerOpenError:
                             logger.warning("External enrichment circuit breaker open, skipping")
-                
+
                 enriched_items.append(enriched_item)
-            
+
             return {
                 "success": True,
                 "enriched_items": enriched_items,
                 "enrichment_sources": enrichment_sources,
                 "total_enriched": len(enriched_items)
             }
-            
+
         except Exception as e:
             logger.error(f"Enrichment failed: {e}")
             return {"success": False, "error": str(e)}
-    
+
     @mcp_tool(
         name="batch_standardize",
         description="Optimized batch standardization for large datasets",
@@ -693,21 +693,21 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                                    memory_limit_mb: int = 1024) -> Dict[str, Any]:
         """
         Batch standardize multiple data types via MCP tool
-        
+
         Provides optimized processing for large datasets with memory management.
         """
         try:
             # Update batch configuration
             self.batch_config.memory_limit_mb = memory_limit_mb
-            
+
             results = {}
             total_items = sum(len(items) for items in batches.values())
-            
+
             # Monitor memory usage
             if self.memory_monitor.get_current_usage() > memory_limit_mb * 0.8:
                 # Trigger garbage collection
                 gc.collect()
-            
+
             if parallel_processing and len(batches) > 1:
                 # Process different data types in parallel
                 tasks = []
@@ -717,9 +717,9 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                         "cache_results": True
                     })
                     tasks.append(task)
-                
+
                 batch_results = await asyncio.gather(*tasks, return_exceptions=True)
-                
+
                 for i, (data_type, items) in enumerate(batches.items()):
                     if isinstance(batch_results[i], Exception):
                         results[data_type] = {"error": str(batch_results[i])}
@@ -731,13 +731,13 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                     results[data_type] = await self._standardize_batch_optimized(
                         data_type, items, {"validate": True, "cache_results": True}
                     )
-            
+
             # Calculate summary
             total_successful = sum(
-                r.get("successful_records", 0) for r in results.values() 
+                r.get("successful_records", 0) for r in results.values()
                 if isinstance(r, dict)
             )
-            
+
             return {
                 "success": True,
                 "batch_results": results,
@@ -748,15 +748,15 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                     "parallel_processing": parallel_processing
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Batch standardization failed: {e}")
             return {"success": False, "error": str(e)}
-    
+
     # ==========================================
     # MCP Resources for Standardization State
     # ==========================================
-    
+
     @mcp_resource(
         uri="standardization://schemas",
         name="Standardization Schemas",
@@ -766,7 +766,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
     async def get_standardization_schemas(self) -> Dict[str, Any]:
         """Get standardization schemas via MCP resource"""
         schemas = {}
-        
+
         for data_type, standardizer in self.standardizers.items():
             schemas[data_type] = {
                 "version": standardizer.get_schema_version(),
@@ -775,14 +775,14 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                 "validation_rules": standardizer.get_validation_rules(),
                 "last_updated": standardizer.get_last_updated()
             }
-        
+
         return {
             "schemas": schemas,
             "total_schemas": len(schemas),
             "l4_compliant": True,
             "last_updated": datetime.utcnow().isoformat()
         }
-    
+
     @mcp_resource(
         uri="standardization://metrics",
         name="Standardization Metrics",
@@ -793,7 +793,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
         """Get standardization metrics via MCP resource"""
         cpu_percent = psutil.cpu_percent(interval=0.1)
         memory_info = psutil.virtual_memory()
-        
+
         return {
             "processing_metrics": {
                 "total_processed": self.metrics.total_processed,
@@ -816,7 +816,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             },
             "timestamp": datetime.utcnow().isoformat()
         }
-    
+
     @mcp_resource(
         uri="standardization://batch-status",
         name="Batch Processing Status",
@@ -826,7 +826,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
     async def get_batch_status(self) -> Dict[str, Any]:
         """Get batch processing status via MCP resource"""
         active_tasks = []
-        
+
         # Get task statuses
         for task_id, task in self.tasks.items():
             if task["status"] in [TaskStatus.PENDING, TaskStatus.RUNNING]:
@@ -838,7 +838,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                         "data_type": task.get("data", {}).get("data_type", "unknown"),
                         "items_count": task.get("data", {}).get("items_count", 0)
                     })
-        
+
         return {
             "active_batches": len(active_tasks),
             "batch_config": {
@@ -850,7 +850,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             "active_tasks": active_tasks,
             "process_pool_active": self.process_pool is not None
         }
-    
+
     @mcp_resource(
         uri="standardization://validation-rules",
         name="Validation Rules",
@@ -860,7 +860,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
     async def get_validation_rules(self) -> Dict[str, Any]:
         """Get validation rules via MCP resource"""
         rules = {}
-        
+
         for data_type, standardizer in self.standardizers.items():
             rules[data_type] = {
                 "basic_rules": standardizer.get_basic_validation_rules(),
@@ -868,7 +868,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                 "strict_rules": standardizer.get_strict_validation_rules(),
                 "custom_rules": standardizer.get_custom_validation_rules()
             }
-        
+
         return {
             "validation_rules": rules,
             "total_rule_sets": len(rules),
@@ -877,37 +877,37 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                 bool(r.get("custom_rules")) for r in rules.values()
             )
         }
-    
+
     # ==========================================
     # Optimized Processing Methods
     # ==========================================
-    
+
     async def _standardize_batch_optimized(self, data_type: str, items: List[Dict[str, Any]],
                                          options: Dict[str, Any]) -> Dict[str, Any]:
         """
         Optimized batch standardization with memory management
-        
+
         Implements chunking, parallel processing, and adaptive sizing.
         """
         standardizer = self.standardizers.get(data_type)
         if not standardizer:
             raise ValueError(f"Unknown data type: {data_type}")
-        
+
         standardized_items = []
         failed_items = []
-        
+
         # Adaptive batch sizing based on memory
         batch_size = self._calculate_optimal_batch_size(items)
-        
+
         # Process in chunks
         for i in range(0, len(items), batch_size):
             chunk = items[i:i + batch_size]
-            
+
             # Check memory before processing
             if self.memory_monitor.is_memory_critical():
                 gc.collect()
                 await asyncio.sleep(0.1)  # Allow GC to run
-            
+
             # Process chunk
             try:
                 if self.batch_config.use_multiprocessing and len(chunk) > 100:
@@ -920,13 +920,13 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                     chunk_results = await self._process_chunk_async(
                         data_type, chunk, standardizer
                     )
-                
+
                 for result in chunk_results:
                     if result.get("success"):
                         standardized_items.append(result["standardized"])
                     else:
                         failed_items.append(result)
-                        
+
             except Exception as e:
                 logger.error(f"Chunk processing failed: {e}")
                 if self.batch_config.retry_failed_chunks:
@@ -938,7 +938,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                     failed_items.extend(retry_results["failed"])
                 else:
                     failed_items.extend([{"original": item, "error": str(e)} for item in chunk])
-        
+
         return {
             "success": True,
             "data_type": data_type,
@@ -949,21 +949,21 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             "failed_items": failed_items,
             "batch_size_used": batch_size
         }
-    
+
     async def _standardize_streaming(self, data_type: str, items: List[Dict[str, Any]],
                                    options: Dict[str, Any]) -> Dict[str, Any]:
         """
         Streaming standardization for large datasets
-        
+
         Processes items as a stream to minimize memory usage.
         """
         standardizer = self.standardizers.get(data_type)
         if not standardizer:
             raise ValueError(f"Unknown data type: {data_type}")
-        
+
         standardized_count = 0
         failed_count = 0
-        
+
         # Create async generator for streaming
         async def stream_standardize():
             for item in items:
@@ -972,7 +972,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                     yield {"success": True, "standardized": standardized}
                 except Exception as e:
                     yield {"success": False, "original": item, "error": str(e)}
-        
+
         # Process stream
         results = []
         async for result in stream_standardize():
@@ -983,11 +983,11 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                     await self._write_to_stream(result["standardized"])
             else:
                 failed_count += 1
-            
+
             # Yield control periodically
             if (standardized_count + failed_count) % 100 == 0:
                 await asyncio.sleep(0)
-        
+
         return {
             "success": True,
             "mode": "streaming",
@@ -995,56 +995,56 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             "successful_records": standardized_count,
             "failed_records": failed_count
         }
-    
+
     async def _standardize_parallel(self, data_type: str, items: List[Dict[str, Any]],
                                   options: Dict[str, Any]) -> Dict[str, Any]:
         """
         Parallel standardization using multiple workers
-        
+
         Distributes work across multiple async workers for maximum throughput.
         """
         standardizer = self.standardizers.get(data_type)
         if not standardizer:
             raise ValueError(f"Unknown data type: {data_type}")
-        
+
         # Determine optimal worker count
         worker_count = min(self.batch_config.parallel_workers, len(items) // 10)
         worker_count = max(1, worker_count)
-        
+
         # Create work queues
         input_queue = asyncio.Queue()
         output_queue = asyncio.Queue()
-        
+
         # Fill input queue
         for item in items:
             await input_queue.put(item)
-        
+
         # Create workers
         workers = []
         for i in range(worker_count):
             worker = asyncio.create_task(
                 self._standardization_worker(
-                    f"worker-{i}", data_type, standardizer, 
+                    f"worker-{i}", data_type, standardizer,
                     input_queue, output_queue
                 )
             )
             workers.append(worker)
-        
+
         # Collect results
         standardized_items = []
         failed_items = []
-        
+
         for _ in range(len(items)):
             result = await output_queue.get()
             if result["success"]:
                 standardized_items.append(result["standardized"])
             else:
                 failed_items.append(result)
-        
+
         # Cancel workers
         for worker in workers:
             worker.cancel()
-        
+
         return {
             "success": True,
             "mode": "parallel",
@@ -1055,7 +1055,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             "standardized_data": standardized_items,
             "failed_items": failed_items
         }
-    
+
     async def _standardization_worker(self, worker_id: str, data_type: str,
                                     standardizer: Any, input_queue: asyncio.Queue,
                                     output_queue: asyncio.Queue):
@@ -1063,7 +1063,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
         while True:
             try:
                 item = await asyncio.wait_for(input_queue.get(), timeout=1.0)
-                
+
                 try:
                     standardized = await standardizer.standardize_async(item)
                     await output_queue.put({
@@ -1078,39 +1078,39 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                         "error": str(e),
                         "worker_id": worker_id
                     })
-                    
+
             except asyncio.TimeoutError:
                 break
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.error(f"Worker {worker_id} error: {e}")
-    
+
     def _calculate_optimal_batch_size(self, items: List[Dict[str, Any]]) -> int:
         """Calculate optimal batch size based on available memory and item size"""
         if not self.batch_config.adaptive_sizing:
             return self.batch_config.batch_size
-        
+
         # Estimate item size
         sample_size = min(10, len(items))
         sample_items = items[:sample_size]
         avg_item_size = sys.getsizeof(json.dumps(sample_items)) / sample_size
-        
+
         # Get available memory
         available_memory = self.memory_monitor.get_available_memory()
         target_memory = min(
             available_memory * 0.5,  # Use max 50% of available memory
             self.batch_config.memory_limit_mb * 1024 * 1024
         )
-        
+
         # Calculate batch size
         optimal_batch_size = int(target_memory / avg_item_size)
-        
+
         # Apply bounds
         optimal_batch_size = max(10, min(optimal_batch_size, self.batch_config.batch_size * 2))
-        
+
         return optimal_batch_size
-    
+
     async def _process_chunk_async(self, data_type: str, chunk: List[Dict[str, Any]],
                                  standardizer: Any) -> List[Dict[str, Any]]:
         """Process chunk using async operations"""
@@ -1118,9 +1118,9 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
         for item in chunk:
             task = self._standardize_item_async(item, standardizer)
             tasks.append(task)
-        
+
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         processed_results = []
         for i, result in enumerate(results):
             if isinstance(result, Exception):
@@ -1134,9 +1134,9 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                     "success": True,
                     "standardized": result
                 })
-        
+
         return processed_results
-    
+
     async def _standardize_item_async(self, item: Dict[str, Any], standardizer: Any) -> Dict[str, Any]:
         """Standardize single item asynchronously"""
         # Use async standardization if available
@@ -1146,15 +1146,15 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             # Run sync method in thread pool
             loop = asyncio.get_event_loop()
             return await loop.run_in_executor(None, standardizer.standardize, item)
-    
+
     async def _process_chunk_multiprocessing(self, data_type: str, chunk: List[Dict[str, Any]],
                                            standardizer: Any) -> List[Dict[str, Any]]:
         """Process chunk using multiprocessing for CPU-intensive operations"""
         if not self.process_pool:
             self.process_pool = ProcessPoolExecutor(max_workers=self.batch_config.parallel_workers)
-        
+
         loop = asyncio.get_event_loop()
-        
+
         # Create futures for parallel processing
         futures = []
         for item in chunk:
@@ -1164,10 +1164,10 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                 data_type, item, standardizer.get_config()
             )
             futures.append(future)
-        
+
         # Wait for all futures
         results = await asyncio.gather(*futures, return_exceptions=True)
-        
+
         processed_results = []
         for i, result in enumerate(results):
             if isinstance(result, Exception):
@@ -1181,18 +1181,18 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                     "success": True,
                     "standardized": result
                 })
-        
+
         return processed_results
-    
+
     async def _retry_failed_chunk(self, data_type: str, chunk: List[Dict[str, Any]],
                                 standardizer: Any, retry_batch_size: int) -> Dict[str, Any]:
         """Retry failed chunk with smaller batch size"""
         successful = []
         failed = []
-        
+
         for i in range(0, len(chunk), retry_batch_size):
             retry_chunk = chunk[i:i + retry_batch_size]
-            
+
             try:
                 results = await self._process_chunk_async(data_type, retry_chunk, standardizer)
                 for result in results:
@@ -1202,24 +1202,24 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                         failed.append(result)
             except Exception as e:
                 failed.extend([{"original": item, "error": str(e)} for item in retry_chunk])
-        
+
         return {"successful": successful, "failed": failed}
-    
+
     # ==========================================
     # Enrichment Methods
     # ==========================================
-    
+
     async def _enrich_internal(self, data_type: str, item: Dict[str, Any]) -> Dict[str, Any]:
         """Internal enrichment using cached reference data"""
         enriched = item.copy()
-        
+
         # Add metadata
         enriched["_metadata"] = {
             "enriched_at": datetime.utcnow().isoformat(),
             "enrichment_source": "internal",
             "data_type": data_type
         }
-        
+
         # Type-specific enrichment
         if data_type == "account":
             enriched["hierarchy_path"] = self._build_hierarchy_path(item)
@@ -1230,20 +1230,20 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
         elif data_type == "product":
             enriched["product_family"] = self._get_product_family(item)
             enriched["risk_category"] = self._get_risk_category(item)
-        
+
         return enriched
-    
+
     async def _enrich_reference_data(self, data_type: str, item: Dict[str, Any]) -> Dict[str, Any]:
         """Enrich using reference data lookups"""
         enriched = item.copy()
-        
+
         # Simulate reference data lookup
         reference_key = item.get("reference_id") or item.get("id")
         if reference_key:
             # Check cache first
             cache_key = f"ref_{data_type}_{reference_key}"
             ref_data = await self.cache.get(cache_key)
-            
+
             if not ref_data:
                 # Simulate lookup
                 ref_data = {
@@ -1254,23 +1254,23 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                     }
                 }
                 await self.cache.set(cache_key, ref_data, ttl=3600)
-            
+
             enriched["reference_data"] = ref_data
-        
+
         return enriched
-    
+
     async def _enrich_external(self, data_type: str, item: Dict[str, Any],
                              pool: ConnectionPool) -> Dict[str, Any]:
         """Enrich using external service"""
         client = await pool.acquire()
-        
+
         try:
             # Call external enrichment service
             response = await client.post(
                 f"/enrich/{data_type}",
                 json={"item": item}
             )
-            
+
             if response.status_code == 200:
                 enrichment_data = response.json()
                 enriched = item.copy()
@@ -1279,21 +1279,21 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             else:
                 logger.warning(f"External enrichment failed: {response.status_code}")
                 return item
-                
+
         finally:
             await pool.release(client)
-    
+
     # ==========================================
     # Helper Methods
     # ==========================================
-    
+
     def _generate_cache_key(self, data_type: str, items: List[Dict[str, Any]]) -> str:
         """Generate cache key for standardization results"""
         # Create hash of items for cache key
         items_str = json.dumps(items, sort_keys=True)
         items_hash = hashlib.md5(items_str.encode()).hexdigest()
         return f"std_{data_type}_{items_hash}"
-    
+
     def _build_hierarchy_path(self, account: Dict[str, Any]) -> str:
         """Build L4 hierarchy path for account"""
         levels = []
@@ -1302,7 +1302,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             if level_value:
                 levels.append(str(level_value))
         return "/".join(levels)
-    
+
     def _categorize_account(self, account: Dict[str, Any]) -> str:
         """Categorize account based on attributes"""
         # Simple categorization logic
@@ -1318,7 +1318,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
         elif "expense" in account_type:
             return "expense"
         return "other"
-    
+
     def _get_geo_coordinates(self, location: Dict[str, Any]) -> Optional[Dict[str, float]]:
         """Get geographical coordinates for location"""
         # Placeholder - would integrate with geocoding service
@@ -1326,12 +1326,12 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             "latitude": 0.0,
             "longitude": 0.0
         }
-    
+
     def _get_timezone(self, location: Dict[str, Any]) -> str:
         """Get timezone for location"""
         # Placeholder - would use location data
         return "UTC"
-    
+
     def _get_product_family(self, product: Dict[str, Any]) -> str:
         """Get product family classification"""
         product_type = product.get("type", "").lower()
@@ -1342,7 +1342,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
         elif "investment" in product_type:
             return "investments"
         return "other"
-    
+
     def _get_risk_category(self, product: Dict[str, Any]) -> str:
         """Get risk category for product"""
         # Simple risk categorization
@@ -1352,7 +1352,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
         elif risk_score < 7:
             return "medium"
         return "high"
-    
+
     async def _write_to_stream(self, item: Dict[str, Any]):
         """Write item to output stream with A2A protocol compliance"""
         try:
@@ -1368,37 +1368,37 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                     "validation_status": item.get("validation_status", "validated")
                 }
             }
-            
+
             # Write to output stream (A2A protocol compliant)
             if hasattr(self, 'output_stream') and self.output_stream:
                 await self.output_stream.write(json.dumps(standardized_item))
                 await self.output_stream.flush()
-            
+
             # Also store in processing results for batch access
             if not hasattr(self, 'stream_buffer'):
                 self.stream_buffer = []
-            
+
             self.stream_buffer.append(standardized_item)
-            
+
             # Maintain buffer size limit
             if len(self.stream_buffer) > 1000:
                 self.stream_buffer = self.stream_buffer[-1000:]
-            
+
             logger.debug(f"Item written to stream: {standardized_item['id']}")
-            
+
         except Exception as e:
             logger.error(f"Stream writing failed: {e}")
 # A2A REMOVED:             # Fallback: store in memory buffer
             if not hasattr(self, 'failed_stream_items'):
                 self.failed_stream_items = []
             self.failed_stream_items.append(item)
-    
+
     # ==========================================
     # A2A Protocol Handlers
     # ==========================================
-    
+
     @a2a_handler("standardize_data")
-    async def handle_standardization_request(self, message: A2AMessage = None, 
+    async def handle_standardization_request(self, message: A2AMessage = None,
                                            context_id: str = None,
                                            payload: Dict[str, Any] = None,
                                            metadata: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -1411,10 +1411,10 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                 request_data = payload
             else:
                 request_data = {}
-            
+
             if not request_data:
                 return create_error_response(400, "No standardization request found")
-            
+
             # Process request
             results = {}
             for data_type, items in request_data.items():
@@ -1425,25 +1425,25 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                         options={"mode": "batch", "validate": True}
                     )
                     results[data_type] = result
-            
+
             return create_success_response({
                 "standardization_results": results,
                 "context_id": context_id
             })
-            
+
         except Exception as e:
             logger.error(f"Standardization handler failed: {e}")
             return create_error_response(500, str(e))
-    
+
     def _extract_standardization_request(self, message: A2AMessage) -> Dict[str, Any]:
         """Extract standardization request from message"""
         request = {}
-        
+
         for part in message.parts:
             if part.kind == "data" and part.data:
                 data_type = part.data.get("type")
                 items = part.data.get("items", [])
-                
+
                 if data_type and items:
                     request[data_type] = items
                 else:
@@ -1451,9 +1451,9 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                     for key, value in part.data.items():
                         if key in self.standardizers and isinstance(value, list):
                             request[key] = value
-        
+
         return request
-    
+
     async def initialize(self) -> None:
         """Initialize the agent"""
         try:
@@ -1469,7 +1469,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                 logger.warning(f"Trust initialization failed: {e}")
                 self.trust_identity = None
                 self.trust_contract = None
-            
+
             # Initialize performance monitoring if enabled
             if self.enable_monitoring:
                 alert_thresholds = AlertThresholds(
@@ -1479,23 +1479,23 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                     error_rate_threshold=0.02,
                     queue_size_threshold=100
                 )
-                
+
                 self.enable_performance_monitoring(
                     alert_thresholds=alert_thresholds,
                     metrics_port=8002
                 )
-            
+
             # Create output directory
             self.output_dir = os.getenv("STANDARDIZATION_OUTPUT_DIR", "/tmp/standardized_data")
             os.makedirs(self.output_dir, exist_ok=True)
-            
+
             # Start background tasks
             memory_task = asyncio.create_task(self.memory_monitor.monitor_loop())
             cleanup_task = asyncio.create_task(self._cache_cleanup_loop())
             self.background_tasks.extend([memory_task, cleanup_task])
-            
+
             logger.info("Enhanced Data Standardization Agent initialized successfully")
-            
+
         except Exception as e:
             logger.error(f"Initialization failed: {e}")
             raise
@@ -1522,7 +1522,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             standards = request_data.get("standards", [])
             domain = request_data.get("domain", "general")
             validation_rules = request_data.get("validation_rules", {})
-            
+
             # Determine data type and perform standardization
             results = {}
             for data_type, items in data.items():
@@ -1539,7 +1539,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                         }
                     )
                     results[data_type] = result
-            
+
             return {
                 "status": "success",
                 "standardization_results": results,
@@ -1547,14 +1547,14 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                 "standards_applied": standards,
                 "processing_time": time.time()
             }
-            
+
         except Exception as e:
             logger.error(f"Data standardization failed: {e}")
             return {"status": "error", "error": str(e)}
 
     @a2a_skill(
         name="schema_validation",
-        description="Advanced schema validation with AI-powered analysis", 
+        description="Advanced schema validation with AI-powered analysis",
         input_schema={
             "type": "object",
             "properties": {
@@ -1573,16 +1573,16 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             data = request_data.get("data", {})
             validation_level = request_data.get("validation_level", "strict")
             auto_correction = request_data.get("auto_correction", False)
-            
+
             validation_results = {}
             errors = []
             corrections = []
-            
+
             # Validate schema structure
             if not schema:
                 errors.append("Empty schema provided")
                 return {"status": "error", "errors": errors}
-            
+
             # Perform validation for each data field
             for field_name, field_value in data.items():
                 if field_name in schema:
@@ -1591,7 +1591,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                         field_name, field_value, field_schema, validation_level
                     )
                     validation_results[field_name] = field_validation
-                    
+
                     if not field_validation["valid"] and auto_correction:
                         correction = await self._auto_correct_field(
                             field_name, field_value, field_schema
@@ -1600,7 +1600,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                             corrections.append(correction)
                 else:
                     errors.append(f"Field '{field_name}' not found in schema")
-            
+
             return {
                 "status": "success",
                 "validation_results": validation_results,
@@ -1609,7 +1609,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                 "overall_valid": len(errors) == 0,
                 "validation_level": validation_level
             }
-            
+
         except Exception as e:
             logger.error(f"Schema validation failed: {e}")
             return {"status": "error", "error": str(e)}
@@ -1618,7 +1618,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
         name="format_conversion",
         description="Intelligent format conversion with preservation of data integrity",
         input_schema={
-            "type": "object", 
+            "type": "object",
             "properties": {
                 "data": {"type": "object"},
                 "source_format": {"type": "string"},
@@ -1637,10 +1637,10 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             target_format = request_data.get("target_format", "")
             conversion_rules = request_data.get("conversion_rules", {})
             preserve_metadata = request_data.get("preserve_metadata", True)
-            
+
             converted_data = {}
             conversion_log = []
-            
+
             # Format conversion logic
             for field_name, field_value in data.items():
                 try:
@@ -1660,7 +1660,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                         "status": "error",
                         "error": str(e)
                     })
-            
+
             return {
                 "status": "success",
                 "converted_data": converted_data,
@@ -1669,13 +1669,13 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                 "conversion_log": conversion_log,
                 "metadata_preserved": preserve_metadata
             }
-            
+
         except Exception as e:
             logger.error(f"Format conversion failed: {e}")
             return {"status": "error", "error": str(e)}
 
     @a2a_skill(
-        name="data_normalization", 
+        name="data_normalization",
         description="Advanced data normalization with AI-powered optimization",
         input_schema={
             "type": "object",
@@ -1695,10 +1695,10 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             normalization_type = request_data.get("normalization_type", "standard")
             reference_data = request_data.get("reference_data", {})
             preserve_relationships = request_data.get("preserve_relationships", True)
-            
+
             normalized_data = {}
             normalization_stats = {}
-            
+
             # Apply normalization to each data field
             for field_name, field_value in data.items():
                 normalized_value, stats = await self._normalize_field(
@@ -1706,15 +1706,15 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                 )
                 normalized_data[field_name] = normalized_value
                 normalization_stats[field_name] = stats
-            
+
             return {
-                "status": "success", 
+                "status": "success",
                 "normalized_data": normalized_data,
                 "normalization_type": normalization_type,
                 "statistics": normalization_stats,
                 "relationships_preserved": preserve_relationships
             }
-            
+
         except Exception as e:
             logger.error(f"Data normalization failed: {e}")
             return {"status": "error", "error": str(e)}
@@ -1740,31 +1740,31 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             quality_metrics = request_data.get("quality_metrics", ["completeness", "accuracy", "consistency"])
             improvement_strategies = request_data.get("improvement_strategies", [])
             auto_apply_fixes = request_data.get("auto_apply_fixes", False)
-            
+
             quality_assessment = {}
             improvements = {}
             recommendations = []
-            
+
             # Assess quality for each data field
             for field_name, field_value in data.items():
                 field_quality = await self._assess_field_quality(
                     field_name, field_value, quality_metrics
                 )
                 quality_assessment[field_name] = field_quality
-                
+
                 # Generate improvement recommendations
                 field_recommendations = await self._generate_field_improvements(
                     field_name, field_value, field_quality, improvement_strategies
                 )
                 recommendations.extend(field_recommendations)
-                
+
                 # Apply fixes if enabled
                 if auto_apply_fixes and field_quality["overall_score"] < 0.8:
                     improved_value = await self._apply_quality_fixes(
                         field_name, field_value, field_recommendations
                     )
                     improvements[field_name] = improved_value
-            
+
             return {
                 "status": "success",
                 "quality_assessment": quality_assessment,
@@ -1773,28 +1773,28 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
                 "metrics_analyzed": quality_metrics,
                 "fixes_applied": auto_apply_fixes
             }
-            
+
         except Exception as e:
             logger.error(f"Quality improvement failed: {e}")
             return {"status": "error", "error": str(e)}
 
-    # Additional delegate methods for A2A handler compatibility  
+    # Additional delegate methods for A2A handler compatibility
     async def standardize_data(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Delegate to data_standardization"""
         return await self.data_standardization(request_data)
-        
+
     async def validate_schema(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Delegate to schema_validation"""
         return await self.schema_validation(request_data)
-        
+
     async def convert_format(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Delegate to format_conversion"""
         return await self.format_conversion(request_data)
-        
+
     async def normalize_data(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Delegate to data_normalization"""
         return await self.data_normalization(request_data)
-        
+
     async def improve_quality(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Delegate to quality_improvement"""
         return await self.quality_improvement(request_data)
@@ -1808,7 +1808,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             "validation_level": validation_level,
             "issues": []
         }
-    
+
     async def _auto_correct_field(self, field_name: str, field_value: Any, field_schema: Dict) -> Dict[str, Any]:
         """Auto-correct field based on schema"""
         return {
@@ -1817,15 +1817,15 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             "corrected": field_value,
             "correction_type": "none"
         }
-    
+
     async def _convert_field_format(self, field_name: str, field_value: Any, source_format: str, target_format: str, rules: Dict) -> Any:
         """Convert field between formats"""
         return field_value  # Placeholder implementation
-    
+
     async def _normalize_field(self, field_name: str, field_value: Any, normalization_type: str, reference_data: Dict) -> Tuple[Any, Dict]:
         """Normalize individual field"""
         return field_value, {"normalization_applied": normalization_type}
-    
+
     async def _assess_field_quality(self, field_name: str, field_value: Any, quality_metrics: List[str]) -> Dict[str, Any]:
         """Assess quality of individual field"""
         return {
@@ -1835,7 +1835,7 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             "consistency": 0.8,
             "metrics": quality_metrics
         }
-    
+
     async def _generate_field_improvements(self, field_name: str, field_value: Any, quality_assessment: Dict, strategies: List[str]) -> List[Dict]:
         """Generate improvement recommendations for field"""
         return [{
@@ -1844,11 +1844,11 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             "priority": "medium",
             "strategy": "standardization"
         }]
-    
+
     async def _apply_quality_fixes(self, field_name: str, field_value: Any, recommendations: List[Dict]) -> Any:
         """Apply quality fixes to field"""
         return field_value  # Placeholder implementation
-    
+
     async def shutdown(self) -> None:
         """Shutdown the agent"""
         try:
@@ -1856,27 +1856,27 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
             for task in self.background_tasks:
                 if not task.done():
                     task.cancel()
-            
+
             # Wait for tasks to complete
             if self.background_tasks:
                 await asyncio.gather(*self.background_tasks, return_exceptions=True)
-            
+
             # Close connection pools
             for pool in self.connection_pools.values():
                 await pool.close_all()
-            
+
             # Shutdown process pool
             if self.process_pool:
                 self.process_pool.shutdown(wait=False)
-            
+
             # Clear cache
             await self.cache.clear()
-            
+
             logger.info("Enhanced Data Standardization Agent shutdown complete")
-            
+
         except Exception as e:
             logger.error(f"Error during shutdown: {e}")
-    
+
     async def _cache_cleanup_loop(self):
         """Background task to clean expired cache entries"""
         while True:
@@ -1899,17 +1899,17 @@ class EnhancedDataStandardizationAgentMCP(SecureA2AAgent, PerformanceOptimizatio
 
 class EnhancedAccountStandardizer(AccountStandardizer):
     """Enhanced account standardizer with real implementation"""
-    
+
     def __init__(self):
         super().__init__()
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-        
+
         self.schema_version = "2.0.0"
         self.hierarchy_levels = ["Entity", "Department", "Account Type", "Account"]
-    
+
     async def standardize_async(self, account: Dict[str, Any]) -> Dict[str, Any]:
         """Async standardization of account data"""
         # Real standardization logic
@@ -1927,23 +1927,23 @@ class EnhancedAccountStandardizer(AccountStandardizer):
             "hierarchy_path": "",
             "standardized_at": datetime.utcnow().isoformat()
         }
-        
+
         # Build hierarchy path
         standardized["hierarchy_path"] = "/".join([
-            standardized["l1"], standardized["l2"], 
+            standardized["l1"], standardized["l2"],
             standardized["l3"], standardized["l4"]
         ])
-        
+
         return standardized
-    
+
     def _standardize_name(self, name: str) -> str:
         """Standardize account name"""
         return name.strip().upper().replace("  ", " ")
-    
+
     def _standardize_code(self, code: str) -> str:
         """Standardize account code"""
         return code.strip().upper().replace("-", "")
-    
+
     def _standardize_type(self, account_type: str) -> str:
         """Standardize account type"""
         type_mapping = {
@@ -1953,18 +1953,18 @@ class EnhancedAccountStandardizer(AccountStandardizer):
             "revenue": "REVENUE",
             "expenses": "EXPENSE"
         }
-        
+
         for key, value in type_mapping.items():
             if key in account_type.lower():
                 return value
-        
+
         return "OTHER"
-    
+
     def _derive_l3(self, account: Dict[str, Any]) -> str:
         """Derive L3 hierarchy from account data"""
         account_type = self._standardize_type(account.get("account_type", ""))
         sub_type = account.get("sub_type", "")
-        
+
         if account_type == "ASSET":
             if "current" in sub_type.lower():
                 return "CURRENT_ASSETS"
@@ -1973,31 +1973,31 @@ class EnhancedAccountStandardizer(AccountStandardizer):
             if "current" in sub_type.lower():
                 return "CURRENT_LIABILITIES"
             return "LONG_TERM_LIABILITIES"
-        
+
         return account_type
-    
+
     async def validate_comprehensive(self, item: Dict[str, Any]) -> bool:
         """Comprehensive validation of standardized account"""
         required_fields = ["id", "name", "code", "type", "l1", "l2", "l3", "l4"]
-        
+
         # Check required fields
         for field in required_fields:
             if field not in item or not item[field]:
                 return False
-        
+
         # Validate hierarchy
         if not item.get("hierarchy_path"):
             return False
-        
+
         # Validate account code format
         if not item["code"].isalnum():
             return False
-        
+
         return True
-    
+
     def get_schema_version(self) -> str:
         return self.schema_version
-    
+
     def get_schema_fields(self) -> List[Dict[str, Any]]:
         return [
             {"name": "id", "type": "string", "required": True},
@@ -2012,10 +2012,10 @@ class EnhancedAccountStandardizer(AccountStandardizer):
             {"name": "l4", "type": "string", "required": True},
             {"name": "hierarchy_path", "type": "string", "required": True}
         ]
-    
+
     def get_hierarchy_levels(self) -> List[str]:
         return self.hierarchy_levels
-    
+
     def get_validation_rules(self) -> Dict[str, Any]:
         return {
             "code_format": "alphanumeric",
@@ -2023,25 +2023,25 @@ class EnhancedAccountStandardizer(AccountStandardizer):
             "status_values": ["active", "inactive", "archived"],
             "hierarchy_depth": 4
         }
-    
+
     def get_last_updated(self) -> str:
         return "2024-01-15T10:00:00Z"
-    
+
     def get_basic_validation_rules(self) -> List[str]:
         return ["required_fields", "code_format"]
-    
+
     def get_comprehensive_validation_rules(self) -> List[str]:
         return ["required_fields", "code_format", "type_values", "hierarchy_structure"]
-    
+
     def get_strict_validation_rules(self) -> List[str]:
-        return ["required_fields", "code_format", "type_values", "hierarchy_structure", 
+        return ["required_fields", "code_format", "type_values", "hierarchy_structure",
                 "referential_integrity", "business_rules"]
-    
+
     def get_custom_validation_rules(self) -> List[str]:
         """Get custom validation rules for data standardization"""
         return [
             "data_type_consistency",
-            "format_standardization", 
+            "format_standardization",
             "value_range_validation",
             "business_rule_compliance",
             "referential_integrity_check",
@@ -2051,7 +2051,7 @@ class EnhancedAccountStandardizer(AccountStandardizer):
             "timeliness_check",
             "consistency_validation"
         ]
-    
+
     def get_config(self) -> Dict[str, Any]:
         """Get configuration for multiprocessing"""
         return {
@@ -2062,17 +2062,17 @@ class EnhancedAccountStandardizer(AccountStandardizer):
 
 class EnhancedLocationStandardizer(LocationStandardizer):
     """Enhanced location standardizer with real implementation"""
-    
+
     def __init__(self):
         super().__init__()
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-        
+
         self.schema_version = "2.0.0"
         self.hierarchy_levels = ["Region", "Country", "State/Province", "City"]
-    
+
     async def standardize_async(self, location: Dict[str, Any]) -> Dict[str, Any]:
         """Async standardization of location data"""
         standardized = {
@@ -2092,23 +2092,23 @@ class EnhancedLocationStandardizer(LocationStandardizer):
             "hierarchy_path": "",
             "standardized_at": datetime.utcnow().isoformat()
         }
-        
+
         # Build hierarchy path
         standardized["hierarchy_path"] = "/".join([
-            standardized["l1"], standardized["l2"], 
+            standardized["l1"], standardized["l2"],
             standardized["l3"], standardized["l4"]
         ])
-        
+
         return standardized
-    
+
     def _standardize_name(self, name: str) -> str:
         """Standardize location name"""
         return name.strip().title()
-    
+
     def _standardize_code(self, code: str) -> str:
         """Standardize location code"""
         return code.strip().upper()
-    
+
     def _standardize_country(self, country: str) -> str:
         """Standardize country to ISO code"""
         # Simple mapping - would use comprehensive country data
@@ -2123,14 +2123,14 @@ class EnhancedLocationStandardizer(LocationStandardizer):
             "japan": "JP",
             "australia": "AU"
         }
-        
+
         country_lower = country.lower().strip()
         return country_map.get(country_lower, country.upper()[:2])
-    
+
     def _derive_region(self, location: Dict[str, Any]) -> str:
         """Derive region from country"""
         country = self._standardize_country(location.get("country", ""))
-        
+
         # Simple region mapping
         region_map = {
             "US": "AMERICAS",
@@ -2146,29 +2146,29 @@ class EnhancedLocationStandardizer(LocationStandardizer):
             "AU": "APAC",
             "IN": "APAC"
         }
-        
+
         return region_map.get(country, "OTHER")
-    
+
     async def validate_comprehensive(self, item: Dict[str, Any]) -> bool:
         """Comprehensive validation of standardized location"""
         required_fields = ["id", "name", "country", "l1", "l2"]
-        
+
         for field in required_fields:
             if field not in item or not item[field]:
                 return False
-        
+
         # Validate country code
         if len(item["country"]) != 2:
             return False
-        
+
         return True
-    
+
     def get_schema_version(self) -> str:
         return self.schema_version
-    
+
     def get_hierarchy_levels(self) -> List[str]:
         return self.hierarchy_levels
-    
+
     def get_validation_rules(self) -> Dict[str, Any]:
         return {
             "country_format": "ISO 3166-1 alpha-2",
@@ -2179,17 +2179,17 @@ class EnhancedLocationStandardizer(LocationStandardizer):
 
 class EnhancedProductStandardizer(ProductStandardizer):
     """Enhanced product standardizer with real implementation"""
-    
+
     def __init__(self):
         super().__init__()
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-        
+
         self.schema_version = "2.0.0"
         self.hierarchy_levels = ["Product Line", "Product Family", "Product Type", "Product"]
-    
+
     async def standardize_async(self, product: Dict[str, Any]) -> Dict[str, Any]:
         """Async standardization of product data"""
         standardized = {
@@ -2208,27 +2208,27 @@ class EnhancedProductStandardizer(ProductStandardizer):
             "risk_rating": self._calculate_risk_rating(product),
             "standardized_at": datetime.utcnow().isoformat()
         }
-        
+
         # Build hierarchy path
         standardized["hierarchy_path"] = "/".join([
-            standardized["l1"], standardized["l2"], 
+            standardized["l1"], standardized["l2"],
             standardized["l3"], standardized["l4"]
         ])
-        
+
         return standardized
-    
+
     def _standardize_name(self, name: str) -> str:
         """Standardize product name"""
         return name.strip().title()
-    
+
     def _standardize_code(self, code: str) -> str:
         """Standardize product code"""
         return code.strip().upper().replace(" ", "_")
-    
+
     def _standardize_type(self, product_type: str) -> str:
         """Standardize product type"""
         type_lower = product_type.lower()
-        
+
         if "loan" in type_lower:
             return "LOAN"
         elif "deposit" in type_lower:
@@ -2239,13 +2239,13 @@ class EnhancedProductStandardizer(ProductStandardizer):
             return "INVESTMENT"
         elif "insurance" in type_lower:
             return "INSURANCE"
-        
+
         return "OTHER"
-    
+
     def _derive_product_line(self, product: Dict[str, Any]) -> str:
         """Derive product line from product data"""
         product_type = self._standardize_type(product.get("product_type", ""))
-        
+
         line_map = {
             "LOAN": "LENDING",
             "DEPOSIT": "BANKING",
@@ -2253,14 +2253,14 @@ class EnhancedProductStandardizer(ProductStandardizer):
             "INVESTMENT": "WEALTH",
             "INSURANCE": "INSURANCE"
         }
-        
+
         return line_map.get(product_type, "OTHER")
-    
+
     def _derive_product_family(self, product: Dict[str, Any]) -> str:
         """Derive product family from product data"""
         product_type = self._standardize_type(product.get("product_type", ""))
         sub_type = product.get("sub_type", "").lower()
-        
+
         if product_type == "LOAN":
             if "mortgage" in sub_type:
                 return "MORTGAGE"
@@ -2277,44 +2277,44 @@ class EnhancedProductStandardizer(ProductStandardizer):
             elif "term" in sub_type or "cd" in sub_type:
                 return "TERM_DEPOSIT"
             return "OTHER_DEPOSIT"
-        
+
         return product_type
-    
+
     def _calculate_risk_rating(self, product: Dict[str, Any]) -> str:
         """Calculate risk rating for product"""
         risk_score = product.get("risk_score", 5)
-        
+
         if risk_score <= 3:
             return "LOW"
         elif risk_score <= 7:
             return "MEDIUM"
         else:
             return "HIGH"
-    
+
     async def validate_comprehensive(self, item: Dict[str, Any]) -> bool:
         """Comprehensive validation of standardized product"""
         required_fields = ["id", "name", "code", "type", "l1", "l2", "l3", "l4"]
-        
+
         for field in required_fields:
             if field not in item or not item[field]:
                 return False
-        
+
         # Validate product code format
         if not item["code"].replace("_", "").isalnum():
             return False
-        
+
         # Validate risk rating
         if item.get("risk_rating") not in ["LOW", "MEDIUM", "HIGH"]:
             return False
-        
+
         return True
-    
+
     def get_schema_version(self) -> str:
         return self.schema_version
-    
+
     def get_hierarchy_levels(self) -> List[str]:
         return self.hierarchy_levels
-    
+
     def get_validation_rules(self) -> Dict[str, Any]:
         return {
             "code_format": "alphanumeric with underscores",
@@ -2327,17 +2327,17 @@ class EnhancedProductStandardizer(ProductStandardizer):
 
 class EnhancedBookStandardizer(BookStandardizer):
     """Enhanced book standardizer with real implementation"""
-    
+
     def __init__(self):
         super().__init__()
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-        
+
         self.schema_version = "2.0.0"
         self.hierarchy_levels = ["Business Line", "Book Type", "Sub-Book", "Book"]
-    
+
     async def standardize_async(self, book: Dict[str, Any]) -> Dict[str, Any]:
         """Async standardization of book data"""
         standardized = {
@@ -2355,41 +2355,41 @@ class EnhancedBookStandardizer(BookStandardizer):
             "hierarchy_path": "",
             "standardized_at": datetime.utcnow().isoformat()
         }
-        
+
         # Build hierarchy path
         standardized["hierarchy_path"] = "/".join([
-            standardized["l1"], standardized["l2"], 
+            standardized["l1"], standardized["l2"],
             standardized["l3"], standardized["l4"]
         ])
-        
+
         return standardized
-    
+
     def _standardize_name(self, name: str) -> str:
         """Standardize book name"""
         return name.strip().title()
-    
+
     def _standardize_code(self, code: str) -> str:
         """Standardize book code"""
         return code.strip().upper()
-    
+
     def _standardize_type(self, book_type: str) -> str:
         """Standardize book type"""
         type_lower = book_type.lower()
-        
+
         if "trading" in type_lower:
             return "TRADING"
         elif "banking" in type_lower:
             return "BANKING"
         elif "investment" in type_lower:
             return "INVESTMENT"
-        
+
         return "OTHER"
-    
+
     def _derive_sub_book(self, book: Dict[str, Any]) -> str:
         """Derive sub-book from book data"""
         book_type = self._standardize_type(book.get("book_type", ""))
         purpose = book.get("purpose", "").lower()
-        
+
         if book_type == "TRADING":
             if "equity" in purpose:
                 return "EQUITY_TRADING"
@@ -2404,39 +2404,39 @@ class EnhancedBookStandardizer(BookStandardizer):
             elif "retail" in purpose:
                 return "RETAIL_BANKING"
             return "OTHER_BANKING"
-        
+
         return book_type
-    
+
     async def validate_comprehensive(self, item: Dict[str, Any]) -> bool:
         """Comprehensive validation of standardized book"""
         required_fields = ["id", "name", "code", "type", "l1", "l2", "l3", "l4"]
-        
+
         for field in required_fields:
             if field not in item or not item[field]:
                 return False
-        
+
         return True
-    
+
     def get_schema_version(self) -> str:
         return self.schema_version
-    
+
     def get_hierarchy_levels(self) -> List[str]:
         return self.hierarchy_levels
 
 
 class EnhancedMeasureStandardizer(MeasureStandardizer):
     """Enhanced measure standardizer with real implementation"""
-    
+
     def __init__(self):
         super().__init__()
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-        
+
         self.schema_version = "2.0.0"
         self.hierarchy_levels = ["Measure Category", "Measure Type", "Measure Group", "Measure"]
-    
+
     async def standardize_async(self, measure: Dict[str, Any]) -> Dict[str, Any]:
         """Async standardization of measure data"""
         standardized = {
@@ -2454,27 +2454,27 @@ class EnhancedMeasureStandardizer(MeasureStandardizer):
             "hierarchy_path": "",
             "standardized_at": datetime.utcnow().isoformat()
         }
-        
+
         # Build hierarchy path
         standardized["hierarchy_path"] = "/".join([
-            standardized["l1"], standardized["l2"], 
+            standardized["l1"], standardized["l2"],
             standardized["l3"], standardized["l4"]
         ])
-        
+
         return standardized
-    
+
     def _standardize_name(self, name: str) -> str:
         """Standardize measure name"""
         return name.strip().title()
-    
+
     def _standardize_code(self, code: str) -> str:
         """Standardize measure code"""
         return code.strip().upper().replace(" ", "_")
-    
+
     def _standardize_type(self, measure_type: str) -> str:
         """Standardize measure type"""
         type_lower = measure_type.lower()
-        
+
         if "balance" in type_lower:
             return "BALANCE"
         elif "flow" in type_lower:
@@ -2483,14 +2483,14 @@ class EnhancedMeasureStandardizer(MeasureStandardizer):
             return "RATIO"
         elif "rate" in type_lower:
             return "RATE"
-        
+
         return "OTHER"
-    
+
     def _derive_category(self, measure: Dict[str, Any]) -> str:
         """Derive measure category"""
         measure_type = measure.get("measure_type", "").lower()
         domain = measure.get("domain", "").lower()
-        
+
         if "financial" in domain or "accounting" in measure_type:
             return "FINANCIAL"
         elif "risk" in domain or "risk" in measure_type:
@@ -2499,14 +2499,14 @@ class EnhancedMeasureStandardizer(MeasureStandardizer):
             return "OPERATIONAL"
         elif "regulatory" in domain:
             return "REGULATORY"
-        
+
         return "OTHER"
-    
+
     def _derive_group(self, measure: Dict[str, Any]) -> str:
         """Derive measure group"""
         measure_type = self._standardize_type(measure.get("measure_type", ""))
         sub_type = measure.get("sub_type", "").lower()
-        
+
         if measure_type == "BALANCE":
             if "asset" in sub_type:
                 return "ASSET_BALANCES"
@@ -2519,30 +2519,30 @@ class EnhancedMeasureStandardizer(MeasureStandardizer):
             elif "capital" in sub_type:
                 return "CAPITAL_RATIOS"
             return "OTHER_RATIOS"
-        
+
         return measure_type
-    
+
     async def validate_comprehensive(self, item: Dict[str, Any]) -> bool:
         """Comprehensive validation of standardized measure"""
         required_fields = ["id", "name", "code", "type", "unit", "l1", "l2", "l3", "l4"]
-        
+
         for field in required_fields:
             if field not in item or not item[field]:
                 return False
-        
+
         # Validate aggregation method
         valid_aggregations = ["sum", "average", "min", "max", "last", "first"]
         if item.get("aggregation") not in valid_aggregations:
             return False
-        
+
         return True
-    
+
     def get_schema_version(self) -> str:
         return self.schema_version
-    
+
     def get_hierarchy_levels(self) -> List[str]:
         return self.hierarchy_levels
-    
+
     def get_validation_rules(self) -> Dict[str, Any]:
         return {
             "code_format": "alphanumeric with underscores",
@@ -2555,17 +2555,17 @@ class EnhancedMeasureStandardizer(MeasureStandardizer):
 
 class EnhancedCatalogStandardizer(CatalogStandardizer):
     """Enhanced catalog standardizer with real implementation"""
-    
+
     def __init__(self):
         super().__init__()
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-        
+
         self.schema_version = "2.0.0"
         self.hierarchy_levels = ["Domain", "Catalog Type", "Business Area", "Catalog"]
-    
+
     async def standardize_async(self, catalog: Dict[str, Any]) -> Dict[str, Any]:
         """Async standardization of catalog data"""
         standardized = {
@@ -2595,30 +2595,30 @@ class EnhancedCatalogStandardizer(CatalogStandardizer):
             "hierarchy_path": "",
             "standardized_at": datetime.utcnow().isoformat()
         }
-        
+
         # Build hierarchy path
         standardized["hierarchy_path"] = "/".join([
-            standardized["l1"], standardized["l2"], 
+            standardized["l1"], standardized["l2"],
             standardized["l3"], standardized["l4"]
         ])
-        
+
         return standardized
-    
+
     def _standardize_name(self, name: str) -> str:
         """Standardize catalog name"""
         return name.strip().title()
-    
+
     def _generate_code(self, name: str) -> str:
         """Generate standardized catalog code"""
         code = name.upper().replace(" ", "_").replace("-", "_")
         return f"CAT_{code[:15]}"
-    
+
     def _infer_business_area(self, catalog: Dict[str, Any]) -> str:
         """Infer specific business area within domain"""
         name = catalog.get("catalog_name", "").lower()
         desc = catalog.get("description", "").lower()
         text = f"{name} {desc}"
-        
+
         business_areas = {
             "Credit Risk": ["credit", "risk", "exposure", "default"],
             "Market Risk": ["market", "trading", "var", "stress"],
@@ -2631,18 +2631,18 @@ class EnhancedCatalogStandardizer(CatalogStandardizer):
             "Data Management": ["metadata", "lineage", "quality"],
             "System Integration": ["api", "service", "integration"]
         }
-        
+
         for area, keywords in business_areas.items():
             if any(keyword in text for keyword in keywords):
                 return area
-        
+
         return "General"
-    
+
     def _infer_access_level(self, catalog: Dict[str, Any]) -> str:
         """Infer access level from catalog metadata"""
         owner = catalog.get("owner", "").lower()
         name = catalog.get("catalog_name", "").lower()
-        
+
         if any(term in name for term in ["public", "open", "shared"]):
             return "Public"
         elif any(term in name for term in ["restricted", "confidential", "sensitive"]):
@@ -2651,40 +2651,40 @@ class EnhancedCatalogStandardizer(CatalogStandardizer):
             return "Department"
         else:
             return "Organization"
-    
+
     def _assess_quality(self, catalog: Dict[str, Any]) -> str:
         """Assess catalog quality level"""
         quality_indicators = 0
-        
+
         # Check for description
         if catalog.get("description") and len(catalog.get("description", "")) > 20:
             quality_indicators += 1
-        
+
         # Check for owner
         if catalog.get("owner"):
             quality_indicators += 1
-        
+
         # Check for schema information
         if catalog.get("schema_version") or catalog.get("schema_format"):
             quality_indicators += 1
-        
+
         # Check for timestamps
         if catalog.get("created_date") or catalog.get("last_modified"):
             quality_indicators += 1
-        
+
         if quality_indicators >= 3:
             return "High"
         elif quality_indicators >= 2:
             return "Medium"
         else:
             return "Low"
-    
+
     def _infer_compliance(self, catalog: Dict[str, Any]) -> str:
         """Infer compliance framework requirements"""
         name = catalog.get("catalog_name", "").lower()
         desc = catalog.get("description", "").lower()
         text = f"{name} {desc}"
-        
+
         if any(term in text for term in ["gdpr", "privacy", "pii"]):
             return "GDPR"
         elif any(term in text for term in ["sox", "sarbanes", "oxley"]):
@@ -2697,25 +2697,25 @@ class EnhancedCatalogStandardizer(CatalogStandardizer):
             return "MiFID"
         else:
             return "Internal"
-    
+
     def _assess_governance_tier(self, catalog: Dict[str, Any]) -> str:
         """Assess governance tier based on catalog characteristics"""
         classification = self._infer_classification(catalog)
         domain = self._infer_domain(catalog)
-        
+
         if classification == "Confidential" or domain in ["Financial", "Regulatory", "Risk"]:
             return "Tier 1"
         elif classification == "Internal" or domain in ["Customer", "Operations"]:
             return "Tier 2"
         else:
             return "Tier 3"
-    
+
     def _infer_integration_pattern(self, catalog: Dict[str, Any]) -> str:
         """Infer integration pattern from catalog metadata"""
         name = catalog.get("catalog_name", "").lower()
         desc = catalog.get("description", "").lower()
         text = f"{name} {desc}"
-        
+
         if any(term in text for term in ["api", "rest", "service"]):
             return "API"
         elif any(term in text for term in ["stream", "kafka", "event"]):
@@ -2726,31 +2726,31 @@ class EnhancedCatalogStandardizer(CatalogStandardizer):
             return "Stream"
         else:
             return "Manual"
-    
+
     async def validate_comprehensive(self, item: Dict[str, Any]) -> bool:
         """Comprehensive validation of standardized catalog"""
         required_fields = ["id", "name", "type", "domain", "l1", "l2", "l3", "l4"]
-        
+
         for field in required_fields:
             if field not in item or not item[field]:
                 return False
-        
+
         # Validate code format
         if not item.get("code", "").replace("_", "").isalnum():
             return False
-        
+
         # Validate governance tier
         if item.get("governance_tier") not in ["Tier 1", "Tier 2", "Tier 3", "Unclassified"]:
             return False
-        
+
         return True
-    
+
     def get_schema_version(self) -> str:
         return self.schema_version
-    
+
     def get_hierarchy_levels(self) -> List[str]:
         return self.hierarchy_levels
-    
+
     def get_validation_rules(self) -> Dict[str, Any]:
         return {
             "code_format": "CAT_ prefix with alphanumeric and underscores",
@@ -2768,7 +2768,7 @@ class EnhancedCatalogStandardizer(CatalogStandardizer):
 
 class MemoryMonitor:
     """Monitor memory usage and provide optimization recommendations"""
-    
+
     def __init__(self):
 
         # Initialize security features
@@ -2777,35 +2777,35 @@ class MemoryMonitor:
         self._init_input_validation()
         self.warning_threshold = 0.8  # 80% memory usage
         self.critical_threshold = 0.9  # 90% memory usage
-    
+
     def get_current_usage(self) -> float:
         """Get current memory usage in MB"""
         process = psutil.Process(os.getpid())
         return process.memory_info().rss / 1024 / 1024
-    
+
     def get_available_memory(self) -> float:
         """Get available system memory in bytes"""
         return psutil.virtual_memory().available
-    
+
     def is_memory_critical(self) -> bool:
         """Check if memory usage is critical"""
         memory_percent = psutil.virtual_memory().percent / 100
         return memory_percent > self.critical_threshold
-    
+
     async def monitor_loop(self):
         """Background monitoring loop"""
         while True:
             try:
                 await asyncio.sleep(60)  # Check every minute
-                
+
                 memory_percent = psutil.virtual_memory().percent / 100
                 if memory_percent > self.warning_threshold:
                     logger.warning(f"High memory usage: {memory_percent * 100:.1f}%")
-                    
+
                     if memory_percent > self.critical_threshold:
                         logger.error("Critical memory usage - triggering garbage collection")
                         gc.collect()
-                        
+
             except asyncio.CancelledError:
                 logger.info("Memory monitor loop cancelled")
                 break
@@ -2813,11 +2813,11 @@ class MemoryMonitor:
                 logger.error(f"Memory monitoring error: {e}")
 
 
-def _standardize_item_process(data_type: str, item: Dict[str, Any], 
+def _standardize_item_process(data_type: str, item: Dict[str, Any],
                              standardizer_config: Dict[str, Any]) -> Dict[str, Any]:
     """
     Process function for multiprocessing standardization
-    
+
     This function runs in a separate process and must be pickleable.
     """
     # Recreate standardizer in the process
@@ -2828,12 +2828,12 @@ def _standardize_item_process(data_type: str, item: Dict[str, Any],
         "book": EnhancedBookStandardizer,
         "measure": EnhancedMeasureStandardizer
     }
-    
+
     standardizer_class = standardizer_map.get(data_type)
     if not standardizer_class:
         raise ValueError(f"Unknown data type: {data_type}")
-    
+
     standardizer = standardizer_class()
-    
+
     # Perform synchronous standardization
     return standardizer.standardize(item)

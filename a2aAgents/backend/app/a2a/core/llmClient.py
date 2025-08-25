@@ -30,15 +30,15 @@ logger = logging.getLogger(__name__)
 class UnifiedLLMClient:
     """
     Unified LLM client that integrates SAP AI Core SDK for A2A agents.
-    
+
     Features:
     - Development: Grok4 → LNN fallback
     - Production: SAP AI Core (Claude Opus 4) → LNN fallback
     - Automatic mode detection and switching
     - Compatible with existing GrokClient interface
     """
-    
-    def __init__(self, 
+
+    def __init__(self,
                  api_key: Optional[str] = None,
                  base_url: Optional[str] = None,
                  model: Optional[str] = None,
@@ -46,7 +46,7 @@ class UnifiedLLMClient:
                  max_tokens: int = 800,
                  **kwargs):
         """Initialize unified LLM client.
-        
+
         Args:
             api_key: API key (will use appropriate key based on mode)
             base_url: Base URL (optional)
@@ -58,18 +58,18 @@ class UnifiedLLMClient:
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.model_override = model
-        
+
         # Initialize LLM service
         self.llm_service = LLMService()
-        
+
         # Log current mode
         mode = self.llm_service.get_current_mode()
         logger.info(f"UnifiedLLMClient initialized in {mode.value} mode")
-        
+
         # Validate connections
         connections = self.llm_service.validate_connection()
         logger.info(f"Available LLM connections: {connections}")
-        
+
     async def complete(self,
                       prompt: str,
                       temperature: Optional[float] = None,
@@ -78,14 +78,14 @@ class UnifiedLLMClient:
                       **kwargs) -> 'LLMResponse':
         """
         Generate completion for a prompt - compatible with GrokClient interface.
-        
+
         Args:
             prompt: The prompt to complete
             temperature: Override default temperature
             max_tokens: Override default max tokens
             response_format: Response format (text or json)
             **kwargs: Additional parameters
-            
+
         Returns:
             LLMResponse object compatible with GrokClient
         """
@@ -94,14 +94,14 @@ class UnifiedLLMClient:
             messages = [
                 Message(role="user", content=prompt)
             ]
-            
+
             # Add system message if needed for JSON response
             if response_format == "json":
                 messages.insert(0, Message(
                     role="system",
                     content="You are a helpful AI assistant. Always respond with valid JSON when requested."
                 ))
-            
+
             # Generate response using LLM service
             response = await self.llm_service.generate(
                 messages=messages,
@@ -110,7 +110,7 @@ class UnifiedLLMClient:
                 max_tokens=max_tokens or self.max_tokens,
                 **kwargs
             )
-            
+
             # Convert to GrokClient-compatible response
             return LLMResponse(
                 content=response.content,
@@ -118,7 +118,7 @@ class UnifiedLLMClient:
                 usage=response.usage,
                 metadata=response.metadata
             )
-            
+
         except Exception as e:
             logger.error(f"LLM completion failed: {e}")
             # Return a basic error response
@@ -130,7 +130,7 @@ class UnifiedLLMClient:
                 model="error",
                 usage={"total_tokens": 0}
             )
-    
+
     async def chat(self,
                    messages: List[Dict[str, str]],
                    temperature: Optional[float] = None,
@@ -138,13 +138,13 @@ class UnifiedLLMClient:
                    **kwargs) -> 'LLMResponse':
         """
         Chat completion with message history.
-        
+
         Args:
             messages: List of message dicts with 'role' and 'content'
             temperature: Override default temperature
             max_tokens: Override default max tokens
             **kwargs: Additional parameters
-            
+
         Returns:
             LLMResponse object
         """
@@ -154,7 +154,7 @@ class UnifiedLLMClient:
                 Message(role=msg["role"], content=msg["content"])
                 for msg in messages
             ]
-            
+
             # Generate response
             response = await self.llm_service.generate(
                 messages=message_objects,
@@ -163,14 +163,14 @@ class UnifiedLLMClient:
                 max_tokens=max_tokens or self.max_tokens,
                 **kwargs
             )
-            
+
             return LLMResponse(
                 content=response.content,
                 model=response.model,
                 usage=response.usage,
                 metadata=response.metadata
             )
-            
+
         except Exception as e:
             logger.error(f"LLM chat failed: {e}")
             return LLMResponse(
@@ -178,15 +178,15 @@ class UnifiedLLMClient:
                 model="error",
                 usage={"total_tokens": 0}
             )
-    
+
     async def analyze_code(self, code: str, analysis_type: str = "general") -> Dict[str, Any]:
         """
         Analyze code - specialized method for code analysis.
-        
+
         Args:
             code: Code to analyze
             analysis_type: Type of analysis
-            
+
         Returns:
             Analysis results
         """
@@ -210,7 +210,7 @@ Respond in JSON format."""
             response_format="json",
             temperature=0.3  # Lower temperature for code analysis
         )
-        
+
         try:
             return json.loads(response.content)
         except json.JSONDecodeError:
@@ -219,15 +219,15 @@ Respond in JSON format."""
                 "type": analysis_type,
                 "format": "text"
             }
-    
+
     def get_model_info(self) -> Dict[str, Any]:
         """Get information about the current model and service."""
         return self.llm_service.get_info()
-    
+
     def set_mode(self, mode: str):
         """
         Manually set execution mode.
-        
+
         Args:
             mode: 'development', 'production', or 'auto'
         """
@@ -237,11 +237,11 @@ Respond in JSON format."""
             logger.info(f"Switched to {mode} mode")
         except ValueError:
             logger.error(f"Invalid mode: {mode}")
-    
+
     async def __aenter__(self):
         """Async context manager entry."""
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit."""
         pass
@@ -249,9 +249,9 @@ Respond in JSON format."""
 
 class LLMResponse:
     """Response object compatible with GrokClient."""
-    
-    def __init__(self, 
-                 content: str, 
+
+    def __init__(self,
+                 content: str,
                  model: str,
                  usage: Optional[Dict[str, int]] = None,
                  metadata: Optional[Dict[str, Any]] = None):
@@ -260,7 +260,7 @@ class LLMResponse:
         self.usage = usage or {"total_tokens": 0}
         self.metadata = metadata or {}
         self.timestamp = datetime.utcnow()
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
@@ -280,26 +280,26 @@ GrokClient = UnifiedLLMClient
 def create_llm_client(**kwargs) -> UnifiedLLMClient:
     """
     Create an LLM client with automatic configuration.
-    
+
     Returns:
         UnifiedLLMClient instance
     """
     # Auto-detect configuration from environment
     config = {}
-    
+
     # Check for model override
     if "GROK_MODEL" in os.environ:
         config["model"] = os.environ["GROK_MODEL"]
-    
+
     # Temperature setting
     if "LLM_TEMPERATURE" in os.environ:
         config["temperature"] = float(os.environ["LLM_TEMPERATURE"])
-    
+
     # Max tokens
     if "LLM_MAX_TOKENS" in os.environ:
         config["max_tokens"] = int(os.environ["LLM_MAX_TOKENS"])
-    
+
     # Merge with provided kwargs
     config.update(kwargs)
-    
+
     return UnifiedLLMClient(**config)

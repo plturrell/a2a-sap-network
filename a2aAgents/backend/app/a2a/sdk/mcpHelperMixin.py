@@ -10,19 +10,19 @@ logger = logging.getLogger(__name__)
 
 class MCPHelperMixin:
     """Mixin providing MCP-related helper methods"""
-    
+
     def list_mcp_tools(self) -> List[Dict[str, Any]]:
         """List available MCP tools"""
         if hasattr(self, 'mcp_server') and hasattr(self.mcp_server, 'tools'):
             return [asdict(tool) for tool in self.mcp_server.tools.values()]
         return []
-    
+
     def list_mcp_resources(self) -> List[Dict[str, Any]]:
         """List available MCP resources"""
         if hasattr(self, 'mcp_server') and hasattr(self.mcp_server, 'resources'):
             return [asdict(resource) for resource in self.mcp_server.resources.values()]
         return []
-    
+
     def get_mcp_capabilities(self) -> Dict[str, Any]:
         """Get comprehensive MCP capabilities"""
         return {
@@ -31,12 +31,12 @@ class MCPHelperMixin:
             "total_tools": len(self.list_mcp_tools()),
             "total_resources": len(self.list_mcp_resources())
         }
-    
+
     async def call_mcp_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Call an MCP tool with arguments"""
         if not hasattr(self, 'mcp_server'):
             return {"error": "MCP server not available"}
-        
+
         try:
             from .mcpTypes import MCPRequest
             request = MCPRequest(
@@ -53,12 +53,12 @@ class MCPHelperMixin:
         except Exception as e:
             logger.error(f"Failed to call MCP tool {tool_name}: {e}")
             return {"error": str(e)}
-    
+
     async def get_mcp_resource(self, resource_uri: str) -> Dict[str, Any]:
         """Get an MCP resource by URI"""
         if not hasattr(self, 'mcp_server'):
             return {"error": "MCP server not available"}
-        
+
         try:
             from .mcpTypes import MCPRequest
             request = MCPRequest(

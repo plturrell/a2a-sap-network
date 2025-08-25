@@ -79,10 +79,10 @@ except ImportError:
         def __init__(self):
             self.base_url = os.getenv("A2A_SERVICE_URL")
             self.storage_base_path = "/tmp/a2a"
-            
-        def get_agent_url(self, agent_type): 
+
+        def get_agent_url(self, agent_type):
             return self.base_url
-            
+
         def get_contract_address(self, name):
             # Return actual deployed contract addresses
             contracts = {
@@ -107,14 +107,14 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
         blockchain_capabilities = [
             "data_product_registration",
             "dublin_core_metadata",
-            "schema_validation", 
+            "schema_validation",
             "integrity_verification",
             "ord_registry_integration",
             "metadata_extraction",
             "quality_assessment",
             "data_lineage_tracking"
         ]
-        
+
         # Initialize A2AAgentBase with blockchain capabilities
         A2AAgentBase.__init__(
             self,
@@ -126,7 +126,7 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
             blockchain_capabilities=blockchain_capabilities,
             a2a_protocol_only=True  # Force A2A protocol compliance
         )
-        
+
         # Initialize blockchain integration
         BlockchainIntegrationMixin.__init__(self)
         self.ord_registry_url = ord_registry_url
@@ -157,14 +157,14 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
         try:
             # Establish standard trust relationships FIRST
             await self.establish_standard_trust_relationships()
-            
+
             # Initialize blockchain integration
             try:
                 await self.initialize_blockchain()
                 logger.info("✅ Blockchain integration initialized for Agent 0")
             except Exception as e:
                 logger.warning(f"⚠️ Blockchain initialization failed: {e}")
-            
+
             # Initialize data storage using centralized config
             storage_path = str(config.data_product_storage)
             os.makedirs(storage_path, exist_ok=True)
@@ -285,13 +285,13 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
             "referential_integrity": {},
             "verification_timestamp": datetime.utcnow().isoformat()
         }
-        
+
         # Process CSV files for hashing
         csv_files = self._find_csv_files(data_location)
         for csv_file in csv_files:
             file_hash = await self._calculate_file_hash(csv_file)
             integrity_results["sha256_hashes"][os.path.basename(csv_file)] = file_hash
-        
+
         try:
             # Verify referential integrity
             ref_integrity = await self._verify_referential_integrity(csv_files)
@@ -301,7 +301,7 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
             logger.error(f"Integrity verification failed: {e}")
             integrity_results["overall_status"] = "failed"
             integrity_results["error"] = str(e)
-        
+
         return integrity_results
     @a2a_skill(
         name="ord_registration",
@@ -333,12 +333,12 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
                 "SHA256 Verified": str(integrity_info.get("overall_status") == "verified").lower()
             }
         }
-        
+
         try:
             # Register with ORD Registry
             registration_result = await self._register_ord_descriptor(ord_descriptor)
             self.processing_stats["successful_registrations"] += 1
-            
+
             # Store product data via data_manager using standard trust relationship
             product_id = registration_result.get("id", f"product_{datetime.utcnow().timestamp()}")
             await self.store_agent_data(
@@ -351,7 +351,7 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
                     "integrity_info": integrity_info
                 }
             )
-            
+
             return {
                 "registration_successful": True,
                 "ord_id": registration_result.get("id"),
@@ -377,7 +377,7 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
             "context_id": context_id,
             "stages": {}
         }
-        
+
         try:
             # Update agent status to processing via agent_manager
             await self.update_agent_status("processing", {
@@ -385,7 +385,7 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
                 "context_id": context_id,
                 "task": "data_product_workflow"
             })
-            
+
             # Stage 1: Dublin Core extraction
             dublin_core_result = await self.execute_skill("dublin_core_extraction", data_info)
             results["stages"]["dublin_core"] = dublin_core_result
@@ -418,10 +418,10 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
                 "ord_registration": ord_result.get("result") if ord_result.get("success") else None,
                 "created_at": datetime.utcnow().isoformat()
             }
-            
+
             # Store locally
             self.data_products[data_product_id] = product_data
-            
+
             # Store via data_manager standard trust relationship
             await self.store_agent_data(
                 data_type="data_product_complete",
@@ -431,7 +431,7 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
                     "workflow_results": results
                 }
             )
-            
+
             # Update agent status to completed
             await self.update_agent_status("completed", {
                 "workflow_id": results["workflow_id"],
@@ -668,7 +668,7 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
         """Validate data product against registered schema"""
         try:
             data_product = input_data.get("data_product")
-            schema_id = input_data.get("schema_id") 
+            schema_id = input_data.get("schema_id")
             version = input_data.get("version", "latest")
             strict_mode = input_data.get("strict_mode", True)
             if not data_product or not schema_id:
@@ -683,8 +683,8 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
                 }
             # Perform validation
             validation_result = await self._perform_schema_validation(
-                data_product, 
-                schema_data["schema_definition"], 
+                data_product,
+                schema_data["schema_definition"],
                 strict_mode
             )
             # Update processing stats
@@ -725,7 +725,7 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
                 "message": "Catalog Manager call failed"
             }
 
-    
+
     # A2A Protocol Helper Methods
     async def _verify_a2a_connectivity(self):
         """Verify A2A protocol connectivity with other agents"""
@@ -733,7 +733,7 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
             # Discover available agents via catalog_manager standard trust relationship
             available_agents = await self.discover_agents()
             logger.info(f"Discovered {len(available_agents)} agents via catalog_manager")
-            
+
             # Test connectivity with essential agents
             essential_agents = [
                 self.catalog_manager_agent,
@@ -741,7 +741,7 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
                 self.vector_agent,
                 self.standardization_agent
             ]
-            
+
             for agent_id in essential_agents:
                 result = await self.request_data_from_agent_a2a(
                     target_agent=agent_id,
@@ -750,15 +750,15 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
                     encrypt=False
                 )
                 logger.info(f"A2A connectivity verified with {agent_id}: {result.get('success', False)}")
-            
+
         except Exception as e:
             logger.warning(f"A2A connectivity verification failed: {e}")
-    
+
     async def _drain_a2a_queues(self):
         """Wait for A2A message queues to empty"""
         while not self.outgoing_queue.empty() or not self.retry_queue.empty():
             await asyncio.sleep(1)
-    
+
     async def _get_schema_from_registry_a2a(self, schema_id: str, version: str) -> Optional[Dict[str, Any]]:
         """Get schema from registry via A2A protocol"""
         try:
@@ -766,7 +766,7 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
             version_key = f"{schema_id}_{version}"
             if version_key in self.schema_registry_cache:
                 return self.schema_registry_cache[version_key]
-            
+
             # Request from Catalog Manager via A2A
             result = await self.request_data_from_agent_a2a(
                 target_agent=self.catalog_manager_agent,
@@ -774,19 +774,19 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
                 query_params={"schema_id": schema_id, "version": version},
                 encrypt=False
             )
-            
+
             if result.get("success"):
                 schema_data = result.get("result", {})
                 # Cache the result
                 self.schema_registry_cache[version_key] = schema_data
                 return schema_data
-            
+
             return None
-            
+
         except Exception as e:
             logger.error(f"Failed to get schema via A2A: {e}")
             return None
-    
+
     async def _subscribe_to_schemas_a2a(self, schema_ids: List[str]) -> Dict[str, Any]:
         """Subscribe to schema notifications via A2A protocol"""
         try:
@@ -796,18 +796,18 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
                 input_data={"schema_ids": schema_ids, "subscriber": self.agent_id},
                 encrypt_data=False
             )
-            
+
             if result.get("success"):
                 # Update local subscriptions
                 for schema_id in schema_ids:
                     self.schema_subscriptions[schema_id] = datetime.now().isoformat()
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Schema subscription failed: {e}")
             return {"success": False, "error": str(e)}
-    
+
     async def _unsubscribe_from_schemas_a2a(self, schema_ids: List[str]) -> Dict[str, Any]:
         """Unsubscribe from schema notifications via A2A protocol"""
         try:
@@ -817,18 +817,18 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
                 input_data={"schema_ids": schema_ids, "subscriber": self.agent_id},
                 encrypt_data=False
             )
-            
+
             if result.get("success"):
                 # Update local subscriptions
                 for schema_id in schema_ids:
                     self.schema_subscriptions.pop(schema_id, None)
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Schema unsubscription failed: {e}")
             return {"success": False, "error": str(e)}
-    
+
     async def _list_schema_subscriptions_a2a(self) -> Dict[str, Any]:
         """List schema subscriptions"""
         return {
@@ -836,7 +836,7 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
             "subscriptions": self.schema_subscriptions,
             "count": len(self.schema_subscriptions)
         }
-    
+
     @a2a_handler("HEALTH_CHECK")
     async def handle_health_check(self, message: A2AMessage, context_id: str) -> Dict[str, Any]:
         """Handle A2A protocol health check messages"""
@@ -861,7 +861,7 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
                 "error": str(e),
                 "timestamp": datetime.utcnow().isoformat()
             }
-    
+
     async def _process_a2a_data_request(self, data_type: str, query_params: Dict[str, Any]) -> Dict[str, Any]:
         """Process A2A data request - override from base class"""
         try:
@@ -892,7 +892,7 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
         except Exception as e:
             logger.error(f"Error processing A2A data request: {e}")
             return {"error": str(e)}
-    
+
     async def _initialize_trust_system(self) -> None:
         """Initialize the agent's trust system"""
         try:
@@ -904,10 +904,10 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
             if self.trust_identity:
                 logger.info(f"✅ Trust system initialized for {self.agent_id}")
                 logger.info(f"   Trust address: {self.trust_identity.get('address')}")
-                
+
                 # Get trust contract reference
                 self.trust_contract = get_trust_contract()
-                
+
                 # Pre-trust essential agents for A2A communication
                 essential_agents = [
                     "agent_manager",
@@ -916,11 +916,11 @@ class DataProductRegistrationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin
                     self.vector_agent,
                     self.standardization_agent
                 ]
-                
+
                 self.trusted_agents = set()
                 for agent_id in essential_agents:
                     self.trusted_agents.add(agent_id)
-                
+
                 logger.info(f"   Pre-trusted agents: {self.trusted_agents}")
             else:
                 logger.warning("⚠️ Trust system initialization failed, running without trust verification")

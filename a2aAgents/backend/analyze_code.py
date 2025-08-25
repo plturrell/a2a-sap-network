@@ -21,34 +21,34 @@ def analyze_python_file(file_path: str) -> Dict[str, Any]:
         line_count = len(lines)
         empty_lines = sum(1 for line in lines if not line.strip())
         comment_lines = sum(1 for line in lines if line.strip().startswith('#'))
-        
+
         # Parse AST for more advanced metrics
         try:
             tree = ast.parse(content)
             functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
             classes = [node for node in ast.walk(tree) if isinstance(node, ast.ClassDef)]
-            
+
             # Check for issues
             issues = []
-            
+
             # Check for long functions
             for func in functions:
                 func_lines = func.end_lineno - func.lineno if hasattr(func, 'end_lineno') else 0
                 if func_lines > 50:
                     issues.append(f"Long function '{func.name}' ({func_lines} lines)")
-            
+
             # Check for missing docstrings
             for func in functions:
                 if not ast.get_docstring(func):
                     issues.append(f"Missing docstring in function '{func.name}'")
-            
+
             for cls in classes:
                 if not ast.get_docstring(cls):
                     issues.append(f"Missing docstring in class '{cls.name}'")
-            
+
             # Calculate complexity (simplified)
             complexity = len(functions) + len(classes)
-            
+
             return {
                 "file": file_path,
                 "lines": line_count,
@@ -81,7 +81,7 @@ def analyze_directory(directory: str) -> Dict[str, Any]:
     total_issues = 0
     total_lines = 0
     total_files = 0
-    
+
     # Find all Python files
     for py_file in glob.glob(os.path.join(directory, "**/*.py"), recursive=True):
         if "__pycache__" not in py_file:
@@ -90,10 +90,10 @@ def analyze_directory(directory: str) -> Dict[str, Any]:
             total_files += 1
             total_lines += result.get("lines", 0)
             total_issues += len(result.get("issues", []))
-    
+
     # Calculate overall quality score
     avg_quality = sum(r.get("quality_score", 0) for r in results) / max(len(results), 1)
-    
+
     return {
         "directory": directory,
         "files_analyzed": total_files,
@@ -111,13 +111,13 @@ def print_summary_table(analyses: List[Dict[str, Any]]):
     print("="*80)
     print(f"{'Directory':<40} {'Files':<10} {'Issues':<10} {'Quality':<10}")
     print("-"*80)
-    
+
     for analysis in analyses:
         dir_name = os.path.basename(analysis["directory"])
         print(f"{dir_name:<40} {analysis['files_analyzed']:<10} {analysis['total_issues']:<10} {analysis['quality_score']:<10.2f}")
-    
+
     print("="*80)
-    
+
     # Print detailed issues for each directory
     for analysis in analyses:
         if analysis["total_issues"] > 0:
@@ -127,11 +127,11 @@ def print_summary_table(analyses: List[Dict[str, Any]]):
             for file_result in analysis["file_results"]:
                 for issue in file_result.get("issues", []):
                     issue_count[issue] += 1
-            
+
             # Sort by frequency
             def get_issue_count(item):
                 return item[1]
-            
+
             for issue, count in sorted(issue_count.items(), key=get_issue_count, reverse=True)[:10]:
                 print(f"  - {issue} (x{count})")
 
@@ -143,9 +143,9 @@ def main():
         "app/a2a/agents/dataManager",
         "app/a2a/common"
     ]
-    
+
     analyses = []
-    
+
     for directory in directories:
         if os.path.exists(directory):
             print(f"\nAnalyzing {directory}...")
@@ -153,14 +153,14 @@ def main():
             analyses.append(analysis)
         else:
             print(f"Directory not found: {directory}")
-    
+
     # Print summary table
     print_summary_table(analyses)
-    
+
     # Save detailed results to JSON
     with open("code_analysis_results.json", "w") as f:
         json.dump(analyses, f, indent=2)
-    
+
     print(f"\nDetailed results saved to code_analysis_results.json")
 
 if __name__ == "__main__":

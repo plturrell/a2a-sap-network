@@ -9,7 +9,7 @@ from app.core.dynamicConfig import get_config_manager
 
 class AppConstants:
     """Application-wide constants derived from dynamic configuration"""
-    
+
     @classmethod
     def get_timeout_constants(cls) -> Dict[str, int]:
         """Get all timeout-related constants"""
@@ -18,7 +18,7 @@ class AppConstants:
         external_config = config_manager.get_external_service_config()
         ui_config = config_manager.get_ui_config()
         db_config = config_manager.get_database_config()
-        
+
         return {
             # Agent timeouts
             "AGENT_DEFAULT_TIMEOUT": agent_config.timeout_seconds,
@@ -28,34 +28,34 @@ class AppConstants:
             "AGENT3_TIMEOUT": agent_config.agent3_timeout,
             "AGENT4_TIMEOUT": agent_config.agent4_timeout,
             "AGENT5_TIMEOUT": agent_config.agent5_timeout,
-            
+
             # External API timeouts
             "EXTERNAL_API_TIMEOUT": external_config.api_timeout_seconds,
             "GROK_API_TIMEOUT": external_config.api_timeout_seconds,
             "PERPLEXITY_API_TIMEOUT": external_config.api_timeout_seconds,
-            
+
             # UI timeouts (converted to seconds)
             "UI_API_TIMEOUT": ui_config.api_timeout_ms // 1000,
             "UI_CHART_TIMEOUT": ui_config.chart_load_timeout_ms // 1000,
             "UI_UPLOAD_TIMEOUT": ui_config.file_upload_timeout_ms // 1000,
-            
+
             # Database timeouts
             "DB_CONNECT_TIMEOUT": db_config.connect_timeout,
             "DB_COMMAND_TIMEOUT": db_config.command_timeout,
             "DB_POOL_TIMEOUT": db_config.pool_timeout,
-            
+
             # System timeouts
             "HEALTH_CHECK_TIMEOUT": config_manager.get_monitoring_config().health_check_timeout,
         }
-    
-    @classmethod 
+
+    @classmethod
     def get_pagination_constants(cls) -> Dict[str, int]:
         """Get pagination-related constants"""
         config_manager = get_config_manager()
         ui_config = config_manager.get_ui_config()
         notification_config = config_manager.get_notification_config()
         agent_config = config_manager.get_agent_config()
-        
+
         return {
             "DEFAULT_PAGE_SIZE": ui_config.default_page_size,
             "MAX_PAGE_SIZE": ui_config.max_page_size,
@@ -63,7 +63,7 @@ class AppConstants:
             "AGENT_BATCH_SIZE": agent_config.processing_batch_size,
             "NOTIFICATION_BATCH_SIZE": notification_config.batch_size,
         }
-    
+
     @classmethod
     def get_limits_constants(cls) -> Dict[str, int]:
         """Get various system limits"""
@@ -74,41 +74,41 @@ class AppConstants:
         notification_config = config_manager.get_notification_config()
         db_config = config_manager.get_database_config()
         redis_config = config_manager.get_redis_config()
-        
+
         return {
             # Agent limits
             "MAX_RETRIES": agent_config.max_retries,
             "MAX_CONCURRENT_REQUESTS": agent_config.max_concurrent_requests,
             "RETRY_DELAY_SECONDS": agent_config.retry_delay_seconds,
-            
+
             # External service limits
             "CIRCUIT_BREAKER_THRESHOLD": external_config.circuit_breaker_threshold,
             "CIRCUIT_BREAKER_TIMEOUT": external_config.circuit_breaker_timeout,
             "RATE_LIMIT_PER_MINUTE": external_config.max_requests_per_minute,
-            
+
             # UI limits
             "MAX_FILE_SIZE_MB": ui_config.max_file_size_mb,
             "MAX_FILE_SIZE_BYTES": ui_config.max_file_size_mb * 1024 * 1024,
             "MAX_CONCURRENT_UPLOADS": ui_config.max_concurrent_uploads,
-            
+
             # Notification limits
             "MAX_NOTIFICATIONS": notification_config.max_notifications,
             "NOTIFICATION_RETENTION_DAYS": notification_config.retention_days,
-            
+
             # Database limits
             "DB_POOL_MIN_SIZE": db_config.pool_min_size,
             "DB_POOL_MAX_SIZE": db_config.pool_max_size,
-            
+
             # Redis limits
             "REDIS_MAX_CONNECTIONS": redis_config.max_connections,
         }
-    
+
     @classmethod
     def get_security_constants(cls) -> Dict[str, Any]:
         """Get security-related constants"""
         config_manager = get_config_manager()
         security_config = config_manager.get_security_config()
-        
+
         return {
             "JWT_ALGORITHM": security_config.jwt_algorithm,
             "JWT_EXPIRY_HOURS": security_config.jwt_expiry_hours,
@@ -118,14 +118,14 @@ class AppConstants:
             "MAX_LOGIN_ATTEMPTS": security_config.max_login_attempts,
             "LOCKOUT_DURATION_MINUTES": security_config.lockout_duration_minutes,
         }
-    
+
     @classmethod
     def get_monitoring_constants(cls) -> Dict[str, Any]:
         """Get monitoring and observability constants"""
         config_manager = get_config_manager()
         monitoring_config = config_manager.get_monitoring_config()
         notification_config = config_manager.get_notification_config()
-        
+
         return {
             "LOG_LEVEL": monitoring_config.log_level,
             "LOG_FORMAT": monitoring_config.log_format,
@@ -136,7 +136,7 @@ class AppConstants:
             "HEALTH_CHECK_INTERVAL": monitoring_config.health_check_interval,
             "OTEL_SERVICE_NAME": monitoring_config.otel_service_name,
             "OTEL_SERVICE_VERSION": monitoring_config.otel_service_version,
-            
+
             # Alert thresholds
             "ERROR_THRESHOLD": notification_config.error_threshold,
             "WARNING_THRESHOLD": notification_config.warning_threshold,
@@ -150,7 +150,7 @@ class HttpStatusCodes:
     CREATED = 201
     ACCEPTED = 202
     NO_CONTENT = 204
-    
+
     BAD_REQUEST = 400
     UNAUTHORIZED = 401
     FORBIDDEN = 403
@@ -159,7 +159,7 @@ class HttpStatusCodes:
     CONFLICT = 409
     UNPROCESSABLE_ENTITY = 422
     TOO_MANY_REQUESTS = 429
-    
+
     INTERNAL_SERVER_ERROR = 500
     BAD_GATEWAY = 502
     SERVICE_UNAVAILABLE = 503
@@ -169,12 +169,12 @@ class HttpStatusCodes:
 class AgentTypes:
     """Agent type constants"""
     AGENT0 = "agent0_data_product"
-    AGENT1 = "agent1_standardization"  
+    AGENT1 = "agent1_standardization"
     AGENT2 = "agent2_ai_preparation"
     AGENT3 = "agent3_vector_processing"
     AGENT4 = "agent4_calc_validation"
     AGENT5 = "agent5_qa_validation"
-    
+
     DATA_MANAGER = "data_manager"
     CATALOG_MANAGER = "catalog_manager"
     AGENT_MANAGER = "agent_manager"
@@ -229,28 +229,28 @@ class ErrorCodes:
     CONFIG_MISSING = "CONFIG_001"
     CONFIG_INVALID = "CONFIG_002"
     CONFIG_VALIDATION_FAILED = "CONFIG_003"
-    
+
     # Agent errors
     AGENT_TIMEOUT = "AGENT_001"
     AGENT_UNAVAILABLE = "AGENT_002"
     AGENT_PROCESSING_FAILED = "AGENT_003"
     AGENT_COMMUNICATION_FAILED = "AGENT_004"
-    
+
     # Data errors
     DATA_VALIDATION_FAILED = "DATA_001"
     DATA_FORMAT_INVALID = "DATA_002"
     DATA_SIZE_EXCEEDED = "DATA_003"
-    
+
     # Authentication/Authorization errors
     AUTH_TOKEN_INVALID = "AUTH_001"
     AUTH_TOKEN_EXPIRED = "AUTH_002"
     AUTH_INSUFFICIENT_PERMISSIONS = "AUTH_003"
-    
+
     # External service errors
     EXTERNAL_SERVICE_UNAVAILABLE = "EXT_001"
     EXTERNAL_SERVICE_TIMEOUT = "EXT_002"
     EXTERNAL_SERVICE_RATE_LIMITED = "EXT_003"
-    
+
     # Database errors
     DATABASE_CONNECTION_FAILED = "DB_001"
     DATABASE_QUERY_FAILED = "DB_002"
@@ -279,17 +279,17 @@ def get_pagination_size(size_type: str = "DEFAULT_PAGE_SIZE") -> int:
 # Static constants that don't change based on environment
 class StaticConstants:
     """Static constants that are the same across all environments"""
-    
+
     # Protocol constants
     HTTP_PROTOCOL = "http"
     HTTPS_PROTOCOL = "https"
     WS_PROTOCOL = "ws"
     WSS_PROTOCOL = "wss"
-    
+
     # Encoding constants
     UTF8_ENCODING = "utf-8"
     BASE64_ENCODING = "base64"
-    
+
     # Content types
     CONTENT_TYPE_JSON = "application/json"
     CONTENT_TYPE_XML = "application/xml"
@@ -297,19 +297,19 @@ class StaticConstants:
     CONTENT_TYPE_TEXT = "text/plain"
     CONTENT_TYPE_FORM = "application/x-www-form-urlencoded"
     CONTENT_TYPE_MULTIPART = "multipart/form-data"
-    
+
     # Date/time formats
     ISO_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
     DATE_FORMAT = "%Y-%m-%d"
     TIME_FORMAT = "%H:%M:%S"
-    
+
     # Regex patterns
     EMAIL_REGEX = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     UUID_REGEX = r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
-    
+
     # Currency codes (ISO 4217)
     CURRENCY_USD = "USD"
-    CURRENCY_EUR = "EUR" 
+    CURRENCY_EUR = "EUR"
     CURRENCY_GBP = "GBP"
     CURRENCY_JPY = "JPY"
     CURRENCY_CHF = "CHF"

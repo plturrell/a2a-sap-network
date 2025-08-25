@@ -30,7 +30,7 @@ class MCPErrorCodes:
     INTERNAL_ERROR = -32603
     SERVER_ERROR_START = -32099
     SERVER_ERROR_END = -32000
-    
+
     # Custom A2A error codes
     AUTHENTICATION_FAILED = -32001
     AUTHORIZATION_FAILED = -32002
@@ -61,7 +61,7 @@ class MCPResponse(BaseModel):
     result: Optional[Any] = None
     error: Optional[MCPError] = None
     _meta: Optional[Dict[str, Any]] = None
-    
+
     @model_validator(mode='after')
     def validate_result_or_error(self):
         """Validate that either result or error is present, but not both"""

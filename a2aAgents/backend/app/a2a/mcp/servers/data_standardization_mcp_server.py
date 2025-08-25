@@ -53,25 +53,25 @@ except ImportError as e:
         def __init__(self, base_url, enable_monitoring=True):
             self.base_url = base_url
             self.enable_monitoring = enable_monitoring
-        
+
         def process_request(self, request):
             return f"Mock response from {'data_standardization'}"
-        
+
         def get_status(self):
             return {"status": "running", "service": "data_standardization"}
-    
+
     agent_class = MockAgent
 
 logger = logging.getLogger(__name__)
 
 class StandaloneMCPEnhancedDataStandardizationAgentServer:
     """Standalone MCP server for data_standardization"""
-    
+
     def __init__(self):
         self.name = "mcp_data_standardization_server"
         self.version = "1.0.0"
         self.port = 8101
-        
+
         # Initialize the agent
         try:
             self.agent = agent_class(
@@ -86,16 +86,16 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
                 base_url=f"http://localhost:{self.port}",
                 enable_monitoring=True
             )
-        
+
         logger.info(f"Initialized {self.__class__.__name__} on port {self.port}")
-    
+
     async def handle_request(self, request):
         """Handle MCP request"""
         method = request.get("method", "unknown")
         params = request.get("params", {})
-        
+
         # Route to appropriate tool
-        
+
         if method == "handle_mcp_enhanced_standardization":
             try:
                 if hasattr(self.agent, 'handle_mcp_enhanced_standardization'):
@@ -111,7 +111,7 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
                 else:
                     return {"error": "Tool handle_mcp_enhanced_standardization not found", "status": "error"}
             except Exception as e:
-                return {"error": f"Error executing handle_mcp_enhanced_standardization: {str(e)}", "status": "error"}        
+                return {"error": f"Error executing handle_mcp_enhanced_standardization: {str(e)}", "status": "error"}
         if method == "mcp_account_standardization_skill":
             try:
                 if hasattr(self.agent, 'mcp_account_standardization_skill'):
@@ -127,7 +127,7 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
                 else:
                     return {"error": "Tool mcp_account_standardization_skill not found", "status": "error"}
             except Exception as e:
-                return {"error": f"Error executing mcp_account_standardization_skill: {str(e)}", "status": "error"}        
+                return {"error": f"Error executing mcp_account_standardization_skill: {str(e)}", "status": "error"}
         if method == "mcp_batch_standardization_skill":
             try:
                 if hasattr(self.agent, 'mcp_batch_standardization_skill'):
@@ -143,7 +143,7 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
                 else:
                     return {"error": "Tool mcp_batch_standardization_skill not found", "status": "error"}
             except Exception as e:
-                return {"error": f"Error executing mcp_batch_standardization_skill: {str(e)}", "status": "error"}        
+                return {"error": f"Error executing mcp_batch_standardization_skill: {str(e)}", "status": "error"}
         if method == "mcp_enhanced_standardization_workflow":
             try:
                 if hasattr(self.agent, 'mcp_enhanced_standardization_workflow'):
@@ -159,7 +159,7 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
                 else:
                     return {"error": "Tool mcp_enhanced_standardization_workflow not found", "status": "error"}
             except Exception as e:
-                return {"error": f"Error executing mcp_enhanced_standardization_workflow: {str(e)}", "status": "error"}        
+                return {"error": f"Error executing mcp_enhanced_standardization_workflow: {str(e)}", "status": "error"}
         if method == "_assess_data_quality_with_mcp":
             try:
                 if hasattr(self.agent, '_assess_data_quality_with_mcp'):
@@ -175,7 +175,7 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
                 else:
                     return {"error": "Tool _assess_data_quality_with_mcp not found", "status": "error"}
             except Exception as e:
-                return {"error": f"Error executing _assess_data_quality_with_mcp: {str(e)}", "status": "error"}        
+                return {"error": f"Error executing _assess_data_quality_with_mcp: {str(e)}", "status": "error"}
         if method == "_validate_data_with_mcp":
             try:
                 if hasattr(self.agent, '_validate_data_with_mcp'):
@@ -191,7 +191,7 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
                 else:
                     return {"error": "Tool _validate_data_with_mcp not found", "status": "error"}
             except Exception as e:
-                return {"error": f"Error executing _validate_data_with_mcp: {str(e)}", "status": "error"}        
+                return {"error": f"Error executing _validate_data_with_mcp: {str(e)}", "status": "error"}
         if method == "_save_mcp_enhanced_results":
             try:
                 if hasattr(self.agent, '_save_mcp_enhanced_results'):
@@ -207,7 +207,7 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
                 else:
                     return {"error": "Tool _save_mcp_enhanced_results not found", "status": "error"}
             except Exception as e:
-                return {"error": f"Error executing _save_mcp_enhanced_results: {str(e)}", "status": "error"}        
+                return {"error": f"Error executing _save_mcp_enhanced_results: {str(e)}", "status": "error"}
         if method == "example_mcp_integration":
             try:
                 if hasattr(self.agent, 'example_mcp_integration'):
@@ -223,7 +223,7 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
                 else:
                     return {"error": "Tool example_mcp_integration not found", "status": "error"}
             except Exception as e:
-                return {"error": f"Error executing example_mcp_integration: {str(e)}", "status": "error"}        
+                return {"error": f"Error executing example_mcp_integration: {str(e)}", "status": "error"}
         if method == "mcp_quality_assessment":
             try:
                 if hasattr(self.agent, 'mcp_quality_assessment'):
@@ -239,7 +239,7 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
                 else:
                     return {"error": "Tool mcp_quality_assessment not found", "status": "error"}
             except Exception as e:
-                return {"error": f"Error executing mcp_quality_assessment: {str(e)}", "status": "error"}        
+                return {"error": f"Error executing mcp_quality_assessment: {str(e)}", "status": "error"}
         if method == "mcp_validation_tools":
             try:
                 if hasattr(self.agent, 'mcp_validation_tools'):
@@ -255,7 +255,7 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
                 else:
                     return {"error": "Tool mcp_validation_tools not found", "status": "error"}
             except Exception as e:
-                return {"error": f"Error executing mcp_validation_tools: {str(e)}", "status": "error"}        
+                return {"error": f"Error executing mcp_validation_tools: {str(e)}", "status": "error"}
         if method == "mcp_performance_tools":
             try:
                 if hasattr(self.agent, 'mcp_performance_tools'):
@@ -271,7 +271,7 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
                 else:
                     return {"error": "Tool mcp_performance_tools not found", "status": "error"}
             except Exception as e:
-                return {"error": f"Error executing mcp_performance_tools: {str(e)}", "status": "error"}        
+                return {"error": f"Error executing mcp_performance_tools: {str(e)}", "status": "error"}
         if method == "mcp_confidence_calculator":
             try:
                 if hasattr(self.agent, 'mcp_confidence_calculator'):
@@ -288,10 +288,10 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
                     return {"error": "Tool mcp_confidence_calculator not found", "status": "error"}
             except Exception as e:
                 return {"error": f"Error executing mcp_confidence_calculator: {str(e)}", "status": "error"}
-        
+
         # Default fallback
         return {"error": f"Unknown method: {method}", "available_tools": [12], "status": "error"}
-    
+
     async def start_server(self):
         """Start the MCP server with production features"""
         try:
@@ -309,7 +309,7 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
 
 # A2A Protocol Compliance: All imports must be available
 # No fallback implementations allowed - the agent must have all required dependencies
-            
+
             class MCPHandler(BaseHTTPRequestHandler):
                 def do_GET(self):
                     if self.path == "/health":
@@ -326,12 +326,12 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
                     else:
                         self.send_response(404)
                         self.end_headers()
-            
+
             server = HTTPServer(('0.0.0.0', 8101), MCPHandler)
             print(f"Starting basic HTTP server for mcp_data_standardization_server on port 8101")
             server.serve_forever()
             return
-        
+
         app = FastAPI(
             title="mcp_data_standardization_server",
             description="Data standardization with L4 hierarchical processing",
@@ -339,7 +339,7 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
             docs_url=None,  # Disable docs in production
             redoc_url=None  # Disable redoc in production
         )
-        
+
         # Add CORS middleware
         app.add_middleware(
             CORSMiddleware,
@@ -348,7 +348,7 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
             allow_methods=["GET", "POST"],
             allow_headers=["Authorization", "Content-Type", "X-API-Key"],
         )
-        
+
         # Global exception handler
         @app.exception_handler(Exception)
         async def global_exception_handler(request: Request, exc: Exception):
@@ -357,17 +357,17 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
                 status_code=500,
                 content={"error": "Internal server error", "status": "error"}
             )
-        
+
         # Graceful shutdown handler
         shutdown_event = asyncio.Event()
-        
+
         def signal_handler(signum, frame):
             logger.info(f"Received signal {signum}, shutting down...")
             shutdown_event.set()
-            
+
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)
-        
+
         @app.get("/health")
         async def health_check():
             return {
@@ -377,7 +377,7 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
                 "tools": 12,
                 "agent_type": type(self.agent).__name__
             }
-        
+
         @app.get("/info")
         async def service_info():
             return {
@@ -437,7 +437,7 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
                     }
                 ]
             }
-        
+
         @app.post("/mcp")
         async def handle_mcp_request(request: dict, auth_info: dict = None):
             """Handle authenticated MCP requests"""
@@ -445,13 +445,13 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
                 # Add auth context to request
                 if auth_info:
                     request['_auth'] = auth_info
-                    
+
                 result = await self.handle_request(request)
-                
+
                 # Add correlation ID if present
                 if '_correlation_id' in request:
                     result['_correlation_id'] = request['_correlation_id']
-                    
+
                 return result
             except Exception as e:
                 logger.error(f"Error handling MCP request: {e}")
@@ -460,21 +460,21 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
                     "status": "error",
                     "code": 500
                 }
-        
+
         # Startup event
         @app.on_event("startup")
         async def startup():
             logger.info(f"Starting mcp_data_standardization_server on port 8101")
             # Initialize connections, caches, etc.
-            
+
         # Shutdown event
         @app.on_event("shutdown")
         async def shutdown():
             logger.info(f"Shutting down mcp_data_standardization_server")
             # Clean up resources, close connections
-            
+
         print(f"🚀 Starting mcp_data_standardization_server on port 8101")
-        
+
         # Production server configuration
         config = uvicorn.Config(
             app=app,
@@ -486,14 +486,14 @@ class StandaloneMCPEnhancedDataStandardizationAgentServer:
             server_header=False,  # Don't expose server info
             date_header=False,    # Don't expose date for security
         )
-        
+
         server = uvicorn.Server(config)
         await server.serve()
 
 async def main():
     """Main server entry point"""
     logging.basicConfig(level=logging.INFO)
-    
+
     try:
         server = StandaloneMCPEnhancedDataStandardizationAgentServer()
         await server.start_server()

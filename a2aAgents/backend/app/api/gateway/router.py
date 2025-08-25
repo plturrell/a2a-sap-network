@@ -30,11 +30,11 @@ async def gateway_proxy(
 ):
     """
     Main gateway endpoint - routes requests to appropriate services
-    
+
     Service names:
     - main: Main API
     - agent0: Data Product Registration Agent
-    - agent1: Data Standardization Agent  
+    - agent1: Data Standardization Agent
     - agent2: AI Preparation Agent
     - agent3: Vector Processing Agent
     - data_manager: Data Manager Agent
@@ -42,11 +42,11 @@ async def gateway_proxy(
     - agent_manager: Agent Manager
     - registry: A2A Registry
     """
-    
+
     # Generate request ID
     request_id = str(uuid.uuid4())
     request.state.request_id = request_id
-    
+
     # Add trace attributes
     add_span_attributes({
         "gateway.request_id": request_id,
@@ -55,11 +55,11 @@ async def gateway_proxy(
         "gateway.authenticated": current_user is not None,
         "gateway.api_key_present": x_api_key is not None
     })
-    
+
     # Determine rate limit tier
     rate_limit_key = "anonymous"
     rate_limit_config = gateway.config.default_rate_limit
-    
+
     if current_user:
         rate_limit_key = f"user:{current_user.id}"
         # Check user tier
@@ -73,13 +73,13 @@ async def gateway_proxy(
     elif x_api_key:
         rate_limit_key = f"api_key:{x_api_key[:8]}"
         rate_limit_config = gateway.config.rate_limits["authenticated"]
-    
+
     # Check rate limits
     allowed, rate_limit_info = await gateway.rate_limiter.check_rate_limit(
         rate_limit_key,
         rate_limit_config
     )
-    
+
     if not allowed:
         retry_after = rate_limit_info.get("retry_after", 60)
         raise HTTPException(
@@ -92,29 +92,29 @@ async def gateway_proxy(
                 "X-RateLimit-Reset": str(int(time.time()) + retry_after)
             }
         )
-    
+
     # Add rate limit headers to response
     response_headers = {
         "X-RateLimit-Limit": str(rate_limit_config.requests_per_minute),
         "X-RateLimit-Remaining": str(rate_limit_info.get("requests_remaining_minute", 0)),
         "X-Gateway-Request-Id": request_id
     }
-    
+
     # Check authentication requirements
     full_path = f"/{path}"
-    
+
     # Check if path requires authentication
     requires_auth = any(
         full_path.startswith(auth_path)
         for auth_path in gateway.config.auth_required_paths
     )
-    
+
     if requires_auth and not current_user and not x_api_key:
         raise HTTPException(
             status_code=401,
             detail="Authentication required for this endpoint"
         )
-    
+
     try:
         # Route request
         response = await gateway.route_request(
@@ -123,13 +123,13 @@ async def gateway_proxy(
             path=f"/{path}",
             user_id=str(current_user.id) if current_user else None
         )
-        
+
         # Add gateway headers
         for key, value in response_headers.items():
             response.headers[key] = value
-        
+
         return response
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -160,7 +160,7 @@ async def list_services():
                 "timeout": config.circuit_breaker_timeout
             }
         }
-    
+
     return {
         "services": services,
         "total": len(services)
@@ -172,26 +172,26 @@ async def get_rate_limits(
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     """Get rate limit information for current user"""
-    
+
     if current_user:
         tier = getattr(current_user, "tier", "authenticated")
         if tier == "premium":
             config = gateway.config.rate_limits["premium"]
         else:
             config = gateway.config.rate_limits["authenticated"]
-        
+
         rate_limit_key = f"user:{current_user.id}"
     else:
         config = gateway.config.default_rate_limit
         rate_limit_key = "anonymous"
-    
+
     # Get current usage
     allowed, info = await gateway.rate_limiter.check_rate_limit(
         rate_limit_key,
         config,
         cost=0  # Don't consume tokens
     )
-    
+
     return {
         "tier": "premium" if current_user and getattr(current_user, "tier", None) == "premium" else "authenticated" if current_user else "anonymous",
         "limits": {
@@ -219,7 +219,7 @@ async def gateway_metrics():
             "failures": len(breaker.failures.get(service, [])),
             "threshold": breaker.threshold
         }
-    
+
     return {
         "circuit_breakers": circuit_status,
         "active_rate_limits": len(gateway.rate_limiter.buckets),

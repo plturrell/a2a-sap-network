@@ -15,7 +15,7 @@ Provides comprehensive simulation capabilities for testing workflow orchestratio
 """
 
 from .comprehensiveOrchestratorAgentSdk import (
-    OrchestratorAgentSdk, WorkflowDefinition, WorkflowTask, 
+    OrchestratorAgentSdk, WorkflowDefinition, WorkflowTask,
     WorkflowStatus, TaskStatus, OrchestrationStrategy
 )
 from app.a2a.core.security_base import SecureA2AAgent
@@ -37,10 +37,10 @@ class SimulationScenario(Enum):
 @dataclass
 class SimulatedAgent(SecureA2AAgent):
     """Simulated agent for orchestration testing"""
-    
+
     # Security features provided by SecureA2AAgent:
     # - JWT authentication and authorization
-    # - Rate limiting and request throttling  
+    # - Rate limiting and request throttling
     # - Input validation and sanitization
     # - Audit logging and compliance tracking
     # - Encrypted communication channels
@@ -55,14 +55,14 @@ class SimulatedAgent(SecureA2AAgent):
     success_rate: float = 0.95
     is_available: bool = True
     load_factor: float = 1.0  # Affects response time
-    
+
 @dataclass
 class WorkflowTemplate(SecureA2AAgent):
     """Template for generating test workflows"""
-    
+
     # Security features provided by SecureA2AAgent:
     # - JWT authentication and authorization
-    # - Rate limiting and request throttling  
+    # - Rate limiting and request throttling
     # - Input validation and sanitization
     # - Audit logging and compliance tracking
     # - Encrypted communication channels
@@ -77,10 +77,10 @@ class WorkflowTemplate(SecureA2AAgent):
 @dataclass
 class SimulationMetrics(SecureA2AAgent):
     """Metrics collected during orchestration simulation"""
-    
+
     # Security features provided by SecureA2AAgent:
     # - JWT authentication and authorization
-    # - Rate limiting and request throttling  
+    # - Rate limiting and request throttling
     # - Input validation and sanitization
     # - Audit logging and compliance tracking
     # - Encrypted communication channels
@@ -103,24 +103,24 @@ class SimulationMetrics(SecureA2AAgent):
 
 class OrchestratorSimulator(SecureA2AAgent):
     """Comprehensive simulation framework for workflow orchestration testing"""
-    
+
     # Security features provided by SecureA2AAgent:
     # - JWT authentication and authorization
-    # - Rate limiting and request throttling  
+    # - Rate limiting and request throttling
     # - Input validation and sanitization
     # - Audit logging and compliance tracking
     # - Encrypted communication channels
     # - Automatic security scanning
-    
+
     def __init__(self, orchestrator_agent: OrchestratorAgentSdk):
-        
+
         super().__init__()
         self.orchestrator_agent = orchestrator_agent
         self.simulated_agents: List[SimulatedAgent] = []
         self.simulation_metrics = SimulationMetrics()
         self.simulation_running = False
         self.simulation_tasks: List[asyncio.Task] = []
-        
+
         # Workflow templates for different complexity levels
         self.workflow_templates = {
             "simple": WorkflowTemplate(
@@ -131,7 +131,7 @@ class OrchestratorSimulator(SecureA2AAgent):
                 agent_types=["data", "calc"]
             ),
             "medium": WorkflowTemplate(
-                name="MediumWorkflow", 
+                name="MediumWorkflow",
                 task_count=8,
                 strategy=OrchestrationStrategy.DAG,
                 complexity="medium",
@@ -147,7 +147,7 @@ class OrchestratorSimulator(SecureA2AAgent):
                 agent_types=["data", "calc", "ai", "sql", "qa", "validation"]
             )
         }
-        
+
         # Agent type configurations
         self.agent_configs = {
             "data": {
@@ -188,13 +188,13 @@ class OrchestratorSimulator(SecureA2AAgent):
         scenario: SimulationScenario = SimulationScenario.NORMAL_WORKFLOW_EXECUTION
     ):
         """Setup simulation environment with agents"""
-        
+
         # Clear existing simulation
         await self.cleanup_simulation()
-        
+
         # Create simulated agents for each type
         self.simulated_agents = []
-        
+
         for agent_type, config in self.agent_configs.items():
             for i in range(agent_count_per_type):
                 agent = SimulatedAgent(
@@ -207,10 +207,10 @@ class OrchestratorSimulator(SecureA2AAgent):
                     success_rate=self._get_success_rate(scenario)
                 )
                 self.simulated_agents.append(agent)
-        
+
         # Apply scenario-specific configurations
         await self._apply_scenario_config(scenario)
-        
+
         # Register agents with orchestrator (mock registration)
         for agent in self.simulated_agents:
             self.orchestrator_agent.available_agents[agent.agent_id] = {
@@ -220,7 +220,7 @@ class OrchestratorSimulator(SecureA2AAgent):
                 "max_concurrent": agent.max_concurrent_tasks,
                 "current_load": agent.current_tasks
             }
-        
+
         logger.info(f"Simulation setup complete: {len(self.simulated_agents)} agents, scenario: {scenario.value}")
 
     def _get_failure_probability(self, scenario: SimulationScenario) -> float:
@@ -257,24 +257,24 @@ class OrchestratorSimulator(SecureA2AAgent):
 
     async def _apply_scenario_config(self, scenario: SimulationScenario):
         """Apply scenario-specific configurations"""
-        
+
         if scenario == SimulationScenario.AGENT_FAILURES:
             # Make some agents unavailable
             for agent in random.sample(self.simulated_agents, k=len(self.simulated_agents) // 4):
                 agent.is_available = False
                 agent.failure_probability = 0.3
-        
+
         elif scenario == SimulationScenario.HIGH_CONCURRENCY:
             # Reduce max concurrent tasks to create contention
             for agent in self.simulated_agents:
                 agent.max_concurrent_tasks = max(1, agent.max_concurrent_tasks // 2)
-        
+
         elif scenario == SimulationScenario.RESOURCE_CONTENTION:
             # Increase load factors
             for agent in self.simulated_agents:
                 agent.load_factor = random.uniform(1.5, 3.0)
                 agent.response_time_ms *= agent.load_factor
-        
+
         elif scenario == SimulationScenario.TIMEOUT_SCENARIOS:
             # Increase response times for some agents
             for agent in random.sample(self.simulated_agents, k=len(self.simulated_agents) // 3):
@@ -287,98 +287,98 @@ class OrchestratorSimulator(SecureA2AAgent):
         report_interval: int = 30
     ) -> SimulationMetrics:
         """Run the orchestration simulation"""
-        
+
         self.simulation_running = True
         self.simulation_metrics = SimulationMetrics()
-        
+
         try:
             # Start simulation tasks
             await self._start_simulation_tasks(workflow_generation_rate)
-            
+
             # Run simulation with periodic reporting
             start_time = datetime.now()
             last_report = start_time
-            
+
             while self.simulation_running:
                 current_time = datetime.now()
                 elapsed = (current_time - start_time).total_seconds()
-                
+
                 if elapsed >= duration_seconds:
                     break
-                
+
                 # Generate periodic report
                 if (current_time - last_report).total_seconds() >= report_interval:
                     await self._generate_progress_report(elapsed, duration_seconds)
                     last_report = current_time
-                
+
                 await asyncio.sleep(1)
-            
+
             # Final metrics calculation
             await self._calculate_final_metrics()
-            
+
             logger.info("Orchestration simulation completed successfully")
-            
+
         except Exception as e:
             logger.error(f"Orchestration simulation failed: {e}")
             raise
-        
+
         finally:
             await self._stop_simulation_tasks()
             self.simulation_running = False
-        
+
         return self.simulation_metrics
 
     async def _start_simulation_tasks(self, workflow_generation_rate: float):
         """Start all simulation tasks"""
-        
+
         # Workflow generation task
         task = asyncio.create_task(self._generate_workflows_task(workflow_generation_rate))
         self.simulation_tasks.append(task)
-        
+
         # Agent status simulation task
         task = asyncio.create_task(self._simulate_agent_status_changes())
         self.simulation_tasks.append(task)
-        
+
         # Resource utilization monitoring task
         task = asyncio.create_task(self._monitor_resource_utilization())
         self.simulation_tasks.append(task)
-        
+
         # Coordination session simulation
         task = asyncio.create_task(self._simulate_coordination_sessions())
         self.simulation_tasks.append(task)
 
     async def _generate_workflows_task(self, generation_rate: float):
         """Generate workflows at specified rate"""
-        
+
         interval = 1.0 / generation_rate
-        
+
         while self.simulation_running:
             try:
                 # Randomly select workflow template
                 template_name = random.choice(list(self.workflow_templates.keys()))
                 template = self.workflow_templates[template_name]
-                
+
                 # Generate and execute workflow
                 workflow_id = await self._generate_and_execute_workflow(template)
-                
+
                 if workflow_id:
                     self.simulation_metrics.workflows_created += 1
                     self.simulation_metrics.workflows_executed += 1
-                
+
                 # Wait for next generation
                 await asyncio.sleep(random.expovariate(1.0 / interval))
-                
+
             except Exception as e:
                 logger.error(f"Workflow generation error: {e}")
                 await asyncio.sleep(1)
 
     async def _generate_and_execute_workflow(self, template: WorkflowTemplate) -> Optional[str]:
         """Generate and execute a workflow based on template"""
-        
+
         try:
             # Generate tasks for workflow
             tasks = await self._generate_workflow_tasks(template)
-            
+
             # Create workflow
             result = await self.orchestrator_agent.create_workflow(
                 workflow_name=f"{template.name}_{datetime.now().strftime('%H%M%S')}_{random.randint(100, 999)}",
@@ -387,30 +387,30 @@ class OrchestratorSimulator(SecureA2AAgent):
                 strategy=template.strategy.value,
                 timeout_minutes=30
             )
-            
+
             workflow_id = result["workflow_id"]
-            
+
             # Execute workflow
             await self.orchestrator_agent.execute_workflow(
                 workflow_id=workflow_id,
                 execution_context={"simulation": True, "template": template.name}
             )
-            
+
             # Start monitoring task for this workflow
             asyncio.create_task(self._monitor_workflow_execution(workflow_id))
-            
+
             return workflow_id
-            
+
         except Exception as e:
             logger.error(f"Failed to generate/execute workflow: {e}")
             return None
 
     async def _generate_workflow_tasks(self, template: WorkflowTemplate) -> List[Dict[str, Any]]:
         """Generate tasks for a workflow based on template"""
-        
+
         tasks = []
         available_agent_types = template.agent_types
-        
+
         for i in range(template.task_count):
             # Select agent type and specific agent
             agent_type = random.choice(available_agent_types)
@@ -418,16 +418,16 @@ class OrchestratorSimulator(SecureA2AAgent):
                 agent for agent in self.simulated_agents
                 if agent.agent_id.startswith(agent_type) and agent.is_available
             ]
-            
+
             if not suitable_agents:
                 # Fallback to any available agent
                 suitable_agents = [agent for agent in self.simulated_agents if agent.is_available]
-            
+
             if not suitable_agents:
                 continue  # Skip if no agents available
-            
+
             selected_agent = random.choice(suitable_agents)
-            
+
             # Create task
             task = {
                 "id": f"task-{i:03d}",
@@ -442,7 +442,7 @@ class OrchestratorSimulator(SecureA2AAgent):
                 "timeout_seconds": random.randint(60, 300),
                 "max_retries": random.randint(1, 3)
             }
-            
+
             # Add dependencies based on template
             if i > 0 and random.random() < template.dependency_ratio:
                 # Add dependency on previous task(s)
@@ -452,32 +452,32 @@ class OrchestratorSimulator(SecureA2AAgent):
                     num_deps
                 )
                 task["dependencies"] = dependencies
-            
+
             tasks.append(task)
-        
+
         return tasks
 
     async def _monitor_workflow_execution(self, workflow_id: str):
         """Monitor individual workflow execution"""
-        
+
         start_time = datetime.now()
-        
+
         try:
             while self.simulation_running:
                 status = await self.orchestrator_agent.get_workflow_status(workflow_id)
-                
+
                 if status["status"] in ["completed", "failed", "cancelled"]:
                     # Workflow finished
                     end_time = datetime.now()
                     duration = (end_time - start_time).total_seconds()
-                    
+
                     self.simulation_metrics.workflow_durations.append(duration)
-                    
+
                     if status["status"] == "completed":
                         self.simulation_metrics.workflows_completed += 1
                     else:
                         self.simulation_metrics.workflows_failed += 1
-                    
+
                     # Update task metrics
                     for task in status["tasks"]:
                         self.simulation_metrics.total_tasks += 1
@@ -485,22 +485,22 @@ class OrchestratorSimulator(SecureA2AAgent):
                             self.simulation_metrics.tasks_completed += 1
                         elif task["status"] == "failed":
                             self.simulation_metrics.tasks_failed += 1
-                    
+
                     break
-                
+
                 await asyncio.sleep(5)  # Check every 5 seconds
-                
+
         except Exception as e:
             logger.error(f"Workflow monitoring error for {workflow_id}: {e}")
 
     async def _simulate_agent_status_changes(self):
         """Simulate dynamic agent status changes"""
-        
+
         while self.simulation_running:
             try:
                 # Randomly change agent status
                 agent = random.choice(self.simulated_agents)
-                
+
                 if random.random() < agent.failure_probability:
                     if agent.is_available:
                         agent.is_available = False
@@ -508,55 +508,55 @@ class OrchestratorSimulator(SecureA2AAgent):
                 elif not agent.is_available and random.random() < 0.3:  # 30% recovery chance
                     agent.is_available = True
                     logger.debug(f"Simulated recovery for agent {agent.agent_id}")
-                
+
                 # Simulate load changes
                 if agent.is_available:
                     # Randomly adjust current task count
                     delta = random.randint(-2, 3)
                     agent.current_tasks = max(0, min(agent.max_concurrent_tasks, agent.current_tasks + delta))
-                    
+
                     # Adjust response time based on load
                     base_response_time = self.agent_configs[agent.agent_id.split('-')[0]]["response_time_ms"]
                     load_multiplier = 1.0 + (agent.current_tasks / agent.max_concurrent_tasks)
                     agent.response_time_ms = base_response_time * load_multiplier * agent.load_factor
-                
+
                 await asyncio.sleep(random.uniform(10, 30))
-                
+
             except Exception as e:
                 logger.error(f"Agent status simulation error: {e}")
                 await asyncio.sleep(5)
 
     async def _monitor_resource_utilization(self):
         """Monitor resource utilization across agents"""
-        
+
         while self.simulation_running:
             try:
                 # Calculate utilization per agent type
                 agent_type_utilization = {}
-                
+
                 for agent_type in self.agent_configs.keys():
                     agents_of_type = [
                         agent for agent in self.simulated_agents
                         if agent.agent_id.startswith(agent_type)
                     ]
-                    
+
                     if agents_of_type:
                         total_capacity = sum(agent.max_concurrent_tasks for agent in agents_of_type)
                         current_usage = sum(agent.current_tasks for agent in agents_of_type)
                         utilization = (current_usage / total_capacity) if total_capacity > 0 else 0
                         agent_type_utilization[agent_type] = utilization
-                
+
                 self.simulation_metrics.resource_utilization = agent_type_utilization
-                
+
                 await asyncio.sleep(10)
-                
+
             except Exception as e:
                 logger.error(f"Resource monitoring error: {e}")
                 await asyncio.sleep(5)
 
     async def _simulate_coordination_sessions(self):
         """Simulate agent coordination sessions"""
-        
+
         while self.simulation_running:
             try:
                 # Randomly create coordination sessions
@@ -565,7 +565,7 @@ class OrchestratorSimulator(SecureA2AAgent):
                         [agent.agent_id for agent in self.simulated_agents if agent.is_available],
                         k=min(random.randint(2, 5), len([a for a in self.simulated_agents if a.is_available]))
                     )
-                    
+
                     if len(agents) >= 2:
                         coordination_plan = {
                             "steps": [
@@ -578,41 +578,41 @@ class OrchestratorSimulator(SecureA2AAgent):
                                 for i in range(random.randint(1, 3))
                             ]
                         }
-                        
+
                         await self.orchestrator_agent.coordinate_agents(
                             coordination_plan=coordination_plan,
                             agents=agents,
                             objective="Simulation coordination test"
                         )
-                        
+
                         self.simulation_metrics.coordination_sessions += 1
-                
+
                 await asyncio.sleep(random.uniform(30, 60))
-                
+
             except Exception as e:
                 logger.error(f"Coordination simulation error: {e}")
                 await asyncio.sleep(10)
 
     async def _generate_progress_report(self, elapsed: float, total: float):
         """Generate progress report during simulation"""
-        
+
         progress = (elapsed / total) * 100
-        
+
         success_rate = (
-            self.simulation_metrics.workflows_completed / 
+            self.simulation_metrics.workflows_completed /
             max(1, self.simulation_metrics.workflows_executed) * 100
         )
-        
+
         task_success_rate = (
             self.simulation_metrics.tasks_completed /
             max(1, self.simulation_metrics.total_tasks) * 100
         )
-        
+
         avg_duration = (
             statistics.mean(self.simulation_metrics.workflow_durations)
             if self.simulation_metrics.workflow_durations else 0
         )
-        
+
         logger.info(f"Simulation Progress: {progress:.1f}% | "
                    f"Workflows: {self.simulation_metrics.workflows_executed} | "
                    f"Success Rate: {success_rate:.1f}% | "
@@ -621,23 +621,23 @@ class OrchestratorSimulator(SecureA2AAgent):
 
     async def _calculate_final_metrics(self):
         """Calculate final simulation metrics"""
-        
+
         if self.simulation_metrics.workflow_durations:
             self.simulation_metrics.average_workflow_duration = statistics.mean(
                 self.simulation_metrics.workflow_durations
             )
-        
+
         if self.simulation_metrics.task_durations:
             self.simulation_metrics.average_task_duration = statistics.mean(
                 self.simulation_metrics.task_durations
             )
-        
+
         # Calculate throughput
         total_time = max(self.simulation_metrics.workflow_durations) if self.simulation_metrics.workflow_durations else 1
         self.simulation_metrics.throughput_per_second = (
             self.simulation_metrics.workflows_completed / total_time
         )
-        
+
         # Calculate error rates
         self.simulation_metrics.error_rates = {
             "workflow_failure_rate": (
@@ -652,31 +652,31 @@ class OrchestratorSimulator(SecureA2AAgent):
 
     async def _stop_simulation_tasks(self):
         """Stop all simulation tasks"""
-        
+
         for task in self.simulation_tasks:
             if not task.done():
                 task.cancel()
-        
+
         # Wait for all tasks to complete
         if self.simulation_tasks:
             await asyncio.gather(*self.simulation_tasks, return_exceptions=True)
-        
+
         self.simulation_tasks.clear()
 
     async def cleanup_simulation(self):
         """Clean up simulation environment"""
-        
+
         self.simulation_running = False
         await self._stop_simulation_tasks()
-        
+
         # Clear agent registry
         self.orchestrator_agent.available_agents.clear()
-        
+
         self.simulated_agents.clear()
 
     def get_simulation_report(self) -> Dict[str, Any]:
         """Get comprehensive simulation report"""
-        
+
         percentiles = {}
         if self.simulation_metrics.workflow_durations:
             sorted_durations = sorted(self.simulation_metrics.workflow_durations)
@@ -685,7 +685,7 @@ class OrchestratorSimulator(SecureA2AAgent):
                 "p95": sorted_durations[int(len(sorted_durations) * 0.95)],
                 "p99": sorted_durations[int(len(sorted_durations) * 0.99)]
             }
-        
+
         return {
             "summary": {
                 "workflows_created": self.simulation_metrics.workflows_created,
@@ -705,7 +705,7 @@ class OrchestratorSimulator(SecureA2AAgent):
             },
             "reliability": {
                 "workflow_success_rate_percent": round(
-                    (self.simulation_metrics.workflows_completed / 
+                    (self.simulation_metrics.workflows_completed /
                      max(1, self.simulation_metrics.workflows_executed)) * 100, 2
                 ),
                 "task_success_rate_percent": round(
@@ -725,13 +725,13 @@ async def run_normal_orchestration_simulation(
     duration_seconds: int = 300
 ) -> Dict[str, Any]:
     """Run normal orchestration simulation"""
-    
+
     simulator = OrchestratorSimulator(orchestrator_agent)
     await simulator.setup_simulation(
         agent_count_per_type=3,
         scenario=SimulationScenario.NORMAL_WORKFLOW_EXECUTION
     )
-    
+
     try:
         metrics = await simulator.run_simulation(
             duration_seconds=duration_seconds,
@@ -746,13 +746,13 @@ async def run_high_concurrency_simulation(
     duration_seconds: int = 180
 ) -> Dict[str, Any]:
     """Run high concurrency simulation"""
-    
+
     simulator = OrchestratorSimulator(orchestrator_agent)
     await simulator.setup_simulation(
         agent_count_per_type=2,
         scenario=SimulationScenario.HIGH_CONCURRENCY
     )
-    
+
     try:
         metrics = await simulator.run_simulation(
             duration_seconds=duration_seconds,
@@ -767,13 +767,13 @@ async def run_failure_recovery_simulation(
     duration_seconds: int = 240
 ) -> Dict[str, Any]:
     """Run agent failure and recovery simulation"""
-    
+
     simulator = OrchestratorSimulator(orchestrator_agent)
     await simulator.setup_simulation(
         agent_count_per_type=4,
         scenario=SimulationScenario.AGENT_FAILURES
     )
-    
+
     try:
         metrics = await simulator.run_simulation(
             duration_seconds=duration_seconds,
@@ -788,13 +788,13 @@ async def run_complex_workflow_simulation(
     duration_seconds: int = 360
 ) -> Dict[str, Any]:
     """Run complex workflow with dependencies simulation"""
-    
+
     simulator = OrchestratorSimulator(orchestrator_agent)
     await simulator.setup_simulation(
         agent_count_per_type=5,
         scenario=SimulationScenario.COMPLEX_DEPENDENCIES
     )
-    
+
     try:
         metrics = await simulator.run_simulation(
             duration_seconds=duration_seconds,

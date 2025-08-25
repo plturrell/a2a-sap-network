@@ -1,5 +1,4 @@
 """
-import time
 Grok Mathematical Client - Enhanced AI for Mathematical Understanding
 Extends the base Grok client with specialized mathematical capabilities
 """
@@ -18,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class GrokMathematicalClient(GrokClient):
     """Extended Grok client with mathematical specialization"""
-    
+
     def __init__(self, config: Optional[GrokConfig] = None):
         super().__init__(config)
         self.math_system_prompt = """You are a world-class mathematician and AI assistant specializing in understanding natural language mathematical queries.
@@ -30,10 +29,10 @@ You excel at:
 5. Validating mathematical results
 
 Always respond with structured, precise information that can be processed by computational systems."""
-    
+
     async def analyze_mathematical_query(self, query: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Analyze a mathematical query with enhanced AI understanding"""
-        
+
         prompt = f"""Analyze this mathematical query and provide a comprehensive structured response.
 
 Query: "{query}"
@@ -57,22 +56,22 @@ Provide a JSON response with the following structure:
 }}
 
 Be extremely precise in extracting the mathematical intent."""
-        
+
         messages = [
             {"role": "system", "content": self.math_system_prompt},
             {"role": "user", "content": prompt}
         ]
-        
+
         try:
             response = await self.async_chat_completion(
                 messages=messages,
                 temperature=0.2,
                 max_tokens=1000
             )
-            
+
             # Parse JSON from response
             content = response.content
-            
+
             # Try to extract JSON even if wrapped in text
             json_match = re.search(r'\{[^{}]*\}', content, re.DOTALL)
             if json_match:
@@ -87,10 +86,10 @@ Be extremely precise in extracting the mathematical intent."""
                         return json.loads(fixed_json)
                     except:
                         pass
-            
+
             # Fallback parsing
             return self._parse_mathematical_response(content)
-            
+
         except Exception as e:
             logger.error(f"Mathematical query analysis failed: {e}")
             return {
@@ -99,12 +98,12 @@ Be extremely precise in extracting the mathematical intent."""
                 "error": str(e),
                 "raw_query": query
             }
-    
-    async def generate_step_by_step_solution(self, 
-                                             query: str, 
+
+    async def generate_step_by_step_solution(self,
+                                             query: str,
                                              analysis: Dict[str, Any]) -> Dict[str, Any]:
         """Generate detailed step-by-step solution for a mathematical problem"""
-        
+
         prompt = f"""Create a detailed step-by-step solution for this mathematical problem.
 
 Problem: "{query}"
@@ -137,41 +136,41 @@ Provide a JSON response with:
 }}
 
 Be thorough and educational in your explanation."""
-        
+
         messages = [
             {"role": "system", "content": self.math_system_prompt},
             {"role": "user", "content": prompt}
         ]
-        
+
         try:
             response = await self.async_chat_completion(
                 messages=messages,
                 temperature=0.3,
                 max_tokens=2000
             )
-            
+
             # Parse response
             content = response.content
             json_match = re.search(r'\{.*\}', content, re.DOTALL)
-            
+
             if json_match:
                 try:
                     return json.loads(json_match.group())
                 except json.JSONDecodeError:
                     return {"steps": [{"description": content}], "raw_response": content}
-            
+
             return {"solution_text": content}
-            
+
         except Exception as e:
             logger.error(f"Step-by-step solution generation failed: {e}")
             return {"error": str(e), "query": query}
-    
-    async def validate_mathematical_result(self, 
-                                           query: str, 
+
+    async def validate_mathematical_result(self,
+                                           query: str,
                                            calculated_result: Any,
                                            calculation_steps: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Validate a mathematical calculation result"""
-        
+
         prompt = f"""Validate this mathematical calculation and verify the result.
 
 Original Problem: "{query}"
@@ -192,52 +191,52 @@ Analyze and provide:
 }}
 
 Be rigorous in your validation."""
-        
+
         messages = [
             {"role": "system", "content": self.math_system_prompt},
             {"role": "user", "content": prompt}
         ]
-        
+
         try:
             response = await self.async_chat_completion(
                 messages=messages,
                 temperature=0.1,  # Low temperature for validation
                 max_tokens=1000
             )
-            
+
             # Parse response
             content = response.content
             json_match = re.search(r'\{.*\}', content, re.DOTALL)
-            
+
             if json_match:
                 try:
                     return json.loads(json_match.group())
                 except:
                     pass
-            
+
             # Fallback
             return {
                 "is_correct": "uncertain",
                 "confidence": 0.5,
                 "validation_text": content
             }
-            
+
         except Exception as e:
             logger.error(f"Result validation failed: {e}")
             return {"is_correct": "error", "error": str(e)}
-    
-    async def explain_mathematical_concept(self, 
-                                           concept: str, 
+
+    async def explain_mathematical_concept(self,
+                                           concept: str,
                                            level: str = "intermediate",
                                            include_examples: bool = True) -> str:
         """Explain a mathematical concept at the specified level"""
-        
+
         level_descriptions = {
             "beginner": "Explain using simple terms, avoiding technical jargon, with visual analogies",
             "intermediate": "Use standard mathematical terminology with clear explanations",
             "advanced": "Provide rigorous mathematical treatment with formal definitions"
         }
-        
+
         prompt = f"""Explain the mathematical concept: {concept}
 
 Level: {level} - {level_descriptions.get(level, level_descriptions['intermediate'])}
@@ -253,26 +252,26 @@ Include:
 8. Visual or intuitive understanding
 
 Make it engaging and educational."""
-        
+
         messages = [
             {"role": "system", "content": self.math_system_prompt},
             {"role": "user", "content": prompt}
         ]
-        
+
         response = await self.async_chat_completion(
             messages=messages,
             temperature=0.4,
             max_tokens=1500
         )
-        
+
         return response.content
-    
-    async def suggest_practice_problems(self, 
-                                        topic: str, 
+
+    async def suggest_practice_problems(self,
+                                        topic: str,
                                         difficulty: str,
                                         num_problems: int = 5) -> List[Dict[str, str]]:
         """Generate practice problems for a mathematical topic"""
-        
+
         prompt = f"""Create {num_problems} practice problems for the topic: {topic}
 Difficulty level: {difficulty} (easy/medium/hard)
 
@@ -289,22 +288,22 @@ For each problem, provide:
 }}
 
 Return a JSON array of problems. Make them progressively challenging."""
-        
+
         messages = [
             {"role": "system", "content": self.math_system_prompt},
             {"role": "user", "content": prompt}
         ]
-        
+
         try:
             response = await self.async_chat_completion(
                 messages=messages,
                 temperature=0.6,
                 max_tokens=1500
             )
-            
+
             # Parse response
             content = response.content
-            
+
             # Try to extract JSON array
             json_match = re.search(r'\[.*\]', content, re.DOTALL)
             if json_match:
@@ -312,7 +311,7 @@ Return a JSON array of problems. Make them progressively challenging."""
                     return json.loads(json_match.group())
                 except:
                     pass
-            
+
             # Fallback: create simple problems
             return [{
                 "problem_number": i + 1,
@@ -320,17 +319,17 @@ Return a JSON array of problems. Make them progressively challenging."""
                 "difficulty": difficulty,
                 "hint": "Think about the fundamental concepts"
             } for i in range(num_problems)]
-            
+
         except Exception as e:
             logger.error(f"Practice problem generation failed: {e}")
             return []
-    
-    async def provide_calculation_feedback(self, 
+
+    async def provide_calculation_feedback(self,
                                          user_solution: str,
                                          correct_solution: str,
                                          problem: str) -> Dict[str, Any]:
         """Provide detailed feedback on a user's solution"""
-        
+
         prompt = f"""Compare the user's solution with the correct solution and provide educational feedback.
 
 Problem: "{problem}"
@@ -357,45 +356,45 @@ Provide feedback including:
 }}
 
 Be constructive and educational in your feedback."""
-        
+
         messages = [
             {"role": "system", "content": self.math_system_prompt},
             {"role": "user", "content": prompt}
         ]
-        
+
         try:
             response = await self.async_chat_completion(
                 messages=messages,
                 temperature=0.3,
                 max_tokens=1000
             )
-            
+
             # Parse response
             content = response.content
             json_match = re.search(r'\{.*\}', content, re.DOTALL)
-            
+
             if json_match:
                 try:
                     return json.loads(json_match.group())
                 except:
                     pass
-            
+
             return {"feedback_text": content}
-            
+
         except Exception as e:
             logger.error(f"Feedback generation failed: {e}")
             return {"error": str(e)}
-    
+
     def _parse_mathematical_response(self, content: str) -> Dict[str, Any]:
         """Fallback parser for mathematical responses"""
-        
+
         # Try to extract key information using patterns
         result = {
             "operation_type": "unknown",
             "confidence": 0.5,
             "raw_response": content
         }
-        
+
         # Operation type detection
         operations = {
             "derivative": ["derivative", "differentiate", "d/dx", "differentiation"],
@@ -405,51 +404,51 @@ Be constructive and educational in your feedback."""
             "series": ["series", "taylor", "maclaurin", "expansion"],
             "evaluate": ["calculate", "compute", "evaluate", "simplify"]
         }
-        
+
         content_lower = content.lower()
         for op_type, keywords in operations.items():
             if any(keyword in content_lower for keyword in keywords):
                 result["operation_type"] = op_type
                 result["confidence"] = 0.7
                 break
-        
+
         # Try to extract expression
         expr_match = re.search(r'expression[:\s]+([^\n]+)', content, re.IGNORECASE)
         if expr_match:
             result["mathematical_expression"] = expr_match.group(1).strip()
-        
+
         # Extract confidence if mentioned
         conf_match = re.search(r'confidence[:\s]+(\d+\.?\d*)', content, re.IGNORECASE)
         if conf_match:
             result["confidence"] = float(conf_match.group(1))
-        
+
         return result
 
 class GrokMathematicalAssistant:
     """High-level mathematical assistant using enhanced Grok client"""
-    
+
     def __init__(self, client: Optional[GrokMathematicalClient] = None):
         self.client = client or GrokMathematicalClient()
         self.conversation_history = []
         self.problem_solving_context = {}
-    
+
     async def interactive_problem_solving(self, user_input: str) -> Dict[str, Any]:
         """Interactive problem-solving session with the user"""
-        
+
         # Add to conversation
         self.conversation_history.append({
             "role": "user",
             "content": user_input,
             "timestamp": datetime.utcnow().isoformat()
         })
-        
+
         # Analyze the query
         analysis = await self.client.analyze_mathematical_query(user_input, self.problem_solving_context)
-        
+
         # Generate solution if confidence is high
         if analysis.get("confidence", 0) > 0.7:
             solution = await self.client.generate_step_by_step_solution(user_input, analysis)
-            
+
             response = {
                 "status": "ready_to_solve",
                 "analysis": analysis,
@@ -464,49 +463,49 @@ class GrokMathematicalAssistant:
                 "clarification_questions": analysis.get("clarification_needed", []),
                 "suggestions": self._generate_clarification_suggestions(analysis)
             }
-        
+
         # Update conversation
         self.conversation_history.append({
             "role": "assistant",
             "content": response,
             "timestamp": datetime.utcnow().isoformat()
         })
-        
+
         return response
-    
+
     def _generate_clarification_suggestions(self, analysis: Dict[str, Any]) -> List[str]:
         """Generate suggestions for clarification"""
-        
+
         suggestions = []
-        
+
         if analysis.get("operation_type") == "unknown":
             suggestions.append("Please specify what mathematical operation you want to perform")
-        
+
         if not analysis.get("variables"):
             suggestions.append("Please indicate which variables are involved")
-        
+
         if "alternative_interpretations" in analysis:
             suggestions.append("Your query could mean several things. Please be more specific.")
-        
+
         return suggestions
-    
+
     async def teach_concept_interactively(self, concept: str, user_level: str = "intermediate") -> Dict[str, Any]:
         """Teach a mathematical concept interactively"""
-        
+
         # Get explanation
         explanation = await self.client.explain_mathematical_concept(
             concept=concept,
             level=user_level,
             include_examples=True
         )
-        
+
         # Generate practice problems
         practice_problems = await self.client.suggest_practice_problems(
             topic=concept,
             difficulty="easy" if user_level == "beginner" else "medium",
             num_problems=3
         )
-        
+
         return {
             "concept": concept,
             "explanation": explanation,
@@ -514,10 +513,10 @@ class GrokMathematicalAssistant:
             "next_concepts": self._suggest_related_concepts(concept),
             "resources": self._get_learning_resources(concept)
         }
-    
+
     def _suggest_related_concepts(self, concept: str) -> List[str]:
         """Suggest related mathematical concepts"""
-        
+
         # Simple concept graph
         concept_relations = {
             "derivative": ["integral", "limit", "chain rule", "optimization"],
@@ -526,12 +525,12 @@ class GrokMathematicalAssistant:
             "matrix": ["determinant", "eigenvalues", "linear systems", "transformations"],
             "probability": ["statistics", "distributions", "bayes theorem", "expectation"]
         }
-        
+
         return concept_relations.get(concept.lower(), ["advanced topics in " + concept])
-    
+
     def _get_learning_resources(self, concept: str) -> List[Dict[str, str]]:
         """Get learning resources for a concept"""
-        
+
         return [
             {
                 "type": "video",

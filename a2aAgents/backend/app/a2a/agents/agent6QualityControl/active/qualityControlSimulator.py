@@ -66,22 +66,22 @@ class SimulationMetrics:
 
 class QualityControlSimulator(SecureA2AAgent):
     """Comprehensive simulation framework for quality control testing"""
-    
+
     # Security features provided by SecureA2AAgent:
     # - JWT authentication and authorization
-    # - Rate limiting and request throttling  
+    # - Rate limiting and request throttling
     # - Input validation and sanitization
     # - Audit logging and compliance tracking
     # - Encrypted communication channels
     # - Automatic security scanning
-    
+
     def __init__(self, quality_control_agent):
         super().__init__()
         self.quality_control_agent = quality_control_agent
         self.simulation_metrics = SimulationMetrics()
         self.simulation_running = False
         self.simulation_tasks: List[asyncio.Task] = []
-        
+
         # Data generators for different types
         self.data_generators = {
             "numerical": self._generate_numerical_data,
@@ -91,7 +91,7 @@ class QualityControlSimulator(SecureA2AAgent):
             "email": self._generate_email_data,
             "financial": self._generate_financial_data
         }
-        
+
         # Quality rules for different scenarios
         self.quality_rules = {
             "range_check": QualityRule(
@@ -101,7 +101,7 @@ class QualityControlSimulator(SecureA2AAgent):
                 parameters={"min_value": 0, "max_value": 100}
             ),
             "format_check": QualityRule(
-                rule_id="format_001", 
+                rule_id="format_001",
                 name="Email Format Validation",
                 rule_type="format",
                 parameters={"pattern": r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"}
@@ -125,7 +125,7 @@ class QualityControlSimulator(SecureA2AAgent):
                 parameters={"fields": ["start_date", "end_date"], "condition": "start_date < end_date"}
             )
         }
-        
+
         # Defect patterns for simulation
         self.defect_patterns = {
             "missing_values": lambda data: self._inject_missing_values(data),
@@ -142,9 +142,9 @@ class QualityControlSimulator(SecureA2AAgent):
         defect_rate: float = 0.1
     ):
         """Setup simulation environment"""
-        
+
         self.simulation_metrics = SimulationMetrics()
-        
+
         # Configure scenario-specific parameters
         if scenario == QualityScenario.HIGH_DEFECT_RATE:
             defect_rate = 0.3
@@ -153,15 +153,15 @@ class QualityControlSimulator(SecureA2AAgent):
         elif scenario == QualityScenario.QUALITY_DEGRADATION:
             # Will gradually increase defect rate during simulation
             pass
-        
+
         # Generate test dataset
         self.test_dataset = await self._generate_test_dataset(
             scenario, data_volume, defect_rate
         )
-        
+
         # Setup quality rules based on scenario
         self.active_rules = self._select_rules_for_scenario(scenario)
-        
+
         logger.info(f"Quality control simulation setup complete: {scenario.value}, "
                    f"{len(self.test_dataset)} data points, {len(self.active_rules)} rules")
 
@@ -172,10 +172,10 @@ class QualityControlSimulator(SecureA2AAgent):
         defect_rate: float
     ) -> List[QualityDataPoint]:
         """Generate test dataset based on scenario"""
-        
+
         dataset = []
         data_types = ["numerical", "categorical", "text", "email", "financial"]
-        
+
         for i in range(volume):
             # Select data type based on scenario
             if scenario == QualityScenario.FINANCIAL_DATA:
@@ -184,24 +184,24 @@ class QualityControlSimulator(SecureA2AAgent):
                 data_type = random.choice(["text", "email"])
             else:
                 data_type = random.choice(data_types)
-            
+
             # Generate base data point
             data_point = await self._generate_data_point(data_type, i)
-            
+
             # Inject defects based on defect rate
             if random.random() < defect_rate:
                 data_point = await self._inject_defect(data_point, scenario)
-            
+
             dataset.append(data_point)
-        
+
         return dataset
 
     async def _generate_data_point(self, data_type: str, index: int) -> QualityDataPoint:
         """Generate a single data point"""
-        
+
         generator = self.data_generators.get(data_type, self._generate_numerical_data)
         value = generator()
-        
+
         return QualityDataPoint(
             id=f"{data_type}_{index:06d}",
             data_type=data_type,
@@ -248,9 +248,9 @@ class QualityControlSimulator(SecureA2AAgent):
         scenario: QualityScenario
     ) -> QualityDataPoint:
         """Inject defects into data point based on scenario"""
-        
+
         defect_types = list(self.defect_patterns.keys())
-        
+
         if scenario == QualityScenario.HIGH_DEFECT_RATE:
             # Multiple defects possible
             num_defects = random.randint(1, 3)
@@ -258,11 +258,11 @@ class QualityControlSimulator(SecureA2AAgent):
         else:
             # Single defect
             selected_defects = [random.choice(defect_types)]
-        
+
         for defect_type in selected_defects:
             injector = self.defect_patterns[defect_type]
             data_point = injector(data_point)
-        
+
         return data_point
 
     def _inject_missing_values(self, data_point: QualityDataPoint) -> QualityDataPoint:
@@ -305,7 +305,7 @@ class QualityControlSimulator(SecureA2AAgent):
 
     def _select_rules_for_scenario(self, scenario: QualityScenario) -> List[QualityRule]:
         """Select appropriate rules for scenario"""
-        
+
         if scenario == QualityScenario.COMPLIANCE_AUDIT:
             return list(self.quality_rules.values())  # All rules
         elif scenario == QualityScenario.PERFORMANCE_STRESS:
@@ -323,110 +323,110 @@ class QualityControlSimulator(SecureA2AAgent):
         report_interval: int = 30
     ) -> SimulationMetrics:
         """Run quality control simulation"""
-        
+
         self.simulation_running = True
-        
+
         try:
             # Start simulation tasks
             await self._start_simulation_tasks(processing_rate)
-            
+
             # Run simulation with periodic reporting
             start_time = datetime.now()
             last_report = start_time
-            
+
             while self.simulation_running:
                 current_time = datetime.now()
                 elapsed = (current_time - start_time).total_seconds()
-                
+
                 if elapsed >= duration_seconds:
                     break
-                
+
                 # Generate periodic report
                 if (current_time - last_report).total_seconds() >= report_interval:
                     await self._generate_progress_report(elapsed, duration_seconds)
                     last_report = current_time
-                
+
                 await asyncio.sleep(1)
-            
+
             # Calculate final metrics
             await self._calculate_final_metrics()
-            
+
             logger.info("Quality control simulation completed successfully")
-            
+
         except Exception as e:
             logger.error(f"Quality control simulation failed: {e}")
             raise
-        
+
         finally:
             await self._stop_simulation_tasks()
             self.simulation_running = False
-        
+
         return self.simulation_metrics
 
     async def _start_simulation_tasks(self, processing_rate: float):
         """Start simulation tasks"""
-        
+
         # Data processing task
         task = asyncio.create_task(self._process_data_stream(processing_rate))
         self.simulation_tasks.append(task)
-        
+
         # Batch processing task
         task = asyncio.create_task(self._run_batch_processing())
         self.simulation_tasks.append(task)
-        
+
         # Real-time monitoring task
         task = asyncio.create_task(self._run_real_time_monitoring())
         self.simulation_tasks.append(task)
 
     async def _process_data_stream(self, processing_rate: float):
         """Process data stream at specified rate"""
-        
+
         interval = 1.0 / processing_rate
         processed_count = 0
-        
+
         while self.simulation_running and processed_count < len(self.test_dataset):
             try:
                 data_point = self.test_dataset[processed_count]
-                
+
                 # Simulate quality check processing
                 start_time = datetime.now()
                 quality_result = await self._perform_quality_check(data_point)
                 processing_time = (datetime.now() - start_time).total_seconds() * 1000
-                
+
                 # Update metrics
                 self.simulation_metrics.total_checks += 1
                 self.simulation_metrics.processing_time_ms.append(processing_time)
-                
+
                 if quality_result["passed"]:
                     self.simulation_metrics.passed_checks += 1
                 else:
                     self.simulation_metrics.failed_checks += 1
                     if quality_result.get("severity") == "critical":
                         self.simulation_metrics.critical_failures += 1
-                
+
                 # Update rule performance
                 for rule_result in quality_result.get("rule_results", []):
                     rule_id = rule_result["rule_id"]
                     if rule_id not in self.simulation_metrics.rule_performance:
                         self.simulation_metrics.rule_performance[rule_id] = {"passed": 0, "failed": 0}
-                    
+
                     if rule_result["passed"]:
                         self.simulation_metrics.rule_performance[rule_id]["passed"] += 1
                     else:
                         self.simulation_metrics.rule_performance[rule_id]["failed"] += 1
-                
+
                 processed_count += 1
-                
+
                 # Wait for next processing cycle
                 await asyncio.sleep(interval)
-                
+
             except Exception as e:
                 logger.error(f"Data processing error: {e}")
                 await asyncio.sleep(0.1)
 
     async def _perform_quality_check(self, data_point: QualityDataPoint) -> Dict[str, Any]:
         """Perform quality check on data point"""
-        
+
         result = {
             "data_point_id": data_point.id,
             "passed": True,
@@ -434,23 +434,23 @@ class QualityControlSimulator(SecureA2AAgent):
             "rule_results": [],
             "severity": "low"
         }
-        
+
         # Apply each active rule
         for rule in self.active_rules:
             rule_result = await self._apply_quality_rule(data_point, rule)
             result["rule_results"].append(rule_result)
-            
+
             if not rule_result["passed"]:
                 result["passed"] = False
                 if rule.severity == "critical":
                     result["severity"] = "critical"
                 elif rule.severity == "high" and result["severity"] != "critical":
                     result["severity"] = "high"
-        
+
         # Simulate processing delay based on complexity
         processing_delay = len(self.active_rules) * 0.001  # 1ms per rule
         await asyncio.sleep(processing_delay)
-        
+
         return result
 
     async def _apply_quality_rule(
@@ -459,25 +459,25 @@ class QualityControlSimulator(SecureA2AAgent):
         rule: QualityRule
     ) -> Dict[str, Any]:
         """Apply single quality rule to data point"""
-        
+
         result = {
             "rule_id": rule.rule_id,
             "rule_name": rule.name,
             "passed": True,
             "details": {}
         }
-        
+
         try:
             if rule.rule_type == "range":
                 min_val = rule.parameters.get("min_value", 0)
                 max_val = rule.parameters.get("max_value", 100)
-                
+
                 if data_point.value is not None:
                     if isinstance(data_point.value, (int, float)):
                         if not (min_val <= data_point.value <= max_val):
                             result["passed"] = False
                             result["details"]["violation"] = f"Value {data_point.value} not in range [{min_val}, {max_val}]"
-            
+
             elif rule.rule_type == "format":
                 pattern = rule.parameters.get("pattern", "")
                 if data_point.value is not None:
@@ -485,59 +485,59 @@ class QualityControlSimulator(SecureA2AAgent):
                     if not re.match(pattern, str(data_point.value)):
                         result["passed"] = False
                         result["details"]["violation"] = f"Value doesn't match pattern {pattern}"
-            
+
             elif rule.rule_type == "completeness":
                 if data_point.value is None or data_point.value == "":
                     result["passed"] = False
                     result["details"]["violation"] = "Missing required value"
-            
+
             elif rule.rule_type == "uniqueness":
                 # Simulate uniqueness check (would need global state in real implementation)
                 if "duplicate" in data_point.metadata.get("defect", ""):
                     result["passed"] = False
                     result["details"]["violation"] = "Duplicate value detected"
-            
+
             elif rule.rule_type == "consistency":
                 # Check cross-field consistency
                 if "inconsistency" in data_point.metadata.get("defect", ""):
                     result["passed"] = False
                     result["details"]["violation"] = "Cross-field consistency violation"
-            
+
             # Simulate random failures based on rule failure probability
             if result["passed"] and random.random() < rule.failure_probability:
                 result["passed"] = False
                 result["details"]["violation"] = "Random simulation failure"
-            
+
         except Exception as e:
             result["passed"] = False
             result["details"]["error"] = str(e)
-        
+
         return result
 
     async def _run_batch_processing(self):
         """Run batch processing simulation"""
-        
+
         batch_size = 100
         batch_interval = 60  # Process batch every minute
-        
+
         while self.simulation_running:
             try:
                 # Simulate batch processing
                 batch_start = datetime.now()
-                
+
                 # Process a batch
                 batch_data = random.sample(
                     self.test_dataset,
                     min(batch_size, len(self.test_dataset))
                 )
-                
+
                 batch_results = []
                 for data_point in batch_data:
                     result = await self._perform_quality_check(data_point)
                     batch_results.append(result)
-                
+
                 batch_duration = (datetime.now() - batch_start).total_seconds()
-                
+
                 # Update batch statistics
                 self.simulation_metrics.batch_statistics[f"batch_{datetime.now().isoformat()}"] = {
                     "size": len(batch_data),
@@ -545,48 +545,48 @@ class QualityControlSimulator(SecureA2AAgent):
                     "passed_count": sum(1 for r in batch_results if r["passed"]),
                     "failed_count": sum(1 for r in batch_results if not r["passed"])
                 }
-                
+
                 await asyncio.sleep(batch_interval)
-                
+
             except Exception as e:
                 logger.error(f"Batch processing error: {e}")
                 await asyncio.sleep(10)
 
     async def _run_real_time_monitoring(self):
         """Run real-time monitoring simulation"""
-        
+
         while self.simulation_running:
             try:
                 # Calculate real-time metrics
                 current_time = datetime.now()
-                
+
                 # Calculate defect rates by data type
                 defect_rates = {}
                 for data_point in self.test_dataset:
                     data_type = data_point.data_type
                     if data_type not in defect_rates:
                         defect_rates[data_type] = {"total": 0, "defects": 0}
-                    
+
                     defect_rates[data_type]["total"] += 1
                     if data_point.quality_score < 1.0:
                         defect_rates[data_type]["defects"] += 1
-                
+
                 # Calculate percentages
                 for data_type, stats in defect_rates.items():
                     rate = (stats["defects"] / stats["total"]) * 100 if stats["total"] > 0 else 0
                     self.simulation_metrics.defect_rates[data_type] = rate
-                
+
                 await asyncio.sleep(10)  # Update every 10 seconds
-                
+
             except Exception as e:
                 logger.error(f"Real-time monitoring error: {e}")
                 await asyncio.sleep(5)
 
     async def _generate_progress_report(self, elapsed: float, total: float):
         """Generate progress report during simulation"""
-        
+
         progress = (elapsed / total) * 100
-        
+
         total_checks = self.simulation_metrics.total_checks
         if total_checks > 0:
             pass_rate = (self.simulation_metrics.passed_checks / total_checks) * 100
@@ -594,7 +594,7 @@ class QualityControlSimulator(SecureA2AAgent):
         else:
             pass_rate = 0
             avg_processing_time = 0
-        
+
         logger.info(f"Quality Control Simulation Progress: {progress:.1f}% | "
                    f"Checks: {total_checks} | "
                    f"Pass Rate: {pass_rate:.1f}% | "
@@ -602,13 +602,13 @@ class QualityControlSimulator(SecureA2AAgent):
 
     async def _calculate_final_metrics(self):
         """Calculate final simulation metrics"""
-        
+
         if self.simulation_metrics.processing_time_ms:
             # Calculate average processing time
             avg_time = statistics.mean(self.simulation_metrics.processing_time_ms)
         else:
             avg_time = 0
-        
+
         # Calculate overall quality score
         total_score = sum(dp.quality_score for dp in self.test_dataset)
         avg_quality = total_score / len(self.test_dataset) if self.test_dataset else 0
@@ -616,32 +616,32 @@ class QualityControlSimulator(SecureA2AAgent):
 
     async def _stop_simulation_tasks(self):
         """Stop all simulation tasks"""
-        
+
         for task in self.simulation_tasks:
             if not task.done():
                 task.cancel()
-        
+
         # Wait for all tasks to complete
         if self.simulation_tasks:
             await asyncio.gather(*self.simulation_tasks, return_exceptions=True)
-        
+
         self.simulation_tasks.clear()
 
     async def cleanup_simulation(self):
         """Clean up simulation environment"""
-        
+
         self.simulation_running = False
         await self._stop_simulation_tasks()
-        
+
         # Clear test data
         self.test_dataset.clear()
         self.active_rules.clear()
 
     def get_simulation_report(self) -> Dict[str, Any]:
         """Get comprehensive simulation report"""
-        
+
         total_checks = self.simulation_metrics.total_checks
-        
+
         percentiles = {}
         if self.simulation_metrics.processing_time_ms:
             sorted_times = sorted(self.simulation_metrics.processing_time_ms)
@@ -650,7 +650,7 @@ class QualityControlSimulator(SecureA2AAgent):
                 "p95": sorted_times[int(len(sorted_times) * 0.95)],
                 "p99": sorted_times[int(len(sorted_times) * 0.99)]
             }
-        
+
         return {
             "summary": {
                 "total_checks": total_checks,
@@ -684,14 +684,14 @@ async def run_normal_quality_simulation(
     duration_seconds: int = 300
 ) -> Dict[str, Any]:
     """Run normal quality control simulation"""
-    
+
     simulator = QualityControlSimulator(quality_control_agent)
     await simulator.setup_simulation(
         scenario=QualityScenario.NORMAL_QUALITY_CHECKS,
         data_volume=1000,
         defect_rate=0.1
     )
-    
+
     try:
         metrics = await simulator.run_simulation(
             duration_seconds=duration_seconds,
@@ -706,14 +706,14 @@ async def run_high_defect_simulation(
     duration_seconds: int = 180
 ) -> Dict[str, Any]:
     """Run high defect rate simulation"""
-    
+
     simulator = QualityControlSimulator(quality_control_agent)
     await simulator.setup_simulation(
         scenario=QualityScenario.HIGH_DEFECT_RATE,
         data_volume=500,
         defect_rate=0.3
     )
-    
+
     try:
         metrics = await simulator.run_simulation(
             duration_seconds=duration_seconds,
@@ -728,14 +728,14 @@ async def run_performance_stress_simulation(
     duration_seconds: int = 120
 ) -> Dict[str, Any]:
     """Run performance stress simulation"""
-    
+
     simulator = QualityControlSimulator(quality_control_agent)
     await simulator.setup_simulation(
         scenario=QualityScenario.PERFORMANCE_STRESS,
         data_volume=2000,
         defect_rate=0.05
     )
-    
+
     try:
         metrics = await simulator.run_simulation(
             duration_seconds=duration_seconds,

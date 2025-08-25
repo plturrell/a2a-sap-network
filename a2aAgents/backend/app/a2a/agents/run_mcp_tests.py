@@ -32,18 +32,18 @@ if missing_vars:
 async def test_mcp_tools_are_real():
     """Test that MCP tools are real instances, not mocks"""
     logger.info("=== Testing MCP Tool Reality ===")
-    
+
     agent = AdvancedMCPDataProductAgentFixed(os.getenv("A2A_BASE_URL"))
-    
+
     # Check tool types
     from ..common.mcpPerformanceTools import MCPPerformanceTools
     from ..common.mcpValidationTools import MCPValidationTools
     from ..common.mcpQualityAssessmentTools import MCPQualityAssessmentTools
-    
+
     assert isinstance(agent.performance_tools, MCPPerformanceTools), "Performance tools are mocked!"
     assert isinstance(agent.validation_tools, MCPValidationTools), "Validation tools are mocked!"
     assert isinstance(agent.quality_tools, MCPQualityAssessmentTools), "Quality tools are mocked!"
-    
+
     logger.info("✓ All MCP tools are real instances")
     return True
 
@@ -51,14 +51,14 @@ async def test_mcp_tools_are_real():
 async def test_real_performance_measurement():
     """Test real performance measurement"""
     logger.info("\n=== Testing Real Performance Measurement ===")
-    
+
     agent = AdvancedMCPDataProductAgentFixed(os.getenv("A2A_BASE_URL"))
-    
+
     # Measure real operation
     start_time = datetime.now().timestamp()
     await asyncio.sleep(0.2)  # Simulate work
     end_time = datetime.now().timestamp()
-    
+
     metrics = await agent.performance_tools.measure_performance_metrics(
         operation_id="test_op_001",
         start_time=start_time,
@@ -69,13 +69,13 @@ async def test_real_performance_measurement():
             "quality_score": 0.92
         }
     )
-    
+
     # Verify results
     assert metrics["duration_ms"] >= 200, f"Duration too short: {metrics['duration_ms']}"
     assert metrics["throughput"] > 0, "Throughput should be positive"
     assert metrics["error_rate"] == 0, "No errors should be recorded"
     assert metrics["custom_metrics"]["quality_score"] == 0.92
-    
+
     logger.info(f"✓ Performance measurement working: {metrics['duration_ms']:.2f}ms, {metrics['throughput']:.2f} ops/sec")
     return True
 
@@ -83,9 +83,9 @@ async def test_real_performance_measurement():
 async def test_real_validation():
     """Test real validation functionality"""
     logger.info("\n=== Testing Real Validation ===")
-    
+
     agent = AdvancedMCPStandardizationAgent(os.getenv("A2A_BASE_URL"))
-    
+
     # Test schema validation
     test_schema = {
         "type": "object",
@@ -96,49 +96,49 @@ async def test_real_validation():
         },
         "required": ["name", "age"]
     }
-    
+
     # Valid data
     valid_data = {
         "name": "Alice Johnson",
         "age": 28,
         "email": "alice@example.com"
     }
-    
+
     result = await agent.validation_tools.validate_schema_compliance(
         data=valid_data,
         schema=test_schema,
         validation_level="strict"
     )
-    
+
     assert result["is_valid"] is True
     logger.info("✓ Valid data passed validation")
-    
+
     # Invalid data
     invalid_data = {
         "name": "Bob",
         "age": 150,  # Too old
         "email": "not-an-email"
     }
-    
+
     result = await agent.validation_tools.validate_schema_compliance(
         data=invalid_data,
         schema=test_schema,
         validation_level="strict"
     )
-    
+
     assert result["is_valid"] is False
     assert len(result["validation_errors"]) >= 2  # Age and email errors
     logger.info(f"✓ Invalid data caught {len(result['validation_errors'])} errors")
-    
+
     return True
 
 
 async def test_real_quality_assessment():
     """Test real quality assessment"""
     logger.info("\n=== Testing Real Quality Assessment ===")
-    
+
     agent = AdvancedMCPDataProductAgentFixed(os.getenv("A2A_BASE_URL"))
-    
+
     # Assess data product quality
     result = await agent.quality_tools.assess_data_product_quality(
         product_definition={
@@ -165,27 +165,27 @@ async def test_real_quality_assessment():
         },
         assessment_criteria=["completeness", "accuracy", "consistency", "timeliness"]
     )
-    
+
     assert "overall_score" in result
     assert 0 <= result["overall_score"] <= 1
     logger.info(f"✓ Quality assessment complete: score={result['overall_score']:.2f}")
-    
+
     return True
 
 
 async def test_cross_agent_workflow():
     """Test complete workflow across multiple agents"""
     logger.info("\n=== Testing Cross-Agent Workflow ===")
-    
+
     # Initialize agents
     data_agent = AdvancedMCPDataProductAgentFixed(os.getenv("A2A_BASE_URL"))
     std_agent = AdvancedMCPStandardizationAgent(os.getenv("A2A_BASE_URL"))
     vec_agent = AdvancedMCPVectorProcessingAgent(os.getenv("A2A_BASE_URL"))
     calc_agent = AdvancedMCPCalculationValidationAgent(os.getenv("A2A_BASE_URL"))
-    
+
     # Step 1: Register data product
     logger.info("Step 1: Registering data product...")
-    
+
     product_def = {
         "name": "test_metrics",
         "type": "structured",
@@ -199,7 +199,7 @@ async def test_cross_agent_workflow():
             }
         }
     }
-    
+
     data_source = {
         "type": "memory",
         "data": [
@@ -207,21 +207,21 @@ async def test_cross_agent_workflow():
             {"metric_id": "2", "value": "92.3", "timestamp": "2024-01-18T10:01:00"}
         ]
     }
-    
+
     reg_result = await data_agent.intelligent_data_product_registration(
         product_definition=product_def,
         data_source=data_source,
         auto_standardization=True,
         cross_agent_validation=False  # Avoid circular deps
     )
-    
+
     assert reg_result["status"] == "success"
     product_id = reg_result["product_id"]
     logger.info(f"✓ Product registered: {product_id}")
-    
+
     # Step 2: Standardize data
     logger.info("Step 2: Standardizing data...")
-    
+
     std_result = await std_agent.intelligent_data_standardization(
         data_input=data_source["data"][0],
         target_schema={
@@ -235,31 +235,31 @@ async def test_cross_agent_workflow():
         },
         learning_mode=True
     )
-    
+
     assert std_result["status"] == "success"
     logger.info("✓ Data standardized successfully")
-    
+
     # Step 3: Process vectors (if we had embeddings)
     logger.info("Step 3: Processing vectors...")
-    
+
     test_vectors = [
         [0.1, 0.2, 0.3, 0.4, 0.5],
         [0.2, 0.3, 0.4, 0.5, 0.6],
         [0.3, 0.4, 0.5, 0.6, 0.7]
     ]
-    
+
     vec_result = await vec_agent.intelligent_vector_processing(
         vectors=test_vectors,
         operations=["normalize"],
         cross_validation=False
     )
-    
+
     assert vec_result["status"] == "success"
     logger.info("✓ Vectors processed successfully")
-    
+
     # Step 4: Validate calculations
     logger.info("Step 4: Validating calculations...")
-    
+
     calc_result = await calc_agent.comprehensive_calculation_validation(
         calculation_request={
             "expression": "85.5 + 92.3",
@@ -270,10 +270,10 @@ async def test_cross_agent_workflow():
         validation_methods=["direct"],
         cross_agent_validation=False
     )
-    
+
     assert calc_result["status"] == "success"
     logger.info("✓ Calculation validated successfully")
-    
+
     logger.info("\n✓ Cross-agent workflow completed successfully!")
     return True
 
@@ -281,9 +281,9 @@ async def test_cross_agent_workflow():
 async def test_mcp_resources():
     """Test MCP resource access"""
     logger.info("\n=== Testing MCP Resources ===")
-    
+
     agent = AdvancedMCPDataProductAgentFixed(os.getenv("A2A_BASE_URL"))
-    
+
     # Add test product
     test_product = {
         "product_id": "test_123",
@@ -295,15 +295,15 @@ async def test_mcp_resources():
         "source_analysis": {"health_score": 0.95}
     }
     agent.data_products["test_123"] = test_product
-    
+
     # Access registry resource
     registry = await agent.get_data_product_registry()
-    
+
     assert "registered_products" in registry
     assert "test_123" in registry["registered_products"]
     assert registry["total_products"] == 1
     assert registry["registered_products"]["test_123"]["health_score"] == 0.95
-    
+
     logger.info("✓ MCP resources accessible and working")
     return True
 
@@ -311,9 +311,9 @@ async def test_mcp_resources():
 async def test_error_handling():
     """Test error handling in MCP tools"""
     logger.info("\n=== Testing Error Handling ===")
-    
+
     agent = AdvancedMCPCalculationValidationAgent(os.getenv("A2A_BASE_URL"))
-    
+
     # Test with division by zero
     result = await agent.comprehensive_calculation_validation(
         calculation_request={
@@ -324,14 +324,14 @@ async def test_error_handling():
         expected_result=0,
         validation_methods=["direct"]
     )
-    
+
     # Should handle gracefully
     assert result["status"] in ["success", "error"]
     if result["status"] == "success":
         # Check that error was detected in calculation
         direct_result = result["calculation_results"]["method_results"].get("direct", {})
         assert direct_result.get("success") is False or direct_result.get("error") is not None
-    
+
     logger.info("✓ Error handling working correctly")
     return True
 
@@ -339,7 +339,7 @@ async def test_error_handling():
 async def main():
     """Run all tests"""
     logger.info("Starting MCP Integration Tests\n")
-    
+
     tests = [
         ("MCP Tools Reality Check", test_mcp_tools_are_real),
         ("Performance Measurement", test_real_performance_measurement),
@@ -349,10 +349,10 @@ async def main():
         ("MCP Resources", test_mcp_resources),
         ("Error Handling", test_error_handling)
     ]
-    
+
     passed = 0
     failed = 0
-    
+
     for test_name, test_func in tests:
         try:
             result = await test_func()
@@ -367,12 +367,12 @@ async def main():
             logger.error(f"❌ {test_name}: FAILED with error: {e}\n")
             import traceback
             traceback.print_exc()
-    
+
     logger.info(f"\n{'='*50}")
     logger.info(f"Test Summary: {passed} passed, {failed} failed")
     logger.info(f"Overall Score: {(passed/(passed+failed)*100):.1f}%")
     logger.info(f"{'='*50}")
-    
+
     return failed == 0
 
 

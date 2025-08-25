@@ -27,7 +27,7 @@ class catalogManagerA2AHandler(SecureA2AAgent):
     A2A-compliant handler for Catalogmanager
     All communication through blockchain messaging only
     """
-    
+
     def __init__(self, agent_sdk: ComprehensivecatalogManagerSDK):
         """Initialize A2A handler with agent SDK"""
         # Configure secure agent
@@ -47,23 +47,23 @@ class catalogManagerA2AHandler(SecureA2AAgent):
             rate_limit_requests=100,
             rate_limit_window=60
         )
-        
+
         super().__init__(config)
-        
+
         self.agent_sdk = agent_sdk
-        
+
         # Initialize A2A blockchain client
         self.a2a_client = A2ANetworkClient(
             agent_id=config.agent_id,
             private_key=os.getenv('A2A_PRIVATE_KEY'),
             rpc_url=os.getenv('A2A_RPC_URL', 'http://localhost:8545')
         )
-        
+
         # Register message handlers
         self._register_handlers()
-        
+
         logger.info(f"A2A-compliant handler initialized for {config.agent_name}")
-    
+
     def _register_handlers(self):
         """Register A2A message handlers"""
 
@@ -72,7 +72,7 @@ class catalogManagerA2AHandler(SecureA2AAgent):
             """Get agent information"""
             try:
                 result = await self.agent_sdk.get_agent_info(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="get_agent_info",
@@ -80,9 +80,9 @@ class catalogManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to get_agent_info: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -99,9 +99,9 @@ class catalogManagerA2AHandler(SecureA2AAgent):
                     "a2a_compliant": True,
                     "blockchain_connected": await self._check_blockchain_connection()
                 }
-                
+
                 return self.create_secure_response(health_status)
-                
+
             except Exception as e:
                 logger.error(f"Failed to health_check: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -111,7 +111,7 @@ class catalogManagerA2AHandler(SecureA2AAgent):
             """Handle catalog management"""
             try:
                 result = await self.agent_sdk.catalog_management(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="catalog_management",
@@ -119,9 +119,9 @@ class catalogManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return result
-                
+
             except Exception as e:
                 logger.error(f"Failed to handle catalog_management: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -131,7 +131,7 @@ class catalogManagerA2AHandler(SecureA2AAgent):
             """Handle metadata indexing"""
             try:
                 result = await self.agent_sdk.metadata_indexing(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="metadata_indexing",
@@ -139,9 +139,9 @@ class catalogManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return result
-                
+
             except Exception as e:
                 logger.error(f"Failed to handle metadata_indexing: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -151,7 +151,7 @@ class catalogManagerA2AHandler(SecureA2AAgent):
             """Handle service discovery"""
             try:
                 result = await self.agent_sdk.service_discovery(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="service_discovery",
@@ -159,9 +159,9 @@ class catalogManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return result
-                
+
             except Exception as e:
                 logger.error(f"Failed to handle service_discovery: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -171,7 +171,7 @@ class catalogManagerA2AHandler(SecureA2AAgent):
             """Handle catalog search"""
             try:
                 result = await self.agent_sdk.catalog_search(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="catalog_search",
@@ -179,9 +179,9 @@ class catalogManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return result
-                
+
             except Exception as e:
                 logger.error(f"Failed to handle catalog_search: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -191,7 +191,7 @@ class catalogManagerA2AHandler(SecureA2AAgent):
             """Handle resource registration"""
             try:
                 result = await self.agent_sdk.resource_registration(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="resource_registration",
@@ -199,9 +199,9 @@ class catalogManagerA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return result
-                
+
             except Exception as e:
                 logger.error(f"Failed to handle resource_registration: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -215,19 +215,19 @@ class catalogManagerA2AHandler(SecureA2AAgent):
             # Extract operation from message
             operation = None
             data = {}
-            
+
             if message.parts and len(message.parts) > 0:
                 part = message.parts[0]
                 if part.data:
                     operation = part.data.get("operation")
                     data = part.data.get("data", {})
-            
+
             if not operation:
                 return self.create_secure_response(
                     "No operation specified in message",
                     status="error"
                 )
-            
+
             # Get handler for operation
             handler = self.handlers.get(operation)
             if not handler:
@@ -235,17 +235,17 @@ class catalogManagerA2AHandler(SecureA2AAgent):
                     f"Unknown operation: {operation}",
                     status="error"
                 )
-            
+
             # Create context ID
             context_id = f"{message.sender_id}:{operation}:{datetime.utcnow().timestamp()}"
-            
+
             # Process through handler
             return await handler(message, context_id, data)
-            
+
         except Exception as e:
             logger.error(f"Failed to process A2A message: {e}")
             return self.create_secure_response(str(e), status="error")
-    
+
     async def _log_blockchain_transaction(self, operation: str, data_hash: str, result_hash: str, context_id: str):
         """Log transaction to blockchain for audit trail"""
         try:
@@ -257,33 +257,33 @@ class catalogManagerA2AHandler(SecureA2AAgent):
                 "context_id": context_id,
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
             # Send to blockchain through A2A client
             await self.a2a_client.log_transaction(transaction_data)
-            
+
         except Exception as e:
             logger.error(f"Failed to log blockchain transaction: {e}")
-    
+
     def _hash_data(self, data: Any) -> str:
         """Create hash of data for blockchain logging"""
         import hashlib
         json_str = json.dumps(data, sort_keys=True, default=str)
         return hashlib.sha256(json_str.encode()).hexdigest()
-    
+
     async def _check_blockchain_connection(self) -> bool:
         """Check if blockchain connection is active"""
         try:
             return await self.a2a_client.is_connected()
         except Exception:
             return False
-    
+
     async def start(self):
         """Start the A2A handler"""
         logger.info(f"Starting A2A handler for {self.config.agent_name}")
-        
+
         # Connect to blockchain
         await self.a2a_client.connect()
-        
+
         # Register agent on blockchain
         await self.a2a_client.register_agent({
             "agent_id": self.config.agent_id,
@@ -291,22 +291,22 @@ class catalogManagerA2AHandler(SecureA2AAgent):
             "capabilities": list(self.config.allowed_operations),
             "version": self.config.agent_version
         })
-        
+
         logger.info(f"A2A handler started and registered on blockchain")
-    
+
     async def stop(self):
         """Stop the A2A handler"""
         logger.info(f"Stopping A2A handler for {self.config.agent_name}")
-        
+
         # Unregister from blockchain
         await self.a2a_client.unregister_agent(self.config.agent_id)
-        
+
         # Disconnect
         await self.a2a_client.disconnect()
-        
+
         # Parent cleanup
         await self.shutdown()
-        
+
         logger.info(f"A2A handler stopped")
 
 

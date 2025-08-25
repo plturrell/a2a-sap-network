@@ -23,7 +23,7 @@ async def get_rate_limit_status(
 ) -> Dict[str, Any]:
     """
     Get current rate limit status for the requesting IP/user
-    
+
     Returns rate limit information including:
     - Current limits
     - Remaining requests
@@ -36,12 +36,12 @@ async def get_rate_limit_status(
             request=request,
             user_tier=user_tier
         )
-        
+
         # Add DDoS protection status
         if rate_limiter.ddos_detector:
             client_ip = rate_limiter._get_client_ip(request)
             is_blocked = client_ip in rate_limiter.ddos_detector.blocked_ips
-            
+
             status["ddos_protection"] = {
                 "enabled": True,
                 "status": "blocked" if is_blocked else "normal",
@@ -49,13 +49,13 @@ async def get_rate_limit_status(
             }
         else:
             status["ddos_protection"] = {"enabled": False}
-        
+
         return {
             "success": True,
             "data": status,
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to get rate limit status: {e}")
         raise HTTPException(
@@ -70,7 +70,7 @@ async def get_rate_limit_config(
 ) -> Dict[str, Any]:
     """
     Get current rate limiting configuration (admin only)
-    
+
     Returns:
     - Rate limits by user tier
     - Endpoint-specific limits
@@ -78,7 +78,7 @@ async def get_rate_limit_config(
     """
     try:
         rate_limiter = await get_rate_limiter()
-        
+
         config = {
             "user_tier_limits": {
                 tier.value: {
@@ -97,13 +97,13 @@ async def get_rate_limit_config(
             },
             "backend": "redis" if rate_limiter.redis_client else "memory"
         }
-        
+
         return {
             "success": True,
             "data": config,
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to get rate limit config: {e}")
         raise HTTPException(
@@ -121,7 +121,7 @@ async def get_blocked_ips(
     """
     try:
         rate_limiter = await get_rate_limiter()
-        
+
         if not rate_limiter.ddos_detector:
             return {
                 "success": True,
@@ -131,10 +131,10 @@ async def get_blocked_ips(
                 },
                 "timestamp": datetime.utcnow().isoformat()
             }
-        
+
         import time
         now = time.time()
-        
+
         blocked_ips = {}
         for ip, unblock_time in rate_limiter.ddos_detector.blocked_ips.items():
             if unblock_time > now:
@@ -143,7 +143,7 @@ async def get_blocked_ips(
                     "unblock_time": datetime.fromtimestamp(unblock_time).isoformat(),
                     "remaining_seconds": remaining_seconds
                 }
-        
+
         return {
             "success": True,
             "data": {
@@ -153,7 +153,7 @@ async def get_blocked_ips(
             },
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to get blocked IPs: {e}")
         raise HTTPException(
@@ -172,25 +172,25 @@ async def unblock_ip(
     """
     try:
         rate_limiter = await get_rate_limiter()
-        
+
         if not rate_limiter.ddos_detector:
             raise HTTPException(
                 status_code=400,
                 detail="DDoS protection is not enabled"
             )
-        
+
         # Validate IP format
         import ipaddress
         try:
             ipaddress.ip_address(ip_address)
         except ValueError:
             raise ValidationError(f"Invalid IP address format: {ip_address}")
-        
+
         # Remove from blocked IPs
         if ip_address in rate_limiter.ddos_detector.blocked_ips:
             del rate_limiter.ddos_detector.blocked_ips[ip_address]
             logger.info(f"IP {ip_address} manually unblocked by admin {current_user.get('sub', 'unknown')}")
-            
+
             return {
                 "success": True,
                 "message": f"IP {ip_address} has been unblocked",
@@ -202,7 +202,7 @@ async def unblock_ip(
                 "message": f"IP {ip_address} was not blocked",
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
     except ValidationError:
         raise
     except Exception as e:
@@ -222,7 +222,7 @@ async def get_rate_limit_metrics(
     """
     try:
         rate_limiter = await get_rate_limiter()
-        
+
         metrics = {
             "total_requests": 0,
             "blocked_requests": 0,
@@ -234,14 +234,14 @@ async def get_rate_limit_metrics(
                 "window_start_times": sum(len(times) for times in rate_limiter.window_start_times.values())
             }
         }
-        
+
         if rate_limiter.ddos_detector:
             metrics["blocked_ips_count"] = len([
                 ip for ip, unblock_time in rate_limiter.ddos_detector.blocked_ips.items()
                 if unblock_time > time.time()
             ])
             metrics["suspicious_patterns"] = len(rate_limiter.ddos_detector.suspicious_patterns)
-            
+
             # Request history metrics
             import time
             now = time.time()
@@ -252,13 +252,13 @@ async def get_rate_limit_metrics(
                     if req_time > now - 300  # Last 5 minutes
                 ])
             metrics["recent_requests_5min"] = recent_requests
-        
+
         return {
             "success": True,
             "data": metrics,
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to get rate limit metrics: {e}")
         raise HTTPException(
@@ -267,13 +267,13 @@ async def get_rate_limit_metrics(
         )
 
 
-@router.post("/clear-history") 
+@router.post("/clear-history")
 async def clear_rate_limit_history(
     current_user = Depends(require_admin)
 ) -> Dict[str, Any]:
     """
     Clear rate limiting history and reset counters (admin only)
-    
+
     Warning: This will reset all rate limiting state including:
     - Token buckets
     - Request counters
@@ -281,18 +281,18 @@ async def clear_rate_limit_history(
     """
     try:
         rate_limiter = await get_rate_limiter()
-        
+
         # Clear in-memory storage
         rate_limiter.token_buckets.clear()
         rate_limiter.request_counts.clear()
         rate_limiter.window_start_times.clear()
-        
+
         # Clear DDoS detector history
         if rate_limiter.ddos_detector:
             rate_limiter.ddos_detector.request_history.clear()
             rate_limiter.ddos_detector.suspicious_patterns.clear()
             # Note: We don't clear blocked_ips as that would be a security risk
-        
+
         # Clear Redis keys if using Redis backend
         if rate_limiter.redis_client:
             try:
@@ -303,16 +303,16 @@ async def clear_rate_limit_history(
                 logger.info(f"Cleared {len(keys)} Redis rate limit keys")
             except Exception as e:
                 logger.error(f"Failed to clear Redis rate limit keys: {e}")
-        
+
         logger.warning(f"Rate limiting history cleared by admin {current_user.get('sub', 'unknown')}")
-        
+
         return {
             "success": True,
             "message": "Rate limiting history has been cleared",
             "warning": "All rate limiting counters have been reset",
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to clear rate limit history: {e}")
         raise HTTPException(

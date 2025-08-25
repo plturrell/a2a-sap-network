@@ -121,7 +121,7 @@ self.addEventListener("fetch", event => {
  * @param {Request} request - The fetch request
  * @returns {Promise<Response>} Response
  */
-async function handleApiRequest(request) {
+function handleApiRequest(request) {
     const url = new URL(request.url);
     const shouldCache = CACHEABLE_API_PATTERNS.some(pattern => pattern.test(url.pathname));
 
@@ -137,7 +137,7 @@ async function handleApiRequest(request) {
  * @param {Request} request - The fetch request
  * @returns {Promise<Response>} Response
  */
-async function handleStaticResource(request) {
+function handleStaticResource(request) {
     return handleCacheFirstStrategy(request, STATIC_CACHE_NAME);
 }
 
@@ -182,7 +182,7 @@ async function handleNavigationRequest(request) {
  * @param {Request} request - The fetch request
  * @returns {Promise<Response>} Response
  */
-async function handleGenericRequest(request) {
+function handleGenericRequest(request) {
     return handleNetworkFirstStrategy(request, CACHE_NAME);
 }
 

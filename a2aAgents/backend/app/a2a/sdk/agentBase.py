@@ -56,7 +56,7 @@ class A2AProtocolMessage:
     retry_count: int = 0
     max_retries: int = 3
     created_at: datetime = field(default_factory=datetime.utcnow)
-    
+
     def to_blockchain_format(self) -> Dict[str, Any]:
         """Convert to blockchain-compatible format"""
         return {
@@ -166,7 +166,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
     - Agent registration
     - Skill discovery
     """
-    
+
     @classmethod
     def create(
         cls,
@@ -197,7 +197,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             blockchain_capabilities=blockchain_capabilities
         )
         return cls(config)
-    
+
     def __init__(
         self,
         config: Optional[AgentConfig] = None,
@@ -231,10 +231,10 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 a2a_protocol_only=a2a_protocol_only,
                 blockchain_capabilities=blockchain_capabilities
             )
-        
+
         # Store configuration
         self._config = config
-        
+
         # Initialize core components
         self._initialize_basic_attributes()
         self._initialize_parent_mixins()
@@ -245,7 +245,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
         self._initialize_ai_intelligence()
         self._start_a2a_protocol_queues()
         self._initialize_task_persistence()
-    
+
     def _initialize_basic_attributes(self):
         """Initialize basic agent attributes from config"""
         self.agent_id = self._config.agent_id
@@ -257,12 +257,12 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
         self.enable_request_signing = self._config.enable_request_signing
         self.a2a_protocol_only = self._config.a2a_protocol_only
         self.blockchain_capabilities = self._config.blockchain_capabilities or []
-    
+
     def _initialize_parent_mixins(self):
         """Initialize parent mixin classes"""
         StandardTrustRelationshipsMixin.__init__(self)
         AgentDiscoveryMixin.__init__(self)
-    
+
     def _initialize_internal_state(self):
         """Initialize internal state dictionaries and collections"""
         self.tasks: Dict[str, Dict[str, Any]] = {}
@@ -270,7 +270,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
         self.skills: Dict[str, SkillDefinition] = {}
         self.capabilities: List[AgentCapability] = []
         self.start_time = datetime.utcnow()
-    
+
     def _initialize_a2a_protocol_components(self):
         """Initialize A2A protocol message queues and crypto keys"""
         # A2A Protocol components
@@ -278,7 +278,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
         self.outgoing_queue = asyncio.PriorityQueue()
         self.retry_queue = asyncio.Queue()
         self.active_contexts: Dict[str, Dict[str, Any]] = {}
-        
+
         # Message statistics
         self.message_stats = {
             "sent": 0,
@@ -287,7 +287,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             "failed": 0,
             "encrypted": 0
         }
-        
+
         # Retry configuration
         self.retry_config = {
             "max_retries": 3,
@@ -295,76 +295,76 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             "backoff_factor": 2.0,
             "max_delay": 60.0
         }
-        
+
         # Initialize crypto keys
         self.request_signer = None
         self.signing_middleware = None
         self.private_key_pem = self._config.private_key_pem
         self.public_key_pem = self._config.public_key_pem
-    
+
     def _initialize_services(self):
         """Initialize core services (MCP, telemetry, request signing)"""
         # Initialize request signing if enabled
         if self._config.enable_request_signing:
             self._initialize_request_signing()
-        
+
         # Initialize MCP server for internal operations
         self.mcp_server = A2AMCPServer(self)
-        
+
         # Initialize telemetry if enabled
         self._initialize_telemetry_if_enabled()
-        
+
         # Discover handlers and skills
         self._discover_handlers()
         self._discover_skills()
-    
+
     def _initialize_telemetry_if_enabled(self):
         """Initialize telemetry if enabled in config"""
         # Check if telemetry is enabled and available
         telemetry_enabled = False
         sampling_rate = 1.0
-        
+
         if isinstance(telemetry_config, dict):
             telemetry_enabled = telemetry_config.get('otel_enabled', False)
             sampling_rate = telemetry_config.get('otel_traces_sampler_arg', 1.0)
         elif hasattr(telemetry_config, 'otel_enabled'):
             telemetry_enabled = telemetry_config.otel_enabled
             sampling_rate = getattr(telemetry_config, 'otel_traces_sampler_arg', 1.0)
-        
+
         if self._config.enable_telemetry and telemetry_enabled:
             init_telemetry(
                 service_name=f"a2a-agent-{self._config.agent_id}",
                 agent_id=self._config.agent_id,
                 sampling_rate=sampling_rate
             )
-    
+
     def _initialize_blockchain_if_enabled(self):
         """Initialize blockchain integration mixin and capabilities"""
         # Initialize blockchain integration mixin
         BlockchainIntegrationMixin.__init__(self)
-        
+
         # Get capabilities from skills and blockchain_capabilities
         all_capabilities = []
-        
+
         # Extract capabilities from skill definitions
         for skill_def in self.skills.values():
             if hasattr(skill_def, 'capabilities') and skill_def.capabilities:
                 all_capabilities.extend(skill_def.capabilities)
-        
+
         # Add blockchain capabilities if provided
         if hasattr(self, 'blockchain_capabilities') and self.blockchain_capabilities:
             all_capabilities.extend(self.blockchain_capabilities)
-        
+
         # Remove duplicates
         all_capabilities = list(set(all_capabilities))
-        
+
         # If no capabilities found, add a default based on agent name
         if not all_capabilities:
             # Extract a capability from the agent name/type
             agent_type = self.name.lower().replace(' ', '-')
             all_capabilities = [agent_type]
             logger.warning(f"No capabilities found for {self.name}, using default: {agent_type}")
-        
+
         # Schedule blockchain initialization asynchronously when event loop is available
         try:
             loop = asyncio.get_running_loop()
@@ -376,12 +376,12 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
         except RuntimeError:
             # No event loop running, blockchain will be initialized later
             self.logger.info(f"Blockchain initialization will be completed asynchronously for {self.name}")
-    
+
     def _initialize_ai_intelligence(self):
         """Initialize AI intelligence capabilities"""
         # Initialize AI intelligence mixin
         AIIntelligenceMixin.__init__(self)
-        
+
         # Configure AI with agent-specific settings
         ai_config = {
             "model": "grok-beta",
@@ -390,7 +390,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             "agent_type": self.__class__.__name__,
             "agent_capabilities": [cap.name for cap in self.capabilities]
         }
-        
+
         # Initialize AI intelligence asynchronously when event loop is available
         try:
             loop = asyncio.get_running_loop()
@@ -401,7 +401,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             # No event loop running, defer AI initialization until later
             logger.info(f"AI intelligence initialization deferred for {self.agent_id} (no event loop)")
             logger.info(f"Agent discovery initialization deferred for {self.agent_id} (no event loop)")
-    
+
     async def _async_initialize_ai_intelligence(self, config: Dict[str, Any]):
         """Asynchronously initialize AI intelligence"""
         try:
@@ -409,7 +409,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             logger.info(f"AI intelligence initialized for {self.agent_id}")
         except Exception as e:
             logger.warning(f"AI intelligence initialization failed for {self.agent_id}: {e}")
-    
+
     async def _async_initialize_discovery_engine(self):
         """Asynchronously initialize agent discovery engine"""
         try:
@@ -417,7 +417,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             logger.info(f"✅ Agent discovery engine initialized for {self.agent_id}")
         except Exception as e:
             logger.warning(f"⚠️ Agent discovery engine initialization failed for {self.agent_id}: {e}")
-    
+
     def _start_a2a_protocol_queues(self):
         """Start A2A protocol message processing queues"""
         if self.a2a_protocol_only:
@@ -430,12 +430,12 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             except RuntimeError:
                 # No event loop running, defer queue starting until later
                 logger.info(f"A2A protocol compliance enabled for {self.agent_id} (queues will start when event loop is available)")
-    
+
     def _initialize_task_persistence(self):
         """Initialize task persistence and recovery"""
         # Initialize task persistence (implementation depends on task_manager)
         # This is handled by the task_manager import at the top
-        
+
         # Start task recovery
         try:
             # Only create tasks if event loop is running
@@ -444,9 +444,9 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
         except RuntimeError:
             # No event loop running, defer task recovery until later
             logger.debug(f"Task recovery deferred for {self.agent_id} (no event loop)")
-        
+
         logger.info(f"Initialized A2A Agent: {self.name} ({self.agent_id})")
-    
+
     def _discover_handlers(self):
         """Discover handler methods decorated with @a2a_handler"""
         for name in dir(self):
@@ -456,7 +456,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 if handler_metadata:
                     self.handlers[handler_metadata['method']] = method
                     logger.debug("Registered handler: %s -> %s", handler_metadata['method'], name)
-    
+
     def _discover_skills(self):
         """Discover skills decorated with @a2a_skill"""
         for name in dir(self):
@@ -473,21 +473,21 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 )
                 self.skills[skill_def.name] = skill_def
                 logger.debug("Registered skill: %s", skill_def.name)
-    
-    
+
+
     @trace_async("process_message")
     async def process_message(self, message: A2AMessage, context_id: str) -> Dict[str, Any]:
         """Process incoming A2A message with AI reasoning and comprehensive tracking"""
-        
+
         add_span_attributes({
             "agent.id": self.agent_id,
             "message.id": message.messageId,
             "message.role": message.role.value,
             "context.id": context_id
         })
-        
+
         processing_start_time = datetime.utcnow()
-        
+
         try:
             # Convert A2A message to dict for AI reasoning
             message_data = {
@@ -500,50 +500,50 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 "parts": [{"kind": part.kind, "data": part.data} for part in message.parts],
                 "timestamp": getattr(message, 'timestamp', datetime.utcnow().isoformat())
             }
-            
+
             # ✨ NEW: Track message receipt with AgentManager
             await self._track_message_with_agent_manager(message_data, "received")
-            
+
             # Apply AI reasoning to incoming message if available
             if self.ai_enabled and hasattr(self, 'process_message_with_ai_reasoning'):
                 logger.info(f"🧠 Applying AI reasoning to incoming message {message.messageId}")
                 ai_result = await self.process_message_with_ai_reasoning(message_data)
-                
+
                 # If AI reasoning was successful, use its response
                 if ai_result.get("success"):
                     logger.info(f"✅ AI reasoning successful for message {message.messageId}")
-                    
+
                     # Calculate processing time and track completion
                     processing_time = (datetime.utcnow() - processing_start_time).total_seconds() * 1000
                     status = "referred" if ai_result.get("referred") else "completed"
-                    
+
                     # Track message completion with AgentManager
                     await self._track_message_with_agent_manager(
-                        message_data, 
-                        status, 
+                        message_data,
+                        status,
                         {"processing_time": processing_time, "ai_enhanced": True, "result": ai_result}
                     )
-                    
+
                     return {
                         **ai_result,
                         "processing_type": "ai_enhanced",
                         "processing_time_ms": processing_time,
                         "timestamp": datetime.utcnow().isoformat()
                     }
-                
+
                 # If AI reasoning failed, fall back to traditional processing
                 logger.warning(f"⚠️ AI reasoning failed for message {message.messageId}, falling back to traditional processing")
-            
+
             # Traditional message processing (fallback or when AI is disabled)
             logger.info(f"🔧 Processing message {message.messageId} with traditional handlers")
-            
+
             # Extract method from message
             method = self._extract_method(message)
-            
+
             if method in self.handlers:
                 try:
                     handler = self.handlers[method]
-                    
+
                     # Wrap handler with retry logic
                     retry_decorator = retry_manager.retry_with_circuit_breaker(
                         service_name=f"{self.agent_id}_{method}",
@@ -551,23 +551,23 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                         backoff_factor=2.0,
                         exceptions=(Exception,)
                     )
-                    
+
                     @retry_decorator
                     async def execute_with_retry():
                         return await self._call_handler(handler, message, context_id)
-                    
+
                     result = await execute_with_retry()
-                    
+
                     # Calculate processing time and track completion
                     processing_time = (datetime.utcnow() - processing_start_time).total_seconds() * 1000
-                    
+
                     # Track message completion with AgentManager
                     await self._track_message_with_agent_manager(
-                        message_data, 
-                        "completed", 
+                        message_data,
+                        "completed",
                         {"processing_time": processing_time, "ai_enhanced": False, "handler": method, "result": result}
                     )
-                    
+
                     return {
                         "success": True,
                         "result": result,
@@ -578,17 +578,17 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                     }
                 except Exception as e:
                     logger.error(f"Handler {method} failed: {e}")
-                    
+
                     # Calculate processing time and track failure
                     processing_time = (datetime.utcnow() - processing_start_time).total_seconds() * 1000
-                    
+
                     # Track message failure with AgentManager
                     await self._track_message_with_agent_manager(
-                        message_data, 
-                        "failed", 
+                        message_data,
+                        "failed",
                         {"processing_time": processing_time, "error": str(e), "handler": method}
                     )
-                    
+
                     # Add to dead letter queue if all retries failed
                     await dlq.add_message(
                         message_id=message.messageId,
@@ -605,7 +605,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                         source=f"{self.agent_id}_{method}",
                         metadata={"agent_id": self.agent_id}
                     )
-                    
+
                     return {
                         "success": False,
                         "error": str(e),
@@ -618,11 +618,11 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 # Track rejection due to no handler
                 processing_time = (datetime.utcnow() - processing_start_time).total_seconds() * 1000
                 await self._track_message_with_agent_manager(
-                    message_data, 
-                    "rejected", 
+                    message_data,
+                    "rejected",
                     {"processing_time": processing_time, "reason": f"No handler found for method: {method}"}
                 )
-                
+
                 return {
                     "success": False,
                     "error": f"No handler found for method: {method}",
@@ -630,18 +630,18 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                     "processing_time_ms": processing_time,
                     "timestamp": datetime.utcnow().isoformat()
                 }
-                
+
         except Exception as e:
             logger.error(f"Error processing message {message.messageId}: {e}")
-            
+
             # Track general failure
             processing_time = (datetime.utcnow() - processing_start_time).total_seconds() * 1000
             await self._track_message_with_agent_manager(
-                message_data, 
-                "failed", 
+                message_data,
+                "failed",
                 {"processing_time": processing_time, "error": str(e), "error_type": "general_exception"}
             )
-            
+
             return {
                 "success": False,
                 "error": str(e),
@@ -649,24 +649,24 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 "processing_time_ms": processing_time,
                 "timestamp": datetime.utcnow().isoformat()
             }
-    
+
     def _extract_method(self, message: A2AMessage) -> str:
         """Extract method name from message"""
         for part in message.parts:
             if part.kind == "data" and "method" in part.data:
                 return part.data["method"]
-        
+
         # Default to process_data for data messages
         if message.parts and message.parts[0].kind == "data":
             return "process_data"
-        
+
         return "handle_message"
-    
+
     async def _call_handler(self, handler: Callable, message: A2AMessage, context_id: str) -> Any:
         """Call handler method with appropriate arguments"""
         sig = inspect.signature(handler)
         kwargs = {}
-        
+
         # Determine what arguments the handler expects
         for param_name, param in sig.parameters.items():
             if param_name == "message":
@@ -678,7 +678,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                     if part.kind == "data":
                         kwargs["data"] = part.data
                         break
-        
+
         # Call the handler with the prepared arguments
         if asyncio.iscoroutinefunction(handler):
             return await handler(**kwargs)
@@ -688,24 +688,24 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
     @trace_async("execute_skill")
     async def execute_skill(self, skill_name: str, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a specific skill"""
-        
+
         if skill_name not in self.skills:
             raise ValueError(f"Skill '{skill_name}' not found")
-        
+
         skill = self.skills[skill_name]
         method = getattr(self, skill.method_name)
-        
+
         add_span_attributes({
             "skill.name": skill_name,
             "skill.capabilities": skill.capabilities
         })
-        
+
         try:
             if asyncio.iscoroutinefunction(method):
                 result = await method(input_data)
             else:
                 result = method(input_data)
-            
+
             return {
                 "success": True,
                 "result": result,
@@ -720,7 +720,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 "skill": skill_name,
                 "timestamp": datetime.utcnow().isoformat()
             }
-    
+
     def get_agent_card(self) -> AgentCard:
         """Generate agent card for registration"""
         return AgentCard(
@@ -748,11 +748,11 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 "health": f"{self.base_url}/health"
             }
         )
-    
+
     async def create_task(self, task_type: str, task_data: Dict[str, Any]) -> str:
         """Create and track a new task"""
         task_id = str(uuid4())
-        
+
         self.tasks[task_id] = {
             "id": task_id,
             "type": task_type,
@@ -763,36 +763,36 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             "result": None,
             "error": None
         }
-        
+
         logger.info(f"Created task {task_id} of type {task_type}")
         return task_id
-    
+
     async def update_task(self, task_id: str, status: TaskStatus, result: Any = None, error: str = None):
         """Update task status"""
         if task_id in self.tasks:
             task = self.tasks[task_id]
             task["status"] = status
             task["updated_at"] = datetime.utcnow().isoformat()
-            
+
             if result is not None:
                 task["result"] = result
             if error is not None:
                 task["error"] = error
-            
+
             logger.info(f"Updated task {task_id} status to {status}")
         else:
             logger.warning(f"Task {task_id} not found for update")
-    
+
     @trace_async("process_mcp_request")
     async def process_mcp_request(self, request: MCPRequest) -> MCPResponse:
         """Process internal MCP request"""
-        
+
         add_span_attributes({
             "agent.id": self.agent_id,
             "mcp.method": request.method,
             "mcp.request_id": str(request.id)
         })
-        
+
         try:
             response = await self.mcp_server.handle_request(request)
             logger.debug(f"MCP request {request.method} processed successfully")
@@ -803,7 +803,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 id=request.id,
                 error=MCPError(code=-32603, message="Internal error", data=str(e))
             )
-    
+
     async def call_mcp_tool(self, tool_name: str, arguments: Dict[str, Any] = None) -> Dict[str, Any]:
         """Internal method to call MCP tools"""
         request = MCPRequest(
@@ -811,13 +811,13 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             method="tools/call",
             params={"name": tool_name, "arguments": arguments or {}}
         )
-        
+
         response = await self.process_mcp_request(request)
         if response.error:
             raise RuntimeError(f"MCP tool call failed: {response.error}")
-        
+
         return response.result
-    
+
     async def get_mcp_resource(self, uri: str) -> Dict[str, Any]:
         """Internal method to get MCP resource"""
         request = MCPRequest(
@@ -825,14 +825,14 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             method="resources/read",
             params={"uri": uri}
         )
-        
+
         response = await self.process_mcp_request(request)
         if response.error:
             raise RuntimeError(f"MCP resource access failed: {response.error}")
-        
+
         return response.result
-    
-    
+
+
     def list_skills(self) -> List[Dict[str, Any]]:
         """List available skills"""
         return [
@@ -845,18 +845,18 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             }
             for skill in self.skills.values()
         ]
-    
+
     def _create_fastapi_base_app(self):
         """Create base FastAPI application with metadata"""
         from fastapi import FastAPI
         from fastapi.middleware.cors import CORSMiddleware
-        
+
         app = FastAPI(
             title=f"{self.name} A2A Agent",
             description=self.description,
             version=self.version
         )
-        
+
         # Add CORS middleware for A2A communication
         app.add_middleware(
             CORSMiddleware,
@@ -865,9 +865,9 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             allow_methods=["*"],
             allow_headers=["*"],
         )
-        
+
         return app
-    
+
     def _setup_app_routes(self, app, api_router):
         """Setup all application routes"""
         @api_router.get("/agent/info", tags=["agent"])
@@ -882,13 +882,13 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 "skills_count": len(self.skills),
                 "handlers_count": len(self.handlers)
             }
-        
+
         app.include_router(api_router)
-    
+
     def _setup_app_middleware(self, app):
         """Setup application middleware"""
         pass  # Implementation would be here in full version
-    
+
     def _setup_app_exception_handlers(self, app):
         """Setup application exception handlers"""
         pass  # Implementation would be here in full version
@@ -896,18 +896,18 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
     def create_fastapi_app(self):
         """Create FastAPI app with standard A2A endpoints"""
         app = self._create_fastapi_base_app()
-        
+
         # Create API router
         from fastapi import APIRouter
         api_router = APIRouter(prefix=f"/api/v1")
-        
+
         # Setup components
         self._setup_app_routes(app, api_router)
         self._setup_app_middleware(app)
         self._setup_app_exception_handlers(app)
-        
+
         return app
-    
+
     def _initialize_request_signing(self):
         """Initialize cryptographic request signing for A2A communication"""
         try:
@@ -924,28 +924,28 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                     public_key=self.public_key_pem
                 )
                 logger.info(f"Loaded existing key pair for agent {self.agent_id}")
-            
+
             # Initialize signing middleware
             self.signing_middleware = A2ASigningMiddleware(
                 agent_id=self.agent_id,
                 signer=self.request_signer
             )
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize request signing for {self.agent_id}: {e}")
             self.enable_request_signing = False
-    
+
     # Abstract methods that subclasses should implement
     @abstractmethod
     async def initialize(self) -> None:
         """Initialize agent-specific resources"""
         pass
-    
+
     @abstractmethod
     async def shutdown(self) -> None:
         """Cleanup agent resources"""
         pass
-    
+
     async def register_with_network(self) -> bool:
         """
         Register agent with the A2A network (blockchain and registry)
@@ -955,34 +955,34 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             # Register with blockchain if enabled
             if hasattr(self, 'blockchain_enabled') and self.blockchain_enabled:
                 logger.info(f"Registering {self.name} with blockchain...")
-                
+
                 # Ensure we have proper endpoint
                 endpoint = self.base_url or os.getenv("A2A_AGENT_URL") or os.getenv("A2A_SERVICE_URL")
                 if not endpoint:
                     raise ValueError(f"No endpoint configured for {self.name}. Set base_url or A2A_AGENT_URL")
-                
+
                 # Get capabilities from skills and blockchain_capabilities
                 all_capabilities = []
-                
+
                 # Extract capabilities from skill definitions
                 for skill_def in self.skills.values():
                     if hasattr(skill_def, 'capabilities') and skill_def.capabilities:
                         all_capabilities.extend(skill_def.capabilities)
-                
+
                 # Add blockchain capabilities if provided
                 if hasattr(self, 'blockchain_capabilities') and self.blockchain_capabilities:
                     all_capabilities.extend(self.blockchain_capabilities)
-                
+
                 # Remove duplicates
                 all_capabilities = list(set(all_capabilities))
-                
+
                 # If no capabilities found, add a default based on agent name
                 if not all_capabilities:
                     # Extract a capability from the agent name/type
                     agent_type = self.name.lower().replace(' ', '-')
                     all_capabilities = [agent_type]
                     logger.warning(f"No capabilities found for {self.name}, using default: {agent_type}")
-                
+
                 # Initialize blockchain if not already done
                 if not hasattr(self, 'blockchain_client') or not self.blockchain_client:
                     self._initialize_blockchain(
@@ -990,9 +990,9 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                         capabilities=all_capabilities,
                         endpoint=endpoint
                     )
-                
+
                 logger.info(f"✅ {self.name} blockchain registration complete")
-            
+
             # Register with Agent Discovery System
             if hasattr(self, 'discovery_enabled') and self.discovery_enabled and hasattr(self, 'discovery_engine'):
                 if self.discovery_engine and hasattr(self, 'agent_profile') and self.agent_profile:
@@ -1002,7 +1002,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                         logger.info(f"✅ {self.name} discovery system registration complete")
                     else:
                         logger.warning(f"⚠️ {self.name} discovery system registration failed")
-            
+
             # Register with A2A Registry if available
             registry_url = os.getenv("A2A_REGISTRY_URL")
             if registry_url:
@@ -1010,15 +1010,15 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 # This would call the registry API
                 # For now, we'll just log success
                 logger.info(f"✅ {self.name} registry registration complete")
-            
+
             self.is_registered = True
             return True
-            
+
         except Exception as e:
             logger.error(f"Failed to register {self.name} with network: {e}")
             self.is_registered = False
             return False
-    
+
     async def deregister_from_network(self) -> bool:
         """Deregister agent from the A2A network"""
         try:
@@ -1028,17 +1028,17 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 logger.info(f"Deregistering {self.name} from A2A Registry...")
                 # This would call the registry API
                 logger.info(f"✅ {self.name} deregistered from registry")
-            
+
             # Note: Blockchain registration is permanent, no deregistration needed
-            
+
             self.is_registered = False
             return True
-            
+
         except Exception as e:
             logger.error(f"Failed to deregister {self.name} from network: {e}")
             return False
 
-    
+
     async def _recover_tasks(self):
         """Recover incomplete tasks on startup"""
         try:
@@ -1047,7 +1047,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             logger.info(f"Task recovery completed for agent {self.agent_id}")
         except Exception as e:
             logger.error(f"Task recovery failed for agent {self.agent_id}: {e}")
-    
+
     async def create_persistent_task(
         self,
         task_type: str,
@@ -1056,7 +1056,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
     ) -> str:
         """Create a persistent task that survives agent restarts"""
         task_id = str(uuid4())
-        
+
         # Create persisted task
         task = PersistedTask(
             task_id=task_id,
@@ -1068,10 +1068,10 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             updated_at=datetime.utcnow(),
             metadata=metadata
         )
-        
+
         # Save to persistence
         await task_manager.save_task(task)
-        
+
         # Also track in memory
         self.tasks[task_id] = {
             "type": task_type,
@@ -1079,21 +1079,21 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             "created_at": datetime.utcnow(),
             "persistent": True
         }
-        
+
         # Execute task asynchronously
         asyncio.create_task(self._execute_persistent_task(task))
-        
+
         return task_id
-    
+
     async def _execute_persistent_task(self, task: PersistedTask):
         """Execute a persistent task"""
         try:
             # Update status to in progress
             await task_manager.update_task_status(task.task_id, PersistTaskStatus.IN_PROGRESS)
-            
+
             # Extract the actual task type (remove agent_id prefix)
             task_type = task.task_type.replace(f"{self.agent_id}_", "", 1)
-            
+
             # Find handler
             handler = None
             if task_type.startswith("skill_"):
@@ -1103,40 +1103,40 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                     handler = getattr(self, skill_def.method_name)
             else:
                 handler = self.handlers.get(task_type)
-            
+
             if not handler:
                 raise ValueError(f"No handler found for task type: {task_type}")
-            
+
             # Execute handler
             if asyncio.iscoroutinefunction(handler):
                 result = await handler(task.payload, task.metadata)
             else:
                 result = handler(task.payload, task.metadata)
-            
+
             # Update task status
             await task_manager.update_task_status(task.task_id, PersistTaskStatus.COMPLETED)
-            
+
             # Update in-memory status
             if task.task_id in self.tasks:
                 self.tasks[task.task_id]["status"] = TaskStatus.COMPLETED
                 self.tasks[task.task_id]["completed_at"] = datetime.utcnow()
                 self.tasks[task.task_id]["result"] = result
-            
+
         except Exception as e:
             logger.error(f"Persistent task {task.task_id} failed: {e}")
-            
+
             # Update task status
             await task_manager.update_task_status(task.task_id, PersistTaskStatus.FAILED, str(e))
-            
+
             # Update in-memory status
             if task.task_id in self.tasks:
                 self.tasks[task.task_id]["status"] = TaskStatus.FAILED
                 self.tasks[task.task_id]["error"] = str(e)
-    
+
     async def get_task_statistics(self) -> Dict[str, Any]:
         """Get task statistics for this agent"""
         return await task_manager.get_task_statistics(self.agent_id)
-    
+
     async def send_signed_request(self,
                                  target_agent_id: str,
                                  method: str,
@@ -1145,14 +1145,14 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                                  headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
         """
         Send a cryptographically signed request to another agent
-        
+
         Args:
             target_agent_id: ID of the target agent
             method: HTTP method
             path: Request path
             body: Request body
             headers: Additional headers
-            
+
         Returns:
             Request dict with signature headers
         """
@@ -1165,7 +1165,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 'body': body,
                 'headers': headers or {}
             }
-        
+
         request = {
             'target_agent_id': target_agent_id,
             'method': method,
@@ -1173,13 +1173,13 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             'body': body,
             'headers': headers or {}
         }
-        
+
         # Add signature headers
         signed_request = await self.signing_middleware.sign_outgoing_request(request)
-        
+
         logger.debug(f"Signed request to {target_agent_id}: {method} {path}")
         return signed_request
-    
+
     async def verify_incoming_request(self,
                                     headers: Dict[str, str],
                                     method: str,
@@ -1187,27 +1187,27 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                                     body: Optional[Dict[str, Any]] = None) -> Tuple[bool, Optional[str]]:
         """
         Verify the signature of an incoming request from another agent
-        
+
         Args:
             headers: Request headers
             method: HTTP method
             path: Request path
             body: Request body
-            
+
         Returns:
             Tuple of (is_valid, error_message)
         """
         if not self.enable_request_signing or not self.signing_middleware:
             logger.warning("Request signing is disabled, skipping verification")
             return True, None
-        
+
         # Import agent registry to get public keys
         from ..storage import get_distributed_storage
 
 
 # A2A Protocol Compliance: All imports must be available
 # No fallback implementations allowed - the agent must have all required dependencies
-        
+
         try:
             agent_registry = await get_distributed_storage()
             is_valid, error = await self.signing_middleware.verify_incoming_request(
@@ -1217,22 +1217,22 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 body=body,
                 agent_registry=agent_registry
             )
-            
+
             if is_valid:
                 logger.debug(f"Successfully verified request from {headers.get('X-A2A-Agent-ID')}")
             else:
                 logger.warning(f"Request verification failed: {error}")
-            
+
             return is_valid, error
-            
+
         except Exception as e:
             logger.error(f"Request verification error: {e}")
             return False, f"Verification error: {str(e)}"
-    
+
     def get_public_key(self) -> Optional[str]:
         """Get the agent's public key for sharing with other agents"""
         return self.public_key_pem
-    
+
     def get_agent_card(self) -> AgentCard:
         """Enhanced agent card with A2A protocol information"""
         card = AgentCard(
@@ -1262,11 +1262,11 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 "health": f"{self.base_url}/health"
             }
         )
-        
+
         # Add A2A protocol information
         if not hasattr(card, 'metadata'):
             card.metadata = {}
-        
+
         card.metadata.update({
             "a2aProtocol": {
                 "version": "0.2.9",
@@ -1279,13 +1279,13 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             },
             "protocolStats": self.get_a2a_stats()
         })
-        
+
         # Add public key for verification
         if hasattr(self, 'public_key_pem') and self.public_key_pem:
             card.metadata['public_key'] = self.public_key_pem
-        
+
         return card
-    
+
     # A2A Protocol Methods
     async def send_a2a_message(
         self,
@@ -1300,7 +1300,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
     ) -> Dict[str, Any]:
         """
         Send A2A protocol compliant message via blockchain with AI reasoning and intelligent agent selection
-        
+
         Args:
             to_agent: Target agent ID (can be overridden by intelligent selection)
             task_id: Task identifier
@@ -1314,28 +1314,28 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
         if not self.a2a_protocol_only:
             logger.warning("A2A protocol not enforced, message may not be sent")
             return {"success": False, "error": "A2A protocol not enabled"}
-        
+
         message_id = f"msg_{uuid4().hex[:12]}"
         original_target = to_agent
-        
+
         # ✨ NEW: Intelligent Agent Selection based on Skills Matching
         if auto_select_agent and hasattr(self, 'analyze_skills_match'):
             logger.info(f"🎯 Performing intelligent agent selection for message {message_id}")
-            
+
             # Extract required skills from message parts or use provided skills
             if not required_skills:
                 required_skills = self._extract_required_skills_from_parts(parts)
-            
+
             if required_skills:
                 logger.info(f"🔍 Required skills identified: {required_skills}")
-                
+
                 # Find the best agent for these skills
                 optimal_agent = await self._find_optimal_agent(required_skills, to_agent)
-                
+
                 if optimal_agent and optimal_agent['name'] != to_agent:
                     logger.info(f"🔄 Redirecting message from {to_agent} to {optimal_agent['name']} (match score: {optimal_agent['match_score']:.2f})")
                     to_agent = optimal_agent['name']
-                    
+
                     # Add routing metadata to message parts
                     routing_metadata = {
                         "partType": "routing_metadata",
@@ -1353,7 +1353,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                     logger.info(f"✅ Original target {to_agent} is optimal for required skills")
             else:
                 logger.info("ℹ️ No specific skills required, using original target")
-        
+
         # Add message tracking metadata for analytics
         message_metadata = {
             "partType": "message_metadata",
@@ -1374,7 +1374,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
         # Apply AI reasoning to outgoing message if available
         if self.ai_enabled and hasattr(self, 'reason_about_message'):
             logger.info(f"🧠 Applying AI reasoning to outgoing message {message_id}")
-            
+
             # Create message data for AI reasoning
             outgoing_message_data = {
                 "message_id": message_id,
@@ -1388,42 +1388,42 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 "direction": "outgoing",
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
             try:
                 # Get AI reasoning about the outgoing message
                 reasoning_result = await self.reason_about_message(
-                    outgoing_message_data, 
+                    outgoing_message_data,
                     context={"message_direction": "outgoing", "target_agent": to_agent}
                 )
-                
+
                 # AI can suggest modifications to the message
                 if reasoning_result.get("recommended_modifications"):
                     modifications = reasoning_result["recommended_modifications"]
-                    
+
                     # Apply priority adjustment if suggested
                     if "priority" in modifications:
                         suggested_priority = modifications["priority"]
                         if suggested_priority in MessagePriority.__members__:
                             priority = MessagePriority[suggested_priority]
                             logger.info(f"🔄 AI adjusted message priority to {priority.name}")
-                    
+
                     # Apply encryption suggestion if provided
                     if "encrypt" in modifications:
                         encrypt = modifications["encrypt"]
                         logger.info(f"🔒 AI {'enabled' if encrypt else 'disabled'} encryption")
-                    
+
                     # Apply content modifications if suggested
                     if "enhanced_parts" in modifications:
                         enhanced_parts = modifications["enhanced_parts"]
                         if enhanced_parts:
                             parts = enhanced_parts
                             logger.info(f"✨ AI enhanced message content")
-                
+
                 logger.info(f"✅ AI reasoning applied to outgoing message {message_id}")
-                
+
             except Exception as e:
                 logger.warning(f"⚠️ AI reasoning failed for outgoing message {message_id}: {e}")
-        
+
         # Create the A2A protocol message
         message = A2AProtocolMessage(
             message_id=message_id,
@@ -1435,32 +1435,32 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             priority=priority,
             encrypted=encrypt
         )
-        
+
         # Add to outgoing queue with priority
         await self.outgoing_queue.put((
             -message.priority.value,  # Negative for priority queue
             message
         ))
-        
+
         self.message_stats["sent"] += 1
-        
+
         return {
             "success": True,
             "message_id": message.message_id,
             "queued": True,
             "ai_enhanced": self.ai_enabled and hasattr(self, 'reason_about_message')
         }
-    
+
     async def _process_a2a_message_queues(self):
         """Process outgoing A2A message queue with retry logic"""
         while True:
             try:
                 # Get message from priority queue
                 _, message = await self.outgoing_queue.get()
-                
+
                 # Send via blockchain
                 success = await self._send_blockchain_a2a_message(message)
-                
+
                 if not success and message.retry_count < message.max_retries:
                     # Add to retry queue
                     message.retry_count += 1
@@ -1469,18 +1469,18 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 elif not success:
                     self.message_stats["failed"] += 1
                     logger.error(f"A2A message {message.message_id} failed after {message.retry_count} retries")
-                
+
             except Exception as e:
                 logger.error(f"Error processing A2A message queue: {e}")
-            
+
             await asyncio.sleep(0.1)
-    
+
     async def _send_blockchain_a2a_message(self, message: A2AProtocolMessage) -> bool:
         """Send A2A message via blockchain smart contract"""
         if not self.blockchain_client:
             logger.error("Blockchain client not initialized for A2A messaging")
             return False
-        
+
         try:
             # Use blockchain integration to send message
             message_id = self.send_blockchain_message(
@@ -1495,22 +1495,22 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 },
                 message_type="A2A_PROTOCOL"
             )
-            
+
             if message_id:
                 logger.info(f"Sent A2A message {message.message_id} via blockchain")
                 return True
             return False
-            
+
         except Exception as e:
             logger.error(f"Failed to send A2A blockchain message: {e}")
             return False
-    
+
     async def _process_a2a_retry_queue(self):
         """Process A2A messages that need retry with exponential backoff"""
         while True:
             try:
                 message = await self.retry_queue.get()
-                
+
                 # Calculate backoff delay
                 delay = min(
                     self.retry_config["initial_delay"] * (
@@ -1518,36 +1518,36 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                     ),
                     self.retry_config["max_delay"]
                 )
-                
+
                 logger.info(f"Retrying A2A message {message.message_id} after {delay}s (attempt {message.retry_count})")
                 await asyncio.sleep(delay)
-                
+
                 # Re-add to outgoing queue
                 await self.outgoing_queue.put((-message.priority.value, message))
-                
+
             except Exception as e:
                 logger.error(f"Error processing A2A retry queue: {e}")
-            
+
             await asyncio.sleep(1)
-    
+
     def _handle_blockchain_message(self, message: Dict[str, Any]):
         """Enhanced blockchain message handler for A2A protocol"""
         # Call parent handler first
         super()._handle_blockchain_message(message)
-        
+
         # Handle A2A protocol specific messages
         if message.get('messageType') == 'A2A_PROTOCOL':
             content = message.get('content', {})
-            
+
             # Extract A2A message components
             message_id = content.get('messageId')
             task_id = content.get('taskId')
             context_id = content.get('contextId')
             parts = content.get('parts', [])
-            
+
             # Update statistics
             self.message_stats["received"] += 1
-            
+
             # Process A2A message parts
             asyncio.create_task(self._handle_a2a_message_parts({
                 "messageId": message_id,
@@ -1556,24 +1556,24 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 "fromAgent": message.get('from_address'),
                 "parts": parts
             }))
-    
+
     async def _handle_a2a_message_parts(self, a2a_message: Dict[str, Any]):
         """Handle A2A message parts"""
         try:
             from_agent = a2a_message.get('fromAgent')
             parts = a2a_message.get('parts', [])
-            
+
             for part in parts:
                 part_type = part.get('partType')
-                
+
                 if part_type == 'function-call':
                     # Handle skill execution request
                     skill_name = part.get('functionName')
                     input_data = part.get('functionArgs', {})
-                    
+
                     if skill_name in self.skills:
                         result = await self.execute_skill(skill_name, input_data)
-                        
+
                         # Send response via A2A
                         await self.send_a2a_message(
                             to_agent=from_agent,
@@ -1585,15 +1585,15 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                                 "responseData": result
                             }]
                         )
-                
+
                 elif part_type == 'data-request':
                     # Handle data request
                     data_type = part.get('dataType')
                     query_params = part.get('queryParams', {})
-                    
+
                     # Process data request (can be overridden)
                     data = await self._process_a2a_data_request(data_type, query_params)
-                    
+
                     # Send response
                     await self.send_a2a_message(
                         to_agent=from_agent,
@@ -1605,16 +1605,16 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                             "data": data
                         }]
                     )
-                
+
         except Exception as e:
             logger.error(f"Error handling A2A message parts: {e}")
-    
+
     async def _process_a2a_data_request(self, data_type: str, query_params: Dict[str, Any]) -> Dict[str, Any]:
         """
         Process A2A data request - override in specific agents
         """
         return {"error": "Data request handler not implemented"}
-    
+
     async def call_agent_skill_a2a(
         self,
         target_agent: str,
@@ -1628,7 +1628,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
         """
         context_id = context_id or f"ctx_{self.agent_id}_{target_agent}"
         task_id = f"skill_{skill_name}_{hash(str(input_data))}"
-        
+
         # Prepare message parts
         parts = [{
             "partType": "function-call",
@@ -1637,7 +1637,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             "functionId": f"func_{task_id[:8]}",
             "sensitive": encrypt_data
         }]
-        
+
         # Send via A2A protocol
         result = await self.send_a2a_message(
             to_agent=target_agent,
@@ -1647,7 +1647,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             priority=MessagePriority.NORMAL,
             encrypt=encrypt_data
         )
-        
+
         # Store context for response handling
         self.active_contexts[context_id] = {
             "operation": "skill_call",
@@ -1656,9 +1656,9 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             "task_id": task_id,
             "created_at": datetime.utcnow().isoformat()
         }
-        
+
         return result
-    
+
     async def request_data_from_agent_a2a(
         self,
         target_agent: str,
@@ -1671,7 +1671,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
         """
         context_id = f"data_req_{self.agent_id}_{target_agent}"
         task_id = f"data_{data_type}_{hash(str(query_params))}"
-        
+
         parts = [{
             "partType": "data-request",
             "dataType": data_type,
@@ -1679,7 +1679,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             "requestId": task_id,
             "sensitive": encrypt
         }]
-        
+
         return await self.send_a2a_message(
             to_agent=target_agent,
             task_id=task_id,
@@ -1688,19 +1688,19 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
             priority=MessagePriority.HIGH,
             encrypt=encrypt
         )
-    
+
     def _extract_required_skills_from_parts(self, parts: List[Dict[str, Any]]) -> List[str]:
         """Extract required skills from message parts for intelligent agent selection"""
         required_skills = []
-        
+
         try:
             for part in parts:
                 part_data = part.get('data', {})
-                
+
                 # Check for explicit skills requirement
                 if 'required_skills' in part_data:
                     required_skills.extend(part_data['required_skills'])
-                
+
                 # Infer skills from common action types
                 action = part_data.get('action', part_data.get('method', ''))
                 if action:
@@ -1720,10 +1720,10 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                         'query_database': ['database_access', 'data_retrieval'],
                         'transform_data': ['data_transformation', 'data_processing']
                     }
-                    
+
                     if action in skill_mapping:
                         required_skills.extend(skill_mapping[action])
-                
+
                 # Infer from content type
                 if 'user_data' in part_data:
                     required_skills.append('user_management')
@@ -1731,24 +1731,24 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                     required_skills.append('data_analysis')
                 if 'encryption' in part_data or 'security' in part_data:
                     required_skills.append('security')
-                
+
             # Remove duplicates and return
             return list(set(required_skills))
-            
+
         except Exception as e:
             logger.warning(f"Failed to extract required skills: {e}")
             return []
-    
+
     async def _find_optimal_agent(self, required_skills: List[str], fallback_agent: str) -> Optional[Dict[str, Any]]:
         """Find the optimal agent for the required skills using network discovery"""
         try:
             if not hasattr(self, 'network_agents_cache'):
                 logger.warning("No network agents cache available for optimal agent selection")
                 return None
-            
+
             best_agent = None
             best_score = 0.0
-            
+
             # Get our own skills match as baseline
             if hasattr(self, '_calculate_skills_similarity'):
                 own_skills = list(getattr(self, 'skill_registry', {}).keys())
@@ -1756,18 +1756,18 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 baseline_score = own_match['similarity_score']
             else:
                 baseline_score = 0.5  # Conservative baseline
-            
+
             # Search through available agents
             for agent_address, agent_info in getattr(self, 'network_agents_cache', {}).items():
                 agent_name = agent_info.get('name', 'Unknown')
-                
+
                 # Skip inactive agents and self
                 if not agent_info.get('active', False) or agent_name == self.agent_id:
                     continue
-                
+
                 # Get agent skills
                 agent_skills = list(agent_info.get('skills', {}).keys())
-                
+
                 if hasattr(self, '_calculate_skills_similarity'):
                     skills_match = self._calculate_skills_similarity(required_skills, agent_skills)
                     match_score = skills_match['similarity_score']
@@ -1775,11 +1775,11 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                     # Simple fallback matching
                     matches = sum(1 for skill in required_skills if skill in agent_skills)
                     match_score = matches / len(required_skills) if required_skills else 0.0
-                
+
                 # Factor in reputation (normalized to 0-1)
                 reputation = agent_info.get('reputation', 50) / 100.0
                 overall_score = (match_score * 0.8) + (reputation * 0.2)  # 80% skills, 20% reputation
-                
+
                 # Only consider agents better than current baseline + threshold
                 if overall_score > max(baseline_score + 0.1, best_score):
                     best_agent = {
@@ -1793,14 +1793,14 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                         'active': agent_info.get('active', False)
                     }
                     best_score = overall_score
-            
+
             if best_agent:
                 logger.info(f"Found optimal agent {best_agent['name']} with score {best_score:.2f} (baseline: {baseline_score:.2f})")
             else:
                 logger.info(f"No better agent found than current target {fallback_agent}")
-            
+
             return best_agent
-            
+
         except Exception as e:
             logger.error(f"Failed to find optimal agent: {e}")
             return None
@@ -1810,7 +1810,7 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
         try:
             # Try to get the AgentManager client
             agent_manager_url = os.getenv("A2A_AGENT_MANAGER_URL", "http://localhost:8010")
-            
+
             # In a full implementation, this would make an A2A protocol call to the AgentManager
             # For now, we'll log the tracking data and store it locally
             tracking_data = {
@@ -1820,19 +1820,19 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 "metadata": metadata or {},
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
             # Store locally for now (in production, this would be sent via A2A messaging)
             if not hasattr(self, '_local_message_tracking'):
                 self._local_message_tracking = []
-            
+
             self._local_message_tracking.append(tracking_data)
-            
+
             # Keep only recent tracking data (last 1000 entries)
             if len(self._local_message_tracking) > 1000:
                 self._local_message_tracking = self._local_message_tracking[-1000:]
-            
+
             logger.debug(f"Tracked message {message_data.get('message_id', 'unknown')} with status: {status}")
-            
+
             # Send tracking data to AgentManager via A2A protocol if available
             if hasattr(self, 'send_a2a_message') and os.getenv("A2A_AGENT_MANAGER_ENABLED", "false").lower() == "true":
                 try:
@@ -1850,21 +1850,21 @@ class A2AAgentBase(ABC, BlockchainIntegrationMixin, AgentDiscoveryMixin, Standar
                 except Exception as track_error:
                     logger.warning(f"Failed to send tracking to AgentManager: {track_error}")
                     # Continue with local storage as fallback
-            
+
         except Exception as e:
             logger.error(f"Failed to track message with AgentManager: {e}")
-    
+
     def get_message_tracking_stats(self) -> Dict[str, Any]:
         """Get local message tracking statistics"""
         if not hasattr(self, '_local_message_tracking'):
             return {"total_tracked": 0}
-        
+
         tracking_data = self._local_message_tracking
         status_counts = {}
         for entry in tracking_data:
             status = entry.get("status", "unknown")
             status_counts[status] = status_counts.get(status, 0) + 1
-        
+
         return {
             "total_tracked": len(tracking_data),
             "status_breakdown": status_counts,

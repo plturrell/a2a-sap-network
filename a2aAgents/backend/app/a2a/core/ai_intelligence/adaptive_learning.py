@@ -583,7 +583,7 @@ class ReinforcementLearner(BaseLearner):
 
         # Calculate temporal difference error
         td_error = experience.reward  # Simplified - would include future rewards
-        
+
         # In a full implementation, we would use:
         # td_error = reward + discount_factor * max_future_q - current_q
         # q_update = current_q + learning_rate * td_error

@@ -112,7 +112,7 @@ async def create_embedding_model(request: CreateModelRequest):
     """Create a new embedding model configuration"""
     try:
         model_id = str(uuid4())
-        
+
         # Store model configuration
         model_registry[model_id] = {
             "id": model_id,
@@ -125,7 +125,7 @@ async def create_embedding_model(request: CreateModelRequest):
             "status": "created",
             "created_at": datetime.utcnow().isoformat()
         }
-        
+
         return {
             "model_id": model_id,
             "status": "created",
@@ -142,7 +142,7 @@ async def list_embedding_models(filters: Optional[str] = None):
     """List all embedding models"""
     try:
         models = list(model_registry.values())
-        
+
         # Apply filters if provided
         if filters:
             filter_dict = json.loads(filters)
@@ -150,7 +150,7 @@ async def list_embedding_models(filters: Optional[str] = None):
                 models = [m for m in models if m["status"] == filter_dict["status"]]
             if "model_type" in filter_dict:
                 models = [m for m in models if m["model_type"] == filter_dict["model_type"]]
-        
+
         return {"models": models}
     except Exception as e:
         logger.error(f"Failed to list embedding models: {str(e)}")
@@ -161,13 +161,13 @@ async def start_fine_tuning(request: StartFineTuningRequest):
     """Start fine-tuning an embedding model"""
     try:
         job_id = str(uuid4())
-        
+
         # Get model configuration
         if request.model_id not in model_registry:
             raise HTTPException(status_code=404, detail="Model not found")
-        
+
         model_config = model_registry[request.model_id]
-        
+
         # Create fine-tuning task
         task_params = {
             "model_config": model_config,
@@ -175,7 +175,7 @@ async def start_fine_tuning(request: StartFineTuningRequest):
             "validation_data": request.validation_data,
             "custom_config": request.custom_config or {}
         }
-        
+
         # Use the agent's fine-tuning method
         result = await agent.fine_tune_embedding_model(
             base_model=model_config["base_model"],
@@ -184,7 +184,7 @@ async def start_fine_tuning(request: StartFineTuningRequest):
             epochs=request.custom_config.get("epochs", 3) if request.custom_config else 3,
             batch_size=request.custom_config.get("batch_size", 16) if request.custom_config else 16
         )
-        
+
         # Track active job
         active_jobs[job_id] = {
             "job_id": job_id,
@@ -193,7 +193,7 @@ async def start_fine_tuning(request: StartFineTuningRequest):
             "started_at": datetime.utcnow().isoformat(),
             "result": result
         }
-        
+
         return {
             "job_id": job_id,
             "model_id": request.model_id,
@@ -210,10 +210,10 @@ async def stop_fine_tuning(job_id: str):
     try:
         if job_id not in active_jobs:
             raise HTTPException(status_code=404, detail="Job not found")
-        
+
         active_jobs[job_id]["status"] = "stopped"
         active_jobs[job_id]["stopped_at"] = datetime.utcnow().isoformat()
-        
+
         return {"status": "stopped", "job_id": job_id}
     except Exception as e:
         logger.error(f"Failed to stop fine-tuning: {str(e)}")
@@ -225,13 +225,13 @@ async def get_training_status(job_id: str):
     try:
         if job_id not in active_jobs:
             raise HTTPException(status_code=404, detail="Job not found")
-        
+
         job = active_jobs[job_id]
-        
+
         # Simulate progress
         elapsed_seconds = (datetime.utcnow() - datetime.fromisoformat(job["started_at"])).total_seconds()
         progress_percentage = min(100, int((elapsed_seconds / 300) * 100))  # 5 minute job
-        
+
         return {
             "job_id": job_id,
             "model_id": job["model_id"],
@@ -264,9 +264,9 @@ async def get_training_metrics(request: TrainingMetricsRequest):
     try:
         if request.job_id not in active_jobs:
             raise HTTPException(status_code=404, detail="Job not found")
-        
+
         job = active_jobs[request.job_id]
-        
+
         # Return metrics based on the agent's monitoring
         return {
             "job_id": request.job_id,
@@ -291,14 +291,14 @@ async def evaluate_embedding_model(request: EvaluateModelRequest):
     try:
         if request.model_id not in model_registry:
             raise HTTPException(status_code=404, detail="Model not found")
-        
+
         # Use the agent's evaluation method
         result = await agent.evaluate_embedding_quality(
             model_id=request.model_id,
             test_samples=request.test_data.get("samples", []),
             metrics=request.metrics
         )
-        
+
         return {
             "model_id": request.model_id,
             "evaluation_results": {
@@ -321,13 +321,13 @@ async def deploy_embedding_model(request: DeployModelRequest):
     try:
         if request.model_id not in model_registry:
             raise HTTPException(status_code=404, detail="Model not found")
-        
+
         deployment_id = str(uuid4())
-        
+
         # Update model status
         model_registry[request.model_id]["status"] = "deployed"
         model_registry[request.model_id]["deployment_id"] = deployment_id
-        
+
         return {
             "model_id": request.model_id,
             "deployment_id": deployment_id,
@@ -345,13 +345,13 @@ async def generate_embeddings(model_id: str, texts: List[str]):
     try:
         if model_id not in model_registry:
             raise HTTPException(status_code=404, detail="Model not found")
-        
+
         # Use the agent's embedding generation
         result = await agent.generate_enhanced_embeddings(
             texts=texts,
             model_type="sentence_transformer"
         )
-        
+
         return {
             "model_id": model_id,
             "embeddings": result.get("embeddings", []),

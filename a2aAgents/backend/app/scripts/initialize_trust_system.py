@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 async def initialize_all_system_agents():
     """Initialize trust for all system agents"""
     logger.info("🚀 Starting A2A Trust System Initialization")
-    
+
     # Define all system agents that need trust initialization
     system_agents = [
         # Core Data Agents
@@ -46,24 +46,24 @@ async def initialize_all_system_agents():
             "description": "Manages data product registration and lifecycle"
         },
         {
-            "agent_id": "financial_standardization_agent", 
+            "agent_id": "financial_standardization_agent",
             "agent_type": "FinancialStandardizationAgent",
             "agent_name": "Financial Standardization Agent",
             "description": "Handles financial data standardization and compliance"
         },
         {
             "agent_id": "ord_registry_agent",
-            "agent_type": "ORDRegistryAgent", 
+            "agent_type": "ORDRegistryAgent",
             "agent_name": "ORD Registry Agent",
             "description": "Object Resource Discovery registry management"
         },
         {
             "agent_id": "data_manager_agent",
             "agent_type": "DataManagerAgent",
-            "agent_name": "Data Manager Agent", 
+            "agent_name": "Data Manager Agent",
             "description": "Central data management and caching"
         },
-        
+
         # Processing and Analysis Agents
         {
             "agent_id": "search_agent",
@@ -77,7 +77,7 @@ async def initialize_all_system_agents():
             "agent_name": "Cache Manager Agent",
             "description": "Multi-tier cache management system"
         },
-        
+
         # Governance and Compliance Agents
         {
             "agent_id": "compliance_agent",
@@ -91,18 +91,18 @@ async def initialize_all_system_agents():
             "agent_name": "Audit Agent",
             "description": "System audit and logging capabilities"
         },
-        
+
         # System Management Agents
         {
             "agent_id": "agent_builder_agent",
-            "agent_type": "AgentBuilderAgent", 
+            "agent_type": "AgentBuilderAgent",
             "agent_name": "Agent Builder Agent",
             "description": "Dynamic agent generation and template management"
         },
         {
             "agent_id": "workflow_orchestrator_agent",
             "agent_type": "WorkflowOrchestratorAgent",
-            "agent_name": "Workflow Orchestrator Agent", 
+            "agent_name": "Workflow Orchestrator Agent",
             "description": "Cross-agent workflow coordination"
         },
         {
@@ -111,7 +111,7 @@ async def initialize_all_system_agents():
             "agent_name": "Security Monitor Agent",
             "description": "Real-time security monitoring and threat detection"
         },
-        
+
         # Specialized Agents
         {
             "agent_id": "notification_agent",
@@ -121,7 +121,7 @@ async def initialize_all_system_agents():
         },
         {
             "agent_id": "integration_agent",
-            "agent_type": "IntegrationAgent", 
+            "agent_type": "IntegrationAgent",
             "agent_name": "Integration Agent",
             "description": "External system integration and API management"
         },
@@ -132,39 +132,39 @@ async def initialize_all_system_agents():
             "description": "Data analytics and insights generation"
         }
     ]
-    
+
     try:
         # Initialize trust system
         trust_initializer = await get_trust_initializer()
         trust_middleware = await get_trust_middleware()
-        
+
         initialization_results = []
-        
+
         # Initialize each agent
         for agent_config in system_agents:
             logger.info(f"Initializing trust for: {agent_config['agent_name']}")
-            
+
             result = await initialize_agent_trust_system(
                 agent_config["agent_id"],
-                agent_config["agent_type"], 
+                agent_config["agent_type"],
                 agent_config["agent_name"]
             )
-            
+
             result["description"] = agent_config["description"]
             initialization_results.append(result)
-            
+
             if result.get("status") == "initialized":
                 logger.info(f"✅ {agent_config['agent_name']} trust initialized successfully")
             else:
                 logger.warning(f"⚠️ {agent_config['agent_name']} trust initialization: {result.get('status', 'unknown')}")
-        
+
         # Generate initialization report
         await generate_initialization_report(initialization_results, trust_initializer)
-        
+
         logger.info("✅ A2A Trust System Initialization Complete")
-        
+
         return initialization_results
-        
+
     except Exception as e:
         logger.error(f"❌ Trust system initialization failed: {e}")
         raise
@@ -175,7 +175,7 @@ async def generate_initialization_report(results, trust_initializer):
     try:
         # Get trust system status
         trust_status = await trust_initializer.get_trust_status()
-        
+
         # Create report
         report = {
             "initialization_report": {
@@ -191,15 +191,15 @@ async def generate_initialization_report(results, trust_initializer):
                 }
             }
         }
-        
+
         # Save report
         from app.a2a.config.storageConfig import get_reports_path
         report_file = get_reports_path() / "a2a_trust_initialization_report.json"
         with open(report_file, 'w') as f:
             json.dump(report, f, indent=2)
-        
+
         logger.info(f"📋 Initialization report saved: {report_file}")
-        
+
         # Print summary
         summary = report["initialization_report"]["summary"]
         logger.info("🔍 Initialization Summary:")
@@ -208,7 +208,7 @@ async def generate_initialization_report(results, trust_initializer):
         logger.info(f"   Already Initialized: {summary['already_initialized']}")
         logger.info(f"   Failed: {summary['failed_initialization']}")
         logger.info(f"   Skipped: {summary['skipped']}")
-        
+
     except Exception as e:
         logger.error(f"Failed to generate initialization report: {e}")
 
@@ -216,43 +216,43 @@ async def generate_initialization_report(results, trust_initializer):
 async def verify_trust_system():
     """Verify that the trust system is working correctly"""
     logger.info("🔍 Verifying Trust System Functionality")
-    
+
     try:
         trust_initializer = await get_trust_initializer()
-        
+
         # Test message signing and verification
         test_agent_id = "test_verification_agent"
         test_agent_type = "TestAgent"
-        
+
         # Initialize test agent
         await trust_initializer.initialize_agent_trust_identity(
-            test_agent_id, 
+            test_agent_id,
             test_agent_type,
             "Test Verification Agent"
         )
-        
+
         # Create test message
         test_message = {
             "message_type": "test",
             "content": "Trust system verification test",
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
         # Sign message
         signed_message = await trust_initializer.sign_agent_message(test_agent_id, test_message)
-        
+
         # Verify message
         verified, verification_result = await trust_initializer.verify_agent_message(signed_message)
-        
+
         if verified:
             logger.info("✅ Trust system verification successful")
             logger.info(f"   Verification details: {verification_result}")
         else:
             logger.error("❌ Trust system verification failed")
             logger.error(f"   Verification error: {verification_result}")
-        
+
         return verified
-        
+
     except Exception as e:
         logger.error(f"Trust system verification failed: {e}")
         return False
@@ -267,13 +267,13 @@ async def cleanup_test_data():
         test_files = [
             "test_verification_agent_trust.json"
         ]
-        
+
         for test_file in test_files:
             file_path = Path(trust_storage_path) / test_file
             if file_path.exists():
                 file_path.unlink()
                 logger.info(f"🗑️ Cleaned up test file: {test_file}")
-        
+
     except Exception as e:
         logger.warning(f"Test cleanup failed: {e}")
 
@@ -282,28 +282,28 @@ async def main():
     """Main execution function"""
     try:
         logger.info("🎯 A2A Trust System Initialization Starting...")
-        
+
         # Initialize all system agents
         results = await initialize_all_system_agents()
-        
+
         # Verify trust system is working
         verification_success = await verify_trust_system()
-        
+
         if not verification_success:
             logger.error("❌ Trust system verification failed - please check configuration")
             return 1
-        
+
         # Clean up test data
         await cleanup_test_data()
-        
+
         logger.info("🎉 Trust System Initialization Completed Successfully!")
-        
+
         # Print final status
         success_count = len([r for r in results if r.get("status") in ["initialized", "already_initialized"]])
         logger.info(f"📊 Final Status: {success_count}/{len(results)} agents have trust identities")
-        
+
         return 0
-        
+
     except Exception as e:
         logger.error(f"💥 Trust system initialization failed: {e}")
         return 1

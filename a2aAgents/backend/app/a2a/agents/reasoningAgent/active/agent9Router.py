@@ -44,7 +44,7 @@ async def json_rpc_handler(request: Request):
     """Handle JSON-RPC 2.0 requests for Agent 9"""
     try:
         body = await request.json()
-        
+
         if "jsonrpc" not in body or body["jsonrpc"] != "2.0":
             return JSONResponse(
                 status_code=400,
@@ -57,11 +57,11 @@ async def json_rpc_handler(request: Request):
                     "id": body.get("id")
                 }
             )
-        
+
         method = body.get("method")
         params = body.get("params", {})
         request_id = body.get("id")
-        
+
         if not agent9:
             return JSONResponse(
                 status_code=503,
@@ -74,10 +74,10 @@ async def json_rpc_handler(request: Request):
                     "id": request_id
                 }
             )
-        
+
         # Route to appropriate handler based on method
         result = await handle_rpc_method(method, params)
-        
+
         return JSONResponse(
             content={
                 "jsonrpc": "2.0",
@@ -85,7 +85,7 @@ async def json_rpc_handler(request: Request):
                 "id": request_id
             }
         )
-        
+
     except Exception as e:
         return JSONResponse(
             status_code=500,
@@ -101,7 +101,7 @@ async def json_rpc_handler(request: Request):
 
 async def handle_rpc_method(method: str, params: Dict[str, Any]) -> Any:
     """Handle individual RPC methods"""
-    
+
     # MCP tool methods
     if method == "tools/reason":
         return await agent9.reason(
@@ -109,33 +109,33 @@ async def handle_rpc_method(method: str, params: Dict[str, Any]) -> Any:
             context=params.get("context", {}),
             reasoning_type=params.get("reasoning_type", "deductive")
         )
-    
+
     elif method == "tools/solve_problem":
         return await agent9.solve_problem(
             problem=params.get("problem", ""),
             constraints=params.get("constraints", []),
             approach=params.get("approach", "analytical")
         )
-    
+
     elif method == "tools/make_decision":
         return await agent9.make_decision(
             options=params.get("options", []),
             criteria=params.get("criteria", {}),
             context=params.get("context", {})
         )
-    
+
     elif method == "tools/analyze":
         return await agent9.analyze(
             data=params.get("data", {}),
             analysis_type=params.get("analysis_type", "comprehensive")
         )
-    
+
     elif method == "tools/validate_logic":
         return await agent9.validate_logic(
             statements=params.get("statements", []),
             rules=params.get("rules", [])
         )
-    
+
     else:
         raise ValueError(f"Unknown method: {method}")
 

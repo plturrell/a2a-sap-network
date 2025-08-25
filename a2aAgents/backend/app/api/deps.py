@@ -39,7 +39,7 @@ async def get_current_user_optional(
                 tier=user_data.get("tier", "authenticated"),
                 scopes=user_data.get("scopes", [])
             )
-        
+
         # If no middleware user info, try to validate token
         if credentials and credentials.credentials:
             payload = jwt.decode(
@@ -47,12 +47,12 @@ async def get_current_user_optional(
                 settings.SECRET_KEY,
                 algorithms=["HS256"]
             )
-            
+
             # Check token expiration
             exp = payload.get("exp")
             if exp and datetime.utcnow().timestamp() > exp:
                 return None
-            
+
             # Create User object from token payload
             return User(
                 id=payload.get("sub"),
@@ -61,7 +61,7 @@ async def get_current_user_optional(
                 tier=payload.get("tier", "authenticated"),
                 scopes=payload.get("scopes", [])
             )
-        
+
         # Check for API key in headers
         api_key = request.headers.get("x-api-key")
         if api_key and await validate_api_key(api_key):
@@ -72,9 +72,9 @@ async def get_current_user_optional(
                 tier="authenticated",
                 scopes=["api_access"]
             )
-        
+
         return None
-        
+
     except jwt.ExpiredSignatureError:
         logger.warning("Expired JWT token provided")
         return None
@@ -108,7 +108,7 @@ async def validate_api_key(api_key: str) -> bool:
     # Validate API key format
     if not api_key.startswith("a2a_") or len(api_key) < 20:
         return False
-    
+
     # In production, check against database/cache
     # For now, validate basic format and check environment
     valid_keys = os.getenv("VALID_API_KEYS", "").split(",")

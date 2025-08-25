@@ -127,7 +127,7 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
     """
     Comprehensive Embedding Fine-Tuner Agent for advanced embedding optimization
     """
-    
+
     def __init__(self):
         super().__init__(
             agent_id=create_agent_id("embedding-fine-tuner-agent"),
@@ -135,28 +135,28 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
             description="Advanced embedding model fine-tuning and optimization system",
             version="1.0.0"
         )
-        
+
         # Initialize AI Intelligence Framework
         self.ai_framework = create_ai_intelligence_framework(
             create_enhanced_agent_config("embedding_fine_tuner")
         )
-        
+
         # Model and job management
         self.embedding_models: Dict[str, EmbeddingModel] = {}
         self.training_jobs: Dict[str, TrainingJob] = {}
         self.active_training_tasks: Dict[str, asyncio.Task] = {}
-        
+
         # Model storage paths
         self.models_dir = Path("models/embeddings")
         self.datasets_dir = Path("data/embedding_datasets")
         self.models_dir.mkdir(parents=True, exist_ok=True)
         self.datasets_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Performance monitoring
         self.training_metrics_history = []
-        
+
         logger.info("EmbeddingFineTunerAgent initialized")
-    
+
     async def get_agent_info(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Get agent information and capabilities"""
         return {
@@ -166,7 +166,7 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
             "version": self.version,
             "capabilities": [
                 "embedding_optimization",
-                "model_fine_tuning", 
+                "model_fine_tuning",
                 "vector_improvement",
                 "performance_tuning",
                 "embedding_evaluation"
@@ -199,20 +199,20 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
         """
         try:
             model_id = str(uuid.uuid4())
-            
+
             # Create fine-tuning configuration
             config = FineTuningConfig(
                 model_name=base_model,
                 model_type=ModelType(model_type),
                 optimization_strategy=OptimizationStrategy(optimization_strategy)
             )
-            
+
             # Apply configuration overrides
             if config_overrides:
                 for key, value in config_overrides.items():
                     if hasattr(config, key):
                         setattr(config, key, value)
-            
+
             # Create embedding model
             embedding_model = EmbeddingModel(
                 id=model_id,
@@ -223,12 +223,12 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                 status=FineTuningStatus.CREATED,
                 config=config
             )
-            
+
             # Store model
             self.embedding_models[model_id] = embedding_model
-            
+
             logger.info(f"Created embedding model: {model_name} ({model_id})")
-            
+
             return {
                 "model_id": model_id,
                 "status": "created",
@@ -236,7 +236,7 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                 "model_type": model_type,
                 "optimization_strategy": optimization_strategy
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to create embedding model: {e}")
             raise
@@ -263,24 +263,24 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
         try:
             if model_id not in self.embedding_models:
                 raise ValueError(f"Embedding model {model_id} not found")
-            
+
             embedding_model = self.embedding_models[model_id]
-            
+
             # Create training job
             job_id = str(uuid.uuid4())
-            
+
             # Prepare training dataset
             dataset_path = await self._prepare_training_dataset(
                 training_data, validation_data, job_id
             )
-            
+
             # Apply custom configuration
             config = embedding_model.config
             if custom_config:
                 for key, value in custom_config.items():
                     if hasattr(config, key):
                         setattr(config, key, value)
-            
+
             # Create training job
             training_job = TrainingJob(
                 id=job_id,
@@ -289,27 +289,27 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                 config=config,
                 status=FineTuningStatus.PREPARING
             )
-            
+
             self.training_jobs[job_id] = training_job
-            
+
             # Start training task
             training_task = asyncio.create_task(
                 self._execute_fine_tuning(training_job)
             )
             self.active_training_tasks[job_id] = training_task
-            
+
             # Update model status
             embedding_model.status = FineTuningStatus.PREPARING
-            
+
             logger.info(f"Started fine-tuning job: {job_id} for model {model_id}")
-            
+
             return {
                 "job_id": job_id,
                 "model_id": model_id,
                 "status": "started",
                 "estimated_duration_minutes": self._estimate_training_time(config)
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to start fine-tuning: {e}")
             raise
@@ -330,9 +330,9 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
         try:
             if job_id not in self.training_jobs:
                 raise ValueError(f"Training job {job_id} not found")
-            
+
             job = self.training_jobs[job_id]
-            
+
             # Calculate estimated completion time
             estimated_completion = None
             if job.started_at and job.total_steps > 0 and job.current_step > 0:
@@ -341,7 +341,7 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                 remaining_steps = job.total_steps - job.current_step
                 remaining_seconds = remaining_steps / steps_per_second
                 estimated_completion = datetime.now() + timedelta(seconds=remaining_seconds)
-            
+
             return {
                 "job_id": job_id,
                 "model_id": job.model_id,
@@ -363,7 +363,7 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                 },
                 "error_message": job.error_message
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to get training status: {e}")
             raise
@@ -378,7 +378,7 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
         Prepare and save training dataset
         """
         dataset_path = self.datasets_dir / f"training_{job_id}.json"
-        
+
         # Process training data based on optimization strategy
         processed_data = {
             "training": training_data,
@@ -388,11 +388,11 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                 "job_id": job_id
             }
         }
-        
+
         # Save dataset
         with open(dataset_path, 'w') as f:
             json.dump(processed_data, f, indent=2)
-        
+
         return str(dataset_path)
 
     async def _execute_fine_tuning(self, training_job: TrainingJob) -> None:
@@ -402,23 +402,23 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
         try:
             training_job.status = FineTuningStatus.TRAINING
             training_job.started_at = datetime.now()
-            
+
             # Simulate training process
             await self._simulate_training_process(training_job)
-            
+
             # Save fine-tuned model
             model_path = await self._save_fine_tuned_model(training_job)
             embedding_model = self.embedding_models[training_job.model_id]
             embedding_model.model_path = model_path
-            
+
             # Update status
             training_job.status = FineTuningStatus.COMPLETED
             training_job.completed_at = datetime.now()
             embedding_model.status = FineTuningStatus.COMPLETED
             embedding_model.updated_at = datetime.now()
-            
+
             logger.info(f"Completed fine-tuning job: {training_job.id}")
-            
+
         except Exception as e:
             training_job.status = FineTuningStatus.FAILED
             training_job.error_message = str(e)
@@ -439,24 +439,24 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
         total_epochs = config.num_epochs
         steps_per_epoch = 100  # Simulated steps per epoch
         training_job.total_steps = total_epochs * steps_per_epoch
-        
+
         for epoch in range(total_epochs):
             training_job.current_epoch = epoch + 1
-            
+
             for step in range(steps_per_epoch):
                 training_job.current_step = epoch * steps_per_epoch + step + 1
                 training_job.progress = (training_job.current_step / training_job.total_steps) * 100
-                
+
                 # Simulate decreasing loss
                 training_job.loss = 1.0 * (0.95 ** training_job.current_step)
-                
+
                 # Simulate evaluation metrics every few steps
                 if step % 20 == 0:
                     training_job.eval_metrics = {
                         "accuracy": 0.7 + (training_job.current_step / training_job.total_steps) * 0.25,
                         "f1_score": 0.65 + (training_job.current_step / training_job.total_steps) * 0.3
                     }
-                
+
                 # Small delay to simulate training time
                 await asyncio.sleep(0.05)
 
@@ -466,13 +466,13 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
         """
         model_path = self.models_dir / f"model_{training_job.model_id}"
         model_path.mkdir(exist_ok=True)
-        
+
         # Simulate saving model files
         model_files = ["pytorch_model.bin", "config.json", "tokenizer.json", "vocab.txt"]
         for file_name in model_files:
             file_path = model_path / file_name
             file_path.write_text(f"# Simulated model file: {file_name}")
-        
+
         return str(model_path)
 
     def _estimate_training_time(self, config: FineTuningConfig) -> int:
@@ -488,7 +488,7 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
         return int(base_time)
 
     # ========== REGISTRY CAPABILITY SKILLS ==========
-    
+
     @a2a_skill(
         name="embedding_optimization",
         description="Optimize embeddings using advanced AI techniques"
@@ -499,33 +499,33 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
             model_id = input_data.get("model_id")
             optimization_type = input_data.get("optimization_type", "performance")  # performance, quality, size
             embeddings = input_data.get("embeddings", [])
-            
+
             if not model_id:
                 return {"success": False, "error": "model_id is required"}
-            
+
             if model_id not in self.embedding_models:
                 return {"success": False, "error": f"Model {model_id} not found"}
-            
+
             model = self.embedding_models[model_id]
-            
+
             # Perform optimization based on type
             optimized_embeddings = []
             optimization_metrics = {}
-            
+
             if optimization_type == "performance":
                 # Optimize for speed and memory
                 for emb in embeddings:
                     # Simulate dimensionality reduction
                     optimized = np.array(emb[:256]) if len(emb) > 256 else np.array(emb)
                     optimized_embeddings.append(optimized.tolist())
-                
+
                 optimization_metrics = {
                     "original_dim": len(embeddings[0]) if embeddings else 0,
                     "optimized_dim": 256,
                     "size_reduction": "50%",
                     "speed_improvement": "2.1x"
                 }
-                
+
             elif optimization_type == "quality":
                 # Optimize for accuracy
                 for emb in embeddings:
@@ -533,26 +533,26 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                     noise = np.random.normal(0, 0.01, len(emb))
                     optimized = np.array(emb) + noise
                     optimized_embeddings.append(optimized.tolist())
-                
+
                 optimization_metrics = {
                     "quality_score": 0.95,
                     "similarity_preservation": 0.98,
                     "semantic_accuracy": 0.93
                 }
-                
+
             elif optimization_type == "size":
                 # Optimize for storage
                 for emb in embeddings:
                     # Simulate quantization
                     quantized = np.round(np.array(emb) * 127).astype(np.int8)
                     optimized_embeddings.append(quantized.tolist())
-                
+
                 optimization_metrics = {
                     "original_size_bytes": len(embeddings) * len(embeddings[0]) * 4 if embeddings else 0,
                     "optimized_size_bytes": len(embeddings) * len(embeddings[0]) if embeddings else 0,
                     "compression_ratio": "4:1"
                 }
-            
+
             return {
                 "success": True,
                 "model_id": model_id,
@@ -561,11 +561,11 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                 "metrics": optimization_metrics,
                 "optimized_embeddings": optimized_embeddings[:5]  # Return sample
             }
-            
+
         except Exception as e:
             logger.error(f"Embedding optimization error: {e}")
             return {"success": False, "error": str(e)}
-    
+
     @a2a_skill(
         name="model_fine_tuning",
         description="Fine-tune embedding models with custom data"
@@ -578,7 +578,7 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
             training_data = input_data.get("training_data", {})
             optimization_strategy = input_data.get("optimization_strategy", "contrastive_learning")
             config_overrides = input_data.get("config", {})
-            
+
             # Create model
             model_result = await self.create_embedding_model(
                 model_name=model_name,
@@ -587,19 +587,19 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                 optimization_strategy=optimization_strategy,
                 config_overrides=config_overrides
             )
-            
+
             if not model_result.get("model_id"):
                 return {"success": False, "error": "Failed to create model"}
-            
+
             model_id = model_result["model_id"]
-            
+
             # Start fine-tuning
             tuning_result = await self.start_fine_tuning(
                 model_id=model_id,
                 training_data=training_data,
                 custom_config=config_overrides
             )
-            
+
             return {
                 "success": True,
                 "model_id": model_id,
@@ -608,13 +608,13 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                 "estimated_duration": tuning_result.get("estimated_duration_minutes", 30),
                 "optimization_strategy": optimization_strategy
             }
-            
+
         except Exception as e:
             logger.error(f"Model fine-tuning error: {e}")
             return {"success": False, "error": str(e)}
-    
+
     @a2a_skill(
-        name="vector_improvement", 
+        name="vector_improvement",
         description="Improve vector quality and representation"
     )
     async def vector_improvement(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -622,13 +622,13 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
         try:
             vectors = input_data.get("vectors", [])
             improvement_type = input_data.get("improvement_type", "normalize")  # normalize, augment, denoise
-            
+
             if not vectors:
                 return {"success": False, "error": "No vectors provided"}
-            
+
             improved_vectors = []
             improvement_metrics = {}
-            
+
             if improvement_type == "normalize":
                 # L2 normalization
                 for vec in vectors:
@@ -636,12 +636,12 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                     norm = np.linalg.norm(vec_array)
                     normalized = vec_array / norm if norm > 0 else vec_array
                     improved_vectors.append(normalized.tolist())
-                
+
                 improvement_metrics = {
                     "normalization": "L2",
                     "magnitude_consistency": 1.0
                 }
-                
+
             elif improvement_type == "augment":
                 # Add semantic features
                 for vec in vectors:
@@ -649,13 +649,13 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                     # Simulate feature augmentation
                     augmented = np.concatenate([vec_array, np.random.randn(64) * 0.1])
                     improved_vectors.append(augmented.tolist())
-                
+
                 improvement_metrics = {
                     "original_dim": len(vectors[0]),
                     "augmented_dim": len(improved_vectors[0]),
                     "features_added": 64
                 }
-                
+
             elif improvement_type == "denoise":
                 # Remove noise
                 for vec in vectors:
@@ -663,12 +663,12 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                     # Simulate denoising with threshold
                     denoised = np.where(np.abs(vec_array) < 0.01, 0, vec_array)
                     improved_vectors.append(denoised.tolist())
-                
+
                 improvement_metrics = {
                     "noise_threshold": 0.01,
                     "sparsity_increase": "15%"
                 }
-            
+
             return {
                 "success": True,
                 "improvement_type": improvement_type,
@@ -676,11 +676,11 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                 "metrics": improvement_metrics,
                 "improved_vectors": improved_vectors[:5]  # Return sample
             }
-            
+
         except Exception as e:
             logger.error(f"Vector improvement error: {e}")
             return {"success": False, "error": str(e)}
-    
+
     @a2a_skill(
         name="performance_tuning",
         description="Tune model performance parameters"
@@ -691,20 +691,20 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
             model_id = input_data.get("model_id")
             tuning_target = input_data.get("tuning_target", "balanced")  # speed, accuracy, balanced
             constraints = input_data.get("constraints", {})
-            
+
             if not model_id:
                 return {"success": False, "error": "model_id is required"}
-            
+
             if model_id not in self.embedding_models:
                 return {"success": False, "error": f"Model {model_id} not found"}
-            
+
             model = self.embedding_models[model_id]
             original_config = model.config
-            
+
             # Tune parameters based on target
             tuned_params = {}
             performance_gains = {}
-            
+
             if tuning_target == "speed":
                 tuned_params = {
                     "batch_size": min(64, constraints.get("max_batch_size", 64)),
@@ -717,7 +717,7 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                     "memory_usage": "-40%",
                     "accuracy_trade_off": "-2%"
                 }
-                
+
             elif tuning_target == "accuracy":
                 tuned_params = {
                     "batch_size": max(8, constraints.get("min_batch_size", 8)),
@@ -731,7 +731,7 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                     "f1_score": "+0.08",
                     "training_time": "+50%"
                 }
-                
+
             elif tuning_target == "balanced":
                 tuned_params = {
                     "batch_size": 16,
@@ -745,14 +745,14 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                     "accuracy": "baseline",
                     "memory_efficiency": "+25%"
                 }
-            
+
             # Apply tuned parameters
             for key, value in tuned_params.items():
                 if hasattr(model.config, key):
                     setattr(model.config, key, value)
-            
+
             model.updated_at = datetime.now()
-            
+
             return {
                 "success": True,
                 "model_id": model_id,
@@ -765,11 +765,11 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                 "tuned_params": tuned_params,
                 "expected_gains": performance_gains
             }
-            
+
         except Exception as e:
             logger.error(f"Performance tuning error: {e}")
             return {"success": False, "error": str(e)}
-    
+
     @a2a_skill(
         name="embedding_evaluation",
         description="Evaluate embedding model quality and performance"
@@ -780,22 +780,22 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
             model_id = input_data.get("model_id")
             evaluation_data = input_data.get("evaluation_data", {})
             metrics_to_compute = input_data.get("metrics", ["all"])
-            
+
             if not model_id:
                 return {"success": False, "error": "model_id is required"}
-            
+
             if model_id not in self.embedding_models:
                 return {"success": False, "error": f"Model {model_id} not found"}
-            
+
             model = self.embedding_models[model_id]
-            
+
             # Compute evaluation metrics
             evaluation_results = {
                 "model_id": model_id,
                 "model_name": model.name,
                 "evaluation_timestamp": datetime.now().isoformat()
             }
-            
+
             # Simulate metric computation
             if "all" in metrics_to_compute or "similarity" in metrics_to_compute:
                 evaluation_results["similarity_metrics"] = {
@@ -803,14 +803,14 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                     "euclidean_distance": 0.23,
                     "manhattan_distance": 0.31
                 }
-            
+
             if "all" in metrics_to_compute or "clustering" in metrics_to_compute:
                 evaluation_results["clustering_metrics"] = {
                     "silhouette_score": 0.72,
                     "davies_bouldin_score": 0.45,
                     "calinski_harabasz_score": 156.8
                 }
-            
+
             if "all" in metrics_to_compute or "retrieval" in metrics_to_compute:
                 evaluation_results["retrieval_metrics"] = {
                     "precision_at_10": 0.87,
@@ -818,7 +818,7 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                     "map_score": 0.82,
                     "ndcg_score": 0.85
                 }
-            
+
             if "all" in metrics_to_compute or "performance" in metrics_to_compute:
                 evaluation_results["performance_metrics"] = {
                     "inference_time_ms": 12.5,
@@ -826,11 +826,11 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                     "memory_usage_mb": 512,
                     "model_size_mb": 128
                 }
-            
+
             # Store evaluation results
             model.metrics = evaluation_results
             model.updated_at = datetime.now()
-            
+
             return {
                 "success": True,
                 "evaluation_results": evaluation_results,
@@ -841,38 +841,38 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                     "Inference speed is optimal for production use"
                 ]
             }
-            
+
         except Exception as e:
             logger.error(f"Embedding evaluation error: {e}")
             return {"success": False, "error": str(e)}
-    
+
     # Additional handler methods expected by A2A handler
-    
+
     async def train_embedding_model(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Train new embedding model - wrapper for model_fine_tuning"""
         return await self.model_fine_tuning(data)
-    
+
     async def optimize_embeddings(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Optimize existing embeddings - wrapper for embedding_optimization"""
         return await self.embedding_optimization(data)
-    
+
     async def evaluate_model_performance(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Evaluate model performance - wrapper for embedding_evaluation"""
         return await self.embedding_evaluation(data)
-    
+
     async def batch_embedding_processing(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Process embeddings in batches"""
         try:
             embeddings = data.get("embeddings", [])
             batch_size = data.get("batch_size", 32)
             operation = data.get("operation", "encode")  # encode, optimize, transform
-            
+
             results = []
             total_batches = (len(embeddings) + batch_size - 1) // batch_size
-            
+
             for i in range(0, len(embeddings), batch_size):
                 batch = embeddings[i:i + batch_size]
-                
+
                 if operation == "encode":
                     # Simulate encoding
                     batch_results = [np.random.randn(384).tolist() for _ in batch]
@@ -887,9 +887,9 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                 elif operation == "transform":
                     # Simulate transformation
                     batch_results = [np.array(emb) * 1.1 for emb in batch]
-                
+
                 results.extend(batch_results)
-            
+
             return {
                 "success": True,
                 "total_processed": len(embeddings),
@@ -898,11 +898,11 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                 "operation": operation,
                 "results": results[:10]  # Return sample
             }
-            
+
         except Exception as e:
             logger.error(f"Batch processing error: {e}")
             return {"success": False, "error": str(e)}
-    
+
     async def hyperparameter_optimization(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Optimize model hyperparameters"""
         try:
@@ -910,10 +910,10 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
             search_space = data.get("search_space", {})
             optimization_metric = data.get("optimization_metric", "f1_score")
             n_trials = data.get("n_trials", 20)
-            
+
             if not model_id:
                 return {"success": False, "error": "model_id is required"}
-            
+
             # Simulate hyperparameter search
             best_params = {
                 "learning_rate": 2.3e-5,
@@ -922,7 +922,7 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                 "weight_decay": 0.01,
                 "dropout_rate": 0.1
             }
-            
+
             search_results = {
                 "best_params": best_params,
                 "best_score": 0.92,
@@ -930,28 +930,28 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                 "n_trials_completed": n_trials,
                 "improvement_over_baseline": "+8.5%"
             }
-            
+
             return {
                 "success": True,
                 "model_id": model_id,
                 "search_results": search_results,
                 "recommended_config": best_params
             }
-            
+
         except Exception as e:
             logger.error(f"Hyperparameter optimization error: {e}")
             return {"success": False, "error": str(e)}
-    
+
     async def cross_validation(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Perform cross-validation on models"""
         try:
             model_id = data.get("model_id")
             n_folds = data.get("n_folds", 5)
             validation_data = data.get("validation_data", {})
-            
+
             if not model_id:
                 return {"success": False, "error": "model_id is required"}
-            
+
             # Simulate cross-validation
             fold_results = []
             for fold in range(n_folds):
@@ -963,7 +963,7 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                     "recall": 0.81 + np.random.uniform(-0.06, 0.06)
                 }
                 fold_results.append(fold_metrics)
-            
+
             # Calculate average metrics
             avg_metrics = {
                 "accuracy": np.mean([f["accuracy"] for f in fold_results]),
@@ -971,7 +971,7 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                 "precision": np.mean([f["precision"] for f in fold_results]),
                 "recall": np.mean([f["recall"] for f in fold_results])
             }
-            
+
             # Calculate standard deviations
             std_metrics = {
                 "accuracy_std": np.std([f["accuracy"] for f in fold_results]),
@@ -979,7 +979,7 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                 "precision_std": np.std([f["precision"] for f in fold_results]),
                 "recall_std": np.std([f["recall"] for f in fold_results])
             }
-            
+
             return {
                 "success": True,
                 "model_id": model_id,
@@ -989,7 +989,7 @@ class ComprehensiveEmbeddingFineTunerSDK(SecureA2AAgent,
                 "std_metrics": std_metrics,
                 "model_stability": "high" if max(std_metrics.values()) < 0.05 else "moderate"
             }
-            
+
         except Exception as e:
             logger.error(f"Cross-validation error: {e}")
             return {"success": False, "error": str(e)}

@@ -13,7 +13,7 @@ Provides mock implementations for isolated testing of workflow orchestration
 """
 
 from .comprehensiveOrchestratorAgentSdk import (
-    ComprehensiveOrchestratorAgent, OrchestratorAgentSdk, WorkflowDefinition, 
+    ComprehensiveOrchestratorAgent, OrchestratorAgentSdk, WorkflowDefinition,
     WorkflowTask, WorkflowStatus, TaskStatus, OrchestrationStrategy
 )
 from app.a2a.core.security_base import SecureA2AAgent
@@ -23,10 +23,10 @@ logger = logging.getLogger(__name__)
 @dataclass
 class MockWorkflowExecution(SecureA2AAgent):
     """Mock workflow execution for testing"""
-    
+
     # Security features provided by SecureA2AAgent:
     # - JWT authentication and authorization
-    # - Rate limiting and request throttling  
+    # - Rate limiting and request throttling
     # - Input validation and sanitization
     # - Audit logging and compliance tracking
     # - Encrypted communication channels
@@ -41,17 +41,17 @@ class MockWorkflowExecution(SecureA2AAgent):
 
 class MockOrchestratorAgent(SecureA2AAgent):
     """Mock implementation of Orchestrator Agent for testing"""
-    
+
     # Security features provided by SecureA2AAgent:
     # - JWT authentication and authorization
-    # - Rate limiting and request throttling  
+    # - Rate limiting and request throttling
     # - Input validation and sanitization
     # - Audit logging and compliance tracking
     # - Encrypted communication channels
     # - Automatic security scanning
-    
+
     def __init__(self):
-        
+
         super().__init__()
         self.mock_workflows = {}
         self.mock_executions = {}
@@ -60,13 +60,13 @@ class MockOrchestratorAgent(SecureA2AAgent):
         self.mock_templates = {}
         self.failure_scenarios = {}
         self.execution_delay = 0.1  # Simulated execution delay
-        
+
         # Pre-populate with test agents
         self._populate_test_agents()
 
     def _populate_test_agents(self):
         """Populate mock registry with test agents"""
-        
+
         test_agents = [
             {
                 "agent_id": "data-agent",
@@ -75,14 +75,14 @@ class MockOrchestratorAgent(SecureA2AAgent):
                 "status": "available"
             },
             {
-                "agent_id": "ai-agent", 
+                "agent_id": "ai-agent",
                 "name": "AI Processing Agent",
                 "capabilities": ["machine_learning", "inference", "training"],
                 "status": "available"
             },
             {
                 "agent_id": "calc-agent",
-                "name": "Calculation Agent", 
+                "name": "Calculation Agent",
                 "capabilities": ["mathematical_operations", "statistical_analysis"],
                 "status": "available"
             },
@@ -93,7 +93,7 @@ class MockOrchestratorAgent(SecureA2AAgent):
                 "status": "available"
             }
         ]
-        
+
         for agent in test_agents:
             self.mock_agents[agent["agent_id"]] = agent
 
@@ -107,12 +107,12 @@ class MockOrchestratorAgent(SecureA2AAgent):
         metadata: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Mock workflow creation"""
-        
+
         if self.failure_scenarios.get("create_workflow"):
             raise Exception("Mock workflow creation failure")
-        
+
         workflow_id = f"mock-workflow-{str(uuid.uuid4())[:8]}"
-        
+
         # Convert task dictionaries to mock task objects
         mock_tasks = []
         for task_data in tasks:
@@ -128,7 +128,7 @@ class MockOrchestratorAgent(SecureA2AAgent):
                 "max_retries": task_data.get("max_retries", 3)
             }
             mock_tasks.append(mock_task)
-        
+
         # Create mock workflow
         mock_workflow = {
             "id": workflow_id,
@@ -141,16 +141,16 @@ class MockOrchestratorAgent(SecureA2AAgent):
             "timeout_minutes": timeout_minutes,
             "metadata": metadata or {}
         }
-        
+
         # Validate workflow (basic mock validation)
         validation_result = await self._mock_validate_workflow(mock_workflow)
         if not validation_result["valid"]:
             raise ValueError(f"Mock validation failed: {validation_result['errors']}")
-        
+
         self.mock_workflows[workflow_id] = mock_workflow
-        
+
         logger.info(f"Mock created workflow: {workflow_name} ({workflow_id})")
-        
+
         return {
             "workflow_id": workflow_id,
             "status": "created",
@@ -164,36 +164,36 @@ class MockOrchestratorAgent(SecureA2AAgent):
         execution_context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Mock workflow execution"""
-        
+
         if self.failure_scenarios.get("execute_workflow"):
             raise Exception("Mock workflow execution failure")
-        
+
         if workflow_id not in self.mock_workflows:
             raise ValueError(f"Mock workflow {workflow_id} not found")
-        
+
         workflow = self.mock_workflows[workflow_id]
-        
+
         if workflow["status"] == "running":
             raise ValueError(f"Mock workflow {workflow_id} is already running")
-        
+
         # Update workflow status
         workflow["status"] = "running"
         workflow["started_at"] = datetime.now()
-        
+
         # Create mock execution
         execution = MockWorkflowExecution(
             workflow_id=workflow_id,
             status=WorkflowStatus.RUNNING,
             start_time=datetime.now()
         )
-        
+
         self.mock_executions[workflow_id] = execution
-        
+
         # Start mock execution task
         asyncio.create_task(self._mock_execute_workflow_async(workflow, execution_context or {}))
-        
+
         logger.info(f"Mock started workflow execution: {workflow_id}")
-        
+
         return {
             "workflow_id": workflow_id,
             "status": "started",
@@ -203,30 +203,30 @@ class MockOrchestratorAgent(SecureA2AAgent):
 
     async def get_workflow_status(self, workflow_id: str) -> Dict[str, Any]:
         """Mock workflow status retrieval"""
-        
+
         if self.failure_scenarios.get("get_workflow_status"):
             raise Exception("Mock workflow status failure")
-        
+
         if workflow_id not in self.mock_workflows:
             raise ValueError(f"Mock workflow {workflow_id} not found")
-        
+
         workflow = self.mock_workflows[workflow_id]
         execution = self.mock_executions.get(workflow_id)
-        
+
         # Calculate mock progress
         total_tasks = len(workflow["tasks"])
         completed_tasks = sum(1 for task in workflow["tasks"] if task["status"] == "completed")
         failed_tasks = sum(1 for task in workflow["tasks"] if task["status"] == "failed")
         running_tasks = sum(1 for task in workflow["tasks"] if task["status"] == "running")
-        
+
         progress_percentage = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
-        
+
         # Calculate execution duration
         execution_duration = None
         if workflow.get("started_at"):
             end_time = workflow.get("completed_at") or datetime.now()
             execution_duration = (end_time - workflow["started_at"]).total_seconds()
-        
+
         return {
             "workflow_id": workflow_id,
             "name": workflow["name"],
@@ -264,12 +264,12 @@ class MockOrchestratorAgent(SecureA2AAgent):
         objective: str
     ) -> Dict[str, Any]:
         """Mock agent coordination"""
-        
+
         if self.failure_scenarios.get("coordinate_agents"):
             raise Exception("Mock agent coordination failure")
-        
+
         coordination_id = f"mock-coord-{str(uuid.uuid4())[:8]}"
-        
+
         # Create mock coordination session
         coordination_session = {
             "id": coordination_id,
@@ -281,17 +281,17 @@ class MockOrchestratorAgent(SecureA2AAgent):
             "messages": [],
             "results": {}
         }
-        
+
         self.mock_coordination_sessions[coordination_id] = coordination_session
-        
+
         # Mock execution of coordination plan
         results = await self._mock_execute_coordination_plan(coordination_session, coordination_plan)
-        
+
         coordination_session["status"] = "completed"
         coordination_session["results"] = results
-        
+
         logger.info(f"Mock completed agent coordination: {coordination_id}")
-        
+
         return {
             "coordination_id": coordination_id,
             "status": "completed",
@@ -306,12 +306,12 @@ class MockOrchestratorAgent(SecureA2AAgent):
         template_definition: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Mock workflow template creation"""
-        
+
         if self.failure_scenarios.get("create_workflow_template"):
             raise Exception("Mock template creation failure")
-        
+
         template_id = f"mock-template-{str(uuid.uuid4())[:8]}"
-        
+
         template = {
             "id": template_id,
             "name": template_name,
@@ -320,11 +320,11 @@ class MockOrchestratorAgent(SecureA2AAgent):
             "created_at": datetime.now(),
             "usage_count": 0
         }
-        
+
         self.mock_templates[template_id] = template
-        
+
         logger.info(f"Mock created workflow template: {template_name} ({template_id})")
-        
+
         return {
             "template_id": template_id,
             "status": "created",
@@ -333,26 +333,26 @@ class MockOrchestratorAgent(SecureA2AAgent):
 
     async def _mock_validate_workflow(self, workflow: Dict[str, Any]) -> Dict[str, Any]:
         """Mock workflow validation"""
-        
+
         errors = []
         warnings = []
-        
+
         # Basic validation checks
         if not workflow.get("tasks"):
             errors.append("Workflow has no tasks")
-        
+
         task_ids = {task["id"] for task in workflow.get("tasks", [])}
-        
+
         for task in workflow.get("tasks", []):
             # Check agent availability
             if task["agent_id"] not in self.mock_agents:
                 warnings.append(f"Agent {task['agent_id']} not in mock registry")
-            
+
             # Check dependencies
             for dep in task.get("dependencies", []):
                 if dep not in task_ids:
                     errors.append(f"Task {task['id']} depends on non-existent task {dep}")
-        
+
         return {
             "valid": len(errors) == 0,
             "errors": errors,
@@ -365,11 +365,11 @@ class MockOrchestratorAgent(SecureA2AAgent):
         context: Dict[str, Any]
     ):
         """Mock asynchronous workflow execution"""
-        
+
         try:
             execution = self.mock_executions[workflow["id"]]
             execution.execution_log.append(f"Started {workflow['strategy']} execution")
-            
+
             # Mock execution based on strategy
             if workflow["strategy"] == "sequential":
                 await self._mock_execute_sequential(workflow, context, execution)
@@ -379,14 +379,14 @@ class MockOrchestratorAgent(SecureA2AAgent):
                 await self._mock_execute_dag(workflow, context, execution)
             else:
                 await self._mock_execute_sequential(workflow, context, execution)  # Default
-            
+
             # Update workflow status
             workflow["status"] = "completed"
             workflow["completed_at"] = datetime.now()
             execution.status = WorkflowStatus.COMPLETED
             execution.end_time = datetime.now()
             execution.execution_log.append("Workflow completed successfully")
-            
+
         except Exception as e:
             workflow["status"] = "failed"
             workflow["error"] = str(e)
@@ -403,7 +403,7 @@ class MockOrchestratorAgent(SecureA2AAgent):
         execution: MockWorkflowExecution
     ):
         """Mock sequential task execution"""
-        
+
         for task in workflow["tasks"]:
             await self._mock_execute_task(task, context, execution)
             if task["status"] == "failed" and not self.failure_scenarios.get("continue_on_failure"):
@@ -416,7 +416,7 @@ class MockOrchestratorAgent(SecureA2AAgent):
         execution: MockWorkflowExecution
     ):
         """Mock parallel task execution"""
-        
+
         tasks = [self._mock_execute_task(task, context, execution) for task in workflow["tasks"]]
         await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -427,11 +427,11 @@ class MockOrchestratorAgent(SecureA2AAgent):
         execution: MockWorkflowExecution
     ):
         """Mock DAG-based task execution"""
-        
+
         # Simple dependency-based execution for mock
         executed_tasks = set()
         remaining_tasks = workflow["tasks"].copy()
-        
+
         while remaining_tasks:
             # Find tasks with satisfied dependencies
             ready_tasks = []
@@ -439,17 +439,17 @@ class MockOrchestratorAgent(SecureA2AAgent):
                 dependencies_met = all(dep in executed_tasks for dep in task.get("dependencies", []))
                 if dependencies_met:
                     ready_tasks.append(task)
-            
+
             if not ready_tasks:
                 raise Exception("Circular dependency detected in mock DAG")
-            
+
             # Execute ready tasks in parallel
             execution_tasks = [
                 self._mock_execute_task(task, context, execution)
                 for task in ready_tasks
             ]
             await asyncio.gather(*execution_tasks, return_exceptions=True)
-            
+
             # Update tracking
             for task in ready_tasks:
                 executed_tasks.add(task["id"])
@@ -462,19 +462,19 @@ class MockOrchestratorAgent(SecureA2AAgent):
         execution: MockWorkflowExecution
     ):
         """Mock individual task execution"""
-        
+
         task["status"] = "running"
         task["start_time"] = datetime.now()
         execution.execution_log.append(f"Started task: {task['name']}")
-        
+
         try:
             # Simulate task execution delay
             await asyncio.sleep(self.execution_delay)
-            
+
             # Mock task failure scenarios
             if self.failure_scenarios.get("task_failure") and task["name"] in self.failure_scenarios.get("failing_tasks", []):
                 raise Exception(f"Mock task failure for {task['name']}")
-            
+
             # Simulate successful task execution
             task["result"] = {
                 "status": "success",
@@ -483,12 +483,12 @@ class MockOrchestratorAgent(SecureA2AAgent):
                 "action": task["action"],
                 "execution_time": self.execution_delay
             }
-            
+
             task["status"] = "completed"
             task["end_time"] = datetime.now()
             execution.tasks_completed += 1
             execution.execution_log.append(f"Completed task: {task['name']}")
-            
+
         except Exception as e:
             task["status"] = "failed"
             task["error"] = str(e)
@@ -503,15 +503,15 @@ class MockOrchestratorAgent(SecureA2AAgent):
         plan: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Mock coordination plan execution"""
-        
+
         results = {}
-        
+
         for step in plan.get("steps", []):
             step_id = step.get("id", str(uuid.uuid4()))
-            
+
             # Simulate coordination step execution
             await asyncio.sleep(self.execution_delay)
-            
+
             step_result = {
                 "step_id": step_id,
                 "status": "completed",
@@ -519,16 +519,16 @@ class MockOrchestratorAgent(SecureA2AAgent):
                 "action": step.get("action", "coordinate"),
                 "output": f"Mock coordination result for step {step_id}"
             }
-            
+
             results[step_id] = step_result
             session["messages"].append(f"Executed coordination step: {step_id}")
-        
+
         return results
 
     def set_failure_scenario(self, scenario: str, should_fail: bool = True, **kwargs):
         """Set up failure scenarios for testing"""
         self.failure_scenarios[scenario] = should_fail
-        
+
         # Handle specific failure parameters
         if scenario == "task_failure" and "failing_tasks" in kwargs:
             self.failure_scenarios["failing_tasks"] = kwargs["failing_tasks"]
@@ -543,7 +543,7 @@ class MockOrchestratorAgent(SecureA2AAgent):
 
     def get_mock_statistics(self) -> Dict[str, Any]:
         """Get mock usage statistics for test verification"""
-        
+
         total_executions = len(self.mock_executions)
         completed_executions = sum(
             1 for exec in self.mock_executions.values()
@@ -553,13 +553,13 @@ class MockOrchestratorAgent(SecureA2AAgent):
             1 for exec in self.mock_executions.values()
             if exec.status == WorkflowStatus.FAILED
         )
-        
+
         total_tasks = sum(len(wf["tasks"]) for wf in self.mock_workflows.values())
         completed_tasks = sum(
             sum(1 for task in wf["tasks"] if task["status"] == "completed")
             for wf in self.mock_workflows.values()
         )
-        
+
         return {
             "workflows_created": len(self.mock_workflows),
             "executions_started": total_executions,
@@ -586,20 +586,20 @@ class MockOrchestratorAgent(SecureA2AAgent):
 # Test utilities and fixtures
 class OrchestratorTestHelper(SecureA2AAgent):
     """Helper class for orchestrator testing"""
-    
+
     # Security features provided by SecureA2AAgent:
     # - JWT authentication and authorization
-    # - Rate limiting and request throttling  
+    # - Rate limiting and request throttling
     # - Input validation and sanitization
     # - Audit logging and compliance tracking
     # - Encrypted communication channels
     # - Automatic security scanning
-    
+
     def __init__(self, mock_orchestrator: MockOrchestratorAgent):
-        
+
         super().__init__()
         self.mock_orchestrator = mock_orchestrator
-    
+
     async def create_test_workflow(
         self,
         name: str,
@@ -608,7 +608,7 @@ class OrchestratorTestHelper(SecureA2AAgent):
         include_dependencies: bool = False
     ) -> str:
         """Create a test workflow with specified parameters"""
-        
+
         tasks = []
         for i in range(task_count):
             task = {
@@ -618,68 +618,68 @@ class OrchestratorTestHelper(SecureA2AAgent):
                 "action": f"test_action_{i}",
                 "parameters": {"test_param": f"value_{i}"}
             }
-            
+
             # Add dependencies for DAG testing
             if include_dependencies and i > 0:
                 task["dependencies"] = [f"task-{i-1}"]
-            
+
             tasks.append(task)
-        
+
         result = await self.mock_orchestrator.create_workflow(
             workflow_name=name,
             description=f"Test workflow with {task_count} tasks",
             tasks=tasks,
             strategy=strategy
         )
-        
+
         return result["workflow_id"]
-    
+
     async def wait_for_workflow_completion(
         self,
         workflow_id: str,
         timeout_seconds: int = 30
     ) -> Dict[str, Any]:
         """Wait for workflow to complete with timeout"""
-        
+
         start_time = datetime.now()
-        
+
         while True:
             status = await self.mock_orchestrator.get_workflow_status(workflow_id)
-            
+
             if status["status"] in ["completed", "failed"]:
                 return status
-            
+
             elapsed = (datetime.now() - start_time).total_seconds()
             if elapsed > timeout_seconds:
                 raise TimeoutError(f"Workflow {workflow_id} did not complete within {timeout_seconds} seconds")
-            
+
             await asyncio.sleep(0.1)
-    
+
     def simulate_agent_failure(self, agent_id: str):
         """Simulate agent failure"""
         if agent_id in self.mock_orchestrator.mock_agents:
             self.mock_orchestrator.mock_agents[agent_id]["status"] = "failed"
-    
+
     def simulate_agent_recovery(self, agent_id: str):
         """Simulate agent recovery"""
         if agent_id in self.mock_orchestrator.mock_agents:
             self.mock_orchestrator.mock_agents[agent_id]["status"] = "available"
-    
+
     def verify_workflow_execution_order(self, workflow_id: str, expected_order: List[str]) -> bool:
         """Verify task execution order for sequential workflows"""
         if workflow_id not in self.mock_orchestrator.mock_executions:
             return False
-        
+
         execution = self.mock_orchestrator.mock_executions[workflow_id]
         execution_log = execution.execution_log
-        
+
         # Extract task execution order from log
         executed_tasks = []
         for log_entry in execution_log:
             if "Started task:" in log_entry:
                 task_name = log_entry.split("Started task: ")[1]
                 executed_tasks.append(task_name)
-        
+
         return executed_tasks == expected_order
 
 

@@ -110,18 +110,18 @@ class ComprehensiveOrchestratorAgentSDK(SecureA2AAgent,
         # Import AgentConfig here to avoid circular imports
         from app.a2a.sdk.agentBase import AgentConfig
         import os
-        
+
         # Create agent configuration using the proper class
         config = AgentConfig(
             agent_id=create_agent_id("orchestrator-agent"),
             name="Orchestrator Agent",
-            description="Multi-agent workflow orchestration and coordination system", 
+            description="Multi-agent workflow orchestration and coordination system",
             base_url=os.getenv("A2A_BASE_URL", "http://localhost:4004"),
             version="1.0.0",
             enable_telemetry=True,
             a2a_protocol_only=True
         )
-        
+
         super().__init__(config)
 
         # Initialize AI Intelligence Framework (with fallback for missing dependencies)
@@ -1154,13 +1154,13 @@ class ComprehensiveOrchestratorAgentSDK(SecureA2AAgent,
             'balancing_result': balancing_result,
             'message': 'Load balancing applied successfully'
         }
-    
+
     async def initialize(self) -> None:
         """Initialize the orchestrator agent"""
         logger.info("Initializing Comprehensive Orchestrator Agent")
         # Initialize components if needed
         pass
-    
+
     async def shutdown(self) -> None:
         """Shutdown the orchestrator agent"""
         logger.info("Shutting down Comprehensive Orchestrator Agent")

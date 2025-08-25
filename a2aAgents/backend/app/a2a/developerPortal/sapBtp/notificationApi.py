@@ -108,16 +108,16 @@ async def get_notifications(
             limit=limit,
             offset=offset
         )
-        
+
         # Get stats for unread count
         stats = await notification_service.get_notification_stats(user_id)
-        
+
         # Convert to response format
         notification_responses = []
         for notification in notifications:
             notification_dict = notification.to_dict()
             notification_responses.append(NotificationResponse(**notification_dict))
-        
+
         # Check if there are more notifications
         total_notifications = await notification_service.get_user_notifications(
             user_id=user_id,
@@ -126,16 +126,16 @@ async def get_notifications(
             limit=1000,  # Large number to get total count
             offset=0
         )
-        
+
         has_more = len(total_notifications) > offset + limit
-        
+
         return NotificationListResponse(
             notifications=notification_responses,
             total=len(total_notifications),
             unread_count=stats["unread"],
             has_more=has_more
         )
-        
+
     except Exception as e:
         logger.error(f"Error fetching notifications for user {user_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch notifications")
@@ -148,7 +148,7 @@ async def get_notification_stats(
     try:
         stats = await notification_service.get_notification_stats(user_id)
         return NotificationStatsResponse(**stats)
-        
+
     except Exception as e:
         logger.error(f"Error fetching notification stats for user {user_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch notification statistics")
@@ -167,7 +167,7 @@ async def create_notification(
         if request.actions:
             for action_req in request.actions:
                 actions.append(NotificationAction(**action_req.dict()))
-        
+
         notification = await notification_service.create_notification(
             user_id=target_user_id,
             title=request.title,
@@ -180,10 +180,10 @@ async def create_notification(
             actions=actions,
             expires_in_hours=request.expires_in_hours
         )
-        
+
         notification_dict = notification.to_dict()
         return NotificationResponse(**notification_dict)
-        
+
     except Exception as e:
         logger.error(f"Error creating notification: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to create notification")
@@ -196,12 +196,12 @@ async def mark_notification_as_read(
     """Mark a specific notification as read"""
     try:
         success = await notification_service.mark_as_read(user_id, notification_id)
-        
+
         if not success:
             raise HTTPException(status_code=404, detail="Notification not found")
-        
+
         return {"success": True, "message": "Notification marked as read"}
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -216,12 +216,12 @@ async def dismiss_notification(
     """Dismiss a specific notification"""
     try:
         success = await notification_service.mark_as_dismissed(user_id, notification_id)
-        
+
         if not success:
             raise HTTPException(status_code=404, detail="Notification not found")
-        
+
         return {"success": True, "message": "Notification dismissed"}
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -235,13 +235,13 @@ async def mark_all_notifications_as_read(
     """Mark all unread notifications as read"""
     try:
         count = await notification_service.mark_all_as_read(user_id)
-        
+
         return {
             "success": True,
             "message": f"Marked {count} notifications as read",
             "processed_count": count
         }
-        
+
     except Exception as e:
         logger.error(f"Error marking all notifications as read for user {user_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to mark all notifications as read")
@@ -255,21 +255,21 @@ async def bulk_mark_as_read(
     try:
         processed_count = 0
         failed_count = 0
-        
+
         for notification_id in request.notification_ids:
             success = await notification_service.mark_as_read(user_id, notification_id)
             if success:
                 processed_count += 1
             else:
                 failed_count += 1
-        
+
         return BulkActionResponse(
             success=failed_count == 0,
             processed_count=processed_count,
             failed_count=failed_count,
             message=f"Processed {processed_count} notifications, {failed_count} failed"
         )
-        
+
     except Exception as e:
         logger.error(f"Error bulk marking notifications as read: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to bulk mark notifications as read")
@@ -282,12 +282,12 @@ async def delete_notification(
     """Delete a specific notification"""
     try:
         success = await notification_service.delete_notification(user_id, notification_id)
-        
+
         if not success:
             raise HTTPException(status_code=404, detail="Notification not found")
-        
+
         return {"success": True, "message": "Notification deleted"}
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -301,18 +301,18 @@ async def create_sample_notifications(
     """Create sample notifications for development/demo purposes"""
     try:
         notifications = await notification_service.create_sample_notifications(user_id)
-        
+
         notification_responses = []
         for notification in notifications:
             notification_dict = notification.to_dict()
             notification_responses.append(NotificationResponse(**notification_dict))
-        
+
         return {
             "success": True,
             "message": f"Created {len(notifications)} sample notifications",
             "notifications": notification_responses
         }
-        
+
     except Exception as e:
         logger.error(f"Error creating sample notifications: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to create sample notifications")
@@ -323,13 +323,13 @@ async def cleanup_expired_notifications():
     """Clean up expired notifications (admin only)"""
     try:
         cleaned_count = await notification_service.cleanup_expired_notifications()
-        
+
         return {
             "success": True,
             "message": f"Cleaned up {cleaned_count} expired notifications",
             "cleaned_count": cleaned_count
         }
-        
+
     except Exception as e:
         logger.error(f"Error cleaning up expired notifications: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to cleanup expired notifications")

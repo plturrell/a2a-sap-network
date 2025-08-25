@@ -32,7 +32,7 @@ def get_a2a_service() -> A2ARegistryService:
 
 # Agent Registration Endpoints
 
-@router.post("/agents/register", 
+@router.post("/agents/register",
              response_model=AgentRegistrationResponse,
              status_code=201,
              summary="Register A2A Agent",
@@ -138,7 +138,7 @@ async def search_agents(
             page=page,
             pageSize=pageSize
         )
-        
+
         return await service.search_agents(search_request)
     except Exception as e:
         logger.error(f"Error searching agents: {e}")
@@ -329,9 +329,9 @@ async def discover_agents_by_skill(
             status=HealthStatus.HEALTHY,
             pageSize=100
         )
-        
+
         search_response = await service.search_agents(search_request)
-        
+
         # Get detailed information for each agent
         detailed_agents = []
         for result in search_response.results:
@@ -340,7 +340,7 @@ async def discover_agents_by_skill(
                 detailed_agents.append(details)
             except Exception as e:
                 logger.warning(f"Could not get details for agent {result.agent_id}: {e}")
-        
+
         return detailed_agents
     except Exception as e:
         logger.error(f"Error discovering agents by skill {skill_id}: {e}")
@@ -358,22 +358,22 @@ async def get_agent_statistics(
         # Get all agents
         search_request = AgentSearchRequest(pageSize=1000)
         search_response = await service.search_agents(search_request)
-        
+
         # Calculate statistics
         total_agents = search_response.total_count
         healthy_agents = len([a for a in search_response.results if a.status == HealthStatus.HEALTHY])
         skill_distribution = {}
         tag_distribution = {}
-        
+
         for agent in search_response.results:
             # Count skills
             for skill in agent.skills:
                 skill_distribution[skill] = skill_distribution.get(skill, 0) + 1
-            
+
             # Count tags
             for tag in agent.tags:
                 tag_distribution[tag] = tag_distribution.get(tag, 0) + 1
-        
+
         return {
             "total_agents": total_agents,
             "healthy_agents": healthy_agents,

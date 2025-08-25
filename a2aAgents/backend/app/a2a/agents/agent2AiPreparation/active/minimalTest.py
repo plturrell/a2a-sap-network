@@ -38,17 +38,17 @@ def test_import():
             AdvancedConfidenceScorer
         )
         print("✅ Import successful!")
-        
+
         # Test enum creation
         mode = EmbeddingMode.HYBRID
         print(f"✅ EmbeddingMode enum works: {mode}")
-        
+
         metric = ConfidenceMetric.SEMANTIC_COHERENCE
         print(f"✅ ConfidenceMetric enum works: {metric}")
-        
+
         print("✅ All basic tests passed!")
         return True
-        
+
     except Exception as e:
         print(f"❌ Error: {e}")
         import traceback

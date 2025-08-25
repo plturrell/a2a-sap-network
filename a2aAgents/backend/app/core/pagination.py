@@ -14,17 +14,17 @@ class PaginationParams:
     page: int = 1
     page_size: int = 50
     max_page_size: int = 1000
-    
+
     def __post_init__(self):
         # Validate and sanitize
         self.page = max(1, self.page)
         self.page_size = min(max(1, self.page_size), self.max_page_size)
-    
+
     @property
     def offset(self) -> int:
         """Calculate offset for database queries"""
         return (self.page - 1) * self.page_size
-    
+
     @property
     def limit(self) -> int:
         """Get limit for database queries"""
@@ -41,7 +41,7 @@ class PaginatedResponse(Generic[T]):
     total_pages: int
     has_next: bool
     has_previous: bool
-    
+
     @classmethod
     def create(cls, items: List[T], total: int, params: PaginationParams):
         """Create paginated response from items and params"""
@@ -55,7 +55,7 @@ class PaginatedResponse(Generic[T]):
             has_next=params.page < total_pages,
             has_previous=params.page > 1
         )
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization"""
         return {
@@ -73,14 +73,14 @@ class PaginatedResponse(Generic[T]):
 
 class CursorPagination:
     """Cursor-based pagination for large datasets"""
-    
+
     @staticmethod
     def encode_cursor(value: Any) -> str:
         """Encode cursor value"""
         import base64
         import json
         return base64.b64encode(json.dumps(value).encode()).decode()
-    
+
     @staticmethod
     def decode_cursor(cursor: str) -> Any:
         """Decode cursor value"""
@@ -90,20 +90,20 @@ class CursorPagination:
             return json.loads(base64.b64decode(cursor.encode()).decode())
         except:
             return None
-    
+
     @dataclass
     class CursorParams:
         """Cursor pagination parameters"""
         cursor: Optional[str] = None
         limit: int = 50
         direction: str = "next"  # "next" or "previous"
-        
+
         def get_decoded_cursor(self) -> Any:
             """Get decoded cursor value"""
             if not self.cursor:
                 return None
             return CursorPagination.decode_cursor(self.cursor)
-    
+
     @dataclass
     class CursorResponse(Generic[T]):
         """Cursor-based pagination response"""
@@ -111,7 +111,7 @@ class CursorPagination:
         next_cursor: Optional[str]
         previous_cursor: Optional[str]
         has_more: bool
-        
+
         def to_dict(self) -> Dict[str, Any]:
             """Convert to dictionary"""
             return {
@@ -132,7 +132,7 @@ def paginate_query(query: str, params: PaginationParams) -> str:
 def calculate_pagination_stats(total_items: int, params: PaginationParams) -> Dict[str, Any]:
     """Calculate pagination statistics"""
     total_pages = math.ceil(total_items / params.page_size)
-    
+
     return {
         "current_page": params.page,
         "page_size": params.page_size,

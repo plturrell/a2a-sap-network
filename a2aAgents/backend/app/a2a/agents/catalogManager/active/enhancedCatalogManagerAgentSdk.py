@@ -1,7 +1,7 @@
 """
 Enhanced Catalog Manager Agent with AI Intelligence Framework Integration
 
-This agent provides advanced catalog management and ORD (Open Resource Discovery) registry capabilities 
+This agent provides advanced catalog management and ORD (Open Resource Discovery) registry capabilities
 with sophisticated reasoning, adaptive learning from catalog patterns, and autonomous optimization.
 
 Enhanced AI Intelligence Rating: 62+ out of 100
@@ -160,11 +160,11 @@ class CatalogResult:
 class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     Enhanced Catalog Manager Agent with AI Intelligence Framework and Blockchain
-    
+
     Advanced catalog management and ORD registry with sophisticated reasoning,
     adaptive learning, autonomous optimization, and blockchain integration capabilities.
     """
-    
+
     def __init__(self, base_url: str, db_path: str = "/tmp/enhanced_catalog.db"):
 
         # Initialize security features
@@ -175,7 +175,7 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         blockchain_capabilities = [
             "catalog_management",
             "metadata_indexing",
-            "service_discovery", 
+            "service_discovery",
             "catalog_search",
             "resource_registration",
             "ord_registry",
@@ -183,7 +183,7 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "catalog_consensus",
             "resource_verification"
         ]
-        
+
         # Initialize A2AAgentBase with blockchain capabilities
         A2AAgentBase.__init__(
             self,
@@ -193,18 +193,18 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             skills=[],
             blockchain_capabilities=blockchain_capabilities
         )
-        
+
         # Initialize blockchain integration
         BlockchainIntegrationMixin.__init__(self)
-        
+
         # Initialize AI Intelligence Framework with enhanced configuration for catalog management
         ai_config = create_enhanced_agent_config(
             reasoning_strategies=[
-                "semantic_based", "taxonomy_driven", "usage_pattern", 
+                "semantic_based", "taxonomy_driven", "usage_pattern",
                 "quality_focused", "relation_based", "context_aware"
             ],
             learning_strategies=[
-                "discovery_pattern_learning", "usage_optimization", 
+                "discovery_pattern_learning", "usage_optimization",
                 "quality_improvement", "semantic_enhancement", "relationship_learning"
             ],
             memory_types=[
@@ -220,9 +220,9 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "semantic_alignment", "usage_optimization"
             ]
         )
-        
+
         self.ai_framework = create_ai_intelligence_framework(ai_config)
-        
+
         # Catalog management
         self.db_path = db_path
         self.db_connection = None
@@ -230,13 +230,13 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         self.data_products_cache = {}
         self.discovery_patterns = {}
         self.quality_metrics = {}
-        
+
         # AI-enhanced features
         self.semantic_embeddings = {}
         self.usage_analytics = {}
         self.relationship_graph = {}
         self.optimization_insights = {}
-        
+
         # Performance tracking
         self.catalog_metrics = {
             "total_resources": 0,
@@ -245,9 +245,9 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "semantic_analyses": 0,
             "ai_optimizations": 0
         }
-        
+
         logger.info(f"Initialized {self.name} with AI Intelligence Framework v5.0.0")
-    
+
     @async_retry(max_retries=3, operation_type=AsyncOperationType.IO_BOUND)
     @async_timeout(30.0)
     async def initialize(self) -> None:
@@ -256,80 +256,80 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         try:
             # Initialize AI framework
             await self.ai_framework.initialize()
-            
+
             # Initialize database with AI context
             await self._ai_initialize_database()
-            
+
             # Load existing catalog data with AI analysis
             await self._ai_load_catalog_data()
-            
+
             # Initialize AI reasoning for catalog patterns
             await self._ai_initialize_catalog_intelligence()
-            
+
             # Setup semantic analysis capabilities
             await self._ai_setup_semantic_analysis()
-            
+
             logger.info("Enhanced Catalog Manager Agent initialization complete")
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize enhanced catalog manager: {e}")
             raise
-    
+
     @a2a_handler("ai_resource_discovery")
     async def handle_ai_resource_discovery(self, message: A2AMessage) -> Dict[str, Any]:
         """AI-enhanced handler for resource discovery with sophisticated reasoning"""
         start_time = time.time()
-        
+
         try:
             # Extract discovery context from message with AI analysis
             discovery_context = await self._ai_extract_discovery_context(message)
             if not discovery_context:
                 return create_error_response("No valid discovery context found in message")
-            
+
             # AI-powered discovery analysis
             discovery_analysis = await self._ai_analyze_discovery_requirements(discovery_context)
-            
+
             # Intelligent resource matching with reasoning
             resource_matching = await self._ai_match_resources(
                 discovery_context, discovery_analysis
             )
-            
+
             # Discover resources with AI enhancements
             discovery_result = await self.ai_discover_resources(
                 discovery_context=discovery_context,
                 resource_matching=resource_matching,
                 context_id=message.conversation_id
             )
-            
+
             # AI learning from discovery process
             await self._ai_learn_from_discovery(discovery_context, discovery_result)
-            
+
             # Record metrics with AI insights
             self.catalog_metrics["discovery_requests"] += 1
             self.catalog_metrics["ai_optimizations"] += 1
-            
+
             processing_time = time.time() - start_time
-            
+
             return create_success_response({
                 **discovery_result.dict(),
                 "ai_processing_time": processing_time,
                 "ai_framework_version": "5.0.0"
             })
-            
+
         except Exception as e:
             logger.error(f"AI resource discovery failed: {e}")
             return create_error_response(f"AI resource discovery failed: {str(e)}")
-    
+
     @a2a_handler("ai_catalog_management")
     async def handle_ai_catalog_management(self, message: A2AMessage) -> Dict[str, Any]:
         """AI-enhanced handler for catalog management operations"""
         start_time = time.time()
-        
+
         try:
             # Extract catalog operation data with AI analysis
             operation_data = await self._ai_extract_catalog_operation(message)
             operation = operation_data.get('operation', 'register')
-            
+
             # AI-powered operation routing
             if operation == 'register':
                 result = await self._ai_register_resource(operation_data)
@@ -345,23 +345,23 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 result = await self._ai_delete_resource(operation_data)
             else:
                 return create_error_response(f"Unknown catalog operation: {operation}")
-            
+
             processing_time = time.time() - start_time
-            
+
             return create_success_response({
                 **result,
                 "ai_processing_time": processing_time,
                 "operation": operation
             })
-            
+
         except Exception as e:
             logger.error(f"AI catalog management failed: {e}")
             return create_error_response(f"AI catalog management failed: {str(e)}")
-    
+
     @a2a_skill("ai_semantic_analysis")
     async def ai_semantic_analysis_skill(self, resource_data: Dict[str, Any]) -> Dict[str, Any]:
         """AI-powered semantic analysis for catalog resources"""
-        
+
         # Use AI reasoning to analyze semantic content
         reasoning_result = await self.ai_framework.reasoning_engine.reason(
             problem="semantic_analysis",
@@ -372,23 +372,23 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             },
             strategy="semantic_based"
         )
-        
+
         # Extract semantic concepts
         semantic_concepts = await self._ai_extract_semantic_concepts(resource_data)
-        
+
         # Generate semantic categories
         semantic_categories = await self._ai_categorize_semantically(resource_data, semantic_concepts)
-        
+
         # Analyze semantic relationships
         semantic_relationships = await self._ai_analyze_semantic_relationships(
             resource_data, semantic_concepts
         )
-        
+
         # Generate enhanced tags
         enhanced_tags = await self._ai_generate_enhanced_tags(
             resource_data, semantic_concepts, semantic_categories
         )
-        
+
         return {
             "semantic_concepts": semantic_concepts,
             "semantic_categories": semantic_categories,
@@ -398,11 +398,11 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "confidence_score": reasoning_result.get("confidence", 0.0),
             "analysis_quality": "high"
         }
-    
+
     @a2a_skill("ai_quality_assessment")
     async def ai_quality_assessment_skill(self, resource_data: Dict[str, Any]) -> Dict[str, Any]:
         """AI-powered quality assessment for catalog resources"""
-        
+
         # Use AI reasoning for quality assessment
         reasoning_result = await self.ai_framework.reasoning_engine.reason(
             problem="quality_assessment",
@@ -413,19 +413,19 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             },
             strategy="quality_focused"
         )
-        
+
         # Assess completeness
         completeness_score = await self._ai_assess_completeness(resource_data)
-        
+
         # Assess accuracy
         accuracy_score = await self._ai_assess_accuracy(resource_data)
-        
+
         # Assess consistency
         consistency_score = await self._ai_assess_consistency(resource_data)
-        
+
         # Assess discoverability
         discoverability_score = await self._ai_assess_discoverability(resource_data)
-        
+
         # Calculate overall quality score
         overall_score = (
             completeness_score * 0.3 +
@@ -433,12 +433,12 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             consistency_score * 0.25 +
             discoverability_score * 0.2
         )
-        
+
         # Generate quality recommendations
         quality_recommendations = await self._ai_generate_quality_recommendations(
             resource_data, completeness_score, accuracy_score, consistency_score, discoverability_score
         )
-        
+
         return {
             "completeness_score": completeness_score,
             "accuracy_score": accuracy_score,
@@ -449,11 +449,11 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "reasoning_trace": reasoning_result.get("reasoning_trace", {}),
             "assessment_confidence": reasoning_result.get("confidence", 0.0)
         }
-    
+
     @a2a_skill("ai_relationship_mapping")
     async def ai_relationship_mapping_skill(self, resource_data: Dict[str, Any]) -> Dict[str, Any]:
         """AI-powered relationship mapping for catalog resources"""
-        
+
         # Use AI reasoning for relationship analysis
         reasoning_result = await self.ai_framework.reasoning_engine.reason(
             problem="relationship_mapping",
@@ -464,25 +464,25 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             },
             strategy="relation_based"
         )
-        
+
         # Find semantic relationships
         semantic_relationships = await self._ai_find_semantic_relationships(resource_data)
-        
+
         # Find functional relationships
         functional_relationships = await self._ai_find_functional_relationships(resource_data)
-        
+
         # Find hierarchical relationships
         hierarchical_relationships = await self._ai_find_hierarchical_relationships(resource_data)
-        
+
         # Find usage-based relationships
         usage_relationships = await self._ai_find_usage_relationships(resource_data)
-        
+
         # Generate relationship strength scores
         relationship_strengths = await self._ai_calculate_relationship_strengths(
-            semantic_relationships, functional_relationships, 
+            semantic_relationships, functional_relationships,
             hierarchical_relationships, usage_relationships
         )
-        
+
         return {
             "semantic_relationships": semantic_relationships,
             "functional_relationships": functional_relationships,
@@ -492,11 +492,11 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "reasoning_trace": reasoning_result.get("reasoning_trace", {}),
             "mapping_confidence": reasoning_result.get("confidence", 0.0)
         }
-    
+
     @a2a_skill("ai_usage_analytics")
     async def ai_usage_analytics_skill(self, resource_id: str, analytics_period: str = "30d") -> Dict[str, Any]:
         """AI-powered usage analytics for catalog resources"""
-        
+
         # Use AI reasoning for usage pattern analysis
         reasoning_result = await self.ai_framework.reasoning_engine.reason(
             problem="usage_analytics",
@@ -508,19 +508,19 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             },
             strategy="usage_pattern"
         )
-        
+
         # Analyze usage patterns
         usage_patterns = await self._ai_analyze_usage_patterns(resource_id, analytics_period)
-        
+
         # Identify usage trends
         usage_trends = await self._ai_identify_usage_trends(resource_id, usage_patterns)
-        
+
         # Generate usage insights
         usage_insights = await self._ai_generate_usage_insights(resource_id, usage_patterns, usage_trends)
-        
+
         # Predict future usage
         usage_predictions = await self._ai_predict_usage(resource_id, usage_patterns, usage_trends)
-        
+
         return {
             "usage_patterns": usage_patterns,
             "usage_trends": usage_trends,
@@ -530,47 +530,47 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "reasoning_trace": reasoning_result.get("reasoning_trace", {}),
             "analytics_confidence": reasoning_result.get("confidence", 0.0)
         }
-    
+
     @a2a_task(
         task_type="ai_catalog_discovery_workflow",
         description="Complete AI-enhanced catalog discovery workflow",
         timeout=300,
         retry_attempts=2
     )
-    async def ai_discover_resources(self, discovery_context: CatalogContext, 
+    async def ai_discover_resources(self, discovery_context: CatalogContext,
                                   resource_matching: Dict[str, Any], context_id: str) -> CatalogResult:
         """Complete AI-enhanced catalog discovery workflow"""
-        
+
         try:
             # Stage 1: AI semantic analysis
             semantic_analysis = await self.execute_skill("ai_semantic_analysis", discovery_context.search_criteria)
-            
+
             # Stage 2: AI quality filtering
             quality_filtering = await self._ai_filter_by_quality(discovery_context, semantic_analysis)
-            
+
             # Stage 3: AI relationship-based discovery
             relationship_discovery = await self._ai_discover_related_resources(
                 discovery_context, semantic_analysis, quality_filtering
             )
-            
+
             # Stage 4: AI usage-based ranking
             usage_ranking = await self._ai_rank_by_usage(relationship_discovery["candidates"])
-            
+
             # Stage 5: AI personalization
             personalized_results = await self._ai_personalize_results(
                 usage_ranking, discovery_context.user_context
             )
-            
+
             # Stage 6: AI result optimization
             optimized_results = await self._ai_optimize_results(
                 personalized_results, discovery_context.discovery_preferences
             )
-            
+
             # Stage 7: Generate AI insights
             discovery_insights = await self._ai_generate_discovery_insights(
                 discovery_context, semantic_analysis, relationship_discovery, optimized_results
             )
-            
+
             # Create result with AI metadata
             result = CatalogResult(
                 operation="discover",
@@ -589,14 +589,14 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 optimization_suggestions=optimized_results.get("suggestions", []),
                 discovery_insights=discovery_insights
             )
-            
+
             # Update usage analytics
             await self._ai_update_usage_analytics(discovery_context, result)
-            
+
             self.catalog_metrics["discovery_requests"] += 1
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"AI catalog discovery workflow failed: {e}")
             return CatalogResult(
@@ -605,22 +605,22 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 success=False,
                 error_details=str(e)
             )
-    
+
     # Private AI helper methods for enhanced functionality
-    
+
     async def _ai_extract_discovery_context(self, message: A2AMessage) -> Optional[CatalogContext]:
         """Extract discovery context from message with AI analysis"""
         request_data = {}
-        
+
         for part in message.parts:
             if part.kind == "data" and part.data:
                 request_data.update(part.data)
             elif part.kind == "file" and part.file:
                 request_data["file"] = part.file
-        
+
         if not request_data:
             return None
-        
+
         try:
             return CatalogContext(
                 operation_type=request_data.get("operation_type", "discover"),
@@ -634,7 +634,7 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         except Exception as e:
             logger.error(f"Failed to extract discovery context: {e}")
             return None
-    
+
     async def _ai_analyze_discovery_requirements(self, context: CatalogContext) -> Dict[str, Any]:
         """AI-powered discovery requirement analysis"""
         try:
@@ -644,7 +644,7 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 context=context.dict(),
                 strategy="context_aware"
             )
-            
+
             return {
                 "search_intent": await self._ai_extract_search_intent(context.search_criteria),
                 "resource_preferences": await self._ai_extract_resource_preferences(context.discovery_preferences),
@@ -656,25 +656,25 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         except Exception as e:
             logger.error(f"AI discovery requirement analysis failed: {e}")
             return {"error": str(e), "analysis_successful": False}
-    
-    async def _ai_match_resources(self, context: CatalogContext, 
+
+    async def _ai_match_resources(self, context: CatalogContext,
                                 analysis: Dict[str, Any]) -> Dict[str, Any]:
         """AI-powered resource matching"""
         try:
             # Semantic matching
             semantic_matches = await self._ai_semantic_matching(context.search_criteria, analysis)
-            
+
             # Quality-based matching
             quality_matches = await self._ai_quality_matching(context.quality_requirements, analysis)
-            
+
             # Usage-pattern matching
             usage_matches = await self._ai_usage_pattern_matching(context.user_context, analysis)
-            
+
             # Combine matching results
             combined_matches = await self._ai_combine_matching_results(
                 semantic_matches, quality_matches, usage_matches
             )
-            
+
             return {
                 "semantic_matches": semantic_matches,
                 "quality_matches": quality_matches,
@@ -685,8 +685,8 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         except Exception as e:
             logger.error(f"AI resource matching failed: {e}")
             return {"error": str(e), "matching_successful": False}
-    
-    async def _ai_learn_from_discovery(self, context: CatalogContext, 
+
+    async def _ai_learn_from_discovery(self, context: CatalogContext,
                                      result: CatalogResult) -> None:
         """AI learning from discovery process"""
         try:
@@ -697,7 +697,7 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "timestamp": datetime.now().isoformat(),
                 "success": result.success
             }
-            
+
             await self.ai_framework.adaptive_learning.learn(
                 experience_type="catalog_discovery",
                 context=learning_experience,
@@ -706,14 +706,14 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             )
         except Exception as e:
             logger.error(f"AI learning from discovery failed: {e}")
-    
+
     async def _ai_initialize_database(self):
         """Initialize database with AI-enhanced schema"""
         try:
             os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
             self.db_connection = await aiosqlite.connect(self.db_path)
             self.db_connection.row_factory = aiosqlite.Row
-            
+
             # Enhanced ORD resources table with AI fields
             await self.db_connection.execute("""
                 CREATE TABLE IF NOT EXISTS enhanced_ord_resources (
@@ -739,13 +739,13 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     last_modified_by TEXT
                 )
             """)
-            
+
             await self.db_connection.commit()
             logger.info("AI-enhanced catalog database initialized")
         except Exception as e:
             logger.error(f"Failed to initialize AI-enhanced database: {e}")
             raise
-    
+
     async def _ai_load_catalog_data(self):
         """Load existing catalog data with AI analysis"""
         try:
@@ -754,7 +754,7 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     "SELECT * FROM enhanced_ord_resources"
                 )
                 rows = await cursor.fetchall()
-                
+
                 for row in rows:
                     resource = ORDResource(
                         ord_id=row["ord_id"],
@@ -776,11 +776,11 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         ai_insights=json.loads(row["ai_insights"]) if row["ai_insights"] else {}
                     )
                     self.ord_cache[resource.ord_id] = resource
-                
+
                 logger.info(f"Loaded {len(self.ord_cache)} resources with AI enhancements")
         except Exception as e:
             logger.warning(f"Failed to load catalog data: {e}")
-    
+
     async def _ai_initialize_catalog_intelligence(self):
         """Initialize AI reasoning for catalog patterns"""
         try:
@@ -795,48 +795,48 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 },
                 temporal_context={"scope": "persistent", "retention": "long_term"}
             )
-            
+
             logger.info("AI catalog intelligence initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize AI catalog intelligence: {e}")
-    
+
     async def _ai_setup_semantic_analysis(self):
         """Setup semantic analysis capabilities"""
         try:
             # Initialize semantic analysis components
             self.semantic_embeddings = {}
             self.optimization_insights = {}
-            
+
             logger.info("AI semantic analysis capabilities setup complete")
         except Exception as e:
             logger.error(f"Failed to setup semantic analysis: {e}")
-    
+
     # Additional AI helper methods for core functionality
     async def _ai_extract_semantic_concepts(self, resource_data: Dict[str, Any]) -> List[str]:
         """Extract semantic concepts from resource data"""
         concepts = []
         text_content = f"{resource_data.get('title', '')} {resource_data.get('description', '')}"
-        
+
         # Extract technical concepts
         tech_keywords = ["api", "service", "data", "integration", "analytics", "ml", "ai"]
         for keyword in tech_keywords:
             if keyword.lower() in text_content.lower():
                 concepts.append(keyword)
-        
+
         return concepts
-    
-    async def _ai_categorize_semantically(self, resource_data: Dict[str, Any], 
+
+    async def _ai_categorize_semantically(self, resource_data: Dict[str, Any],
                                         concepts: List[str]) -> List[str]:
         """Generate semantic categories based on concepts"""
         categories = []
-        
+
         if any(concept in ["api", "service", "integration"] for concept in concepts):
             categories.append("integration")
         if any(concept in ["data", "analytics"] for concept in concepts):
             categories.append("data_processing")
         if any(concept in ["ml", "ai"] for concept in concepts):
             categories.append("artificial_intelligence")
-        
+
         return categories
 
     # Blockchain Integration Message Handlers
@@ -848,24 +848,24 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             resource_types = content.get('resource_types', [])
             quality_threshold = content.get('quality_threshold', 0.5)
             requester_address = message.get('from_address')
-            
+
             if not search_query:
                 return {
                     'status': 'error',
                     'operation': 'blockchain_catalog_search',
                     'error': 'search_query is required'
                 }
-            
+
             # Verify requester trust for advanced search features
             min_reputation = 30 if search_type == 'semantic' else 20
-            
+
             if requester_address and not await self.verify_trust(requester_address, min_reputation):
                 return {
                     'status': 'error',
                     'operation': 'blockchain_catalog_search',
                     'error': f'Requester failed trust verification for {search_type} search'
                 }
-            
+
             # Perform catalog search based on type
             if search_type == 'semantic':
                 search_results = await self._perform_semantic_search(search_query, resource_types, quality_threshold)
@@ -875,7 +875,7 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 search_results = await self._perform_fuzzy_search(search_query, resource_types)
             else:  # category
                 search_results = await self._perform_category_search(search_query, resource_types)
-            
+
             # Create blockchain-verifiable search result
             blockchain_search = {
                 'search_query': search_query,
@@ -889,16 +889,16 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 'result_count': len(search_results) if search_results else 0,
                 'search_hash': self._generate_search_hash(search_query, search_results)
             }
-            
+
             logger.info(f"🔍 Blockchain catalog search completed: {search_query} ({len(search_results or [])} results)")
-            
+
             return {
                 'status': 'success',
                 'operation': 'blockchain_catalog_search',
                 'result': blockchain_search,
                 'message': f"Catalog search completed with {blockchain_search['result_count']} results"
             }
-            
+
         except Exception as e:
             logger.error(f"❌ Blockchain catalog search failed: {e}")
             return {
@@ -906,7 +906,7 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 'operation': 'blockchain_catalog_search',
                 'error': str(e)
             }
-    
+
     async def _handle_blockchain_resource_registration(self, message: Dict[str, Any], content: Dict[str, Any]) -> Dict[str, Any]:
         """Handle blockchain-based resource registration requests with verification"""
         try:
@@ -914,14 +914,14 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             resource_type = content.get('resource_type', 'api')
             validation_level = content.get('validation_level', 'standard')  # basic, standard, comprehensive
             requester_address = message.get('from_address')
-            
+
             if not resource_data:
                 return {
                     'status': 'error',
                     'operation': 'blockchain_resource_registration',
                     'error': 'resource_data is required'
                 }
-            
+
             # Verify requester trust based on validation level
             min_reputation_map = {
                 'basic': 40,
@@ -929,14 +929,14 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 'comprehensive': 75
             }
             min_reputation = min_reputation_map.get(validation_level, 60)
-            
+
             if requester_address and not await self.verify_trust(requester_address, min_reputation):
                 return {
                     'status': 'error',
                     'operation': 'blockchain_resource_registration',
                     'error': f'Requester failed trust verification for {validation_level} validation level'
                 }
-            
+
             # Perform resource registration with validation
             if validation_level == 'basic':
                 registration_result = await self._register_resource_basic(resource_data, resource_type)
@@ -944,7 +944,7 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 registration_result = await self._register_resource_standard(resource_data, resource_type)
             else:  # comprehensive
                 registration_result = await self._register_resource_comprehensive(resource_data, resource_type)
-            
+
             # Create blockchain-verifiable registration result
             blockchain_registration = {
                 'resource_data': resource_data,
@@ -957,16 +957,16 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 'resource_id': registration_result.get('resource_id') if isinstance(registration_result, dict) else None,
                 'registration_status': registration_result.get('status') if isinstance(registration_result, dict) else 'unknown'
             }
-            
+
             logger.info(f"📝 Blockchain resource registration completed: {resource_type}")
-            
+
             return {
                 'status': 'success',
                 'operation': 'blockchain_resource_registration',
                 'result': blockchain_registration,
                 'message': f"Resource registration completed with {validation_level} validation"
             }
-            
+
         except Exception as e:
             logger.error(f"❌ Blockchain resource registration failed: {e}")
             return {
@@ -974,7 +974,7 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 'operation': 'blockchain_resource_registration',
                 'error': str(e)
             }
-    
+
     async def _handle_blockchain_catalog_consensus(self, message: Dict[str, Any], content: Dict[str, Any]) -> Dict[str, Any]:
         """Handle blockchain-based catalog consensus operations involving multiple catalog managers"""
         try:
@@ -982,14 +982,14 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             catalog_data = content.get('catalog_data')
             manager_addresses = content.get('manager_addresses', [])
             consensus_threshold = content.get('consensus_threshold', 0.7)
-            
+
             if not operation_type or not catalog_data:
                 return {
                     'status': 'error',
                     'operation': 'blockchain_catalog_consensus',
                     'error': 'operation_type and catalog_data are required'
                 }
-            
+
             # Verify all catalog manager agents
             verified_managers = []
             for manager_address in manager_addresses:
@@ -998,20 +998,20 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     logger.info(f"✅ Catalog Manager {manager_address} verified for consensus")
                 else:
                     logger.warning(f"⚠️ Catalog Manager {manager_address} failed trust verification")
-            
+
             if len(verified_managers) < 2:
                 return {
                     'status': 'error',
                     'operation': 'blockchain_catalog_consensus',
                     'error': 'At least 2 verified catalog managers required for consensus'
                 }
-            
+
             # Perform own operation
             my_operation = await self._perform_catalog_operation(operation_type, catalog_data)
-            
+
             # Send consensus requests to other verified managers via blockchain
             manager_results = [{'manager': 'self', 'result': my_operation}]
-            
+
             for manager_address in verified_managers:
                 if manager_address != (self.blockchain_identity.agent_address if hasattr(self, 'blockchain_identity') else ''):
                     try:
@@ -1032,12 +1032,12 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         })
                     except Exception as e:
                         logger.warning(f"Failed to get catalog operation from {manager_address}: {e}")
-            
+
             # Analyze consensus
             consensus_result = await self._analyze_catalog_consensus(
                 manager_results, operation_type, consensus_threshold
             )
-            
+
             catalog_consensus = {
                 'operation_type': operation_type,
                 'catalog_data': catalog_data,
@@ -1049,16 +1049,16 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 'consensus_time': datetime.utcnow().isoformat(),
                 'consensus_reached': consensus_result.get('consensus_reached', False)
             }
-            
+
             logger.info(f"🤝 Blockchain catalog consensus completed: {operation_type}")
-            
+
             return {
                 'status': 'success',
                 'operation': 'blockchain_catalog_consensus',
                 'result': catalog_consensus,
                 'message': f"Catalog consensus {'reached' if consensus_result.get('consensus_reached', False) else 'not reached'}"
             }
-            
+
         except Exception as e:
             logger.error(f"❌ Blockchain catalog consensus failed: {e}")
             return {
@@ -1066,7 +1066,7 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 'operation': 'blockchain_catalog_consensus',
                 'error': str(e)
             }
-    
+
     async def _perform_semantic_search(self, query: str, resource_types: List[str], quality_threshold: float) -> List[Dict[str, Any]]:
         """Perform semantic search in catalog (simplified implementation)"""
         try:
@@ -1085,7 +1085,7 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         except Exception as e:
             logger.error(f"Semantic search failed: {e}")
             return []
-    
+
     async def _perform_exact_search(self, query: str, resource_types: List[str]) -> List[Dict[str, Any]]:
         """Perform exact search in catalog (simplified implementation)"""
         try:
@@ -1102,7 +1102,7 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         except Exception as e:
             logger.error(f"Exact search failed: {e}")
             return []
-    
+
     async def _perform_fuzzy_search(self, query: str, resource_types: List[str]) -> List[Dict[str, Any]]:
         """Perform fuzzy search in catalog (simplified implementation)"""
         try:
@@ -1119,7 +1119,7 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         except Exception as e:
             logger.error(f"Fuzzy search failed: {e}")
             return []
-    
+
     async def _perform_category_search(self, category: str, resource_types: List[str]) -> List[Dict[str, Any]]:
         """Perform category-based search in catalog (simplified implementation)"""
         try:
@@ -1136,7 +1136,7 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         except Exception as e:
             logger.error(f"Category search failed: {e}")
             return []
-    
+
     async def _register_resource_basic(self, resource_data: Dict[str, Any], resource_type: str) -> Dict[str, Any]:
         """Register resource with basic validation (simplified implementation)"""
         try:
@@ -1153,7 +1153,7 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 'error': str(e),
                 'validation_level': 'basic'
             }
-    
+
     async def _register_resource_standard(self, resource_data: Dict[str, Any], resource_type: str) -> Dict[str, Any]:
         """Register resource with standard validation (simplified implementation)"""
         try:
@@ -1171,7 +1171,7 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 'error': str(e),
                 'validation_level': 'standard'
             }
-    
+
     async def _register_resource_comprehensive(self, resource_data: Dict[str, Any], resource_type: str) -> Dict[str, Any]:
         """Register resource with comprehensive validation (simplified implementation)"""
         try:
@@ -1191,7 +1191,7 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 'error': str(e),
                 'validation_level': 'comprehensive'
             }
-    
+
     async def _perform_catalog_operation(self, operation_type: str, catalog_data: Dict[str, Any]) -> Dict[str, Any]:
         """Perform catalog operation for consensus (simplified implementation)"""
         try:
@@ -1223,7 +1223,7 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 'error': str(e),
                 'confidence': 0.0
             }
-    
+
     async def _analyze_catalog_consensus(self, results: List[Dict[str, Any]], operation_type: str, threshold: float) -> Dict[str, Any]:
         """Analyze consensus from catalog operation results"""
         try:
@@ -1232,21 +1232,21 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 result = result_data['result']
                 if isinstance(result, dict) and result.get('confidence') is not None:
                     valid_results.append(result)
-            
+
             if not valid_results:
                 return {
                     'consensus_reached': False,
                     'error': 'No valid results for consensus analysis'
                 }
-            
+
             # Calculate consensus metrics
             avg_confidence = sum(r.get('confidence', 0.0) for r in valid_results) / len(valid_results)
             quality_scores = [r.get('quality_score', 0.0) for r in valid_results if r.get('quality_score') is not None]
             avg_quality = sum(quality_scores) / len(quality_scores) if quality_scores else 0.0
-            
+
             # Determine consensus
             consensus_reached = avg_confidence >= threshold
-            
+
             return {
                 'consensus_reached': consensus_reached,
                 'average_confidence': avg_confidence,
@@ -1255,13 +1255,13 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 'consensus_threshold': threshold,
                 'operation_type': operation_type
             }
-            
+
         except Exception as e:
             return {
                 'consensus_reached': False,
                 'error': f'Consensus analysis failed: {str(e)}'
             }
-    
+
     def _generate_search_hash(self, query: str, results: List[Dict[str, Any]]) -> str:
         """Generate a verification hash for search results"""
         try:
@@ -1270,22 +1270,22 @@ class EnhancedCatalogManagerAgent(SecureA2AAgent, BlockchainIntegrationMixin):
 
 # A2A Protocol Compliance: All imports must be available
 # No fallback implementations allowed - the agent must have all required dependencies
-            
+
             result_summary = f"{query}_{len(results or [])}_{datetime.utcnow().strftime('%Y%m%d')}"
             return hashlib.sha256(result_summary.encode()).hexdigest()[:16]
         except Exception:
             return "search_hash_unavailable"
-    
+
     async def cleanup(self) -> None:
         """Cleanup agent resources with AI state preservation"""
         try:
             # Save AI-enhanced state
             if self.db_connection:
                 await self.db_connection.close()
-            
+
             # Cleanup AI framework
             await self.ai_framework.cleanup()
-            
+
             logger.info(f"Enhanced Catalog Manager Agent cleanup completed with AI state preservation")
         except Exception as e:
             logger.error(f"Enhanced Catalog Manager Agent cleanup failed: {e}")

@@ -21,23 +21,23 @@ class ContractInfo:
     name: str
     network: str
     deployed_at: Optional[str] = None
-    
+
 class ContractConfigManager:
     """Manages contract configuration from deployment artifacts"""
-    
+
     def __init__(self, network: str = None, artifacts_path: str = None):
         self.network = network or os.getenv('A2A_NETWORK', 'localhost')
         self.artifacts_path = artifacts_path or self._find_artifacts_path()
         self.contracts: Dict[str, ContractInfo] = {}
         self._load_contracts()
-    
+
     def _find_artifacts_path(self) -> str:
         """Find the deployment artifacts path"""
         # Look for a2a_network deployment artifacts
         possible_paths = [
             # Relative to current project
             "../a2a_network/broadcast/DeployUpgradeable.s.sol",
-            "../a2a_network/broadcast/Deploy.s.sol", 
+            "../a2a_network/broadcast/Deploy.s.sol",
             "../../a2a_network/broadcast/DeployUpgradeable.s.sol",
             "../../a2a_network/broadcast/Deploy.s.sol",
             # Environment variable
@@ -46,39 +46,39 @@ class ContractConfigManager:
             "../artifacts/broadcast",
             "./artifacts/broadcast"
         ]
-        
+
         for path in possible_paths:
             if path and Path(path).exists():
                 logger.info(f"Found artifacts path: {path}")
                 return str(Path(path).resolve())
-        
+
         logger.warning("No deployment artifacts found, using fallback configuration")
         return ""
-    
+
     def _load_contracts(self):
         """Load contract information from deployment artifacts"""
         if not self.artifacts_path:
             self._load_fallback_contracts()
             return
-            
+
         try:
             # Load from deployment artifacts
             self._load_from_artifacts()
         except Exception as e:
             logger.error(f"Failed to load from artifacts: {e}")
             self._load_fallback_contracts()
-    
+
     def _load_from_artifacts(self):
         """Load contracts from Foundry deployment artifacts"""
         artifacts_dir = Path(self.artifacts_path)
-        
+
         # Look for network-specific deployments
         network_dirs = [
             artifacts_dir / self.network,
             artifacts_dir / "31337",  # Anvil default
             artifacts_dir / "1337",   # Ganache default
         ]
-        
+
         for network_dir in network_dirs:
             if network_dir.exists():
                 self._load_network_contracts(network_dir)
@@ -89,16 +89,16 @@ class ContractConfigManager:
                 if item.is_dir() and item.name.isdigit():
                     self._load_network_contracts(item)
                     break
-    
+
     def _load_network_contracts(self, network_dir: Path):
         """Load contracts from a specific network directory"""
         run_latest = network_dir / "run-latest.json"
         if not run_latest.exists():
             return
-            
+
         with open(run_latest) as f:
             deployment_data = json.load(f)
-        
+
         # Extract contract addresses from deployment
         for tx in deployment_data.get('transactions', []):
             if tx.get('transactionType') == 'CREATE':
@@ -119,9 +119,9 @@ class ContractConfigManager:
                         network=self.network,
                         deployed_at=tx.get('timestamp')
                     )
-        
+
         logger.info(f"Loaded {len(self.contracts)} contracts from deployment artifacts")
-    
+
     def _load_contract_abi(self, contract_name: str) -> list:
         """Load contract ABI from artifacts"""
         try:
@@ -133,7 +133,7 @@ class ContractConfigManager:
                 if (project_root / 'a2aNetwork').exists():
                     break
                 project_root = project_root.parent
-            
+
             # Look for ABI in a2a_network out directory
             abi_paths = [
                 # Absolute path from project root
@@ -147,7 +147,7 @@ class ContractConfigManager:
                 Path(f"../a2a_network/out/{contract_name}Upgradeable.sol/{contract_name}Upgradeable.json"),
                 Path(f"../../a2a_network/out/{contract_name}Upgradeable.sol/{contract_name}Upgradeable.json"),
             ]
-            
+
             for abi_path in abi_paths:
                 if abi_path.exists():
                     with open(abi_path) as f:
@@ -156,17 +156,17 @@ class ContractConfigManager:
                         if abi:
                             logger.info(f"Loaded ABI for {contract_name} from {abi_path}")
                             return abi
-            
+
             logger.warning(f"ABI not found for {contract_name}, using empty ABI")
             return []
         except Exception as e:
             logger.error(f"Failed to load ABI for {contract_name}: {e}")
             return []
-    
+
     def _load_fallback_contracts(self):
         """Load fallback contract configuration from environment variables"""
         logger.info("Loading fallback contract configuration")
-        
+
         # AgentRegistry
         registry_address = os.getenv('A2A_AGENT_REGISTRY_ADDRESS')
         if registry_address:
@@ -176,7 +176,7 @@ class ContractConfigManager:
                 name='AgentRegistry',
                 network=self.network
             )
-        
+
         # MessageRouter
         router_address = os.getenv('A2A_MESSAGE_ROUTER_ADDRESS')
         if router_address:
@@ -186,7 +186,7 @@ class ContractConfigManager:
                 name='MessageRouter',
                 network=self.network
             )
-        
+
         # ORDRegistry
         ord_address = os.getenv('A2A_ORD_REGISTRY_ADDRESS')
         if ord_address:
@@ -196,30 +196,30 @@ class ContractConfigManager:
                 name='ORDRegistry',
                 network=self.network
             )
-    
+
     def get_contract(self, name: str) -> Optional[ContractInfo]:
         """Get contract information by name"""
         return self.contracts.get(name)
-    
+
     def get_contract_address(self, name: str) -> Optional[str]:
         """Get contract address by name"""
         contract = self.get_contract(name)
         return contract.address if contract else None
-    
+
     def get_contract_abi(self, name: str) -> Optional[list]:
         """Get contract ABI by name"""
         contract = self.get_contract(name)
         return contract.abi if contract else None
-    
+
     def is_contract_available(self, name: str) -> bool:
         """Check if contract is available and has valid address"""
         contract = self.get_contract(name)
         return contract is not None and bool(contract.address) and contract.address != '0x'
-    
+
     def get_all_contracts(self) -> Dict[str, ContractInfo]:
         """Get all loaded contracts"""
         return self.contracts.copy()
-    
+
     def load_config(self) -> Dict[str, Any]:
         """Load and return the complete contract configuration"""
         config = {
@@ -227,7 +227,7 @@ class ContractConfigManager:
             'artifacts_path': self.artifacts_path,
             'contracts': {}
         }
-        
+
         for name, contract_info in self.contracts.items():
             config['contracts'][name] = {
                 'address': contract_info.address,
@@ -236,7 +236,7 @@ class ContractConfigManager:
                 'network': contract_info.network,
                 'deployed_at': contract_info.deployed_at
             }
-        
+
         # Ensure we have the required contracts with fallback values
         if 'AgentRegistry' not in config['contracts']:
             registry_address = os.getenv('A2A_AGENT_REGISTRY_ADDRESS', '0x5FbDB2315678afecb367f032d93F642f64180aa3')
@@ -247,7 +247,7 @@ class ContractConfigManager:
                 'network': self.network,
                 'deployed_at': None
             }
-            
+
         if 'MessageRouter' not in config['contracts']:
             router_address = os.getenv('A2A_MESSAGE_ROUTER_ADDRESS', '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512')
             config['contracts']['MessageRouter'] = {
@@ -257,7 +257,7 @@ class ContractConfigManager:
                 'network': self.network,
                 'deployed_at': None
             }
-            
+
         if 'ORDRegistry' not in config['contracts']:
             ord_address = os.getenv('A2A_ORD_REGISTRY_ADDRESS', '0x5FbDB2315678afecb367f032d93F642f64180aa3')
             config['contracts']['ORDRegistry'] = {
@@ -267,7 +267,7 @@ class ContractConfigManager:
                 'network': self.network,
                 'deployed_at': None
             }
-        
+
         return config
 
     def validate_configuration(self) -> Dict[str, Any]:
@@ -278,9 +278,9 @@ class ContractConfigManager:
             'warnings': [],
             'contracts': {}
         }
-        
+
         required_contracts = ['AgentRegistry', 'MessageRouter']
-        
+
         for contract_name in required_contracts:
             contract = self.get_contract(contract_name)
             if not contract:
@@ -295,10 +295,10 @@ class ContractConfigManager:
                     'network': contract.network,
                     'abi_loaded': len(contract.abi) > 0
                 }
-                
+
                 if len(contract.abi) == 0:
                     validation_result['warnings'].append(f"No ABI loaded for {contract_name}")
-        
+
         return validation_result
 
 # Global configuration manager instance

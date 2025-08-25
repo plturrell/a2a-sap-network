@@ -45,7 +45,7 @@ class XAIService:
             "stream": stream,
             "temperature": temperature
         }
-        
+
         if max_tokens:
             payload["max_tokens"] = max_tokens
 
@@ -78,18 +78,18 @@ class XAIService:
         Generate a response from X.AI Grok with optional system prompt
         """
         messages = []
-        
+
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
-        
+
         messages.append({"role": "user", "content": prompt})
-        
+
         response = await self.chat_completion(
             messages=messages,
             temperature=temperature,
             max_tokens=max_tokens
         )
-        
+
         return response["choices"][0]["message"]["content"]
 
 

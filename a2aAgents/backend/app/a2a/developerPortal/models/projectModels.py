@@ -68,7 +68,7 @@ class DeploymentStatus(str, Enum):
 class ProjectDB(Base):
     """Database model for projects"""
     __tablename__ = "projects"
-    
+
     id = Column(String, primary_key=True)
     name = Column(String, nullable=False)
     description = Column(Text)
@@ -92,7 +92,7 @@ class ProjectDB(Base):
 class AgentDB(Base):
     """Database model for agents"""
     __tablename__ = "agents"
-    
+
     id = Column(String, primary_key=True)
     project_id = Column(String, nullable=False)
     name = Column(String, nullable=False)
@@ -111,7 +111,7 @@ class AgentDB(Base):
 class WorkflowDB(Base):
     """Database model for workflows"""
     __tablename__ = "workflows"
-    
+
     id = Column(String, primary_key=True)
     project_id = Column(String, nullable=False)
     name = Column(String, nullable=False)
@@ -167,33 +167,33 @@ class EnhancedProject(BaseModel):
     last_modified: datetime = Field(default_factory=datetime.utcnow)
     created_by: str = "system"
     tags: List[str] = Field(default_factory=list)
-    
+
     # Enhanced data
     agents: List[Dict[str, Any]] = Field(default_factory=list)
     workflows: List[Dict[str, Any]] = Field(default_factory=list)
     templates: List[str] = Field(default_factory=list)
     dependencies: List[ProjectDependency] = Field(default_factory=list)
-    
+
     # Configuration and deployment
     deployment_config: DeploymentConfig = Field(default_factory=DeploymentConfig)
     test_results: Dict[str, Any] = Field(default_factory=dict)
     metrics: ProjectMetrics = Field(default_factory=ProjectMetrics)
-    
+
     # Metadata
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
 class ProjectDataManager:
     """Enhanced project data manager with real data source connections"""
-    
+
     def __init__(self, database_url: str = None):
         # Use environment variable or secure default
         self.database_url = database_url or os.getenv('PROJECT_DATABASE_URL', 'sqlite:///./data/a2a_projects.db')
-        
+
         # Validate database URL for security
         if not self.database_url:
             raise ValueError("Database URL must be configured")
-        
+
         # Security configuration based on database type
         if self.database_url.startswith('sqlite:'):
             # Secure SQLite configuration
@@ -221,142 +221,142 @@ class ProjectDataManager:
         else:
             # Default secure configuration
             engine_kwargs = {'echo': False, 'pool_pre_ping': True}
-        
+
         self.engine = create_engine(self.database_url, **engine_kwargs)
-        
+
         # Ensure data directory exists for SQLite
         if self.database_url.startswith('sqlite:'):
             db_path = self.database_url.replace('sqlite:///', '')
             os.makedirs(os.path.dirname(db_path) if os.path.dirname(db_path) else '.', exist_ok=True)
-        
+
         Base.metadata.create_all(bind=self.engine)
         SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
         self.db_session = SessionLocal()
-        
+
         # In-memory cache for performance
         self.project_cache: Dict[str, EnhancedProject] = {}
         self.cache_ttl = timedelta(minutes=5)
         self.last_cache_update = datetime.utcnow()
-        
+
         logger.info(f"ProjectDataManager initialized with database: {database_url}")
-    
+
     async def get_all_projects(self) -> List[EnhancedProject]:
         """Get all projects from database"""
         try:
             # Check cache first
             if self._is_cache_valid():
                 return list(self.project_cache.values())
-            
+
             # Fetch from database
             db_projects = self.db_session.query(ProjectDB).all()
             projects = []
-            
+
             for db_project in db_projects:
                 project = self._db_to_pydantic(db_project)
                 projects.append(project)
                 self.project_cache[project.id] = project
-            
+
             self.last_cache_update = datetime.utcnow()
             return projects
-            
+
         except Exception as e:
             logger.error(f"Error fetching projects: {e}")
             return []
-    
+
     async def get_project(self, project_id: str) -> Optional[EnhancedProject]:
         """Get single project by ID"""
         try:
             # Check cache first
             if project_id in self.project_cache and self._is_cache_valid():
                 return self.project_cache[project_id]
-            
+
             # Fetch from database
             db_project = self.db_session.query(ProjectDB).filter(ProjectDB.id == project_id).first()
             if not db_project:
                 return None
-            
+
             project = self._db_to_pydantic(db_project)
             self.project_cache[project_id] = project
             return project
-            
+
         except Exception as e:
             logger.error(f"Error fetching project {project_id}: {e}")
             return None
-    
+
     async def create_project(self, project_data: Dict[str, Any]) -> EnhancedProject:
         """Create new project"""
         try:
             project = EnhancedProject(**project_data)
-            
+
             # Save to database
             db_project = self._pydantic_to_db(project)
             self.db_session.add(db_project)
             self.db_session.commit()
-            
+
             # Update cache
             self.project_cache[project.id] = project
-            
+
             logger.info(f"Created project: {project.name} ({project.id})")
             return project
-            
+
         except Exception as e:
             self.db_session.rollback()
             logger.error(f"Error creating project: {e}")
             raise
-    
+
     async def update_project(self, project_id: str, updates: Dict[str, Any]) -> Optional[EnhancedProject]:
         """Update existing project"""
         try:
             db_project = self.db_session.query(ProjectDB).filter(ProjectDB.id == project_id).first()
             if not db_project:
                 return None
-            
+
             # Update fields
             for key, value in updates.items():
                 if hasattr(db_project, key):
                     setattr(db_project, key, value)
-            
+
             db_project.last_modified = datetime.utcnow()
             self.db_session.commit()
-            
+
             # Update cache
             project = self._db_to_pydantic(db_project)
             self.project_cache[project_id] = project
-            
+
             return project
-            
+
         except Exception as e:
             self.db_session.rollback()
             logger.error(f"Error updating project {project_id}: {e}")
             return None
-    
+
     async def delete_project(self, project_id: str) -> bool:
         """Delete project"""
         try:
             db_project = self.db_session.query(ProjectDB).filter(ProjectDB.id == project_id).first()
             if not db_project:
                 return False
-            
+
             self.db_session.delete(db_project)
             self.db_session.commit()
-            
+
             # Remove from cache
             self.project_cache.pop(project_id, None)
-            
+
             logger.info(f"Deleted project: {project_id}")
             return True
-            
+
         except Exception as e:
             self.db_session.rollback()
             logger.error(f"Error deleting project {project_id}: {e}")
             return False
-    
+
     async def get_project_metrics(self, project_id: str) -> Optional[ProjectMetrics]:
         """Get project performance metrics"""
         project = await self.get_project(project_id)
         if not project:
             return None
-        
+
         # Calculate real-time metrics
         metrics = ProjectMetrics(
             total_agents=len(project.agents),
@@ -366,13 +366,13 @@ class ProjectDataManager:
             avg_response_time=project.test_results.get("avg_response_time", 0.0),
             error_rate=project.test_results.get("error_rate", 0.0)
         )
-        
+
         return metrics
-    
+
     def _is_cache_valid(self) -> bool:
         """Check if cache is still valid"""
         return datetime.utcnow() - self.last_cache_update < self.cache_ttl
-    
+
     def _db_to_pydantic(self, db_project: ProjectDB) -> EnhancedProject:
         """Convert database model to Pydantic model"""
         return EnhancedProject(
@@ -395,7 +395,7 @@ class ProjectDataManager:
             metrics=ProjectMetrics(**(db_project.performance_metrics or {})),
             metadata=db_project.metadata or {}
         )
-    
+
     def _pydantic_to_db(self, project: EnhancedProject) -> ProjectDB:
         """Convert Pydantic model to database model"""
         return ProjectDB(

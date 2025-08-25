@@ -45,19 +45,19 @@ class CacheEntry(BaseModel):
 class CacheManager:
     """
     3-Tier Cache Manager for BDC Core
-    
+
     L1: In-memory LRU cache for hot data
     L2: Redis distributed cache for processed results
     L3: Database cache tables for long-term storage
     """
-    
+
     def __init__(self, config: Optional[CacheConfig] = None):
         self.config = config or CacheConfig()
         self._l1_cache: Dict[str, CacheEntry] = {}
         self._l1_access_order: List[str] = []
         self._redis_client: Optional[redis.Redis] = None
         self._lock = asyncio.Lock()
-        
+
     async def initialize(self):
         """Initialize cache connections"""
         if self.config.enable_l2:
@@ -72,12 +72,12 @@ class CacheManager:
             except Exception as e:
                 logger.error(f"Failed to connect to Redis: {e}")
                 self.config.enable_l2 = False
-    
+
     async def close(self):
         """Close cache connections"""
         if self._redis_client:
             await self._redis_client.close()
-    
+
     def _generate_key(self, namespace: str, key: str, **kwargs) -> str:
         """Generate cache key with namespace and parameters"""
         key_data = {"key": key, **kwargs}
@@ -85,16 +85,16 @@ class CacheManager:
             json.dumps(key_data, sort_keys=True).encode()
         ).hexdigest()[:16]
         return f"{namespace}:{key_hash}"
-    
+
     def _is_expired(self, entry: CacheEntry) -> bool:
         """Check if cache entry is expired"""
         return datetime.now() > entry.expires_at
-    
+
     async def _l1_get(self, cache_key: str) -> Optional[Any]:
         """Get from L1 cache"""
         if not self.config.enable_l1:
             return None
-            
+
         async with self._lock:
             if cache_key in self._l1_cache:
                 entry = self._l1_cache[cache_key]
@@ -103,21 +103,21 @@ class CacheManager:
                     if cache_key in self._l1_access_order:
                         self._l1_access_order.remove(cache_key)
                     return None
-                
+
                 # Update access
                 entry.access_count += 1
                 if cache_key in self._l1_access_order:
                     self._l1_access_order.remove(cache_key)
                 self._l1_access_order.append(cache_key)
-                
+
                 return entry.data
         return None
-    
+
     async def _l1_set(self, cache_key: str, value: Any, ttl: int):
         """Set in L1 cache with LRU eviction"""
         if not self.config.enable_l1:
             return
-            
+
         async with self._lock:
             # Evict if at capacity
             while len(self._l1_cache) >= self.config.l1_max_size:
@@ -126,7 +126,7 @@ class CacheManager:
                     self._l1_cache.pop(oldest_key, None)
                 else:
                     break
-            
+
             # Add new entry
             entry = CacheEntry(
                 data=value,
@@ -136,12 +136,12 @@ class CacheManager:
             )
             self._l1_cache[cache_key] = entry
             self._l1_access_order.append(cache_key)
-    
+
     async def _l2_get(self, cache_key: str) -> Optional[Any]:
         """Get from L2 cache (Redis)"""
         if not self.config.enable_l2 or not self._redis_client:
             return None
-            
+
         try:
             data = await self._redis_client.get(cache_key)
             if data:
@@ -149,57 +149,57 @@ class CacheManager:
         except Exception as e:
             logger.error(f"L2 cache get error: {e}")
         return None
-    
+
     async def _l2_set(self, cache_key: str, value: Any, ttl: int):
         """Set in L2 cache (Redis)"""
         if not self.config.enable_l2 or not self._redis_client:
             return
-            
+
         try:
             serialized = pickle.dumps(value)
             await self._redis_client.setex(cache_key, ttl, serialized)
         except Exception as e:
             logger.error(f"L2 cache set error: {e}")
-    
+
     async def _l3_get(self, cache_key: str) -> Optional[Any]:
         """Get from L3 cache (Database)"""
         if not self.config.enable_l3:
             return None
-            
+
         try:
             # Use the new database-backed L3 cache
             from .l3DatabaseCache import get_l3_database_cache
             l3_cache = await get_l3_database_cache()
             return await l3_cache.get(cache_key)
-                
+
         except Exception as e:
             logger.error(f"L3 cache get error: {e}")
             return None
-    
+
     async def _l3_set(self, cache_key: str, value: Any, ttl: int):
         """Set in L3 cache (Database)"""
         if not self.config.enable_l3:
             return
-            
+
         try:
             # Use the new database-backed L3 cache
             from .l3DatabaseCache import get_l3_database_cache
             l3_cache = await get_l3_database_cache()
             await l3_cache.set(cache_key, value, ttl)
-                
+
         except Exception as e:
             logger.error(f"L3 cache set error: {e}")
-    
+
     async def get(
-        self, 
-        namespace: str, 
-        key: str, 
+        self,
+        namespace: str,
+        key: str,
         max_level: int = 2,
         **kwargs
     ) -> Optional[Any]:
         """
         Get value from cache with fallback through levels
-        
+
         Args:
             namespace: Cache namespace (e.g., "ord", "query", "std")
             key: Cache key
@@ -207,14 +207,14 @@ class CacheManager:
             **kwargs: Additional key parameters for cache key generation
         """
         cache_key = self._generate_key(namespace, key, **kwargs)
-        
+
         # Try L1 first
         if max_level >= 1:
             result = await self._l1_get(cache_key)
             if result is not None:
                 logger.debug(f"Cache hit L1: {cache_key}")
                 return result
-        
+
         # Try L2 next
         if max_level >= 2:
             result = await self._l2_get(cache_key)
@@ -223,7 +223,7 @@ class CacheManager:
                 # Populate L1 for next access
                 await self._l1_set(cache_key, result, self.config.l1_default_ttl)
                 return result
-        
+
         # L3 database cache implementation
         if max_level >= 3 and self.config.enable_l3:
             result = await self._l3_get(cache_key)
@@ -233,10 +233,10 @@ class CacheManager:
                 await self._l1_set(cache_key, result, self.config.l1_default_ttl)
                 await self._l2_set(cache_key, result, self.config.l2_default_ttl)
                 return result
-        
+
         logger.debug(f"Cache miss: {cache_key}")
         return None
-    
+
     async def set(
         self,
         namespace: str,
@@ -248,7 +248,7 @@ class CacheManager:
     ):
         """
         Set value in cache at specified level(s)
-        
+
         Args:
             namespace: Cache namespace
             key: Cache key
@@ -258,24 +258,24 @@ class CacheManager:
             **kwargs: Additional key parameters
         """
         cache_key = self._generate_key(namespace, key, **kwargs)
-        
+
         # Determine TTLs
         l1_ttl = ttl or self.config.l1_default_ttl
         l2_ttl = ttl or self.config.l2_default_ttl
         l3_ttl = ttl or self.config.l3_default_ttl
-        
+
         # Write to appropriate levels
         if level >= 1:
             await self._l1_set(cache_key, value, l1_ttl)
-        
+
         if level >= 2:
             await self._l2_set(cache_key, value, l2_ttl)
-        
+
         if level >= 3:
             await self._l3_set(cache_key, value, l3_ttl)
-        
+
         logger.debug(f"Cache set L{level}: {cache_key}")
-    
+
     async def invalidate(self, namespace: str, key: str = None, **kwargs):
         """Invalidate cache entries"""
         if key:
@@ -285,7 +285,7 @@ class CacheManager:
                 self._l1_cache.pop(cache_key, None)
                 if cache_key in self._l1_access_order:
                     self._l1_access_order.remove(cache_key)
-            
+
             # Remove from L2
             if self._redis_client:
                 try:
@@ -302,7 +302,7 @@ class CacheManager:
                         await self._redis_client.delete(*keys)
                 except Exception as e:
                     logger.error(f"L2 namespace invalidate error: {e}")
-    
+
     async def get_stats(self) -> Dict[str, Any]:
         """Get cache statistics"""
         stats = {
@@ -312,7 +312,7 @@ class CacheManager:
             "l2_enabled": self.config.enable_l2,
             "l3_enabled": self.config.enable_l3,
         }
-        
+
         if self._redis_client:
             try:
                 info = await self._redis_client.info("memory")
@@ -320,7 +320,7 @@ class CacheManager:
                 stats["l2_memory_peak"] = info.get("used_memory_peak", 0)
             except Exception as e:
                 logger.error(f"Failed to get Redis stats: {e}")
-        
+
         # Get L3 database cache stats
         if self.config.enable_l3:
             try:
@@ -330,7 +330,7 @@ class CacheManager:
                 stats["l3_stats"] = l3_stats
             except Exception as e:
                 logger.error(f"Failed to get L3 cache stats: {e}")
-        
+
         return stats
 
 
@@ -347,18 +347,18 @@ def cache_result(
             # Get cache manager from first argument (should be self with cache_manager)
             if args and hasattr(args[0], 'cache_manager'):
                 cache_manager = args[0].cache_manager
-                
+
                 # Generate cache key
                 if key_func:
                     cache_key = key_func(*args, **kwargs)
                 else:
                     cache_key = f"{func.__name__}:{hash(str(args[1:]) + str(kwargs))}"
-                
+
                 # Try to get from cache
                 cached_result = await cache_manager.get(namespace, cache_key)
                 if cached_result is not None:
                     return cached_result
-                
+
                 # Execute function and cache result
                 result = await func(*args, **kwargs)
                 await cache_manager.set(namespace, cache_key, result, ttl, level)

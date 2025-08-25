@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import logging
 
 from ...core.securityMonitoring import (
-    get_security_monitor, SecurityEvent, ThreatLevel, EventType, 
+    get_security_monitor, SecurityEvent, ThreatLevel, EventType,
     report_security_event
 )
 from ...core.blockchainSecurity import get_security_auditor, run_blockchain_security_audit
@@ -26,13 +26,13 @@ async def get_security_status(
 ) -> Dict[str, Any]:
     """
     Get current security monitoring status
-    
+
     Returns comprehensive overview of security system health
     """
     try:
         monitor = get_security_monitor()
         status = monitor.get_status()
-        
+
         return {
             "success": True,
             "data": {
@@ -41,7 +41,7 @@ async def get_security_status(
                 "operator": admin_user.get("username")
             }
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to get security status: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve security status")
@@ -59,7 +59,7 @@ async def get_security_events(
 ) -> Dict[str, Any]:
     """
     Get security events with filtering
-    
+
     Query parameters:
     - limit: Maximum number of events to return (default: 100)
     - threat_level: Filter by threat level (critical, high, medium, low, info)
@@ -70,27 +70,27 @@ async def get_security_events(
     """
     try:
         monitor = get_security_monitor()
-        
+
         # Filter events
         cutoff = datetime.utcnow() - timedelta(hours=hours_back)
         filtered_events = []
-        
+
         for event in list(monitor.events)[-limit*2:]:  # Get more to allow for filtering
             if event.timestamp < cutoff:
                 continue
-                
+
             if threat_level and event.threat_level.value != threat_level:
                 continue
-                
+
             if event_type and event.event_type.value != event_type:
                 continue
-                
+
             if source_ip and event.source_ip != source_ip:
                 continue
-                
+
             if user_id and event.user_id != user_id:
                 continue
-            
+
             filtered_events.append({
                 "event_id": event.event_id,
                 "event_type": event.event_type.value,
@@ -107,13 +107,13 @@ async def get_security_events(
                 "resolved": event.resolved,
                 "false_positive": event.false_positive
             })
-            
+
             if len(filtered_events) >= limit:
                 break
-        
+
         # Sort by timestamp descending
         filtered_events.sort(key=lambda x: x["timestamp"], reverse=True)
-        
+
         return {
             "success": True,
             "data": {
@@ -129,7 +129,7 @@ async def get_security_events(
                 "timestamp": datetime.utcnow().isoformat()
             }
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to get security events: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve security events")
@@ -148,7 +148,7 @@ async def report_manual_event(
 ) -> Dict[str, Any]:
     """
     Manually report a security event
-    
+
     Allows administrators to manually create security events for tracking
     """
     try:
@@ -158,7 +158,7 @@ async def report_manual_event(
             threat_level_enum = ThreatLevel(threat_level)
         except ValueError as e:
             raise HTTPException(status_code=400, detail=f"Invalid enum value: {e}")
-        
+
         # Report the event
         event_id = await report_security_event(
             event_type=event_type_enum,
@@ -169,12 +169,12 @@ async def report_manual_event(
             details=details,
             affected_resources=affected_resources
         )
-        
+
         if not event_id:
             raise HTTPException(status_code=500, detail="Failed to create security event")
-        
+
         logger.info(f"Manual security event reported by {admin_user.get('username')}: {event_id}")
-        
+
         return {
             "success": True,
             "data": {
@@ -184,7 +184,7 @@ async def report_manual_event(
                 "timestamp": datetime.utcnow().isoformat()
             }
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -201,36 +201,36 @@ async def update_security_event(
 ) -> Dict[str, Any]:
     """
     Update security event status
-    
+
     Allows marking events as resolved or false positives
     """
     try:
         monitor = get_security_monitor()
-        
+
         # Find the event
         event = None
         for e in monitor.events:
             if e.event_id == event_id:
                 event = e
                 break
-        
+
         if not event:
             raise HTTPException(status_code=404, detail="Security event not found")
-        
+
         # Update event
         updated_fields = []
         if resolved is not None:
             event.resolved = resolved
             updated_fields.append("resolved")
-            
+
         if false_positive is not None:
             event.false_positive = false_positive
             updated_fields.append("false_positive")
             if false_positive:
                 monitor.metrics.increment("false_positives")
-        
+
         logger.info(f"Security event {event_id} updated by {admin_user.get('username')}: {updated_fields}")
-        
+
         return {
             "success": True,
             "data": {
@@ -240,7 +240,7 @@ async def update_security_event(
                 "timestamp": datetime.utcnow().isoformat()
             }
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -257,15 +257,15 @@ async def get_security_metrics(
     """
     try:
         monitor = get_security_monitor()
-        
+
         # Calculate metrics
         now = datetime.utcnow()
         last_24h = now - timedelta(hours=24)
         last_hour = now - timedelta(hours=1)
-        
+
         events_24h = [e for e in monitor.events if e.timestamp > last_24h]
         events_1h = [e for e in monitor.events if e.timestamp > last_hour]
-        
+
         # Threat level breakdown
         threat_breakdown = {
             "critical": len([e for e in events_24h if e.threat_level == ThreatLevel.CRITICAL]),
@@ -274,22 +274,22 @@ async def get_security_metrics(
             "low": len([e for e in events_24h if e.threat_level == ThreatLevel.LOW]),
             "info": len([e for e in events_24h if e.threat_level == ThreatLevel.INFO])
         }
-        
+
         # Top event types
         event_type_counts = {}
         for event in events_24h:
             event_type_counts[event.event_type.value] = event_type_counts.get(event.event_type.value, 0) + 1
-        
+
         top_event_types = sorted(event_type_counts.items(), key=lambda x: x[1], reverse=True)[:10]
-        
+
         # Top source IPs
         ip_counts = {}
         for event in events_24h:
             if event.source_ip:
                 ip_counts[event.source_ip] = ip_counts.get(event.source_ip, 0) + 1
-        
+
         top_source_ips = sorted(ip_counts.items(), key=lambda x: x[1], reverse=True)[:10]
-        
+
         return {
             "success": True,
             "data": {
@@ -312,7 +312,7 @@ async def get_security_metrics(
                 "timestamp": now.isoformat()
             }
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to get security metrics: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve security metrics")
@@ -325,7 +325,7 @@ async def run_blockchain_audit(
 ) -> Dict[str, Any]:
     """
     Run comprehensive blockchain security audit
-    
+
     Requires super admin privileges due to potential system impact
     """
     try:
@@ -336,12 +336,12 @@ async def run_blockchain_audit(
                 "/Users/apple/projects/a2a/a2aAgents/backend/scripts/deployment/",
                 "/Users/apple/projects/a2a/a2aNetwork/src/"
             ]
-        
+
         logger.info(f"Starting blockchain security audit requested by {admin_user.get('username')}")
-        
+
         # Run the audit
         audit_results = await run_blockchain_security_audit(target_paths)
-        
+
         # Report audit completion as security event
         await report_security_event(
             event_type=EventType.SYSTEM_INTRUSION,  # Using as general security event
@@ -355,12 +355,12 @@ async def run_blockchain_audit(
                 "risk_score": audit_results["summary"]["risk_score"]
             }
         )
-        
+
         return {
             "success": True,
             "data": audit_results
         }
-        
+
     except SecurityError as e:
         logger.error(f"Blockchain audit failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -378,7 +378,7 @@ async def get_threat_patterns(
     """
     try:
         monitor = get_security_monitor()
-        
+
         patterns = []
         for pattern_id, pattern in monitor.patterns.items():
             patterns.append({
@@ -392,7 +392,7 @@ async def get_threat_patterns(
                 "response_actions": pattern.response_actions,
                 "conditions": pattern.conditions
             })
-        
+
         return {
             "success": True,
             "data": {
@@ -401,7 +401,7 @@ async def get_threat_patterns(
                 "timestamp": datetime.utcnow().isoformat()
             }
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to get threat patterns: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve threat patterns")
@@ -413,23 +413,23 @@ async def start_monitoring(
 ) -> Dict[str, Any]:
     """
     Start security monitoring system
-    
+
     Requires super admin privileges
     """
     try:
         monitor = get_security_monitor()
-        
+
         if monitor.monitoring_active:
             return {
                 "success": True,
                 "message": "Security monitoring is already active",
                 "timestamp": datetime.utcnow().isoformat()
             }
-        
+
         await monitor.start_monitoring()
-        
+
         logger.info(f"Security monitoring started by {admin_user.get('username')}")
-        
+
         # Report monitoring start
         await report_security_event(
             event_type=EventType.SYSTEM_INTRUSION,
@@ -437,14 +437,14 @@ async def start_monitoring(
             description=f"Security monitoring system started by {admin_user.get('username')}",
             user_id=admin_user.get("user_id")
         )
-        
+
         return {
             "success": True,
             "message": "Security monitoring started successfully",
             "started_by": admin_user.get("username"),
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to start security monitoring: {e}")
         raise HTTPException(status_code=500, detail="Failed to start security monitoring")
@@ -456,30 +456,30 @@ async def stop_monitoring(
 ) -> Dict[str, Any]:
     """
     Stop security monitoring system
-    
+
     Requires super admin privileges
     """
     try:
         monitor = get_security_monitor()
-        
+
         if not monitor.monitoring_active:
             return {
                 "success": True,
                 "message": "Security monitoring is already inactive",
                 "timestamp": datetime.utcnow().isoformat()
             }
-        
+
         await monitor.stop_monitoring()
-        
+
         logger.warning(f"Security monitoring stopped by {admin_user.get('username')}")
-        
+
         return {
             "success": True,
             "message": "Security monitoring stopped",
             "stopped_by": admin_user.get("username"),
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to stop security monitoring: {e}")
         raise HTTPException(status_code=500, detail="Failed to stop security monitoring")
@@ -491,12 +491,12 @@ async def get_security_dashboard(
 ) -> Dict[str, Any]:
     """
     Get comprehensive security dashboard data
-    
+
     Returns all information needed for a security operations dashboard
     """
     try:
         monitor = get_security_monitor()
-        
+
         # Recent events (last 4 hours)
         recent_cutoff = datetime.utcnow() - timedelta(hours=4)
         recent_events = [
@@ -512,7 +512,7 @@ async def get_security_dashboard(
             for e in monitor.events
             if e.timestamp > recent_cutoff
         ][-20:]  # Last 20 events
-        
+
         # Active threats (unresolved critical/high events)
         active_threats = [
             {
@@ -527,7 +527,7 @@ async def get_security_dashboard(
             for e in monitor.events
             if not e.resolved and e.threat_level in [ThreatLevel.CRITICAL, ThreatLevel.HIGH]
         ][-10:]  # Last 10 active threats
-        
+
         # System health
         system_health = {
             "monitoring_active": monitor.monitoring_active,
@@ -537,7 +537,7 @@ async def get_security_dashboard(
             "alert_channels": len(monitor.alerting.alert_channels),
             "last_event_time": monitor.events[-1].timestamp.isoformat() if monitor.events else None
         }
-        
+
         return {
             "success": True,
             "data": {
@@ -549,7 +549,7 @@ async def get_security_dashboard(
                 "generated_for": admin_user.get("username")
             }
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to get security dashboard: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate security dashboard")

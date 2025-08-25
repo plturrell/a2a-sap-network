@@ -23,7 +23,7 @@ async def hypothesis_generation(
 ) -> Dict[str, Any]:
     """
     Generate hypotheses for reasoning problems
-    
+
     Args:
         problem: Problem statement to generate hypotheses for
         domain: Problem domain (scientific, logical, business, general)
@@ -34,14 +34,14 @@ async def hypothesis_generation(
         # Import necessary components
         from ..nlpPatternMatcher import NLPPatternMatcher
         from ..grokReasoning import GrokReasoning
-        
+
         # Analyze problem domain and complexity
         pattern_matcher = NLPPatternMatcher()
         patterns = await pattern_matcher.analyze_patterns(problem)
-        
+
         # Generate hypotheses based on problem analysis
         hypotheses = []
-        
+
         # Use different strategies based on domain
         if domain == "scientific":
             hypothesis_types = ["causal", "correlational", "mechanistic", "predictive", "descriptive"]
@@ -51,7 +51,7 @@ async def hypothesis_generation(
             hypothesis_types = ["market", "operational", "strategic", "financial", "behavioral"]
         else:
             hypothesis_types = ["explanatory", "predictive", "descriptive", "comparative", "exploratory"]
-        
+
         # Generate hypotheses for each type
         for i, h_type in enumerate(hypothesis_types[:max_hypotheses]):
             hypothesis = {
@@ -62,13 +62,13 @@ async def hypothesis_generation(
                 "testable": True,
                 "variables": _extract_variables(problem, h_type)
             }
-            
+
             if include_confidence:
                 # Simple confidence based on pattern matching
                 hypothesis["confidence"] = 0.6 + (0.1 * len(patterns.get("entities", [])))
-            
+
             hypotheses.append(hypothesis)
-        
+
         return {
             "success": True,
             "problem": problem,
@@ -81,7 +81,7 @@ async def hypothesis_generation(
                 "include_confidence": include_confidence
             }
         }
-        
+
     except Exception as e:
         logger.error(f"Hypothesis generation error: {e}")
         return {
@@ -95,17 +95,17 @@ def _extract_variables(problem: str, hypothesis_type: str) -> List[str]:
     """Extract potential variables from problem statement"""
     # Simple extraction based on common patterns
     variables = []
-    
+
     # Look for comparison words
     if any(word in problem.lower() for word in ["compare", "versus", "vs", "between"]):
         variables.append("comparison_target")
-    
+
     # Look for causal words
     if any(word in problem.lower() for word in ["cause", "effect", "impact", "influence"]):
         variables.extend(["independent_variable", "dependent_variable"])
-    
+
     # Look for quantitative words
     if any(word in problem.lower() for word in ["how many", "how much", "measure", "count"]):
         variables.append("quantitative_measure")
-    
+
     return variables if variables else ["primary_variable", "secondary_variable"]

@@ -18,7 +18,7 @@ def mcp_tool(
 ):
     """
     Decorator to mark a method as an MCP tool
-    
+
     Args:
         name: Tool name
         description: Tool description
@@ -32,11 +32,11 @@ def mcp_tool(
             "input_schema": input_schema or {"type": "object", "properties": {}},
             "output_schema": output_schema
         }
-        
+
         # Preserve the MCP metadata on the original function
         # Don't wrap the function - just add metadata
         return func
-    
+
     return decorator
 
 
@@ -48,7 +48,7 @@ def mcp_resource(
 ):
     """
     Decorator to mark a method as an MCP resource provider
-    
+
     Args:
         uri: Resource URI
         name: Resource name
@@ -62,11 +62,11 @@ def mcp_resource(
             "description": description,
             "mime_type": mime_type
         }
-        
+
         # Preserve the MCP metadata on the original function
         # Don't wrap the function - just add metadata
         return func
-    
+
     return decorator
 
 
@@ -77,7 +77,7 @@ def mcp_prompt(
 ):
     """
     Decorator to mark a method as an MCP prompt
-    
+
     Args:
         name: Prompt name
         description: Prompt description
@@ -89,11 +89,11 @@ def mcp_prompt(
             "description": description,
             "arguments": arguments or []
         }
-        
+
         # Preserve the MCP metadata on the original function
         # Don't wrap the function - just add metadata
         return func
-    
+
     return decorator
 
 

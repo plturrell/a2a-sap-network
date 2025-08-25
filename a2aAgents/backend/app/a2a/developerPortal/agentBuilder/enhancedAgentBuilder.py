@@ -39,12 +39,12 @@ except ImportError:
         USER = "user"
         ASSISTANT = "assistant"
         SYSTEM = "system"
-    
+
     class MessagePart(BaseModel):
         role: MessageRole
         content: str
         content_type: str = "text/plain"
-    
+
     class A2AMessage(BaseModel):
         id: str
         conversation_id: str
@@ -98,7 +98,7 @@ class AgentSkill(BaseModel):
     dependencies: List[str] = Field(default_factory=list)
     enabled: bool = True
     priority: int = 0
-    
+
     @validator('name')
     def validate_name(cls, v):
         if not v or len(v.strip()) == 0:
@@ -116,7 +116,7 @@ class AgentHandler(BaseModel):
     triggers: List[str] = Field(default_factory=list)
     enabled: bool = True
     priority: int = 0
-    
+
     @validator('name')
     def validate_name(cls, v):
         if not v or len(v.strip()) == 0:
@@ -131,30 +131,30 @@ class AgentConfiguration(BaseModel):
     description: str = ""
     agent_type: AgentType = AgentType.CUSTOM
     version: str = "1.0.0"
-    
+
     # Core configuration
     skills: List[AgentSkill] = Field(default_factory=list)
     handlers: List[AgentHandler] = Field(default_factory=list)
-    
+
     # Runtime configuration
     max_concurrent_tasks: int = 10
     timeout_seconds: int = 300
     retry_attempts: int = 3
-    
+
     # Security and trust
     trust_level: str = "medium"
     allowed_delegations: List[str] = Field(default_factory=list)
     security_policies: Dict[str, Any] = Field(default_factory=dict)
-    
+
     # Monitoring and logging
     logging_level: str = "INFO"
     metrics_enabled: bool = True
     health_check_interval: int = 60
-    
+
     # Deployment
     deployment_config: Dict[str, Any] = Field(default_factory=dict)
     environment_variables: Dict[str, str] = Field(default_factory=dict)
-    
+
     @validator('name')
     def validate_name(cls, v):
         if not v or len(v.strip()) == 0:
@@ -170,20 +170,20 @@ class AgentTemplate(BaseModel):
     agent_type: AgentType
     category: str = "general"
     tags: List[str] = Field(default_factory=list)
-    
+
     # Template configuration
     default_skills: List[Dict[str, Any]] = Field(default_factory=list)
     default_handlers: List[Dict[str, Any]] = Field(default_factory=list)
     default_config: Dict[str, Any] = Field(default_factory=dict)
-    
+
     # Template files
     code_templates: Dict[str, str] = Field(default_factory=dict)  # filename -> template content
     config_templates: Dict[str, str] = Field(default_factory=dict)
-    
+
     # Requirements
     dependencies: List[str] = Field(default_factory=list)
     python_version: str = "3.8+"
-    
+
     # Metadata
     author: str = "A2A Team"
     version: str = "1.0.0"
@@ -209,28 +209,28 @@ class GenerationResult(BaseModel):
 
 class EnhancedAgentBuilder:
     """Enhanced agent builder with comprehensive workflow"""
-    
+
     def __init__(self, templates_path: str, output_path: str):
         self.templates_path = Path(templates_path)
         self.output_path = Path(output_path)
         self.templates_path.mkdir(parents=True, exist_ok=True)
         self.output_path.mkdir(parents=True, exist_ok=True)
-        
+
         # Initialize Jinja2 environment
         self.jinja_env = Environment(
             loader=FileSystemLoader(str(self.templates_path)),
             autoescape=False
         )
-        
+
         # Load built-in templates
         self.templates: Dict[str, AgentTemplate] = {}
         self._load_builtin_templates()
-        
+
         logger.info(f"Enhanced Agent Builder initialized with {len(self.templates)} templates")
-    
+
     def _load_builtin_templates(self):
         """Load built-in agent templates"""
-        
+
         # Data Processing Agent Template
         data_processor_template = AgentTemplate(
             id="data-processor",
@@ -283,12 +283,12 @@ from app.a2a.core.a2aTypes import A2AMessage, MessagePart, MessageRole
 
 class {{ agent_class_name }}(DataStandardizationAgent):
     \"\"\"{{ agent_description }}\"\"\"
-    
+
     def __init__(self, agent_id: str, config: Dict[str, Any]):
         super().__init__(agent_id, config)
         self.name = "{{ agent_name }}"
         self.description = "{{ agent_description }}"
-        
+
     async def process_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
         \"\"\"Process incoming data\"\"\"
         try:
@@ -296,22 +296,22 @@ class {{ agent_class_name }}(DataStandardizationAgent):
             processed_data = data.copy()
             processed_data["processed_at"] = datetime.utcnow().isoformat()
             processed_data["processed_by"] = self.agent_id
-            
+
             return processed_data
-            
+
         except Exception as e:
             self.logger.error(f"Error processing data: {e}")
             raise
-    
+
     async def handle_message(self, message: A2AMessage) -> A2AMessage:
         \"\"\"Handle incoming A2A messages\"\"\"
         try:
             # Extract data from message
             data = json.loads(message.parts[0].content)
-            
+
             # Process data
             processed_data = await self.process_data(data)
-            
+
             # Create response message
             response = A2AMessage(
                 id=f"response_{message.id}",
@@ -326,9 +326,9 @@ class {{ agent_class_name }}(DataStandardizationAgent):
                     )
                 ]
             )
-            
+
             return response
-            
+
         except Exception as e:
             self.logger.error(f"Error handling message: {e}")
             raise
@@ -384,9 +384,9 @@ security:
             dependencies=["fastapi", "pydantic", "asyncio"],
             python_version="3.8+"
         )
-        
+
         self.templates["data-processor"] = data_processor_template
-        
+
         # Workflow Orchestrator Template
         workflow_template = AgentTemplate(
             id="workflow-orchestrator",
@@ -420,72 +420,72 @@ security:
             dependencies=["fastapi", "pydantic", "asyncio", "camunda-client"],
             python_version="3.8+"
         )
-        
+
         self.templates["workflow-orchestrator"] = workflow_template
-    
+
     async def get_templates(self) -> List[AgentTemplate]:
         """Get all available agent templates"""
         return list(self.templates.values())
-    
+
     async def get_template(self, template_id: str) -> Optional[AgentTemplate]:
         """Get specific agent template"""
         return self.templates.get(template_id)
-    
+
     async def validate_configuration(self, config: AgentConfiguration) -> ValidationResult:
         """Validate agent configuration"""
         errors = []
         warnings = []
         suggestions = []
-        
+
         # Validate basic configuration
         if not config.name:
             errors.append("Agent name is required")
-        
+
         if not config.skills:
             warnings.append("Agent has no skills defined")
-        
+
         if not config.handlers:
             warnings.append("Agent has no handlers defined")
-        
+
         # Validate skills
         skill_names = set()
         for skill in config.skills:
             if skill.name in skill_names:
                 errors.append(f"Duplicate skill name: {skill.name}")
             skill_names.add(skill.name)
-            
+
             # Validate skill configuration
             if skill.type == SkillType.CUSTOM and not skill.configuration:
                 warnings.append(f"Custom skill '{skill.name}' has no configuration")
-        
+
         # Validate handlers
         handler_names = set()
         for handler in config.handlers:
             if handler.name in handler_names:
                 errors.append(f"Duplicate handler name: {handler.name}")
             handler_names.add(handler.name)
-            
+
             # Validate handler configuration
             if handler.type == HandlerType.CUSTOM and not handler.configuration:
                 warnings.append(f"Custom handler '{handler.name}' has no configuration")
-        
+
         # Performance suggestions
         if config.max_concurrent_tasks > 100:
             suggestions.append("Consider reducing max_concurrent_tasks for better resource management")
-        
+
         if config.timeout_seconds > 600:
             suggestions.append("Long timeout values may impact system responsiveness")
-        
+
         return ValidationResult(
             is_valid=len(errors) == 0,
             errors=errors,
             warnings=warnings,
             suggestions=suggestions
         )
-    
+
     async def generate_agent(
-        self, 
-        config: AgentConfiguration, 
+        self,
+        config: AgentConfiguration,
         template_id: Optional[str] = None,
         output_dir: Optional[str] = None
     ) -> GenerationResult:
@@ -499,15 +499,15 @@ security:
                     agent_id=config.id,
                     errors=validation.errors
                 )
-            
+
             # Determine output directory
             if not output_dir:
                 output_dir = self.output_path / config.id
             else:
                 output_dir = Path(output_dir)
-            
+
             output_dir.mkdir(parents=True, exist_ok=True)
-            
+
             # Get template if specified
             template = None
             if template_id:
@@ -518,15 +518,15 @@ security:
                         agent_id=config.id,
                         errors=[f"Template not found: {template_id}"]
                     )
-            
+
             generated_files = []
-            
+
             # Generate files from template or default structure
             if template and template.code_templates:
                 # Use template files
                 for filename, template_content in template.code_templates.items():
                     file_path = output_dir / filename
-                    
+
                     # Render template
                     jinja_template = Template(template_content)
                     rendered_content = jinja_template.render(
@@ -546,40 +546,40 @@ security:
                         trust_level=config.trust_level,
                         allowed_delegations=config.allowed_delegations
                     )
-                    
+
                     # Write file
                     with open(file_path, 'w', encoding='utf-8') as f:
                         f.write(rendered_content)
-                    
+
                     generated_files.append(str(file_path))
             else:
                 # Generate default structure
                 await self._generate_default_structure(config, output_dir, generated_files)
-            
+
             # Generate requirements.txt
             requirements_path = output_dir / "requirements.txt"
             requirements = ["fastapi", "pydantic", "asyncio", "httpx", "pyyaml"]
             if template:
                 requirements.extend(template.dependencies)
-            
+
             with open(requirements_path, 'w') as f:
                 f.write('\n'.join(sorted(set(requirements))))
             generated_files.append(str(requirements_path))
-            
+
             # Generate README.md
             readme_path = output_dir / "README.md"
             readme_content = self._generate_readme(config, template)
             with open(readme_path, 'w') as f:
                 f.write(readme_content)
             generated_files.append(str(readme_path))
-            
+
             return GenerationResult(
                 success=True,
                 agent_id=config.id,
                 generated_files=generated_files,
                 warnings=validation.warnings
             )
-            
+
         except Exception as e:
             logger.error(f"Error generating agent: {e}")
             return GenerationResult(
@@ -587,15 +587,15 @@ security:
                 agent_id=config.id,
                 errors=[str(e)]
             )
-    
+
     async def _generate_default_structure(
-        self, 
-        config: AgentConfiguration, 
-        output_dir: Path, 
+        self,
+        config: AgentConfiguration,
+        output_dir: Path,
         generated_files: List[str]
     ):
         """Generate default agent structure"""
-        
+
         # Generate main agent file
         main_content = f'''"""
 {config.name} - A2A Agent
@@ -615,24 +615,24 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
     """
     {config.description}
     """
-    
+
     def __init__(self, agent_id: str, config: Dict[str, Any]):
         super().__init__(agent_id, config)
         self.name = "{config.name}"
         self.description = "{config.description}"
         self.agent_type = "{config.agent_type.value}"
-        
+
         # Initialize skills and handlers
         self._initialize_skills()
         self._initialize_handlers()
-    
+
     def _initialize_skills(self):
         """Initialize agent skills"""
         # Initialize skills from configuration
         for skill_config in self.config.get('skills', []):
             skill_name = skill_config.get('name')
             skill_type = skill_config.get('type')
-            
+
             if skill_type == 'function':
                 # Register function-based skill
                 self.skills[skill_name] = {
@@ -650,9 +650,9 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
                     'headers': skill_config.get('headers', {{}}),
                     'description': skill_config.get('description', '')
                 }
-            
+
             logger.info(f"Initialized skill: {skill_name} (type: {skill_type})")
-    
+
     def _initialize_handlers(self):
         """Initialize agent handlers"""
         # Initialize event handlers from configuration
@@ -660,10 +660,10 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
             event_type = handler_config.get('event')
             handler_name = handler_config.get('handler')
             priority = handler_config.get('priority', 0)
-            
+
             if event_type not in self.handlers:
                 self.handlers[event_type] = []
-            
+
             self.handlers[event_type].append({
                 'name': handler_name,
                 'function': handler_config.get('function'),
@@ -671,19 +671,19 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
                 'filters': handler_config.get('filters', {{}}),
                 'async': handler_config.get('async', True)
             })
-            
+
             # Sort handlers by priority
             self.handlers[event_type].sort(key=lambda x: x['priority'], reverse=True)
-            
+
             logger.info(f"Registered handler: {handler_name} for event: {event_type}")
-    
+
     async def handle_message(self, message: A2AMessage) -> A2AMessage:
         """Handle incoming A2A messages"""
         try:
             # Extract message content and type
             message_content = message.parts[0].content if message.parts else ""
             message_type = message.metadata.get('type', 'general')
-            
+
             # Trigger event handlers for incoming message
             if 'message_received' in self.handlers:
                 for handler in self.handlers['message_received']:
@@ -691,7 +691,7 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
                         await self._execute_handler_async(handler, message)
                     else:
                         self._execute_handler_sync(handler, message)
-            
+
             # Process message based on type
             response_content = ""
             if message_type == 'query':
@@ -707,7 +707,7 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
             else:
                 # Default message processing
                 response_content = await self._process_general_message(message_content)
-            
+
             # Create response message
             response = A2AMessage(
                 id=f"response_{message.id}",
@@ -727,25 +727,25 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
                     'message_type': f'{message_type}_response'
                 }
             )
-            
+
             # Trigger response handlers
             if 'message_sent' in self.handlers:
                 for handler in self.handlers['message_sent']:
                     if handler['async']:
                         await self._execute_handler_async(handler, response)
-            
+
             return response
-            
+
         except Exception as e:
             self.logger.error(f"Error handling message: {e}")
             raise
-    
+
     async def _process_query(self, content: str) -> str:
         """Process query messages through A2A network"""
         try:
             # Parse query intent
             query_type = self._analyze_query_intent(content)
-            
+
             # Check if this agent can handle the query
             if query_type in self.config.get('capabilities', []):
                 # Process locally
@@ -757,13 +757,13 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
                     response = await self._forward_to_agent(target_agent, content, 'query')
                 else:
                     response = "No agent available to handle this query type"
-            
+
             return response
-            
+
         except Exception as e:
             logger.error(f"Query processing error: {e}")
             return f"Error processing query: {str(e)}"
-    
+
     async def _execute_command(self, content: str) -> str:
         """Execute command through agent network"""
         try:
@@ -771,7 +771,7 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
             command_parts = content.split(' ', 1)
             command = command_parts[0].lower()
             args = command_parts[1] if len(command_parts) > 1 else ""
-            
+
             # Check if command requires collaboration
             if command in self.config.get('collaborative_commands', []):
                 # Execute distributed command
@@ -780,11 +780,11 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
             else:
                 # Execute local command
                 return await self._execute_local_command(command, args)
-                
+
         except Exception as e:
             logger.error(f"Command execution error: {e}")
             return f"Command execution failed: {str(e)}"
-    
+
     async def _invoke_skill(self, skill_name: str, content: str) -> str:
         """Invoke a specific skill with real implementation"""
         if skill_name not in self.skills:
@@ -793,9 +793,9 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
             if remote_agent:
                 return await self._invoke_remote_skill(remote_agent, skill_name, content)
             return f"Skill '{skill_name}' not found in A2A network"
-        
+
         skill = self.skills[skill_name]
-        
+
         try:
             if skill['type'] == 'function':
                 # Execute local function skill
@@ -809,7 +809,7 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
                     func = getattr(module, func_name)
                     result = await func(content, **skill.get('parameters', {{}}))
                 return str(result)
-                
+
             elif skill['type'] == 'api':
                 # Call external API
                 # A2A Protocol: Use blockchain messaging instead of httpx
@@ -819,7 +819,7 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
                     method = skill.get('method', 'POST')
                     headers = skill.get('headers', {{}})
                     headers['Content-Type'] = 'application/json'
-                    
+
                     if method == 'GET':
                         response = await client.get(
                             skill['endpoint'],
@@ -832,21 +832,21 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
                             json={'data': content},
                             headers=headers
                         )
-                    
+
                     response.raise_for_status()
                     return response.json().get('result', str(response.json()))
-                    
+
             elif skill['type'] == 'ml_model':
                 # Invoke ML model
                 return await self._invoke_ml_model(skill.get('model_id'), content)
-                
+
             else:
                 return f"Unknown skill type: {skill['type']}"
-                
+
         except Exception as e:
             logger.error(f"Skill invocation error for {skill_name}: {e}")
             return f"Skill execution failed: {str(e)}"
-    
+
     async def _process_general_message(self, content: str) -> str:
         """Process general messages using agent's AI capabilities"""
         try:
@@ -856,28 +856,28 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
             else:
                 # Rule-based processing
                 response = await self._apply_message_rules(content)
-            
+
             # Enrich response with context from A2A network if needed
             if self.config.get('enrich_responses', True):
                 context = await self._gather_network_context(content)
                 response = self._enrich_response(response, context)
-            
+
             return response
-            
+
         except Exception as e:
             logger.error(f"General message processing error: {e}")
             return "I encountered an error processing your message."
-    
+
     async def _execute_handler_async(self, handler: Dict, data: Any):
         """Execute async handler"""
         logger.debug(f"Executing async handler: {handler['name']}")
-    
+
     def _execute_handler_sync(self, handler: Dict, data: Any):
         """Execute sync handler"""
         logger.debug(f"Executing sync handler: {handler['name']}")
-    
+
     # A2A Network Communication Methods
-    
+
     async def _find_capable_agent(self, query_type: str) -> Optional[str]:
         """Find agent in network capable of handling query type"""
         try:
@@ -896,7 +896,7 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
         except Exception as e:
             logger.error(f"Error finding capable agent: {e}")
         return None
-    
+
     async def _forward_to_agent(self, target_agent_id: str, content: str, message_type: str) -> str:
         """Forward message to another agent in A2A network"""
         try:
@@ -915,7 +915,7 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
                 ],
                 metadata={'type': message_type, 'forwarded': True}
             )
-            
+
             # Send via A2A network
             network_url = self.config.get('network_url', 'http://localhost:8000/api/messages')
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
@@ -932,47 +932,47 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
         except Exception as e:
             logger.error(f"Error forwarding to agent {target_agent_id}: {e}")
         return "Failed to forward message"
-    
+
     async def _execute_distributed_command(self, command: str, args: str) -> List[Dict]:
         """Execute command across multiple agents"""
         results = []
         try:
             # Get list of participating agents
             agents = await self._get_network_agents()
-            
+
             # Send command to each agent
             tasks = []
             for agent in agents:
                 if agent['agent_id'] != self.agent_id:  # Don't send to self
                     task = self._send_command_to_agent(agent['agent_id'], command, args)
                     tasks.append(task)
-            
+
             # Execute local command
             local_result = await self._execute_local_command(command, args)
             results.append({'agent_id': self.agent_id, 'result': local_result})
-            
+
             # Gather remote results
             remote_results = await asyncio.gather(*tasks, return_exceptions=True)
             for agent, result in zip(agents, remote_results):
                 if not isinstance(result, Exception):
                     results.append({'agent_id': agent['agent_id'], 'result': result})
-                    
+
         except Exception as e:
             logger.error(f"Distributed command execution error: {e}")
-            
+
         return results
-    
+
     def _aggregate_command_results(self, results: List[Dict]) -> str:
         """Aggregate results from distributed command execution"""
         if not results:
             return "No results received"
-        
+
         aggregated = f"Command executed across {len(results)} agents:\n"
         for result in results:
             aggregated += f"- Agent {result['agent_id']}: {result['result']}\n"
-        
+
         return aggregated
-    
+
     async def _find_agent_with_skill(self, skill_name: str) -> Optional[str]:
         """Find agent that has a specific skill"""
         try:
@@ -989,7 +989,7 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
         except Exception as e:
             logger.error(f"Error finding agent with skill {skill_name}: {e}")
         return None
-    
+
     async def _invoke_remote_skill(self, agent_id: str, skill_name: str, content: str) -> str:
         """Invoke skill on remote agent"""
         # Create message with skill metadata
@@ -1008,7 +1008,7 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
                 ],
                 metadata={'type': 'skill', 'skill': skill_name, 'forwarded': True}
             )
-            
+
             # Send via A2A network
             network_url = self.config.get('network_url', 'http://localhost:8000/api/messages')
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
@@ -1025,11 +1025,11 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
         except Exception as e:
             logger.error(f"Error invoking remote skill {skill_name} on agent {agent_id}: {e}")
         return f"Failed to invoke skill {skill_name}"
-    
+
     def _analyze_query_intent(self, content: str) -> str:
         """Analyze query to determine intent/type"""
         content_lower = content.lower()
-        
+
         # Simple intent classification
         if any(word in content_lower for word in ['analyze', 'process', 'compute']):
             return 'analytical'
@@ -1041,7 +1041,7 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
             return 'transformation'
         else:
             return 'general'
-    
+
     async def _execute_local_query(self, query_type: str, content: str) -> str:
         """Execute query locally based on type"""
         handlers = {
@@ -1051,10 +1051,10 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
             'transformation': self._handle_transformation_query,
             'general': self._handle_general_query
         }
-        
+
         handler = handlers.get(query_type, self._handle_general_query)
         return await handler(content)
-    
+
     async def _execute_local_command(self, command: str, args: str) -> str:
         """Execute command locally"""
         commands = {
@@ -1064,21 +1064,21 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
             'stop': self._stop_task,
             'configure': self._configure_agent
         }
-        
+
         if command in commands:
             return await commands[command](args)
         else:
             return f"Unknown command: {command}"
-    
+
     async def _invoke_language_model(self, content: str) -> str:
         """Invoke configured language model"""
         llm_config = self.config.get('llm_config', {{}})
-        
+
         if llm_config.get('provider') == 'openai':
             # OpenAI integration
             import openai
             openai.api_key = llm_config.get('api_key')
-            
+
             response = await openai.ChatCompletion.acreate(
                 model=llm_config.get('model', 'gpt-3.5-turbo'),
                 messages=[
@@ -1087,17 +1087,17 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
                 ]
             )
             return response.choices[0].message.content
-            
+
         elif llm_config.get('provider') == 'local':
             # Local model integration
             return await self._invoke_local_llm(content, llm_config)
-        
+
         return "No language model configured"
-    
+
     async def _apply_message_rules(self, content: str) -> str:
         """Apply rule-based message processing"""
         rules = self.config.get('message_rules', [])
-        
+
         for rule in rules:
             if rule['type'] == 'pattern':
                 import re
@@ -1106,54 +1106,54 @@ class {config.name.replace(' ', '').replace('-', '_')}Agent(A2AAgentBase):
             elif rule['type'] == 'keyword':
                 if any(keyword in content.lower() for keyword in rule['keywords']):
                     return rule['response']
-        
+
         return "I understand your message but don't have a specific response."
-    
+
     async def _gather_network_context(self, content: str) -> Dict[str, Any]:
         """Gather context from A2A network"""
         context = {{}}
-        
+
         try:
             # Query related agents for context
             related_agents = await self._find_related_agents(content)
-            
+
             tasks = []
             for agent_id in related_agents[:3]:  # Limit to 3 agents
                 task = self._query_agent_context(agent_id, content)
                 tasks.append(task)
-            
+
             contexts = await asyncio.gather(*tasks, return_exceptions=True)
-            
+
             for agent_id, agent_context in zip(related_agents, contexts):
                 if not isinstance(agent_context, Exception):
                     context[agent_id] = agent_context
-                    
+
         except Exception as e:
             logger.error(f"Error gathering network context: {e}")
-            
+
         return context
-    
+
     def _enrich_response(self, response: str, context: Dict[str, Any]) -> str:
         """Enrich response with network context"""
         if not context:
             return response
-        
+
         enriched = response + "\n\nAdditional context from A2A network:"
         for agent_id, agent_context in context.items():
             enriched += f"\n- {agent_id}: {agent_context.get('summary', 'No summary available')}"
-        
+
         return enriched
 
 # Agent factory function
 def create_agent(agent_id: str, config: Dict[str, Any]) -> {config.name.replace(' ', '').replace('-', '_')}Agent:
     return {config.name.replace(' ', '').replace('-', '_')}Agent(agent_id, config)
 '''
-        
+
         main_path = output_dir / "main.py"
         with open(main_path, 'w') as f:
             f.write(main_content)
         generated_files.append(str(main_path))
-        
+
         # Generate configuration file
         config_content = {
             "agent": {
@@ -1176,12 +1176,12 @@ def create_agent(agent_id: str, config: Dict[str, Any]) -> {config.name.replace(
                 "allowed_delegations": config.allowed_delegations
             }
         }
-        
+
         config_path = output_dir / "config.yaml"
         with open(config_path, 'w') as f:
             yaml.dump(config_content, f, default_flow_style=False, indent=2)
         generated_files.append(str(config_path))
-    
+
     def _generate_readme(self, config: AgentConfiguration, template: Optional[AgentTemplate]) -> str:
         """Generate README.md content"""
         content = f"""# {config.name}
@@ -1197,15 +1197,15 @@ def create_agent(agent_id: str, config: Dict[str, Any]) -> {config.name.replace(
 ## Skills
 
 """
-        
+
         for skill in config.skills:
             content += f"- **{skill.name}** ({skill.type.value}): {skill.description}\n"
-        
+
         content += "\n## Handlers\n\n"
-        
+
         for handler in config.handlers:
             content += f"- **{handler.name}** ({handler.type.value}): {handler.description}\n"
-        
+
         content += f"""
 ## Configuration
 
@@ -1236,9 +1236,9 @@ response = await agent.handle_message(message)
 ---
 Generated by A2A Agent Builder
 """
-        
+
         return content
-    
+
     def _to_class_name(self, name: str) -> str:
         """Convert agent name to valid Python class name"""
         # Remove special characters and convert to PascalCase
@@ -1246,9 +1246,9 @@ Generated by A2A Agent Builder
         clean_name = re.sub(r'[^a-zA-Z0-9\s]', '', name)
         words = clean_name.split()
         return ''.join(word.capitalize() for word in words) + 'Agent'
-    
+
     # Additional helper methods for real A2A network operations
-    
+
     async def _get_network_agents(self) -> List[Dict[str, Any]]:
         """Get list of all agents in the A2A network"""
         try:
@@ -1262,7 +1262,7 @@ Generated by A2A Agent Builder
         except Exception as e:
             logger.error(f"Error getting network agents: {e}")
         return []
-    
+
     async def _send_command_to_agent(self, agent_id: str, command: str, args: str) -> str:
         """Send command to specific agent"""
         try:
@@ -1272,7 +1272,7 @@ Generated by A2A Agent Builder
                 "args": args,
                 "sender_id": self.agent_id
             }
-            
+
             network_url = self.config.get('network_url', 'http://localhost:8000/api/messages')
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
         async with httpx.AsyncClient() as client:
@@ -1287,7 +1287,7 @@ Generated by A2A Agent Builder
         except Exception as e:
             logger.error(f"Error sending command to {agent_id}: {e}")
         return "Failed to send command"
-    
+
     async def _invoke_ml_model(self, model_id: str, content: str) -> str:
         """Invoke ML model for inference"""
         try:
@@ -1306,7 +1306,7 @@ Generated by A2A Agent Builder
         except Exception as e:
             logger.error(f"Error invoking ML model {model_id}: {e}")
         return "ML model invocation failed"
-    
+
     async def _invoke_local_llm(self, content: str, llm_config: Dict[str, Any]) -> str:
         """Invoke local language model"""
         try:
@@ -1328,13 +1328,13 @@ Generated by A2A Agent Builder
         except Exception as e:
             logger.error(f"Error invoking local LLM: {e}")
         return "Local LLM invocation failed"
-    
+
     async def _find_related_agents(self, content: str) -> List[str]:
         """Find agents related to the message content"""
         try:
             # Extract keywords from content
             keywords = self._extract_keywords(content)
-            
+
             registry_url = self.config.get('registry_url', 'http://localhost:8000/api/registry')
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
         async with httpx.AsyncClient() as client:
@@ -1349,7 +1349,7 @@ Generated by A2A Agent Builder
         except Exception as e:
             logger.error(f"Error finding related agents: {e}")
         return []
-    
+
     async def _query_agent_context(self, agent_id: str, content: str) -> Dict[str, Any]:
         """Query specific agent for context"""
         try:
@@ -1358,7 +1358,7 @@ Generated by A2A Agent Builder
                 "content": content,
                 "sender_id": self.agent_id
             }
-            
+
             network_url = self.config.get('network_url', 'http://localhost:8000/api/messages')
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
         async with httpx.AsyncClient() as client:
@@ -1373,7 +1373,7 @@ Generated by A2A Agent Builder
         except Exception as e:
             logger.error(f"Error querying agent {agent_id} for context: {e}")
         return {}
-    
+
     def _extract_keywords(self, content: str) -> List[str]:
         """Extract keywords from content for agent matching"""
         # Simple keyword extraction - in production use NLP
@@ -1382,58 +1382,58 @@ Generated by A2A Agent Builder
 
 # A2A Protocol Compliance: All imports must be available
 # No fallback implementations allowed - the agent must have all required dependencies
-        
+
         # Remove common words
-        stopwords = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 
+        stopwords = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
                     'of', 'with', 'by', 'from', 'up', 'about', 'into', 'through', 'during'}
-        
+
         # Extract words
         words = re.findall(r'\b\w+\b', content.lower())
-        
+
         # Filter keywords
         keywords = [w for w in words if len(w) > 3 and w not in stopwords]
-        
+
         # Return unique keywords
         return list(set(keywords))[:10]  # Limit to 10 keywords
-    
+
     # Handler implementation methods for generated agents
-    
+
     async def _handle_analytical_query(self, content: str) -> str:
         """Handle analytical queries"""
         return f"Analyzing: {content}"
-    
+
     async def _handle_search_query(self, content: str) -> str:
         """Handle search queries"""
         return f"Searching for: {content}"
-    
+
     async def _handle_generative_query(self, content: str) -> str:
         """Handle generative queries"""
         return f"Generating response for: {content}"
-    
+
     async def _handle_transformation_query(self, content: str) -> str:
         """Handle transformation queries"""
         return f"Transforming: {content}"
-    
+
     async def _handle_general_query(self, content: str) -> str:
         """Handle general queries"""
         return f"Processing general query: {content}"
-    
+
     async def _get_agent_status(self, args: str) -> str:
         """Get agent status"""
         return "Agent is operational"
-    
+
     async def _list_capabilities(self, args: str) -> str:
         """List agent capabilities"""
         return "Agent capabilities: query processing, command execution, skill invocation"
-    
+
     async def _execute_task(self, args: str) -> str:
         """Execute a specific task"""
         return f"Executing task: {args}"
-    
+
     async def _stop_task(self, args: str) -> str:
         """Stop a running task"""
         return f"Stopping task: {args}"
-    
+
     async def _configure_agent(self, args: str) -> str:
         """Configure agent settings"""
         return f"Configuring agent with: {args}"

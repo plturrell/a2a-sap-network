@@ -108,20 +108,20 @@ class AgentConfig(BaseModel):
     version: str = "1.0.0"
     base_url: str = os.getenv("A2A_SERVICE_URL")
     port: int = 8000
-    
+
     # Telemetry settings
     enable_telemetry: bool = True
     telemetry_endpoint: Optional[str] = None
-    
+
     # Registry settings
     registry_url: Optional[str] = None
     auto_register: bool = True
-    
+
     # Performance settings
     max_concurrent_tasks: int = 10
     task_timeout: int = 300
     message_queue_size: int = 100
-    
+
     # Security settings
     enable_auth: bool = False
     api_key: Optional[str] = None

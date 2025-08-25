@@ -362,16 +362,16 @@ class AgentHelpSeeker:
                     # Fallback: A2A Network Client (should route through blockchain)
                     from .networkClient import A2ANetworkClient
                     network_client = A2ANetworkClient(agent_id=getattr(self, 'agent_id', 'unknown'))
-                    
+
                     response = await network_client.send_message(
                         to_agent=target_agent,
                         message=help_message.model_dump(),
                         message_type="HELP_REQUEST"
                     )
-                    
+
                     if not response or response.get('error'):
                         raise RuntimeError(f"A2A network request failed: {response.get('error', 'Unknown error')}")
-                    
+
                     return response
 
             # Execute with circuit breaker protection

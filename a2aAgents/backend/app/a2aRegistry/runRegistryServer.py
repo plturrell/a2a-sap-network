@@ -40,9 +40,9 @@ trust_system = None
 async def lifespan(app: FastAPI):
     """Application lifespan management"""
     global registry_service, trust_system
-    
+
     print("🚀 Starting Trust-Aware A2A Registry Server...")
-    
+
     # Initialize trust system
     try:
         # Try to import trust system from correct location
@@ -62,12 +62,12 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"⚠️ Trust system failed: {e}")
         trust_system = None
-    
+
     # Initialize registry with trust integration
     try:
         # Import directly since we've set up the path correctly
         from service import A2ARegistryService
-        
+
         registry_service = A2ARegistryService(
             enable_trust_integration=(trust_system is not None)
         )
@@ -75,41 +75,41 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"❌ Registry initialization failed: {e}")
         raise
-    
+
     # Register your blockchain agents automatically
     await register_blockchain_agents()
-    
+
     print("🎯 Trust-Aware A2A Registry Server is LIVE!")
     print("   • Blockchain integration: Ready")
-    print("   • Trust-aware discovery: Active") 
+    print("   • Trust-aware discovery: Active")
     print("   • Secure workflows: Enabled")
     print("   • API endpoints: Available")
-    
+
     yield
-    
+
     print("🛑 Shutting down Trust-Aware A2A Registry Server...")
 
 async def register_blockchain_agents():
     """Register your blockchain agents in the A2A Registry"""
     if not registry_service or not trust_system:
         return
-    
+
     # Your blockchain agent addresses
     AGENT1_ADDRESS = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
     AGENT2_ADDRESS = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
-    
+
     try:
         from models import (
-            AgentRegistrationRequest, AgentCard, AgentProvider, 
+            AgentRegistrationRequest, AgentCard, AgentProvider,
             AgentCapabilities, AgentSkill
         )
-        
+
         print("📋 Auto-registering blockchain agents...")
-        
+
         # Register agents in trust system first
         agent1_identity = trust_system.register_agent(AGENT1_ADDRESS, "blockchain_financial_agent")
         agent2_identity = trust_system.register_agent(AGENT2_ADDRESS, "blockchain_message_agent")
-        
+
         # Create Agent1 card (Financial Agent)
         agent1_card = AgentCard(
             name="Blockchain Financial Agent",
@@ -134,7 +134,7 @@ async def register_blockchain_agents():
                     tags=["financial", "blockchain", "analysis"]
                 ),
                 AgentSkill(
-                    id="risk-assessment", 
+                    id="risk-assessment",
                     name="Risk Assessment",
                     description="On-chain risk assessment",
                     tags=["financial", "risk", "blockchain"]
@@ -145,19 +145,19 @@ async def register_blockchain_agents():
             authentication={"schemes": ["Bearer", "Basic"]},
             preferredTransport="https"
         )
-        
+
         # Register Agent1 in A2A Registry
         agent1_request = AgentRegistrationRequest(
             agent_card=agent1_card,
             registered_by="blockchain_network"
         )
-        
+
         agent1_response = await registry_service.register_agent(agent1_request)
         # Update to use blockchain address
         registry_service.agents[AGENT1_ADDRESS] = registry_service.agents.pop(agent1_response.agent_id)
-        
+
         print(f"✅ Agent1 registered: {AGENT1_ADDRESS[:25]}...")
-        
+
         # Create Agent2 card (Message Agent)
         agent2_card = AgentCard(
             name="Blockchain Message Agent",
@@ -183,7 +183,7 @@ async def register_blockchain_agents():
                 ),
                 AgentSkill(
                     id="data-transformation",
-                    name="Data Transformation", 
+                    name="Data Transformation",
                     description="On-chain data processing",
                     tags=["data", "blockchain", "processing"]
                 )
@@ -193,20 +193,20 @@ async def register_blockchain_agents():
             authentication={"schemes": ["Bearer", "Basic"]},
             preferredTransport="https"
         )
-        
-        # Register Agent2 in A2A Registry  
+
+        # Register Agent2 in A2A Registry
         agent2_request = AgentRegistrationRequest(
             agent_card=agent2_card,
             registered_by="blockchain_network"
         )
-        
+
         agent2_response = await registry_service.register_agent(agent2_request)
         # Update to use blockchain address
         registry_service.agents[AGENT2_ADDRESS] = registry_service.agents.pop(agent2_response.agent_id)
-        
+
         print(f"✅ Agent2 registered: {AGENT2_ADDRESS[:25]}...")
         print(f"📊 Total agents in registry: {len(registry_service.agents)}")
-        
+
     except Exception as e:
         print(f"⚠️ Agent auto-registration failed: {e}")
 
@@ -300,10 +300,10 @@ async def sign_message(request: dict, trust: object = Depends(get_trust)):
     try:
         agent_id = request.get("agent_id")
         message = request.get("message")
-        
+
         if not agent_id or not message:
             raise HTTPException(status_code=400, detail="agent_id and message required")
-        
+
         signed_message = trust.sign_message(agent_id, message)
         return signed_message
     except Exception as e:
@@ -314,10 +314,10 @@ async def verify_message(request: dict, trust: object = Depends(get_trust)):
     """Verify a signed message"""
     try:
         signed_message = request.get("signed_message")
-        
+
         if not signed_message:
             raise HTTPException(status_code=400, detail="signed_message required")
-        
+
         is_valid, verified_msg = trust.verify_message(signed_message)
         return {
             "valid": is_valid,
@@ -335,7 +335,7 @@ async def get_trust_scores(trust: object = Depends(get_trust)):
         for agent_id in registry_service.agents.keys():
             scores[agent_id] = {
                 "trust_score": trust.get_trust_score(agent_id),
-                "trust_level": "verified" if trust.get_trust_score(agent_id) >= 0.9 else 
+                "trust_level": "verified" if trust.get_trust_score(agent_id) >= 0.9 else
                               "high" if trust.get_trust_score(agent_id) >= 0.7 else
                               "medium" if trust.get_trust_score(agent_id) >= 0.5 else "low"
             }
@@ -348,7 +348,7 @@ async def blockchain_status():
         "network": "Anvil (localhost:8545)",
         "registry_contract": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
         "message_router": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-        "agent1": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", 
+        "agent1": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
         "agent2": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
         "status": "active",
         "timestamp": datetime.utcnow().isoformat()
@@ -359,7 +359,7 @@ if __name__ == "__main__":
     print("   • Blockchain: Anvil (localhost:8545)")
     print("   • Registry: Trust-aware agent discovery")
     print("   • Server: http://localhost:8000")
-    
+
     uvicorn.run(
         app,
         host="0.0.0.0",

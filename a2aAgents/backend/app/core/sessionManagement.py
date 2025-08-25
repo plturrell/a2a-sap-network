@@ -17,7 +17,7 @@ try:
     JWT_AVAILABLE = True
 except ImportError:
     JWT_AVAILABLE = False
-    
+
 try:
     from passlib.context import CryptContext
     PASSLIB_AVAILABLE = True
@@ -75,46 +75,46 @@ class RefreshTokenInfo:
     is_revoked: bool = False
     def _generate_token_family():
         return str(uuid.uuid4())
-    
+
     token_family: str = field(default_factory=_generate_token_family)
     rotation_count: int = 0
 
 
 class SessionManager:
     """Secure session management service"""
-    
+
     def __init__(self):
         if not JWT_AVAILABLE:
             logger.warning("JWT library not available - session management will have limited functionality")
-            
+
         self.secrets_manager = get_secrets_manager()
         self.jwt_secret = self.secrets_manager.get_secret(
             "JWT_SECRET_KEY",
             default=settings.SECRET_KEY
         )
         self.jwt_algorithm = "HS256"
-        
+
         # Token expiration settings
         self.access_token_expire_minutes = 15  # Short-lived access tokens
         self.refresh_token_expire_days = 30    # Long-lived refresh tokens
         self.session_expire_hours = 24         # Session lifetime
-        
+
         # Security settings
         self.max_sessions_per_user = 5
         self.require_device_fingerprint = True
         self.enforce_ip_binding = False  # Can be enabled for high security
         self.detect_token_reuse = True   # Detect refresh token replay
-        
+
         # Initialize Redis for session storage
         self._init_redis()
-        
+
         # In-memory caches (for development/fallback)
         self.sessions: Dict[str, SessionInfo] = {}
         self.refresh_tokens: Dict[str, RefreshTokenInfo] = {}
         self.revoked_tokens: Set[str] = set()
-        
+
         logger.info("Session Manager initialized")
-    
+
     def _init_redis(self):
         """Initialize Redis connection"""
         if not REDIS_AVAILABLE:
@@ -122,7 +122,7 @@ class SessionManager:
             self.redis_client = None
             self.use_redis = False
             return
-            
+
         try:
             redis_url = self.secrets_manager.get_secret(
                 "REDIS_URL",
@@ -136,7 +136,7 @@ class SessionManager:
             logger.warning(f"Redis not available, using in-memory storage: {e}")
             self.redis_client = None
             self.use_redis = False
-    
+
     async def create_session(self,
                            user_id: str,
                            ip_address: str,
@@ -144,7 +144,7 @@ class SessionManager:
                            device_fingerprint: Optional[str] = None) -> Tuple[str, str, SessionInfo]:
         """
         Create a new session with tokens
-        
+
         Returns: (access_token, refresh_token, session_info)
         """
         try:
@@ -154,10 +154,10 @@ class SessionManager:
                 # Terminate oldest session
                 def get_creation_time(session):
                     return session.created_at
-                
+
                 oldest = min(active_sessions, key=get_creation_time)
                 await self.terminate_session(oldest.session_id)
-                
+
                 await report_security_event(
                     EventType.ACCESS_DENIED,
                     ThreatLevel.LOW,
@@ -165,10 +165,10 @@ class SessionManager:
                     user_id=user_id,
                     source_ip=ip_address
                 )
-            
+
             # Generate session ID
             session_id = str(uuid.uuid4())
-            
+
             # Create session
             session = SessionInfo(
                 session_id=session_id,
@@ -184,15 +184,15 @@ class SessionManager:
                     "suspicious_activity": False
                 }
             )
-            
+
             # Generate tokens
             access_token = self._create_access_token(user_id, session_id)
             refresh_token, refresh_info = await self._create_refresh_token(user_id, session_id)
-            
+
             # Store session
             session.refresh_token_id = refresh_info.token_id
             await self._store_session(session)
-            
+
             # Log session creation
             await report_security_event(
                 EventType.LOGIN_SUCCESS,
@@ -202,13 +202,13 @@ class SessionManager:
                 source_ip=ip_address,
                 session_id=session_id
             )
-            
+
             return access_token, refresh_token, session
-            
+
         except Exception as e:
             logger.error(f"Failed to create session: {e}")
             raise SecurityError("Session creation failed")
-    
+
     def _create_access_token(self, user_id: str, session_id: str) -> str:
         """Create a short-lived access token"""
         payload = {
@@ -219,13 +219,13 @@ class SessionManager:
             "exp": datetime.utcnow() + timedelta(minutes=self.access_token_expire_minutes),
             "jti": str(uuid.uuid4())  # Unique token ID
         }
-        
+
         return jwt.encode(payload, self.jwt_secret, algorithm=self.jwt_algorithm)
-    
+
     async def _create_refresh_token(self, user_id: str, session_id: str) -> Tuple[str, RefreshTokenInfo]:
         """Create a long-lived refresh token"""
         token_id = str(uuid.uuid4())
-        
+
         # Create token info
         refresh_info = RefreshTokenInfo(
             token_id=token_id,
@@ -234,7 +234,7 @@ class SessionManager:
             created_at=datetime.utcnow(),
             expires_at=datetime.utcnow() + timedelta(days=self.refresh_token_expire_days)
         )
-        
+
         # Create JWT
         payload = {
             "sub": user_id,
@@ -245,14 +245,14 @@ class SessionManager:
             "iat": refresh_info.created_at,
             "exp": refresh_info.expires_at
         }
-        
+
         token = jwt.encode(payload, self.jwt_secret, algorithm=self.jwt_algorithm)
-        
+
         # Store refresh token info
         await self._store_refresh_token(refresh_info)
-        
+
         return token, refresh_info
-    
+
     async def refresh_access_token(self,
                                  refresh_token: str,
                                  ip_address: str,
@@ -260,7 +260,7 @@ class SessionManager:
         """
         Refresh access token using refresh token
         Implements token rotation for security
-        
+
         Returns: (new_access_token, new_refresh_token)
         """
         try:
@@ -275,26 +275,26 @@ class SessionManager:
                 raise AuthenticationError("Refresh token has expired")
             except jwt.InvalidTokenError:
                 raise AuthenticationError("Invalid refresh token")
-            
+
             # Validate token type
             if payload.get("type") != "refresh":
                 raise AuthenticationError("Invalid token type")
-            
+
             token_id = payload.get("tid")
             session_id = payload.get("sid")
             user_id = payload.get("sub")
             token_family = payload.get("fam")
-            
+
             # Get refresh token info
             refresh_info = await self._get_refresh_token(token_id)
             if not refresh_info:
                 raise AuthenticationError("Refresh token not found")
-            
+
             # Check if token is revoked
             if refresh_info.is_revoked:
                 # Potential token theft - revoke entire family
                 await self._revoke_token_family(token_family)
-                
+
                 await report_security_event(
                     EventType.SUSPICIOUS_TRAFFIC,
                     ThreatLevel.HIGH,
@@ -303,14 +303,14 @@ class SessionManager:
                     source_ip=ip_address,
                     session_id=session_id
                 )
-                
+
                 raise AuthenticationError("Token has been revoked")
-            
+
             # Check if token has been used (replay detection)
             if self.detect_token_reuse and refresh_info.used_at:
                 # Token reuse detected - revoke entire family
                 await self._revoke_token_family(token_family)
-                
+
                 await report_security_event(
                     EventType.SUSPICIOUS_TRAFFIC,
                     ThreatLevel.CRITICAL,
@@ -319,14 +319,14 @@ class SessionManager:
                     source_ip=ip_address,
                     session_id=session_id
                 )
-                
+
                 raise AuthenticationError("Token reuse detected - security breach")
-            
+
             # Get session
             session = await self._get_session(session_id)
             if not session or not session.is_active:
                 raise AuthenticationError("Session not found or inactive")
-            
+
             # Validate session security
             if self.enforce_ip_binding and session.ip_address != ip_address:
                 await report_security_event(
@@ -338,11 +338,11 @@ class SessionManager:
                     session_id=session_id
                 )
                 raise AuthenticationError("Session IP mismatch")
-            
+
             # Mark old refresh token as used
             refresh_info.used_at = datetime.utcnow()
             await self._store_refresh_token(refresh_info)
-            
+
             # Rotate refresh token (create new one, invalidate old)
             new_refresh_token, new_refresh_info = await self._create_refresh_token(
                 user_id, session_id
@@ -350,25 +350,25 @@ class SessionManager:
             new_refresh_info.token_family = token_family
             new_refresh_info.rotation_count = refresh_info.rotation_count + 1
             await self._store_refresh_token(new_refresh_info)
-            
+
             # Create new access token
             new_access_token = self._create_access_token(user_id, session_id)
-            
+
             # Update session
             session.last_activity = datetime.utcnow()
             session.refresh_token_id = new_refresh_info.token_id
             await self._store_session(session)
-            
+
             logger.info(f"Tokens refreshed for user {user_id}, session {session_id}")
-            
+
             return new_access_token, new_refresh_token
-            
+
         except AuthenticationError:
             raise
         except Exception as e:
             logger.error(f"Token refresh failed: {e}")
             raise AuthenticationError("Token refresh failed")
-    
+
     async def validate_access_token(self, token: str) -> Dict[str, Any]:
         """Validate access token and return claims"""
         try:
@@ -376,35 +376,35 @@ class SessionManager:
             token_hash = hashlib.sha256(token.encode()).hexdigest()
             if await self._is_token_revoked(token_hash):
                 raise AuthenticationError("Token has been revoked")
-            
+
             # Decode token
             payload = jwt.decode(
                 token,
                 self.jwt_secret,
                 algorithms=[self.jwt_algorithm]
             )
-            
+
             # Validate token type
             if payload.get("type") != "access":
                 raise AuthenticationError("Invalid token type")
-            
+
             # Get session
             session_id = payload.get("sid")
             session = await self._get_session(session_id)
-            
+
             if not session or not session.is_active:
                 raise AuthenticationError("Session not found or inactive")
-            
+
             # Update last activity
             session.last_activity = datetime.utcnow()
             await self._store_session(session)
-            
+
             return {
                 "user_id": payload.get("sub"),
                 "session_id": session_id,
                 "session": session
             }
-            
+
         except jwt.ExpiredSignatureError:
             raise AuthenticationError("Access token has expired")
         except jwt.InvalidTokenError:
@@ -412,7 +412,7 @@ class SessionManager:
         except Exception as e:
             logger.error(f"Token validation failed: {e}")
             raise AuthenticationError("Token validation failed")
-    
+
     async def terminate_session(self, session_id: str, reason: str = "User logout"):
         """Terminate a session and revoke associated tokens"""
         try:
@@ -421,14 +421,14 @@ class SessionManager:
                 # Mark session as inactive
                 session.is_active = False
                 await self._store_session(session)
-                
+
                 # Revoke refresh token
                 if session.refresh_token_id:
                     refresh_info = await self._get_refresh_token(session.refresh_token_id)
                     if refresh_info:
                         refresh_info.is_revoked = True
                         await self._store_refresh_token(refresh_info)
-                
+
                 # Log termination
                 await report_security_event(
                     EventType.LOGIN_SUCCESS,  # Using as logout event
@@ -437,25 +437,25 @@ class SessionManager:
                     user_id=session.user_id,
                     session_id=session_id
                 )
-                
+
                 logger.info(f"Session {session_id} terminated: {reason}")
-                
+
         except Exception as e:
             logger.error(f"Failed to terminate session: {e}")
-    
+
     async def terminate_all_user_sessions(self, user_id: str, reason: str = "Security measure"):
         """Terminate all sessions for a user"""
         sessions = await self.get_user_sessions(user_id)
         for session in sessions:
             await self.terminate_session(session.session_id, reason)
-        
+
         await report_security_event(
             EventType.ACCESS_DENIED,
             ThreatLevel.MEDIUM,
             f"All sessions terminated for user {user_id}: {reason}",
             user_id=user_id
         )
-    
+
     async def get_user_sessions(self, user_id: str) -> List[SessionInfo]:
         """Get all active sessions for a user"""
         if self.use_redis:
@@ -473,15 +473,15 @@ class SessionManager:
             # Get from memory
             return [
                 session for session in self.sessions.values()
-                if session.user_id == user_id and 
-                   session.is_active and 
+                if session.user_id == user_id and
+                   session.is_active and
                    session.expires_at > datetime.utcnow()
             ]
-    
+
     async def revoke_token(self, token: str):
         """Revoke a specific token"""
         token_hash = hashlib.sha256(token.encode()).hexdigest()
-        
+
         if self.use_redis:
             self.redis_client.setex(
                 f"revoked_token:{token_hash}",
@@ -490,7 +490,7 @@ class SessionManager:
             )
         else:
             self.revoked_tokens.add(token_hash)
-    
+
     # Storage methods
     async def _store_session(self, session: SessionInfo):
         """Store session information"""
@@ -504,7 +504,7 @@ class SessionManager:
             )
         else:
             self.sessions[session.session_id] = session
-    
+
     async def _get_session(self, session_id: str) -> Optional[SessionInfo]:
         """Get session information"""
         if self.use_redis:
@@ -517,7 +517,7 @@ class SessionManager:
             return None
         else:
             return self.sessions.get(session_id)
-    
+
     async def _store_refresh_token(self, refresh_info: RefreshTokenInfo):
         """Store refresh token information"""
         if self.use_redis:
@@ -530,7 +530,7 @@ class SessionManager:
             )
         else:
             self.refresh_tokens[refresh_info.token_id] = refresh_info
-    
+
     async def _get_refresh_token(self, token_id: str) -> Optional[RefreshTokenInfo]:
         """Get refresh token information"""
         if self.use_redis:
@@ -540,18 +540,18 @@ class SessionManager:
             return None
         else:
             return self.refresh_tokens.get(token_id)
-    
+
     async def _is_token_revoked(self, token_hash: str) -> bool:
         """Check if token is revoked"""
         if self.use_redis:
             return bool(self.redis_client.get(f"revoked_token:{token_hash}"))
         else:
             return token_hash in self.revoked_tokens
-    
+
     async def _revoke_token_family(self, token_family: str):
         """Revoke entire token family (for security breach scenarios)"""
         logger.warning(f"Revoking entire token family: {token_family}")
-        
+
         if self.use_redis:
             # Find all tokens in family
             for key in self.redis_client.scan_iter("refresh_token:*"):
@@ -566,14 +566,14 @@ class SessionManager:
             for refresh_info in self.refresh_tokens.values():
                 if refresh_info.token_family == token_family:
                     refresh_info.is_revoked = True
-    
+
     # Serialization helpers
     async def create_password_reset_token(self, user_id: str, email: str) -> str:
         """Create secure password reset token valid for 1 hour"""
         try:
             # Generate secure random token
             reset_token = secrets.token_urlsafe(32)
-            
+
             # Create token data
             token_data = {
                 "user_id": user_id,
@@ -582,46 +582,46 @@ class SessionManager:
                 "expires_at": (datetime.utcnow() + timedelta(hours=1)).isoformat(),
                 "token_type": "password_reset"
             }
-            
+
             # Store token (in production, use Redis with TTL)
             if not hasattr(self, '_password_reset_tokens'):
                 self._password_reset_tokens = {}
-            
+
             self._password_reset_tokens[reset_token] = token_data
-            
+
             logger.info(f"Password reset token created for user {user_id}")
             return reset_token
-            
+
         except Exception as e:
             logger.error(f"Failed to create password reset token: {e}")
             raise SecurityError("Failed to create password reset token")
-    
+
     async def validate_password_reset_token(self, reset_token: str) -> Dict[str, Any]:
         """Validate password reset token and return user data"""
         try:
             if not hasattr(self, '_password_reset_tokens'):
                 self._password_reset_tokens = {}
-            
+
             token_data = self._password_reset_tokens.get(reset_token)
-            
+
             if not token_data:
                 raise ValidationError("Invalid reset token")
-            
+
             # Check expiration
             expires_at = datetime.fromisoformat(token_data["expires_at"])
             if datetime.utcnow() > expires_at:
                 # Clean up expired token
                 del self._password_reset_tokens[reset_token]
                 raise ValidationError("Reset token has expired")
-            
+
             return token_data
-            
+
         except ValidationError:
             raise
         except Exception as e:
             logger.error(f"Failed to validate password reset token: {e}")
             raise ValidationError("Invalid reset token")
-    
+
     async def invalidate_password_reset_token(self, reset_token: str):
         """Invalidate used password reset token"""
         try:
@@ -645,7 +645,7 @@ class SessionManager:
             "device_fingerprint": session.device_fingerprint,
             "security_flags": session.security_flags
         }
-    
+
     def _deserialize_session(self, data: Dict[str, Any]) -> SessionInfo:
         return SessionInfo(
             session_id=data["session_id"],
@@ -660,7 +660,7 @@ class SessionManager:
             device_fingerprint=data.get("device_fingerprint"),
             security_flags=data.get("security_flags", {})
         )
-    
+
     def _serialize_refresh_token(self, refresh_info: RefreshTokenInfo) -> Dict[str, Any]:
         return {
             "token_id": refresh_info.token_id,
@@ -673,7 +673,7 @@ class SessionManager:
             "token_family": refresh_info.token_family,
             "rotation_count": refresh_info.rotation_count
         }
-    
+
     def _deserialize_refresh_token(self, data: Dict[str, Any]) -> RefreshTokenInfo:
         return RefreshTokenInfo(
             token_id=data["token_id"],

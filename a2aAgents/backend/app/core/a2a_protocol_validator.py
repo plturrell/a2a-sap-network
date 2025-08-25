@@ -90,18 +90,18 @@ class AgentInteractionContext:
 
 class ValidationRule(ABC):
     """Abstract base class for validation rules"""
-    
+
     def __init__(self, rule_id: str, category: ValidationCategory, severity: ValidationSeverity):
         self.rule_id = rule_id
         self.category = category
         self.severity = severity
         self.enabled = True
-        
+
     @abstractmethod
     async def validate(self, context: Union[MessageValidationContext, AgentInteractionContext]) -> List[ValidationResult]:
         """Validate the given context"""
         pass
-    
+
     def create_result(self, message: str, details: Dict[str, Any] = None, location: str = None, suggestion: str = None) -> ValidationResult:
         """Create a validation result"""
         return ValidationResult(
@@ -117,14 +117,14 @@ class ValidationRule(ABC):
 
 class MessageFormatRule(ValidationRule):
     """Validates A2A message format compliance"""
-    
+
     def __init__(self):
         super().__init__("msg_format", ValidationCategory.MESSAGE_FORMAT, ValidationSeverity.ERROR)
-    
+
     async def validate(self, context: MessageValidationContext) -> List[ValidationResult]:
         results = []
         message = context.message
-        
+
         # Required fields validation
         required_fields = ['id', 'type', 'sender', 'timestamp', 'payload']
         for field in required_fields:
@@ -134,7 +134,7 @@ class MessageFormatRule(ValidationRule):
                     {"field": field},
                     suggestion=f"Ensure message includes '{field}' field"
                 ))
-        
+
         # Message ID format validation
         if hasattr(message, 'id') and message.id:
             if not re.match(r'^[a-zA-Z0-9\-_]{1,64}$', message.id):
@@ -143,33 +143,33 @@ class MessageFormatRule(ValidationRule):
                     {"message_id": message.id, "pattern": "^[a-zA-Z0-9\\-_]{1,64}$"},
                     suggestion="Use alphanumeric characters, hyphens, and underscores only"
                 ))
-        
+
         # Timestamp validation
         if hasattr(message, 'timestamp') and message.timestamp:
             try:
                 # Validate timestamp is not too old or in future
                 msg_time = datetime.fromisoformat(message.timestamp.replace('Z', '+00:00'))
                 now = datetime.utcnow()
-                
+
                 if msg_time > now + timedelta(minutes=5):
                     results.append(self.create_result(
                         "Message timestamp is in the future",
                         {"timestamp": message.timestamp, "drift_minutes": (msg_time - now).total_seconds() / 60}
                     ))
-                
+
                 if now - msg_time > timedelta(hours=24):
                     results.append(self.create_result(
                         "Message timestamp is too old",
                         {"timestamp": message.timestamp, "age_hours": (now - msg_time).total_seconds() / 3600}
                     ))
-                    
+
             except (ValueError, TypeError) as e:
                 results.append(self.create_result(
                     "Invalid timestamp format",
                     {"timestamp": message.timestamp, "error": str(e)},
                     suggestion="Use ISO 8601 format: YYYY-MM-DDTHH:MM:SS.sssZ"
                 ))
-        
+
         # Payload size validation
         if hasattr(message, 'payload') and message.payload:
             try:
@@ -185,20 +185,20 @@ class MessageFormatRule(ValidationRule):
                     "Message payload is not JSON serializable",
                     {"payload_type": type(message.payload).__name__}
                 ))
-        
+
         return results
 
 
 class ProtocolComplianceRule(ValidationRule):
     """Validates A2A protocol compliance"""
-    
+
     def __init__(self):
         super().__init__("protocol_compliance", ValidationCategory.PROTOCOL_COMPLIANCE, ValidationSeverity.ERROR)
-    
+
     async def validate(self, context: MessageValidationContext) -> List[ValidationResult]:
         results = []
         message = context.message
-        
+
         # Message type validation
         if hasattr(message, 'type') and message.type:
             valid_types = [mt.value for mt in MessageType]
@@ -208,7 +208,7 @@ class ProtocolComplianceRule(ValidationRule):
                     {"message_type": message.type, "valid_types": valid_types},
                     suggestion=f"Use one of: {', '.join(valid_types)}"
                 ))
-        
+
         # Conversation ID validation for dialogue messages
         if (hasattr(message, 'type') and message.type in ['request', 'response', 'dialogue'] and
             context.conversation_id is None):
@@ -217,7 +217,7 @@ class ProtocolComplianceRule(ValidationRule):
                 {"message_type": message.type},
                 suggestion="Include conversation_id in message context"
             ))
-        
+
         # Response correlation validation
         if hasattr(message, 'type') and message.type == 'response':
             if not hasattr(message, 'in_reply_to') or not message.in_reply_to:
@@ -226,7 +226,7 @@ class ProtocolComplianceRule(ValidationRule):
                     {"message_type": message.type},
                     suggestion="Include original message ID in 'in_reply_to' field"
                 ))
-        
+
         # Capability declaration validation
         if hasattr(message, 'payload') and isinstance(message.payload, dict):
             if 'capabilities' in message.payload:
@@ -240,7 +240,7 @@ class ProtocolComplianceRule(ValidationRule):
                             {"invalid_capabilities": invalid_caps, "valid_capabilities": valid_capabilities},
                             suggestion="Use only standard A2A capabilities"
                         ))
-        
+
         # Protocol version compatibility
         if context.protocol_version == ProtocolVersion.V1_0:
             # V1.0 doesn't support certain features
@@ -253,24 +253,24 @@ class ProtocolComplianceRule(ValidationRule):
                         {"protocol_version": context.protocol_version.value, "unsupported_features": used_features},
                         suggestion="Upgrade to protocol v2.0 or remove unsupported features"
                     ))
-        
+
         return results
 
 
 class SecurityValidationRule(ValidationRule):
     """Validates security aspects of A2A messages"""
-    
+
     def __init__(self):
         super().__init__("security_validation", ValidationCategory.SECURITY, ValidationSeverity.CRITICAL)
-    
+
     async def validate(self, context: MessageValidationContext) -> List[ValidationResult]:
         results = []
         message = context.message
-        
+
         # Check for sensitive data in payload
         if hasattr(message, 'payload') and isinstance(message.payload, dict):
             payload_str = json.dumps(message.payload).lower()
-            
+
             # Common sensitive patterns
             sensitive_patterns = {
                 'password': r'password["\s]*[:=]["\s]*[^\s,"}{]+',
@@ -280,7 +280,7 @@ class SecurityValidationRule(ValidationRule):
                 'private_key': r'private[_\s]*key["\s]*[:=]["\s]*[^\s,"}{]+',
                 'ssh_key': r'ssh[_\s]*key["\s]*[:=]["\s]*[^\s,"}{]+'
             }
-            
+
             for pattern_name, pattern in sensitive_patterns.items():
                 if re.search(pattern, payload_str):
                     results.append(self.create_result(
@@ -288,7 +288,7 @@ class SecurityValidationRule(ValidationRule):
                         {"pattern": pattern_name, "severity": "critical"},
                         suggestion="Remove sensitive data from message payload or use encryption"
                     ))
-        
+
         # Validate sender identity
         if hasattr(message, 'sender') and message.sender:
             # Check for suspicious sender patterns
@@ -298,7 +298,7 @@ class SecurityValidationRule(ValidationRule):
                     {"sender": message.sender},
                     suggestion="Implement proper agent authentication"
                 ))
-        
+
         # Trust level validation
         if context.trust_level < 0.3:
             results.append(self.create_result(
@@ -306,7 +306,7 @@ class SecurityValidationRule(ValidationRule):
                 {"trust_level": context.trust_level, "threshold": 0.3},
                 suggestion="Verify sender identity and message authenticity"
             ))
-        
+
         # Message integrity check
         if hasattr(message, 'signature') and message.signature:
             # Validate signature format
@@ -322,23 +322,23 @@ class SecurityValidationRule(ValidationRule):
                 {"trust_level": context.trust_level},
                 suggestion="Sign messages for integrity verification"
             ))
-        
+
         return results
 
 
 class AgentBehaviorRule(ValidationRule):
     """Validates agent behavior patterns"""
-    
+
     def __init__(self):
         super().__init__("agent_behavior", ValidationCategory.AGENT_BEHAVIOR, ValidationSeverity.WARNING)
-    
+
     async def validate(self, context: AgentInteractionContext) -> List[ValidationResult]:
         results = []
-        
+
         # Capability consistency check
         declared_caps = context.expected_capabilities
         demonstrated_caps = context.actual_capabilities
-        
+
         missing_caps = declared_caps - demonstrated_caps
         if missing_caps:
             results.append(self.create_result(
@@ -346,7 +346,7 @@ class AgentBehaviorRule(ValidationRule):
                 {"missing_capabilities": [cap.value for cap in missing_caps]},
                 suggestion="Ensure agent implements all declared capabilities"
             ))
-        
+
         unexpected_caps = demonstrated_caps - declared_caps
         if unexpected_caps:
             results.append(self.create_result(
@@ -354,7 +354,7 @@ class AgentBehaviorRule(ValidationRule):
                 {"unexpected_capabilities": [cap.value for cap in unexpected_caps]},
                 suggestion="Update agent capability declarations"
             ))
-        
+
         # Message frequency analysis
         if len(context.messages) > 100:
             time_span = (datetime.utcnow() - context.start_time).total_seconds()
@@ -366,24 +366,24 @@ class AgentBehaviorRule(ValidationRule):
                         {"message_rate": message_rate, "threshold": 10},
                         suggestion="Implement rate limiting or batch processing"
                     ))
-        
+
         # Response time analysis
         request_response_pairs = []
         for i, msg in enumerate(context.messages):
             if msg.type == 'request':
                 # Look for corresponding response
                 for j in range(i + 1, len(context.messages)):
-                    if (context.messages[j].type == 'response' and 
-                        hasattr(context.messages[j], 'in_reply_to') and 
+                    if (context.messages[j].type == 'response' and
+                        hasattr(context.messages[j], 'in_reply_to') and
                         context.messages[j].in_reply_to == msg.id):
-                        
+
                         request_time = datetime.fromisoformat(msg.timestamp.replace('Z', '+00:00'))
                         response_time = datetime.fromisoformat(context.messages[j].timestamp.replace('Z', '+00:00'))
                         response_delay = (response_time - request_time).total_seconds()
-                        
+
                         request_response_pairs.append(response_delay)
                         break
-        
+
         if request_response_pairs:
             avg_response_time = sum(request_response_pairs) / len(request_response_pairs)
             if avg_response_time > 30:  # More than 30 seconds average
@@ -392,27 +392,27 @@ class AgentBehaviorRule(ValidationRule):
                     {"average_response_time": avg_response_time, "threshold": 30},
                     suggestion="Optimize agent processing or implement asynchronous responses"
                 ))
-        
+
         return results
 
 
 class PerformanceValidationRule(ValidationRule):
     """Validates performance aspects of A2A interactions"""
-    
+
     def __init__(self):
         super().__init__("performance_validation", ValidationCategory.PERFORMANCE, ValidationSeverity.INFO)
-    
+
     async def validate(self, context: Union[MessageValidationContext, AgentInteractionContext]) -> List[ValidationResult]:
         results = []
-        
+
         if isinstance(context, MessageValidationContext):
             # Message-level performance validation
             message = context.message
-            
+
             # Payload efficiency check
             if hasattr(message, 'payload') and isinstance(message.payload, dict):
                 payload_str = json.dumps(message.payload)
-                
+
                 # Check for redundant data
                 if 'data' in message.payload and 'payload' in message.payload:
                     results.append(self.create_result(
@@ -420,7 +420,7 @@ class PerformanceValidationRule(ValidationRule):
                         {"fields": ["data", "payload"]},
                         suggestion="Use consistent field naming to avoid redundancy"
                     ))
-                
+
                 # Check for large string repetitions
                 import collections
                 words = payload_str.split()
@@ -432,36 +432,36 @@ class PerformanceValidationRule(ValidationRule):
                         {"repeated_word": most_common[0][0], "count": most_common[0][1]},
                         suggestion="Consider data compression or structure optimization"
                     ))
-        
+
         elif isinstance(context, AgentInteractionContext):
             # Interaction-level performance validation
-            
+
             # Message batching efficiency
             if len(context.messages) > 50:
                 # Check for potential batching opportunities
                 message_types = [msg.type for msg in context.messages]
                 type_counts = collections.Counter(message_types)
-                
+
                 if type_counts.get('notification', 0) > 10:
                     results.append(self.create_result(
                         f"Multiple notification messages ({type_counts['notification']}) could be batched",
                         {"notification_count": type_counts['notification']},
                         suggestion="Consider batching notifications to reduce overhead"
                     ))
-        
+
         return results
 
 
 class A2AProtocolValidator:
     """Main A2A protocol validation system"""
-    
+
     def __init__(self):
         self.rules: Dict[str, ValidationRule] = {}
         self.validation_history: deque = deque(maxlen=10000)
         self.agent_interactions: Dict[str, AgentInteractionContext] = {}
         self.enabled = True
         self.severity_threshold = ValidationSeverity.WARNING
-        
+
         # Statistics
         self.validation_stats = {
             "total_validations": 0,
@@ -470,10 +470,10 @@ class A2AProtocolValidator:
             "by_category": defaultdict(int),
             "by_rule": defaultdict(int)
         }
-        
+
         # Register default rules
         self._register_default_rules()
-    
+
     def _register_default_rules(self):
         """Register default validation rules"""
         self.register_rule(MessageFormatRule())
@@ -481,28 +481,28 @@ class A2AProtocolValidator:
         self.register_rule(SecurityValidationRule())
         self.register_rule(AgentBehaviorRule())
         self.register_rule(PerformanceValidationRule())
-    
+
     def register_rule(self, rule: ValidationRule):
         """Register a validation rule"""
         self.rules[rule.rule_id] = rule
         logger.info(f"Registered validation rule: {rule.rule_id} ({rule.category.value})")
-    
+
     def unregister_rule(self, rule_id: str):
         """Unregister a validation rule"""
         if rule_id in self.rules:
             del self.rules[rule_id]
             logger.info(f"Unregistered validation rule: {rule_id}")
-    
+
     def enable_rule(self, rule_id: str):
         """Enable a validation rule"""
         if rule_id in self.rules:
             self.rules[rule_id].enabled = True
-    
+
     def disable_rule(self, rule_id: str):
         """Disable a validation rule"""
         if rule_id in self.rules:
             self.rules[rule_id].enabled = False
-    
+
     @trace_async("validate_message")
     async def validate_message(
         self,
@@ -514,17 +514,17 @@ class A2AProtocolValidator:
         trust_level: float = 0.5
     ) -> List[ValidationResult]:
         """Validate an A2A message"""
-        
+
         if not self.enabled:
             return []
-        
+
         add_span_attributes({
             "message.id": message.id if hasattr(message, 'id') else "unknown",
             "message.type": message.type if hasattr(message, 'type') else "unknown",
             "sender.agent": sender_agent or "unknown",
             "protocol.version": protocol_version.value
         })
-        
+
         context = MessageValidationContext(
             message=message,
             sender_agent=sender_agent,
@@ -533,76 +533,76 @@ class A2AProtocolValidator:
             protocol_version=protocol_version,
             trust_level=trust_level
         )
-        
+
         all_results = []
-        
+
         # Run all applicable rules
         for rule in self.rules.values():
             if not rule.enabled:
                 continue
-                
+
             # Only run message-applicable rules
-            if rule.category in [ValidationCategory.MESSAGE_FORMAT, ValidationCategory.PROTOCOL_COMPLIANCE, 
+            if rule.category in [ValidationCategory.MESSAGE_FORMAT, ValidationCategory.PROTOCOL_COMPLIANCE,
                                ValidationCategory.SECURITY, ValidationCategory.PERFORMANCE]:
                 try:
                     results = await rule.validate(context)
                     all_results.extend(results)
-                    
+
                     # Update statistics
                     self.validation_stats["by_rule"][rule.rule_id] += len(results)
-                    
+
                 except Exception as e:
                     logger.error(f"Validation rule {rule.rule_id} failed: {e}")
-        
+
         # Filter by severity threshold
         filtered_results = [
             result for result in all_results
             if self._severity_level(result.severity) >= self._severity_level(self.severity_threshold)
         ]
-        
+
         # Update statistics
         self.validation_stats["total_validations"] += 1
         if filtered_results:
             self.validation_stats["failed_validations"] += 1
-        
+
         for result in filtered_results:
             self.validation_stats["by_severity"][result.severity.value] += 1
             self.validation_stats["by_category"][result.category.value] += 1
-        
+
         # Store in history
         self.validation_history.append({
             "timestamp": datetime.utcnow().isoformat(),
             "message_id": message.id if hasattr(message, 'id') else None,
             "sender_agent": sender_agent,
             "results_count": len(filtered_results),
-            "max_severity": max([result.severity for result in filtered_results], 
+            "max_severity": max([result.severity for result in filtered_results],
                               default=ValidationSeverity.INFO).value
         })
-        
+
         return filtered_results
-    
+
     @trace_async("validate_agent_interaction")
     async def validate_agent_interaction(self, agent_id: str) -> List[ValidationResult]:
         """Validate an agent's interaction patterns"""
-        
+
         if not self.enabled or agent_id not in self.agent_interactions:
             return []
-        
+
         context = self.agent_interactions[agent_id]
         all_results = []
-        
+
         # Run agent behavior rules
         for rule in self.rules.values():
-            if (rule.enabled and 
+            if (rule.enabled and
                 rule.category in [ValidationCategory.AGENT_BEHAVIOR, ValidationCategory.PERFORMANCE]):
                 try:
                     results = await rule.validate(context)
                     all_results.extend(results)
                 except Exception as e:
                     logger.error(f"Agent validation rule {rule.rule_id} failed: {e}")
-        
+
         return all_results
-    
+
     def start_agent_interaction(
         self,
         agent_id: str,
@@ -610,23 +610,23 @@ class A2AProtocolValidator:
         expected_capabilities: Set[AgentCapability] = None
     ):
         """Start tracking an agent interaction"""
-        
+
         context = AgentInteractionContext(
             agent_id=agent_id,
             interaction_type=interaction_type,
             start_time=datetime.utcnow(),
             expected_capabilities=expected_capabilities or set()
         )
-        
+
         self.agent_interactions[agent_id] = context
         logger.debug(f"Started tracking agent interaction: {agent_id}")
-    
+
     def add_message_to_interaction(self, agent_id: str, message: A2AMessage):
         """Add a message to an agent interaction"""
-        
+
         if agent_id in self.agent_interactions:
             self.agent_interactions[agent_id].messages.append(message)
-            
+
             # Update demonstrated capabilities based on message content
             if hasattr(message, 'payload') and isinstance(message.payload, dict):
                 if 'capability_used' in message.payload:
@@ -635,15 +635,15 @@ class A2AProtocolValidator:
                         self.agent_interactions[agent_id].actual_capabilities.add(capability)
                     except ValueError:
                         pass
-    
+
     def end_agent_interaction(self, agent_id: str) -> Optional[AgentInteractionContext]:
         """End tracking an agent interaction"""
-        
+
         return self.agent_interactions.pop(agent_id, None)
-    
+
     def get_validation_stats(self) -> Dict[str, Any]:
         """Get validation statistics"""
-        
+
         return {
             "enabled": self.enabled,
             "severity_threshold": self.severity_threshold.value,
@@ -653,25 +653,25 @@ class A2AProtocolValidator:
             "validation_history_size": len(self.validation_history),
             "statistics": dict(self.validation_stats)
         }
-    
+
     def get_validation_report(self, agent_id: Optional[str] = None) -> Dict[str, Any]:
         """Generate a validation report"""
-        
+
         recent_validations = list(self.validation_history)[-100:]  # Last 100 validations
-        
+
         if agent_id:
             recent_validations = [
-                v for v in recent_validations 
+                v for v in recent_validations
                 if v.get("sender_agent") == agent_id
             ]
-        
+
         # Analyze trends
         severity_trend = defaultdict(int)
         category_trend = defaultdict(int)
-        
+
         for validation in recent_validations:
             severity_trend[validation.get("max_severity", "info")] += 1
-        
+
         return {
             "report_timestamp": datetime.utcnow().isoformat(),
             "agent_id": agent_id,
@@ -680,7 +680,7 @@ class A2AProtocolValidator:
             "statistics": self.get_validation_stats(),
             "recommendations": self._generate_recommendations(recent_validations)
         }
-    
+
     def _severity_level(self, severity: ValidationSeverity) -> int:
         """Convert severity to numeric level"""
         levels = {
@@ -690,32 +690,32 @@ class A2AProtocolValidator:
             ValidationSeverity.CRITICAL: 3
         }
         return levels.get(severity, 0)
-    
+
     def _generate_recommendations(self, validations: List[Dict[str, Any]]) -> List[str]:
         """Generate recommendations based on validation history"""
         recommendations = []
-        
+
         # High failure rate
         failed_count = sum(1 for v in validations if v.get("results_count", 0) > 0)
         if failed_count > len(validations) * 0.5:
             recommendations.append(
                 "High validation failure rate detected. Review message format and protocol compliance."
             )
-        
+
         # Security issues
         security_issues = sum(1 for v in validations if v.get("max_severity") == "critical")
         if security_issues > 0:
             recommendations.append(
                 "Critical security issues detected. Implement proper authentication and remove sensitive data from messages."
             )
-        
+
         # Performance issues
         perf_issues = [v for v in validations if "performance" in str(v)]
         if len(perf_issues) > 5:
             recommendations.append(
                 "Performance issues detected. Consider message batching and payload optimization."
             )
-        
+
         return recommendations
 
 
@@ -726,10 +726,10 @@ _protocol_validator = None
 def initialize_protocol_validator() -> A2AProtocolValidator:
     """Initialize global protocol validator"""
     global _protocol_validator
-    
+
     if _protocol_validator is None:
         _protocol_validator = A2AProtocolValidator()
-    
+
     return _protocol_validator
 
 
@@ -772,19 +772,19 @@ def validate_a2a_message(trust_level: float = 0.5):
                 if isinstance(arg, A2AMessage):
                     message = arg
                     break
-            
+
             if message:
                 validator = get_protocol_validator()
                 if validator:
                     results = await validator.validate_message(message, trust_level=trust_level)
-                    
+
                     # Log critical issues
                     critical_issues = [r for r in results if r.severity == ValidationSeverity.CRITICAL]
                     if critical_issues:
                         logger.error(f"Critical validation issues in {func.__name__}: {[r.message for r in critical_issues]}")
                         # Optionally raise exception for critical issues
                         # raise ValueError(f"Message validation failed: {critical_issues[0].message}")
-            
+
             return await func(*args, **kwargs)
         return wrapper
     return decorator

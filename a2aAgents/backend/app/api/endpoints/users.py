@@ -11,7 +11,7 @@ from datetime import datetime
 import logging
 
 from ...core.rbac import (
-    get_auth_service, UserModel, UserRole, Permission, 
+    get_auth_service, UserModel, UserRole, Permission,
     AuthenticationError, AuthorizationError, ValidationError
 )
 from ...core.auditTrail import audit_log, AuditEventType
@@ -56,10 +56,10 @@ async def get_user_profile(current_user: Dict[str, Any] = Depends(get_current_us
     try:
         auth_service = get_auth_service()
         user = auth_service.users.get(current_user["user_id"])
-        
+
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         return UserResponse(
             user_id=user.user_id,
             username=user.username,
@@ -71,7 +71,7 @@ async def get_user_profile(current_user: Dict[str, Any] = Depends(get_current_us
             last_login=user.last_login,
             mfa_enabled=user.mfa_enabled
         )
-        
+
     except Exception as e:
         logger.error(f"Get user profile error: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve user profile")
@@ -89,34 +89,34 @@ async def update_user_profile(
         auth_service = get_auth_service()
         user_id = current_user["user_id"]
         user = auth_service.users.get(user_id)
-        
+
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         # Track changes for audit
         changes = {}
-        
+
         # Update full name if provided
         if profile_data.full_name is not None:
             old_name = user.full_name
             user.full_name = profile_data.full_name
             changes["full_name"] = {"old": old_name, "new": profile_data.full_name}
-        
+
         # Update email if provided
         if profile_data.email is not None:
             # Check if email already exists
-            if any(u.email == profile_data.email and u.user_id != user_id 
+            if any(u.email == profile_data.email and u.user_id != user_id
                    for u in auth_service.users.values()):
                 raise HTTPException(status_code=400, detail="Email already in use")
-            
+
             old_email = user.email
             user.email = profile_data.email
             changes["email"] = {"old": old_email, "new": profile_data.email}
-        
+
         if changes:
             # Log profile update
             logger.info(f"User profile updated: {user.username}")
-            
+
             # Audit log profile update
             await audit_log(
                 event_type=AuditEventType.USER_UPDATED,
@@ -128,7 +128,7 @@ async def update_user_profile(
                     "changes": changes
                 }
             )
-        
+
         return UserResponse(
             user_id=user.user_id,
             username=user.username,
@@ -140,7 +140,7 @@ async def update_user_profile(
             last_login=user.last_login,
             mfa_enabled=user.mfa_enabled
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -163,37 +163,37 @@ async def search_users(
     """
     try:
         auth_service = get_auth_service()
-        
+
         # Get all users
         all_users = list(auth_service.users.values())
-        
+
         # Apply filters
         filtered_users = []
         for user in all_users:
             # Active filter
             if active_only and not user.is_active:
                 continue
-                
+
             # Username filter
             if username and username.lower() not in user.username.lower():
                 continue
-                
+
             # Email filter
             if email and email.lower() not in user.email.lower():
                 continue
-                
+
             # Role filter
             if role and user.role != role:
                 continue
-                
+
             filtered_users.append(user)
-        
+
         # Pagination
         total_count = len(filtered_users)
         start_idx = (page - 1) * page_size
         end_idx = start_idx + page_size
         paginated_users = filtered_users[start_idx:end_idx]
-        
+
         # Convert to response format
         user_responses = [
             UserResponse(
@@ -209,14 +209,14 @@ async def search_users(
             )
             for user in paginated_users
         ]
-        
+
         return UserListResponse(
             users=user_responses,
             total_count=total_count,
             page=page,
             page_size=page_size
         )
-        
+
     except Exception as e:
         logger.error(f"Search users error: {e}")
         raise HTTPException(status_code=500, detail="Failed to search users")
@@ -233,10 +233,10 @@ async def get_user_by_id(
     try:
         auth_service = get_auth_service()
         user = auth_service.users.get(user_id)
-        
+
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         return UserResponse(
             user_id=user.user_id,
             username=user.username,
@@ -248,7 +248,7 @@ async def get_user_by_id(
             last_login=user.last_login,
             mfa_enabled=user.mfa_enabled
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -267,28 +267,28 @@ async def deactivate_user(
     try:
         auth_service = get_auth_service()
         user = auth_service.users.get(user_id)
-        
+
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         # Prevent super admin from deactivating themselves
         if user_id == super_admin["user_id"]:
             raise HTTPException(status_code=400, detail="Cannot deactivate your own account")
-        
+
         # Deactivate user
         user.is_active = False
-        
+
         # Revoke all user sessions
         sessions_to_revoke = []
         for session_id, session in auth_service.sessions.items():
             if session["user_id"] == user_id:
                 sessions_to_revoke.append(session_id)
-        
+
         for session_id in sessions_to_revoke:
             auth_service.revoke_token(session_id)
-        
+
         logger.warning(f"User deactivated by super admin {super_admin.get('username')}: {user.username}")
-        
+
         # Audit log user deactivation
         await audit_log(
             event_type=AuditEventType.USER_UPDATED,
@@ -301,12 +301,12 @@ async def deactivate_user(
                 "sessions_revoked": len(sessions_to_revoke)
             }
         )
-        
+
         return {
             "message": f"User {user.username} has been deactivated",
             "sessions_revoked": len(sessions_to_revoke)
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:

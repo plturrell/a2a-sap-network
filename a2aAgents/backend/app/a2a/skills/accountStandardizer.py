@@ -17,7 +17,7 @@ class AccountStandardizer:
         self.js_file_path = os.path.join(project_root, "scripts/build/account_standardization.js")
         # Initialize Grok client for enrichment
         self.grok_client = None
-        
+
     async def standardize(self, account_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Standardize account data using the JavaScript standardizer
@@ -38,13 +38,13 @@ class AccountStandardizer:
             else:
                 # Already structured data
                 input_data = account_data
-            
+
             # Call JavaScript standardizer
             result = await self._call_js_standardizer([input_data])
-            
+
             if result and len(result) > 0:
                 standardized = result[0]
-                
+
                 # Extract initial standardized data
                 initial_standardized = {
                     "hierarchy_path": standardized.get("hierarchy_path"),
@@ -61,24 +61,24 @@ class AccountStandardizer:
                     "account_description": account_data.get("accountDescription", ""),
                     "cost_center": account_data.get("costCenter", "")
                 }
-                
+
                 # Calculate initial completeness
                 completeness = self._calculate_completeness(initial_standardized)
-                
+
                 # If completeness is low, try to enrich with Grok (up to 3 passes)
                 enrichment_passes = 0
                 max_passes = 3
-                
+
                 while completeness < 0.8 and self._should_use_grok() and enrichment_passes < max_passes:
                     enrichment_passes += 1
                     logger.info(f"Account enrichment pass {enrichment_passes} - completeness: {completeness:.2f}")
-                    
+
                     # Get missing fields for targeted enrichment
                     missing_fields = self._get_missing_fields(initial_standardized)
-                    
+
                     if not missing_fields:
                         break
-                    
+
                     enriched = await self._enrich_with_grok(initial_standardized, account_data, missing_fields, enrichment_passes)
                     if enriched:
                         # Update only missing fields
@@ -87,20 +87,20 @@ class AccountStandardizer:
                             if value and (not initial_standardized.get(key) or initial_standardized.get(key) == "Unknown"):
                                 initial_standardized[key] = value
                                 fields_updated += 1
-                        
+
                         # Recalculate completeness
                         new_completeness = self._calculate_completeness(initial_standardized)
-                        
+
                         # If no improvement, stop trying
                         if new_completeness <= completeness or fields_updated == 0:
                             logger.info(f"No improvement in pass {enrichment_passes}, stopping enrichment")
                             break
-                            
+
                         completeness = new_completeness
                     else:
                         # If enrichment failed, don't try again
                         break
-                
+
                 return {
                     "original": account_data,
                     "standardized": initial_standardized,
@@ -117,7 +117,7 @@ class AccountStandardizer:
                 }
             else:
                 raise ValueError("No standardization result returned")
-                
+
         except Exception as e:
             logger.error(f"Error standardizing account: {str(e)}")
             return {
@@ -126,18 +126,18 @@ class AccountStandardizer:
                 "confidence": 0.0,
                 "error": str(e)
             }
-    
+
     async def _call_js_standardizer(self, data: List[Dict]) -> List[Dict]:
         """
         Call the JavaScript standardizer via Node.js subprocess
         """
         # Use absolute path to ensure it's found
         absolute_js_path = os.path.abspath(self.js_file_path)
-        
+
         # Create a temporary Node.js wrapper script
         wrapper_script = f"""
         const AccountStandardizer = require('{absolute_js_path}');
-        
+
         // Create standardizer with custom logger that writes to stderr
         const standardizer = new AccountStandardizer({{
             logger: {{
@@ -147,7 +147,7 @@ class AccountStandardizer:
                 debug: (msg) => console.error(`[DEBUG] ${{msg}}`)
             }}
         }});
-        
+
         async function run() {{
             try {{
                 const input = JSON.parse(process.argv[2]);
@@ -159,16 +159,16 @@ class AccountStandardizer:
                 process.exit(1);
             }}
         }}
-        
+
         run();
         """
-        
+
         # Write wrapper to temporary file
         import tempfile
         with tempfile.NamedTemporaryFile(mode='w', suffix='.js', delete=False) as f:
             f.write(wrapper_script)
             wrapper_path = f.name
-        
+
         try:
             # Run Node.js subprocess
             process = await asyncio.create_subprocess_exec(
@@ -176,46 +176,46 @@ class AccountStandardizer:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
             )
-            
+
             stdout, stderr = await process.communicate()
-            
+
             if process.returncode != 0:
                 raise RuntimeError(f"Node.js error: {stderr.decode()}")
-            
+
             # Debug: log the output
             output = stdout.decode()
             if not output.strip():
                 raise RuntimeError(f"No output from Node.js. Stderr: {stderr.decode()}")
-            
+
             return json.loads(output)
-            
+
         finally:
             # Clean up temporary file
             os.unlink(wrapper_path)
-    
+
     def _calculate_confidence(self, standardized_data: Dict) -> float:
         """
         Calculate confidence score for standardized account
         """
         score = 0.0
         max_score = 5.0
-        
+
         # Check account classification
         if standardized_data.get("account_type") and standardized_data.get("account_type") != "Unknown":
             score += 1.0
-        
+
         # Check IFRS9 classification
         if standardized_data.get("ifrs9_classification") and standardized_data.get("ifrs9_classification") != "Unknown":
             score += 1.0
-        
-        # Check Basel classification  
+
+        # Check Basel classification
         if standardized_data.get("basel_classification") and standardized_data.get("basel_classification") != "Unknown":
             score += 1.0
-        
+
         # Check if hierarchy is valid
         if not standardized_data.get("hierarchy_validation_issues"):
             score += 1.0
-        
+
         # Check standardization quality
         quality = standardized_data.get("standardization_quality", "")
         if quality == "Excellent":
@@ -224,9 +224,9 @@ class AccountStandardizer:
             score += 0.6
         elif quality == "Fair":
             score += 0.3
-        
+
         return min(1.0, score / max_score)
-    
+
     def _calculate_completeness(self, standardized: Dict) -> float:
         """
         Calculate completeness score (0-1) for standardized account data
@@ -241,29 +241,29 @@ class AccountStandardizer:
             ("regulatory_treatment", 0.5),
             ("hierarchy_path", 0.5)
         ]
-        
+
         total_weight = sum(weight for _, weight in fields)
         score = 0.0
-        
+
         for field, weight in fields:
             value = standardized.get(field)
             if value and value != "Unknown":
                 score += weight
-        
+
         return min(1.0, score / total_weight)
-    
+
     def _should_use_grok(self) -> bool:
         """
         Check if Grok API is available and should be used
         """
         return os.getenv('XAI_API_KEY') is not None
-    
+
     def _get_missing_fields(self, standardized: Dict) -> List[str]:
         """
         Get list of missing or unknown fields that need enrichment
         """
         missing = []
-        
+
         # Check each field
         fields_to_check = [
             "gl_account_code",
@@ -274,14 +274,14 @@ class AccountStandardizer:
             "basel_classification",
             "regulatory_treatment"
         ]
-        
+
         for field in fields_to_check:
             value = standardized.get(field)
             if not value or value == "Unknown":
                 missing.append(field)
-        
+
         return missing
-    
+
     async def _enrich_with_grok(self, standardized: Dict, original: Dict, missing_fields: List[str] = None, pass_number: int = 1) -> Optional[Dict]:
         """
         Use Grok API to enrich missing account data
@@ -289,11 +289,11 @@ class AccountStandardizer:
         try:
             if not self.grok_client:
                 self.grok_client = create_grok_client()
-            
+
             # Use missing fields if provided, otherwise check all fields
             if missing_fields is None:
                 missing_fields = self._get_missing_fields(standardized)
-            
+
             # Build field descriptions
             field_descriptions = {
                 "gl_account_code": 'A standardized GL account code (e.g., "1001", "4001")',
@@ -307,26 +307,26 @@ class AccountStandardizer:
                 "is_income_statement": "Boolean - true if this is an income statement account",
                 "typical_balance": 'Normal balance side ("Debit" or "Credit")'
             }
-            
+
             # Build targeted prompt
             missing_items = []
             for field in missing_fields:
                 if field in field_descriptions:
                     missing_items.append(f"{field}: {field_descriptions[field]}")
-            
+
             # Add context hints for later passes
             context_hint = ""
             if pass_number > 1:
                 context_hint = f"\n\nThis is enrichment pass {pass_number}. Use standard accounting principles and typical GL account mappings to determine the missing fields."
-            
+
             # Build prompt for Grok
             account_num = standardized.get('account_number', '')
             account_desc = standardized.get('account_description', '')
             cost_center = standardized.get('cost_center', '')
             current_type = standardized.get('account_type', 'Unknown')
-            
+
             prompt = f"""Given this financial account information:
-            
+
 Account Number: {account_num}
 Account Description: {account_desc}
 Cost Center: {cost_center}
@@ -343,22 +343,22 @@ Important: Only include the fields I've asked for above. Return ONLY valid JSON 
                 temperature=0.1,
                 max_tokens=600
             )
-            
+
             if response.content:
                 # Parse JSON response
                 import re
                 # Remove any markdown code blocks if present
                 json_str = re.sub(r'```json\s*|\s*```', '', response.content)
                 enriched_data = json.loads(json_str)
-                
+
                 # Validate and return only the fields we need
                 result = {}
-                
+
                 # Map enriched fields
                 field_mappings = [
                     ("gl_account_code", str),
                     ("account_type", str),
-                    ("account_subtype", str), 
+                    ("account_subtype", str),
                     ("account_category", str),
                     ("ifrs9_classification", str),
                     ("basel_classification", str),
@@ -367,17 +367,17 @@ Important: Only include the fields I've asked for above. Return ONLY valid JSON 
                     ("is_income_statement", bool),
                     ("typical_balance", str)
                 ]
-                
+
                 for field, field_type in field_mappings:
                     if field in enriched_data and enriched_data[field] is not None:
                         try:
                             result[field] = field_type(enriched_data[field])
                         except (ValueError, TypeError):
                             pass
-                    
+
                 return result if result else None
-                
+
         except Exception as e:
             logger.warning(f"Failed to enrich account with Grok: {str(e)}")
-        
+
         return None

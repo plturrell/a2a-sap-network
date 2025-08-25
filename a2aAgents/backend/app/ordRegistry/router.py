@@ -38,11 +38,11 @@ async def register_ord_document(
             tags=registration_request.tags,
             labels=registration_request.labels
         )
-        
+
         if not result or not result.registration_id:
             # Get the actual validation errors from the service logs
             error_message = "Registration failed"
-            
+
             # Check if we can get more specific error information
             try:
                 # Try to validate the document to get specific errors
@@ -52,7 +52,7 @@ async def register_ord_document(
                 else:
                     # Validation passed but storage failed
                     error_message = "Registration failed: Storage error - check database connectivity"
-                    
+
                     # Check storage status
                     if registry.storage:
                         if registry.storage.fallback_mode:
@@ -61,12 +61,12 @@ async def register_ord_document(
                             error_message += " (No database connections available)"
             except Exception as e:
                 error_message = f"Registration failed: {str(e)}"
-            
+
             return JSONResponse(
                 status_code=400,
                 content={"errors": [error_message]}
             )
-        
+
         # Build response data from ORDRegistration object
         response_data = {
             "registration_id": result.registration_id,
@@ -75,9 +75,9 @@ async def register_ord_document(
             "registered_at": result.metadata.registered_at,
             "registry_url": f"{request.url.scheme}://{request.url.netloc}/api/v1/ord"
         }
-        
+
         return RegistrationResponse(**response_data)
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -86,19 +86,19 @@ async def register_ord_document(
 async def get_registration(registration_id: str):
     """Get registration details by ID"""
     registration = await ord_registry.get_registration(registration_id)
-    
+
     if not registration:
         raise HTTPException(
             status_code=404,
             detail=f"Registration {registration_id} not found"
         )
-    
+
     return registration.dict()
 
 
 @router.put("/register/{registration_id}")
 async def update_ord_document(
-    registration_id: str, 
+    registration_id: str,
     ord_document: ORDDocument,
     registry: ORDRegistryService = Depends(ensure_ord_registry_initialized)
 ):
@@ -110,20 +110,20 @@ async def update_ord_document(
             ord_document=ord_document,
             enhance_with_ai=True
         )
-        
+
         if not updated_registration:
             raise HTTPException(
                 status_code=404,
                 detail=f"Registration {registration_id} not found or update failed"
             )
-        
+
         return {
             "registration_id": registration_id,
             "status": updated_registration.metadata.status.value,
             "version": updated_registration.metadata.version,
             "updated_at": updated_registration.metadata.last_updated
         }
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -142,19 +142,19 @@ async def delete_registration(
             soft_delete=soft_delete,
             deleted_by="api_user"  # In production, get from auth context
         )
-        
+
         if not success:
             raise HTTPException(
                 status_code=404,
                 detail=f"Registration {registration_id} not found"
             )
-        
+
         return {
             "message": f"Registration {registration_id} {'soft' if soft_delete else 'hard'} deleted successfully",
             "registration_id": registration_id,
             "deleted_at": datetime.utcnow()
         }
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -189,13 +189,13 @@ async def get_resource_analytics(
 async def get_resource_by_ord_id(ord_id: str):
     """Get a specific resource by ORD ID"""
     resource = await ord_registry.get_resource_by_ord_id(ord_id)
-    
+
     if not resource:
         raise HTTPException(
             status_code=404,
             detail=f"Resource with ORD ID {ord_id} not found"
         )
-    
+
     return resource.dict()
 
 
@@ -213,7 +213,7 @@ async def browse_resources(
         page=page,
         page_size=page_size
     )
-    
+
     try:
         results = await ord_registry.search_resources(search_request)
         return results.dict()
@@ -225,13 +225,13 @@ async def browse_resources(
 async def get_registration_status(registration_id: str):
     """Get registration status"""
     registration = await ord_registry.get_registration(registration_id)
-    
+
     if not registration:
         raise HTTPException(
             status_code=404,
             detail=f"Registration {registration_id} not found"
         )
-    
+
     return {
         "registration_id": registration_id,
         "status": registration.metadata.status,
@@ -244,13 +244,13 @@ async def get_registration_status(registration_id: str):
 async def get_validation_report(registration_id: str):
     """Get detailed validation report"""
     registration = await ord_registry.get_registration(registration_id)
-    
+
     if not registration:
         raise HTTPException(
             status_code=404,
             detail=f"Registration {registration_id} not found"
         )
-    
+
     return {
         "registration_id": registration_id,
         "validation_results": registration.validation.dict(),
@@ -263,13 +263,13 @@ async def get_validation_report(registration_id: str):
 async def get_usage_analytics(registration_id: str):
     """Get usage analytics for a registration"""
     registration = await ord_registry.get_registration(registration_id)
-    
+
     if not registration:
         raise HTTPException(
             status_code=404,
             detail=f"Registration {registration_id} not found"
         )
-    
+
     return {
         "registration_id": registration_id,
         "analytics": registration.analytics.dict()
@@ -306,7 +306,7 @@ async def health_check():
 async def get_metrics():
     """Get registry metrics including Dublin Core quality metrics"""
     health = await ord_registry.get_health_status()
-    
+
     return {
         "ord_registry_total_registrations": len(ord_registry.registrations),
         "ord_registry_active_resources": len(ord_registry.resource_index),
@@ -339,12 +339,12 @@ async def verify_document_integrity(
     """Verify document integrity using blockchain records"""
     try:
         verification = await registry.verify_document_integrity(registration_id, version)
-        
+
         if verification.get("status") == "not_found":
             raise HTTPException(status_code=404, detail="Registration not found")
         elif verification.get("status") == "unavailable":
             raise HTTPException(status_code=503, detail="Blockchain verification not available")
-        
+
         return verification
     except HTTPException:
         raise
@@ -375,19 +375,19 @@ async def create_blockchain_audit_entry(
     try:
         if not registry.blockchain_integration:
             raise HTTPException(status_code=503, detail="Blockchain integration not available")
-        
+
         audit_entry = await registry.blockchain_integration.create_audit_trail(
             registration_id=registration_id,
             operation=audit_data.get("operation", "manual_audit"),
             user=audit_data.get("user", "api_user"),
             details=audit_data.get("details", {})
         )
-        
+
         return {
             "message": "Audit entry created successfully",
             "audit_entry": audit_entry
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:

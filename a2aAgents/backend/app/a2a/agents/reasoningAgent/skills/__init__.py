@@ -10,7 +10,7 @@ from .reasoningChainAnalysis import reasoning_chain_analysis
 
 __all__ = [
     "advanced_reasoning",
-    "hypothesis_generation", 
+    "hypothesis_generation",
     "debate_orchestration",
     "reasoning_chain_analysis"
 ]

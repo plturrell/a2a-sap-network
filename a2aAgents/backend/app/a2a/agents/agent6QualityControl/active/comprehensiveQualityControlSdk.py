@@ -199,9 +199,9 @@ class QualityTrend:
 class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     Comprehensive Quality Control Agent with Real AI Intelligence
-    
+
     Rating: 95/100 (Real AI Intelligence)
-    
+
     This agent provides:
     - Real ML-based quality prediction and anomaly detection
     - Multi-dimensional quality assessment across 8 quality dimensions
@@ -210,7 +210,7 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
     - Automated root cause analysis using advanced ML techniques
     - Real-time quality monitoring and continuous improvement
     """
-    
+
     def __init__(self, base_url: str):
         # Initialize base agent
         super().__init__(
@@ -220,13 +220,13 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
             version="3.0.0",
             base_url=base_url
         )
-        
-        
+
+
         # Initialize blockchain capabilities
         self.blockchain_queue_enabled = False
         self.web3_client = None
         self.account = None
-        
+
         # Machine Learning Models for Quality Control
         self.quality_predictor = GradientBoostingRegressor(n_estimators=100, random_state=42)
         self.anomaly_detector = IsolationForest(contamination=0.1, random_state=42)
@@ -235,20 +235,20 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
         self.compliance_checker = KMeans(n_clusters=3, random_state=42)  # compliant, warning, non-compliant
         self.feature_scaler = StandardScaler()
         self.metric_scaler = MinMaxScaler()
-        
+
         # Root cause analysis
         self.root_cause_analyzer = DBSCAN(eps=0.5, min_samples=3)
-        
+
         # Semantic understanding for quality reports
         if SENTENCE_TRANSFORMERS_AVAILABLE:
             self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
         else:
             self.embedding_model = None
-            
+
         # Grok AI client for intelligent quality insights
         self.grok_client = None
         self.grok_available = False
-        
+
         # Quality metrics registry
         self.quality_metrics = {
             'accuracy': QualityMetric(
@@ -288,14 +288,14 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 description='System uptime percentage'
             )
         }
-        
+
         # Quality standards compliance
         self.quality_standards = {
             QualityStandard.ISO_9001: self._check_iso_9001_compliance,
             QualityStandard.SIX_SIGMA: self._check_six_sigma_compliance,
             QualityStandard.LEAN: self._check_lean_compliance
         }
-        
+
         # Quality improvement strategies
         self.improvement_strategies = {
             QualityDimension.ACCURACY: [
@@ -314,11 +314,11 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 "Enhance monitoring and alerting"
             ]
         }
-        
+
         # Statistical process control
         self.control_charts = {}
         self.control_limits = {}
-        
+
         # Training data storage
         self.training_data = {
             'quality_assessments': [],
@@ -326,12 +326,12 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
             'trend_analyses': [],
             'compliance_checks': []
         }
-        
+
         # Learning configuration
         self.learning_enabled = True
         self.model_update_frequency = 100
         self.assessment_count = 0
-        
+
         # Performance metrics
         self.metrics = {
             'total_assessments': 0,
@@ -343,7 +343,7 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
             'critical_issues': 0,
             'resolved_issues': 0
         }
-        
+
         # Method performance tracking
         self.method_performance = defaultdict(lambda: {
             'total': 0,
@@ -351,46 +351,46 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
             'total_time': 0.0,
             'average_accuracy': 0.0
         })
-        
+
         # Quality history for trending
         self.quality_history = defaultdict(list)
-        
+
         # Data Manager integration
         self.data_manager_agent_url = os.getenv('DATA_MANAGER_URL')
         self.use_data_manager = True
-        
+
         logger.info(f"Initialized Comprehensive Quality Control Agent v{self.version}")
-    
+
     async def initialize(self) -> None:
         """Initialize the quality control agent with all capabilities"""
         try:
             # Initialize blockchain if available
             if WEB3_AVAILABLE:
                 await self._initialize_blockchain()
-            
+
             # Initialize Grok AI
             if GROK_AVAILABLE:
                 await self._initialize_grok()
-            
+
             # Initialize ML models with sample data
             await self._initialize_ml_models()
-            
+
             # Load quality control history
             await self._load_quality_history()
-            
+
             logger.info("Quality Control Agent initialization complete")
-            
+
         except Exception as e:
             logger.error(f"Initialization error: {e}")
             raise
-    
+
     async def _initialize_blockchain(self) -> None:
         """Initialize blockchain connection for quality audit trails"""
         try:
             # Get blockchain configuration
             private_key = os.getenv('A2A_PRIVATE_KEY')
             rpc_url = os.getenv('BLOCKCHAIN_RPC_URL')
-            
+
             if private_key:
                 self.web3_client = Web3(Web3.HTTPProvider(rpc_url))
                 self.account = Account.from_key(private_key)
@@ -398,17 +398,17 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 logger.info(f"Blockchain initialized: {self.account.address}")
             else:
                 logger.info("No private key found - blockchain features disabled")
-                
+
         except Exception as e:
             logger.error(f"Blockchain initialization error: {e}")
             self.blockchain_queue_enabled = False
-    
+
     async def _initialize_grok(self) -> None:
         """Initialize Grok AI for quality insights"""
         try:
             # Get Grok API key from environment
             api_key = os.getenv('GROK_API_KEY')
-            
+
             if api_key:
                 self.grok_client = AsyncOpenAI(
                     api_key=api_key,
@@ -418,11 +418,11 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 logger.info("Grok AI initialized for quality insights")
             else:
                 logger.info("No Grok API key found")
-                
+
         except Exception as e:
             logger.error(f"Grok initialization error: {e}")
             self.grok_available = False
-    
+
     async def _initialize_ml_models(self) -> None:
         """Initialize ML models with training data"""
         try:
@@ -432,35 +432,35 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 {'accuracy': 0.8, 'performance': 0.7, 'reliability': 0.85, 'overall_score': 0.78},
                 {'accuracy': 0.99, 'performance': 0.95, 'reliability': 0.99, 'overall_score': 0.97}
             ]
-            
+
             if sample_quality_data:
                 X = [[d['accuracy'], d['performance'], d['reliability']] for d in sample_quality_data]
                 y = [d['overall_score'] for d in sample_quality_data]
-                
+
                 X_scaled = self.feature_scaler.fit_transform(X)
                 self.quality_predictor.fit(X_scaled, y)
-                
+
                 # Train anomaly detector
                 normal_data = [[0.95, 0.9, 0.98], [0.92, 0.88, 0.94], [0.97, 0.93, 0.96]]
                 self.anomaly_detector.fit(normal_data)
-                
+
                 # Train issue classifier
                 issue_samples = [
                     {'critical': 1, 'performance': 0, 'reliability': 0, 'issue_type': 0},
                     {'critical': 0, 'performance': 1, 'reliability': 0, 'issue_type': 1},
                     {'critical': 0, 'performance': 0, 'reliability': 1, 'issue_type': 2}
                 ]
-                
+
                 X_issue = [[s['critical'], s['performance'], s['reliability']] for s in issue_samples]
                 y_issue = [s['issue_type'] for s in issue_samples]
-                
+
                 self.issue_classifier.fit(X_issue, y_issue)
-                
+
                 logger.info("ML models initialized with sample data")
-                
+
         except Exception as e:
             logger.error(f"ML model initialization error: {e}")
-    
+
     async def _load_quality_history(self) -> None:
         """Load historical quality data"""
         try:
@@ -473,7 +473,7 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                     logger.info(f"Loaded quality control history")
         except Exception as e:
             logger.error(f"Error loading quality history: {e}")
-    
+
     # Quality control skills
     @a2a_skill(
         name="quality_assessment",
@@ -512,50 +512,50 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
         """Perform comprehensive quality assessment using ML models"""
         start_time = time.time()
         method_name = "assess_quality"
-        
+
         try:
             target = request_data.get('target')
             metrics_data = request_data.get('metrics', {})
             standards = request_data.get('standards', ['iso_9001'])
             include_trends = request_data.get('include_trends', True)
-            
+
             if not target:
                 return create_error_response("Missing assessment target")
-            
+
             # Collect and normalize metrics
             normalized_metrics = await self._collect_and_normalize_metrics(target, metrics_data)
-            
+
             # Predict overall quality score using ML
             overall_score = await self._predict_quality_score_ml(normalized_metrics)
-            
+
             # Calculate dimension scores
             dimension_scores = await self._calculate_dimension_scores(normalized_metrics)
-            
+
             # Detect quality issues and anomalies
             issues = await self._detect_quality_issues_ml(normalized_metrics, target)
-            
+
             # Check compliance with standards
             compliance_status = {}
             for standard in standards:
                 compliance_status[QualityStandard(standard)] = await self._check_compliance(
                     standard, normalized_metrics
                 )
-            
+
             # Generate improvement recommendations
             recommendations = await self._generate_recommendations_ml(issues, dimension_scores)
-            
+
             # Analyze trends if requested
             trends = []
             if include_trends:
                 trends = await self._analyze_quality_trends(target, normalized_metrics)
-            
+
             # Use Grok AI for advanced insights
             advanced_insights = []
             if self.grok_available:
                 advanced_insights = await self._generate_grok_insights(
                     target, overall_score, issues, trends
                 )
-            
+
             # Create comprehensive report
             report = QualityReport(
                 report_id=f"qc_{hashlib.md5(f'{target}_{time.time()}'.encode()).hexdigest()[:8]}",
@@ -568,18 +568,18 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 compliance_status=compliance_status,
                 execution_time=time.time() - start_time
             )
-            
+
             # Store assessment results
             if self.use_data_manager:
                 await self._store_quality_assessment(report)
-            
+
             # Update quality history
             self.quality_history[target].append({
                 'timestamp': datetime.now(),
                 'score': overall_score,
                 'issues': len(issues)
             })
-            
+
             # Update metrics
             self.metrics['total_assessments'] += 1
             self.metrics['quality_issues_detected'] += len(issues)
@@ -587,20 +587,20 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 self.metrics['average_quality_score'] * (self.metrics['total_assessments'] - 1) +
                 overall_score
             ) / self.metrics['total_assessments']
-            
+
             critical_issues = len([i for i in issues if getattr(i, 'severity', None) == QualitySeverity.CRITICAL])
             self.metrics['critical_issues'] += critical_issues
-            
+
             # Record performance
             self.method_performance[method_name]['total'] += 1
             self.method_performance[method_name]['success'] += 1
             self.method_performance[method_name]['total_time'] += report.execution_time
             self.method_performance[method_name]['average_accuracy'] = float(overall_score)
-            
+
             # Learn from assessment
             if self.learning_enabled:
                 await self._learn_from_assessment(report, normalized_metrics)
-            
+
             return create_success_response({
                 'report_id': report.report_id,
                 'target': report.assessment_target,
@@ -613,17 +613,17 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 'trends': trends,
                 'execution_time': report.execution_time
             })
-            
+
         except Exception as e:
             logger.error(f"Quality assessment error: {e}")
             self.method_performance[method_name]['total'] += 1
             return create_error_response(f"Assessment error: {str(e)}")
-    
+
     # Create alias method for assess_quality to maintain compatibility
     async def assess_quality(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Alias for quality_assessment to maintain backward compatibility"""
         return await self.quality_assessment(request_data)
-    
+
     @a2a_skill(
         name="routing_decision",
         description="Intelligent routing decisions based on quality metrics and system health",
@@ -647,18 +647,18 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
         try:
             routing_options = request_data.get("routing_options", [])
             decision_criteria = request_data.get("decision_criteria", {})
-            
+
             best_route = None
             best_score = 0.0
             route_assessments = []
-            
+
             # Assess each routing option
             for option in routing_options:
                 assessment_result = await self.quality_assessment({
                     "target": option.get("target", "route_option"),
                     "metrics": option.get("metrics", {})
                 })
-                
+
                 if assessment_result.get("success"):
                     score = assessment_result["data"]["overall_score"]
                     route_assessments.append({
@@ -666,24 +666,24 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                         "score": score,
                         "assessment": assessment_result["data"]
                     })
-                    
+
                     if score > best_score:
                         best_score = score
                         best_route = option
-            
+
             return create_success_response({
                 "selected_route": best_route,
                 "confidence_score": best_score,
                 "route_assessments": route_assessments,
                 "decision_rationale": f"Selected route with highest quality score: {best_score:.3f}"
             })
-            
+
         except Exception as e:
             logger.error(f"Routing decision error: {e}")
             return create_error_response(f"Routing decision error: {str(e)}")
-    
+
     @a2a_skill(
-        name="improvement_recommendations", 
+        name="improvement_recommendations",
         description="AI-driven improvement recommendations using ML analysis and quality insights",
         input_schema={
             "type": "object",
@@ -707,7 +707,7 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
     async def improvement_recommendations(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Generate AI-driven improvement recommendations"""
         return await self.continuous_improvement(request_data)
-    
+
     @a2a_skill(
         name="workflow_control",
         description="Intelligent workflow control based on quality thresholds and trend analysis",
@@ -736,26 +736,26 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
             workflow = request_data.get("workflow", {})
             quality_thresholds = request_data.get("quality_thresholds", {})
             control_actions = request_data.get("control_actions", ["continue", "pause", "halt"])
-            
+
             workflow_id = workflow.get("workflow_id", "unknown")
-            
+
             # Monitor workflow quality trends
             trend_result = await self.monitor_trends({
                 "target": workflow_id,
                 "time_period": "1h"
             })
-            
+
             # Determine control action
             control_action = "continue"
             action_reason = "Quality metrics within acceptable range"
-            
+
             if trend_result.get("success"):
                 trend_data = trend_result["data"]
                 anomalies = trend_data.get("trend_anomalies", [])
-                
+
                 critical_anomalies = [a for a in anomalies if a.get("severity") == "critical"]
                 high_anomalies = [a for a in anomalies if a.get("severity") == "high"]
-                
+
                 if len(critical_anomalies) > 0:
                     control_action = "halt"
                     action_reason = f"Critical quality anomalies detected: {len(critical_anomalies)}"
@@ -765,7 +765,7 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 elif len(anomalies) > 5:
                     control_action = "investigate"
                     action_reason = f"Elevated anomaly count detected: {len(anomalies)}"
-            
+
             return create_success_response({
                 "workflow_id": workflow_id,
                 "control_action": control_action,
@@ -773,11 +773,11 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 "quality_analysis": trend_result.get("data", {}),
                 "timestamp": datetime.now().isoformat()
             })
-            
+
         except Exception as e:
             logger.error(f"Workflow control error: {e}")
             return create_error_response(f"Workflow control error: {str(e)}")
-    
+
     @a2a_skill(
         name="trust_verification",
         description="Trust verification through comprehensive quality assessment and compliance checking",
@@ -807,7 +807,7 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
             agent_id = request_data.get("agent_id")
             trust_metrics = request_data.get("trust_metrics", {})
             verification_level = request_data.get("verification_level", "standard")
-            
+
             # Define trust thresholds based on verification level
             thresholds = {
                 "basic": 0.6,
@@ -815,25 +815,25 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 "high": 0.85,
                 "critical": 0.95
             }
-            
+
             required_threshold = thresholds.get(verification_level, 0.7)
-            
+
             # Assess agent quality/trust
             trust_assessment = await self.quality_assessment({
                 "target": f"agent_{agent_id}",
                 "metrics": trust_metrics,
                 "standards": ["iso_9001"] if verification_level in ["high", "critical"] else []
             })
-            
+
             trust_verified = False
             trust_score = 0.0
             verification_details = {}
-            
+
             if trust_assessment.get("success"):
                 trust_score = trust_assessment["data"]["overall_score"]
                 trust_verified = trust_score >= required_threshold
                 verification_details = trust_assessment["data"]
-            
+
             # Additional compliance check for high verification levels
             compliance_result = None
             if verification_level in ["high", "critical"]:
@@ -841,11 +841,11 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                     "target": f"agent_{agent_id}",
                     "standards": ["iso_9001", "six_sigma"]
                 })
-                
+
                 if compliance_result.get("success"):
                     compliance_score = compliance_result["data"].get("compliance_score", 0.0)
                     trust_verified = trust_verified and (compliance_score >= 0.8)
-            
+
             return create_success_response({
                 "agent_id": agent_id,
                 "trust_verified": trust_verified,
@@ -856,11 +856,11 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 "compliance_result": compliance_result.get("data") if compliance_result else None,
                 "verified_at": datetime.now().isoformat()
             })
-            
+
         except Exception as e:
             logger.error(f"Trust verification error: {e}")
             return create_error_response(f"Trust verification error: {str(e)}")
-    
+
     # Create alias for detect_anomalies to maintain compatibility
     async def detect_anomalies(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Detect quality anomalies using advanced ML techniques"""
@@ -868,22 +868,22 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
             metrics_data = request_data.get('metrics', {})
             sensitivity = request_data.get('sensitivity', 0.1)
             time_window = request_data.get('time_window', '1h')
-            
+
             # Extract features for anomaly detection
             features = await self._extract_anomaly_features(metrics_data)
-            
+
             # Detect anomalies using ML
             anomalies = await self._detect_anomalies_ml(features, sensitivity)
-            
+
             # Analyze anomaly patterns
             patterns = await self._analyze_anomaly_patterns(anomalies)
-            
+
             # Generate explanations
             explanations = await self._explain_anomalies(anomalies, features)
-            
+
             # Update metrics
             self.metrics['anomalies_found'] += len(anomalies)
-            
+
             return create_success_response({
                 'anomalies_detected': len(anomalies),
                 'anomaly_details': anomalies,
@@ -891,33 +891,33 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 'explanations': explanations,
                 'severity_distribution': self._calculate_anomaly_severity_distribution(anomalies)
             })
-            
+
         except Exception as e:
             logger.error(f"Anomaly detection error: {e}")
             return create_error_response(f"Anomaly detection error: {str(e)}")
-    
+
     async def monitor_trends(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Monitor quality trends using statistical analysis and ML"""
         try:
             target = request_data.get('target')
             time_period = request_data.get('time_period', '30d')
             forecast_horizon = request_data.get('forecast_horizon', '7d')
-            
+
             # Get historical quality data
             historical_data = await self._get_historical_quality_data(target, time_period)
-            
+
             # Analyze trends
             trends = await self._analyze_trends_ml(historical_data)
-            
+
             # Generate forecasts
             forecasts = await self._generate_quality_forecasts(historical_data, forecast_horizon)
-            
+
             # Detect trend anomalies
             trend_anomalies = await self._detect_trend_anomalies(trends)
-            
+
             # Generate trend insights
             insights = await self._generate_trend_insights(trends, forecasts)
-            
+
             return create_success_response({
                 'target': target,
                 'time_period': time_period,
@@ -927,36 +927,36 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 'trend_anomalies': trend_anomalies,
                 'insights': insights
             })
-            
+
         except Exception as e:
             logger.error(f"Trend monitoring error: {e}")
             return create_error_response(f"Trend monitoring error: {str(e)}")
-    
+
     async def continuous_improvement(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Generate continuous improvement recommendations using AI"""
         try:
             target = request_data.get('target')
             current_metrics = request_data.get('current_metrics', {})
             improvement_goals = request_data.get('improvement_goals', {})
-            
+
             # Analyze current state
             current_state = await self._analyze_current_quality_state(target, current_metrics)
-            
+
             # Identify improvement opportunities
             opportunities = await self._identify_improvement_opportunities_ml(current_state, improvement_goals)
-            
+
             # Generate action plans
             action_plans = await self._generate_improvement_action_plans(opportunities)
-            
+
             # Estimate improvement impact
             impact_estimates = await self._estimate_improvement_impact(action_plans, current_state)
-            
+
             # Prioritize improvements
             prioritized_improvements = await self._prioritize_improvements_ml(action_plans, impact_estimates)
-            
+
             # Update metrics
             self.metrics['improvements_suggested'] += len(prioritized_improvements)
-            
+
             return create_success_response({
                 'target': target,
                 'current_state': current_state,
@@ -965,42 +965,42 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 'estimated_impact': impact_estimates,
                 'implementation_timeline': await self._estimate_implementation_timeline(prioritized_improvements)
             })
-            
+
         except Exception as e:
             logger.error(f"Continuous improvement error: {e}")
             return create_error_response(f"Continuous improvement error: {str(e)}")
-    
+
     async def compliance_audit(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Perform automated compliance audit against quality standards"""
         try:
             target = request_data.get('target')
             standards = request_data.get('standards', ['iso_9001'])
             audit_scope = request_data.get('scope', 'full')
-            
+
             # Collect compliance evidence
             evidence = await self._collect_compliance_evidence(target, audit_scope)
-            
+
             # Perform compliance checks
             compliance_results = {}
             for standard in standards:
                 compliance_results[standard] = await self._perform_compliance_check(
                     standard, evidence
                 )
-            
+
             # Generate compliance report
             compliance_report = await self._generate_compliance_report(
                 target, compliance_results, evidence
             )
-            
+
             # Identify compliance gaps
             gaps = await self._identify_compliance_gaps(compliance_results)
-            
+
             # Generate remediation plan
             remediation_plan = await self._generate_remediation_plan(gaps)
-            
+
             # Update metrics
             self.metrics['compliance_checks'] += len(standards)
-            
+
             return create_success_response({
                 'target': target,
                 'standards_audited': standards,
@@ -1010,20 +1010,20 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 'remediation_plan': remediation_plan,
                 'audit_report': compliance_report
             })
-            
+
         except Exception as e:
             logger.error(f"Compliance audit error: {e}")
             return create_error_response(f"Compliance audit error: {str(e)}")
-    
+
     # Helper methods for ML operations
     async def _collect_and_normalize_metrics(self, target: str, metrics_data: Dict[str, Any]) -> Dict[str, float]:
         """Collect and normalize quality metrics"""
         normalized = {}
-        
+
         for metric_id, metric in self.quality_metrics.items():
             if metric_id in metrics_data:
                 value = metrics_data[metric_id]
-                
+
                 # Normalize based on measurement type
                 if metric.measurement_type == 'percentage':
                     normalized[metric_id] = min(100.0, max(0.0, value)) / 100.0
@@ -1036,35 +1036,35 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
             else:
                 # Default value if metric not provided
                 normalized[metric_id] = 0.5
-        
+
         return normalized
-    
+
     async def _predict_quality_score_ml(self, metrics: Dict[str, float]) -> float:
         """Predict overall quality score using ML"""
         try:
             # Extract features for prediction
             features = list(metrics.values())[:3]  # Use first 3 metrics
-            
+
             # Pad or truncate to expected size
             while len(features) < 3:
                 features.append(0.5)
             features = features[:3]
-            
+
             # Scale features and predict
             features_scaled = self.feature_scaler.transform([features])
             predicted_score = self.quality_predictor.predict(features_scaled)[0]
-            
+
             return max(0.0, min(1.0, predicted_score))
-            
+
         except Exception as e:
             logger.error(f"Quality prediction error: {e}")
             # Fallback to simple average
             return np.mean(list(metrics.values())) if metrics else 0.5
-    
+
     async def _calculate_dimension_scores(self, metrics: Dict[str, float]) -> Dict[QualityDimension, float]:
         """Calculate scores for each quality dimension"""
         dimension_scores = {}
-        
+
         # Group metrics by dimension
         dimension_metrics = defaultdict(list)
         for metric_id, value in metrics.items():
@@ -1072,28 +1072,28 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 dimension = self.quality_metrics[metric_id].dimension
                 weight = self.quality_metrics[metric_id].weight
                 dimension_metrics[dimension].append(value * weight)
-        
+
         # Calculate weighted average for each dimension
         for dimension, values in dimension_metrics.items():
             dimension_scores[dimension] = np.mean(values) if values else 0.5
-        
+
         # Ensure all dimensions have scores
         for dimension in QualityDimension:
             if dimension not in dimension_scores:
                 dimension_scores[dimension] = 0.5
-        
+
         return dimension_scores
-    
+
     async def _detect_quality_issues_ml(self, metrics: Dict[str, float], target: str) -> List[QualityIssue]:
         """Detect quality issues using ML models"""
         issues = []
-        
+
         try:
             # Check against thresholds
             for metric_id, value in metrics.items():
                 if metric_id in self.quality_metrics:
                     metric = self.quality_metrics[metric_id]
-                    
+
                     # Convert normalized value back to original scale
                     if metric.measurement_type == 'percentage':
                         actual_value = value * 100
@@ -1103,20 +1103,20 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                         actual_value = value * metric.target_value
                         threshold_critical = metric.threshold_critical
                         threshold_warning = metric.threshold_warning
-                    
+
                     # Determine severity
                     severity = None
                     if actual_value < threshold_critical:
                         severity = QualitySeverity.CRITICAL
                     elif actual_value < threshold_warning:
                         severity = QualitySeverity.HIGH
-                    
+
                     if severity:
                         # Use ML to classify issue type and generate description
                         issue_description = await self._generate_issue_description_ml(
                             metric, actual_value, severity
                         )
-                        
+
                         issue = QualityIssue(
                             issue_id=f"issue_{len(issues)}_{int(time.time())}",
                             title=f"{metric.name} below threshold",
@@ -1133,56 +1133,56 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                             confidence_score=0.8
                         )
                         issues.append(issue)
-            
+
             # Use anomaly detection to find additional issues
             anomaly_issues = await self._detect_anomaly_issues_ml(metrics, target)
             issues.extend(anomaly_issues)
-            
+
         except Exception as e:
             logger.error(f"Issue detection error: {e}")
-        
+
         return issues
-    
-    async def _generate_recommendations_ml(self, issues: List[QualityIssue], 
+
+    async def _generate_recommendations_ml(self, issues: List[QualityIssue],
                                          dimension_scores: Dict[QualityDimension, float]) -> List[str]:
         """Generate improvement recommendations using ML insights"""
         recommendations = []
-        
+
         # Issue-based recommendations
         for issue in issues:
             if issue.dimension in self.improvement_strategies:
                 strategies = self.improvement_strategies[issue.dimension]
                 recommendations.extend(strategies)
-        
+
         # Dimension-based recommendations
         for dimension, score in dimension_scores.items():
             if score < 0.7:  # Low score threshold
                 if dimension in self.improvement_strategies:
                     recommendations.extend(self.improvement_strategies[dimension])
-        
+
         # Use Grok for additional insights if available
         if self.grok_available and issues:
             grok_recommendations = await self._get_grok_recommendations(issues)
             recommendations.extend(grok_recommendations)
-        
+
         # Remove duplicates and return
         return list(set(recommendations))
-    
+
     async def _check_compliance(self, standard: str, metrics: Dict[str, float]) -> bool:
         """Check compliance with quality standard"""
         if standard in ['iso_9001', 'six_sigma', 'lean']:
             # Simplified compliance check
             overall_score = np.mean(list(metrics.values()))
             return overall_score >= 0.8  # 80% threshold
-        
+
         return True  # Default to compliant
-    
-    async def _generate_grok_insights(self, target: str, score: float, 
+
+    async def _generate_grok_insights(self, target: str, score: float,
                                     issues: List[QualityIssue], trends: List[Any]) -> List[str]:
         """Generate insights using Grok AI"""
         if not self.grok_available:
             return []
-        
+
         try:
             response = await self.grok_client.chat.completions.create(
                 model="grok-2-latest",
@@ -1195,16 +1195,16 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 }],
                 max_tokens=300
             )
-            
+
             content = response.choices[0].message.content
             # Split into individual insights
             insights = [insight.strip() for insight in content.split('\n') if insight.strip()]
             return insights[:3]  # Return top 3
-            
+
         except Exception as e:
             logger.error(f"Grok insights error: {e}")
             return []
-    
+
     async def _learn_from_assessment(self, report: QualityReport, metrics: Dict[str, float]):
         """Learn from quality assessment results"""
         self.training_data['quality_assessments'].append({
@@ -1214,12 +1214,12 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
             'execution_time': report.execution_time,
             'timestamp': report.created_at.isoformat()
         })
-        
+
         # Retrain models periodically
         self.assessment_count += 1
         if self.assessment_count % self.model_update_frequency == 0:
             await self._retrain_models()
-    
+
     async def _retrain_models(self):
         """Retrain ML models with accumulated data"""
         try:
@@ -1228,17 +1228,17 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 # Implementation would retrain models here
         except Exception as e:
             logger.error(f"Model retraining error: {e}")
-    
+
     # Placeholder methods for compliance checks
     async def _check_iso_9001_compliance(self, metrics: Dict[str, float]) -> bool:
         return np.mean(list(metrics.values())) >= 0.85
-    
+
     async def _check_six_sigma_compliance(self, metrics: Dict[str, float]) -> bool:
         return np.mean(list(metrics.values())) >= 0.9999
-    
+
     async def _check_lean_compliance(self, metrics: Dict[str, float]) -> bool:
         return np.mean(list(metrics.values())) >= 0.8
-    
+
     async def shutdown(self) -> None:
         """Graceful shutdown"""
         try:
@@ -1249,12 +1249,12 @@ class ComprehensiveQualityControlSDK(SecureA2AAgent, BlockchainIntegrationMixin)
                 'quality_history': dict(self.quality_history),
                 'quality_metrics': {k: v.__dict__ for k, v in self.quality_metrics.items()}
             }
-            
+
             with open('quality_control_history.pkl', 'wb') as f:
                 pickle.dump(history, f)
-            
+
             logger.info("Quality Control Agent shutdown complete")
-            
+
         except Exception as e:
             logger.error(f"Shutdown error: {e}")
 
@@ -1274,7 +1274,7 @@ if __name__ == "__main__":
     async def main():
         agent = create_quality_control_agent()
         await agent.initialize()
-        
+
         # Example: Quality assessment
         result = await agent.assess_quality({
             'target': 'test_system',
@@ -1286,7 +1286,7 @@ if __name__ == "__main__":
             'standards': ['iso_9001']
         })
         print(f"Assessment result: {result}")
-        
+
         await agent.shutdown()
-    
+
     asyncio.run(main())

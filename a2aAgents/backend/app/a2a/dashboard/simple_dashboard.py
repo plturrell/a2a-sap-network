@@ -67,7 +67,7 @@ async def check_service_health(service):
                 return {"name": service["name"], "port": service["port"], "status": "healthy"}
     except:
         pass
-    
+
     # Check if port is at least listening
     try:
         async with httpx.AsyncClient(timeout=1.0) as client:
@@ -105,16 +105,16 @@ async def dashboard():
         <div id="summary" class="summary"></div>
         <div id="content"></div>
         <div class="timestamp" id="timestamp"></div>
-        
+
         <script>
             async function fetchHealth() {
                 const response = await blockchainClient.sendMessage('/api/health');
                 const data = await response.json();
-                
+
                 let html = '';
                 let totalServices = 0;
                 let healthyServices = 0;
-                
+
                 for (const [group, services] of Object.entries(data)) {
                     html += `<div class="service-group"><h2>${group.toUpperCase()}</h2>`;
                     for (const service of services) {
@@ -124,14 +124,14 @@ async def dashboard():
                     }
                     html += '</div>';
                 }
-                
+
                 document.getElementById('content').innerHTML = html;
-                document.getElementById('summary').innerHTML = 
+                document.getElementById('summary').innerHTML =
                     `System Health: ${healthyServices}/${totalServices} services healthy (${Math.round(healthyServices/totalServices*100)}%)`;
-                document.getElementById('timestamp').innerHTML = 
+                document.getElementById('timestamp').innerHTML =
                     `Last updated: ${new Date().toLocaleString()}`;
             }
-            
+
             fetchHealth();
             setInterval(fetchHealth, 5000);
         </script>
@@ -148,12 +148,12 @@ async def health():
 async def api_health():
     """Get health status of all services"""
     health_data = {}
-    
+
     for group, services in SERVICES.items():
         health_data[group] = await asyncio.gather(
             *[check_service_health(service) for service in services]
         )
-    
+
     return health_data
 
 if __name__ == "__main__":

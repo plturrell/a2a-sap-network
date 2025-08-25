@@ -26,7 +26,7 @@ except ImportError:
     class TrustIdentity(SecureA2AAgent):
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
+        # - Rate limiting and request throttling
         # - Input validation and sanitization
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
@@ -40,7 +40,7 @@ except ImportError:
     class DataValidator(SecureA2AAgent):
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
+        # - Rate limiting and request throttling
         # - Input validation and sanitization
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
@@ -54,7 +54,7 @@ except ImportError:
     class GrokClient(SecureA2AAgent):
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
+        # - Rate limiting and request throttling
         # - Input validation and sanitization
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
@@ -134,10 +134,10 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
         self.trust_identity = trust_identity
         self.logger = logging.getLogger(__name__)
         self.data_validator = DataValidator()
-        
+
         # Initialize embedding model for semantic analysis
         self.embedding_model = SentenceTransformer('all-mpnet-base-v2')
-        
+
         # Initialize GrokClient for intelligent analysis
         try:
             self.grok_client = get_grok_client()
@@ -145,16 +145,16 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
         except Exception as e:
             self.logger.warning(f"GrokClient initialization failed: {e}")
             self.grok_client = None
-        
+
         # Knowledge graph storage
         self.knowledge_graph = nx.MultiDiGraph()
         self.nodes: Dict[str, KnowledgeNode] = {}
         self.edges: Dict[str, KnowledgeEdge] = {}
-        
+
         # Update tracking
         self.update_history: List[GraphUpdate] = []
         self.relationship_rules = self._initialize_relationship_rules()
-        
+
         # Performance metrics
         self.graph_metrics = {
             'total_nodes': 0,
@@ -198,15 +198,15 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
             auto_discover = request_data.get("auto_discover_relationships", True)
             relationship_threshold = request_data.get("relationship_threshold", 0.7)
             use_grok = request_data.get("use_grok_analysis", True) and self.grok_client is not None
-            
+
             # Create unique node ID
             node_content = f"{node_data['label']}_{json.dumps(node_data.get('properties', {}), sort_keys=True)}"
             node_id = hashlib.md5(node_content.encode()).hexdigest()[:12]
-            
+
             # Generate embedding for semantic analysis
             content_text = node_data.get('content_text', node_data['label'])
             embedding = self.embedding_model.encode(content_text, normalize_embeddings=True)
-            
+
             # Create knowledge node
             knowledge_node = KnowledgeNode(
                 node_id=node_id,
@@ -216,29 +216,29 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                 embedding=embedding,
                 confidence_score=node_data.get('confidence_score', 1.0)
             )
-            
+
             # Add to graph structures
             self.nodes[node_id] = knowledge_node
             self.knowledge_graph.add_node(node_id, **knowledge_node.__dict__)
-            
+
             discovered_relationships = []
-            
+
             # Auto-discover relationships if enabled
             if auto_discover and len(self.nodes) > 1:
                 discovered_relationships = self._discover_relationships(
                     knowledge_node, relationship_threshold, use_grok
                 )
-            
+
             # Get Grok insights on the new node
             grok_insights = None
             if use_grok:
                 grok_insights = self._get_grok_node_insights(knowledge_node)
-            
+
             # Update metrics
             self.graph_metrics['total_nodes'] += 1
             self.graph_metrics['relationships_discovered'] += len(discovered_relationships)
             self.graph_metrics['updates_processed'] += 1
-            
+
             # Record update
             update = GraphUpdate(
                 update_id=hashlib.md5(f"add_node_{node_id}_{datetime.utcnow().isoformat()}".encode()).hexdigest()[:12],
@@ -248,12 +248,12 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                 confidence_score=knowledge_node.confidence_score
             )
             self.update_history.append(update)
-            
+
             # Update graph coherence
             self.graph_metrics['graph_coherence_score'] = self._calculate_graph_coherence()
-            
+
             self.logger.info(f"Added knowledge node {node_id} with {len(discovered_relationships)} relationships")
-            
+
             return {
                 'success': True,
                 'node_details': {
@@ -281,7 +281,7 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                     'coherence_score': self.graph_metrics['graph_coherence_score']
                 }
             }
-            
+
         except Exception as e:
             self.logger.error(f"Failed to add knowledge node: {str(e)}")
             return {
@@ -347,7 +347,7 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
             update_data = request_data["update_data"]
             revalidation_threshold = request_data.get("revalidation_threshold", 0.6)
             use_grok = request_data.get("use_grok_validation", True) and self.grok_client is not None
-            
+
             update_summary = {
                 'nodes_updated': 0,
                 'relationships_added': 0,
@@ -355,30 +355,30 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                 'facts_processed': 0,
                 'validation_changes': 0
             }
-            
+
             # Process node updates
             node_updates = update_data.get("node_updates", [])
             for node_update in node_updates:
                 node_id = node_update["node_id"]
                 if node_id in self.nodes:
                     node = self.nodes[node_id]
-                    
+
                     # Update properties
                     property_updates = node_update.get("property_updates", {})
                     node.properties.update(property_updates)
-                    
+
                     # Update confidence if provided
                     if "confidence_update" in node_update:
                         node.confidence_score = node_update["confidence_update"]
-                    
+
                     # Update timestamps and counts
                     node.last_updated = datetime.utcnow().isoformat()
                     node.update_count += 1
-                    
+
                     # Update graph representation
                     self.knowledge_graph.nodes[node_id].update(node.__dict__)
                     update_summary['nodes_updated'] += 1
-            
+
             # Process new facts
             new_facts = update_data.get("new_facts", [])
             for fact_data in new_facts:
@@ -388,7 +388,7 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                     relationships = self._discover_relationships(fact_node, revalidation_threshold, use_grok)
                     update_summary['facts_processed'] += 1
                     update_summary['relationships_added'] += len(relationships)
-            
+
             # Process relationship hints
             relationship_hints = update_data.get("relationship_hints", [])
             for hint in relationship_hints:
@@ -401,19 +401,19 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                     )
                     if edge:
                         update_summary['relationships_added'] += 1
-            
+
             # Re-validate existing relationships
             revalidation_results = self._revalidate_relationships(revalidation_threshold, use_grok)
             update_summary['validation_changes'] = len(revalidation_results)
-            
+
             # Update graph metrics
             self._update_graph_metrics()
-            
+
             # Get Grok insights on the updates
             grok_update_insights = None
             if use_grok:
                 grok_update_insights = self._get_grok_update_insights(update_data, update_summary)
-            
+
             # Record the update
             update_record = GraphUpdate(
                 update_id=hashlib.md5(f"graph_update_{datetime.utcnow().isoformat()}".encode()).hexdigest()[:12],
@@ -423,9 +423,9 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                 confidence_score=np.mean([f.get("confidence", 0.8) for f in new_facts]) if new_facts else 0.8
             )
             self.update_history.append(update_record)
-            
+
             self.logger.info(f"Updated knowledge graph: {update_summary}")
-            
+
             return {
                 'success': True,
                 'update_summary': update_summary,
@@ -439,7 +439,7 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                 },
                 'update_id': update_record.update_id
             }
-            
+
         except Exception as e:
             self.logger.error(f"Knowledge graph update failed: {str(e)}")
             return {
@@ -485,10 +485,10 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
         try:
             query = request_data["query"]
             use_grok = request_data.get("use_grok_enhancement", True) and self.grok_client is not None
-            
+
             query_type = query["query_type"]
             query_results = []
-            
+
             if query_type == "semantic_search":
                 query_results = self._perform_semantic_search(query)
             elif query_type == "path_finding":
@@ -499,15 +499,15 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                 query_results = self._explore_concepts(query)
             elif query_type == "relationship_analysis":
                 query_results = self._analyze_relationships(query)
-            
+
             # Enhance results with Grok insights if enabled
             grok_enhancement = None
             if use_grok and query_results:
                 grok_enhancement = self._get_grok_query_enhancement(query, query_results)
-            
+
             # Calculate query confidence
             query_confidence = self._calculate_query_confidence(query_results)
-            
+
             return {
                 'success': True,
                 'query_type': query_type,
@@ -521,7 +521,7 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                     'graph_coherence': self.graph_metrics['graph_coherence_score']
                 }
             }
-            
+
         except Exception as e:
             self.logger.error(f"Knowledge graph query failed: {str(e)}")
             return {
@@ -544,29 +544,29 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
     def _discover_relationships(self, new_node: KnowledgeNode, threshold: float, use_grok: bool) -> List[Dict[str, Any]]:
         """Discover relationships between the new node and existing nodes"""
         discovered_relationships = []
-        
+
         # Skip if no existing nodes
         if len(self.nodes) <= 1:
             return discovered_relationships
-        
+
         new_embedding = new_node.embedding
         if new_embedding is None:
             return discovered_relationships
-        
+
         # Calculate similarities with existing nodes
         for existing_node_id, existing_node in self.nodes.items():
             if existing_node_id == new_node.node_id or existing_node.embedding is None:
                 continue
-            
+
             # Semantic similarity
             similarity = float(cosine_similarity([new_embedding], [existing_node.embedding])[0][0])
-            
+
             if similarity >= threshold:
                 # Determine relationship type
                 relationship_type, confidence = self._determine_relationship_type(
                     new_node, existing_node, similarity, use_grok
                 )
-                
+
                 if relationship_type:
                     edge = self._create_relationship_edge(
                         new_node.node_id,
@@ -575,7 +575,7 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                         confidence,
                         strength=similarity
                     )
-                    
+
                     if edge:
                         discovered_relationships.append({
                             'edge_id': edge.edge_id,
@@ -584,17 +584,17 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                             'confidence_score': confidence,
                             'strength': similarity
                         })
-        
+
         return discovered_relationships
 
     def _determine_relationship_type(self, node1: KnowledgeNode, node2: KnowledgeNode, similarity: float, use_grok: bool) -> Tuple[Optional[RelationshipType], float]:
         """Determine the type of relationship between two nodes"""
-        
+
         # Text-based relationship detection
         text1 = f"{node1.label} {json.dumps(node1.properties)}"
         text2 = f"{node2.label} {json.dumps(node2.properties)}"
         combined_text = f"{text1} {text2}".lower()
-        
+
         # Check for specific relationship patterns
         for pattern_type, keywords in [
             (RelationshipType.HIERARCHICAL, self.relationship_rules['hierarchical_keywords']),
@@ -606,17 +606,17 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
             if any(keyword in combined_text for keyword in keywords):
                 confidence = min(0.8 + similarity * 0.2, 0.95)
                 return pattern_type, confidence
-        
+
         # Default to semantic similarity if above threshold
         if similarity >= self.relationship_rules['semantic_similarity_threshold']:
             return RelationshipType.SEMANTIC_SIMILARITY, similarity
-        
+
         return None, 0.0
 
     def _create_relationship_edge(self, source_id: str, target_id: str, relationship_type: RelationshipType, confidence: float, strength: float = 1.0) -> Optional[KnowledgeEdge]:
         """Create a relationship edge between two nodes"""
         edge_id = hashlib.md5(f"{source_id}_{target_id}_{relationship_type.value}".encode()).hexdigest()[:12]
-        
+
         # Check if edge already exists
         if edge_id in self.edges:
             # Update existing edge
@@ -626,7 +626,7 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
             existing_edge.last_validated = datetime.utcnow().isoformat()
             existing_edge.validation_count += 1
             return existing_edge
-        
+
         # Create new edge
         edge = KnowledgeEdge(
             edge_id=edge_id,
@@ -636,14 +636,14 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
             confidence_score=confidence,
             strength=strength
         )
-        
+
         # Add to graph structures
         self.edges[edge_id] = edge
         self.knowledge_graph.add_edge(source_id, target_id, key=edge_id, **edge.__dict__)
-        
+
         # Update metrics
         self.graph_metrics['total_edges'] += 1
-        
+
         return edge
 
     def _create_fact_node(self, fact_data: Dict[str, Any]) -> Optional[KnowledgeNode]:
@@ -651,13 +651,13 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
         fact_text = fact_data["fact_text"]
         confidence = fact_data.get("confidence", 0.8)
         source = fact_data.get("source", "unknown")
-        
+
         # Generate embedding
         embedding = self.embedding_model.encode(fact_text, normalize_embeddings=True)
-        
+
         # Create node ID
         node_id = hashlib.md5(f"fact_{fact_text}_{source}".encode()).hexdigest()[:12]
-        
+
         # Create fact node
         fact_node = KnowledgeNode(
             node_id=node_id,
@@ -671,12 +671,12 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
             embedding=embedding,
             confidence_score=confidence
         )
-        
+
         # Add to graph
         self.nodes[node_id] = fact_node
         self.knowledge_graph.add_node(node_id, **fact_node.__dict__)
         self.graph_metrics['total_nodes'] += 1
-        
+
         return fact_node
 
     def _validate_relationship_hint(self, hint: Dict[str, Any]) -> bool:
@@ -684,11 +684,11 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
         source_id = hint["source_id"]
         target_id = hint["target_id"]
         relationship_type = hint["relationship_type"]
-        
+
         # Check if nodes exist
         if source_id not in self.nodes or target_id not in self.nodes:
             return False
-        
+
         # Check if relationship type is valid
         try:
             RelationshipType(relationship_type)
@@ -699,18 +699,18 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
     def _revalidate_relationships(self, threshold: float, use_grok: bool) -> List[Dict[str, Any]]:
         """Re-validate existing relationships based on updated information"""
         revalidation_results = []
-        
+
         for edge_id, edge in list(self.edges.items()):
             source_node = self.nodes.get(edge.source_node_id)
             target_node = self.nodes.get(edge.target_node_id)
-            
+
             if not source_node or not target_node:
                 continue
-            
+
             # Re-calculate relationship strength
             if source_node.embedding is not None and target_node.embedding is not None:
                 new_similarity = float(cosine_similarity([source_node.embedding], [target_node.embedding])[0][0])
-                
+
                 # Update confidence based on new similarity
                 confidence_change = abs(edge.strength - new_similarity)
                 if confidence_change > 0.1:  # Significant change
@@ -718,7 +718,7 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                     edge.confidence_score = max(edge.confidence_score - confidence_change * 0.5, 0.1)
                     edge.last_validated = datetime.utcnow().isoformat()
                     edge.validation_count += 1
-                    
+
                     revalidation_results.append({
                         'edge_id': edge_id,
                         'old_strength': edge.strength,
@@ -726,30 +726,30 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                         'confidence_change': confidence_change,
                         'action': 'updated'
                     })
-                
+
                 # Remove weak relationships
                 if edge.confidence_score < threshold:
                     self.knowledge_graph.remove_edge(edge.source_node_id, edge.target_node_id, key=edge_id)
                     del self.edges[edge_id]
                     self.graph_metrics['total_edges'] -= 1
-                    
+
                     revalidation_results.append({
                         'edge_id': edge_id,
                         'action': 'removed',
                         'reason': 'confidence_below_threshold'
                     })
-        
+
         return revalidation_results
 
     def _update_graph_metrics(self):
         """Update graph metrics"""
         self.graph_metrics['total_nodes'] = len(self.nodes)
         self.graph_metrics['total_edges'] = len(self.edges)
-        
+
         # Calculate average update confidence
         if self.update_history:
             self.graph_metrics['avg_update_confidence'] = np.mean([u.confidence_score for u in self.update_history[-100:]])
-        
+
         # Update graph coherence
         self.graph_metrics['graph_coherence_score'] = self._calculate_graph_coherence()
 
@@ -757,18 +757,18 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
         """Calculate overall graph coherence score"""
         if len(self.nodes) < 2:
             return 1.0
-        
+
         # Calculate based on connectivity and confidence
         total_confidence = sum(node.confidence_score for node in self.nodes.values())
         avg_node_confidence = total_confidence / len(self.nodes)
-        
+
         total_edge_confidence = sum(edge.confidence_score for edge in self.edges.values())
         avg_edge_confidence = total_edge_confidence / max(len(self.edges), 1)
-        
+
         # Connectivity ratio
         max_possible_edges = len(self.nodes) * (len(self.nodes) - 1)
         connectivity_ratio = len(self.edges) / max(max_possible_edges, 1)
-        
+
         # Combined coherence score
         coherence = (avg_node_confidence * 0.4 + avg_edge_confidence * 0.4 + connectivity_ratio * 0.2)
         return min(coherence, 1.0)
@@ -778,21 +778,21 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
         query_text = query.get("query_text", "")
         max_results = query.get("max_results", 10)
         min_confidence = query.get("min_confidence", 0.5)
-        
+
         if not query_text:
             return []
-        
+
         # Generate query embedding
         query_embedding = self.embedding_model.encode(query_text, normalize_embeddings=True)
-        
+
         # Calculate similarities
         search_results = []
         for node_id, node in self.nodes.items():
             if node.embedding is None:
                 continue
-            
+
             similarity = float(cosine_similarity([query_embedding], [node.embedding])[0][0])
-            
+
             if similarity >= min_confidence:
                 search_results.append({
                     'node_id': node_id,
@@ -802,7 +802,7 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                     'similarity_score': similarity,
                     'confidence_score': node.confidence_score
                 })
-        
+
         # Sort by similarity and return top results
         search_results.sort(key=lambda x: x['similarity_score'], reverse=True)
         return search_results[:max_results]
@@ -810,13 +810,13 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
     def _find_knowledge_paths(self, query: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Find paths between nodes in the knowledge graph"""
         target_nodes = query.get("target_node_ids", [])
-        
+
         if len(target_nodes) < 2:
             return []
-        
+
         paths = []
         source = target_nodes[0]
-        
+
         for target in target_nodes[1:]:
             try:
                 if nx.has_path(self.knowledge_graph, source, target):
@@ -828,7 +828,7 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                         'path_length': len(shortest_path) - 1,
                         'path_edges': []
                     }
-                    
+
                     # Get edge information for the path
                     for i in range(len(shortest_path) - 1):
                         node1, node2 = shortest_path[i], shortest_path[i + 1]
@@ -839,26 +839,26 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                                 'target': node2,
                                 'edge_info': list(edge_data.values())[0] if edge_data else {}
                             })
-                    
+
                     paths.append(path_info)
             except nx.NetworkXNoPath:
                 continue
-        
+
         return paths
 
     def _analyze_node_neighborhood(self, query: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Analyze the neighborhood of specified nodes"""
         target_nodes = query.get("target_node_ids", [])
-        
+
         neighborhoods = []
         for node_id in target_nodes:
             if node_id not in self.nodes:
                 continue
-            
+
             # Get immediate neighbors
             predecessors = list(self.knowledge_graph.predecessors(node_id))
             successors = list(self.knowledge_graph.successors(node_id))
-            
+
             # Calculate neighborhood statistics
             neighborhood_info = {
                 'node_id': node_id,
@@ -883,19 +883,19 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                     for succ in successors if succ in self.nodes
                 ]
             }
-            
+
             neighborhoods.append(neighborhood_info)
-        
+
         return neighborhoods
 
     def _explore_concepts(self, query: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Explore concepts related to the query"""
         query_text = query.get("query_text", "")
         max_results = query.get("max_results", 10)
-        
+
         # Find concept nodes
         concept_nodes = [node for node in self.nodes.values() if node.node_type == NodeType.CONCEPT]
-        
+
         if not query_text:
             return [
                 {
@@ -906,15 +906,15 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                 }
                 for node in concept_nodes[:max_results]
             ]
-        
+
         # Semantic search within concept nodes
         query_embedding = self.embedding_model.encode(query_text, normalize_embeddings=True)
         concept_results = []
-        
+
         for node in concept_nodes:
             if node.embedding is None:
                 continue
-            
+
             similarity = float(cosine_similarity([query_embedding], [node.embedding])[0][0])
             concept_results.append({
                 'node_id': node.node_id,
@@ -923,16 +923,16 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                 'confidence_score': node.confidence_score,
                 'similarity_score': similarity
             })
-        
+
         concept_results.sort(key=lambda x: x['similarity_score'], reverse=True)
         return concept_results[:max_results]
 
     def _analyze_relationships(self, query: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Analyze relationships in the knowledge graph"""
         relationship_types = query.get("relationship_types", [])
-        
+
         relationship_analysis = []
-        
+
         # Group edges by relationship type
         relationship_groups = {}
         for edge in self.edges.values():
@@ -941,12 +941,12 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                 if rel_type not in relationship_groups:
                     relationship_groups[rel_type] = []
                 relationship_groups[rel_type].append(edge)
-        
+
         # Analyze each relationship type
         for rel_type, edges in relationship_groups.items():
             avg_confidence = np.mean([edge.confidence_score for edge in edges])
             avg_strength = np.mean([edge.strength for edge in edges])
-            
+
             relationship_analysis.append({
                 'relationship_type': rel_type,
                 'count': len(edges),
@@ -959,14 +959,14 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                     'strength': max(edge.strength for edge in edges)
                 }
             })
-        
+
         return relationship_analysis
 
     def _calculate_query_confidence(self, query_results: List[Dict[str, Any]]) -> float:
         """Calculate confidence score for query results"""
         if not query_results:
             return 0.0
-        
+
         # Calculate based on result confidence scores and similarity scores
         confidences = []
         for result in query_results:
@@ -974,14 +974,14 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
             similarity_conf = result.get('similarity_score', 0.5)
             combined_conf = (result_conf + similarity_conf) / 2
             confidences.append(combined_conf)
-        
+
         return float(np.mean(confidences))
 
     def _get_grok_node_insights(self, node: KnowledgeNode) -> Optional[str]:
         """Get Grok insights for a new node"""
         if not self.grok_client:
             return None
-        
+
         try:
             messages = [
                 {
@@ -992,19 +992,19 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                     "role": "user",
                     "content": f"""
                     Analyze this knowledge graph node and suggest insights:
-                    
+
                     Node Type: {node.node_type.value}
                     Label: {node.label}
                     Properties: {json.dumps(node.properties, indent=2)}
-                    
+
                     What relationships might this node have? What insights can you provide?
                     """
                 }
             ]
-            
+
             response = self.grok_client.chat_completion(messages, temperature=0.4, max_tokens=300)
             return response.content
-            
+
         except Exception as e:
             self.logger.warning(f"GrokClient node insights failed: {e}")
             return None
@@ -1013,7 +1013,7 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
         """Get Grok insights on graph updates"""
         if not self.grok_client:
             return None
-        
+
         try:
             messages = [
                 {
@@ -1024,18 +1024,18 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                     "role": "user",
                     "content": f"""
                     Analyze this knowledge graph update:
-                    
+
                     Update Summary: {json.dumps(update_summary, indent=2)}
                     Update Data: {json.dumps(update_data, indent=2)}
-                    
+
                     What patterns do you see in the knowledge evolution? Any insights or recommendations?
                     """
                 }
             ]
-            
+
             response = self.grok_client.chat_completion(messages, temperature=0.4, max_tokens=400)
             return response.content
-            
+
         except Exception as e:
             self.logger.warning(f"GrokClient update insights failed: {e}")
             return None
@@ -1044,7 +1044,7 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
         """Get Grok enhancement for query results"""
         if not self.grok_client:
             return None
-        
+
         try:
             messages = [
                 {
@@ -1055,18 +1055,18 @@ class DynamicKnowledgeGraphSkills(PerformanceMonitorMixin, SecurityHardenedMixin
                     "role": "user",
                     "content": f"""
                     Enhance these knowledge graph query results:
-                    
+
                     Query: {json.dumps(query, indent=2)}
                     Results: {json.dumps(results[:5], indent=2)}  # First 5 results
-                    
+
                     Provide additional insights, suggest related concepts, or identify patterns.
                     """
                 }
             ]
-            
+
             response = self.grok_client.chat_completion(messages, temperature=0.5, max_tokens=350)
             return response.content
-            
+
         except Exception as e:
             self.logger.warning(f"GrokClient query enhancement failed: {e}")
             return None

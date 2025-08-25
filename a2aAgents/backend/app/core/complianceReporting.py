@@ -71,19 +71,19 @@ class ReportRequest:
 
 class EnhancedComplianceReporter:
     """Enhanced compliance reporting with comprehensive features"""
-    
+
     def __init__(self):
         self.report_requests: Dict[str, ReportRequest] = {}
         self.reports_directory = Path("reports/compliance")
         self.reports_directory.mkdir(parents=True, exist_ok=True)
-        
+
         self.audit_logger = get_audit_logger()
         self.compliance_reporter = get_compliance_reporter()
         self.retention_manager = get_retention_manager()
         self.gdpr_manager = get_gdpr_manager()
-        
+
         logger.info("Enhanced Compliance Reporter initialized")
-    
+
     async def generate_comprehensive_report(
         self,
         framework: ComplianceFramework,
@@ -94,9 +94,9 @@ class EnhancedComplianceReporter:
         include_recommendations: bool = True
     ) -> str:
         """Generate comprehensive compliance report"""
-        
+
         request_id = str(uuid.uuid4())
-        
+
         # Create report request
         request = ReportRequest(
             request_id=request_id,
@@ -108,15 +108,15 @@ class EnhancedComplianceReporter:
             requested_by=requested_by,
             requested_at=datetime.utcnow()
         )
-        
+
         self.report_requests[request_id] = request
-        
+
         # Generate report asynchronously
         asyncio.create_task(self._generate_report_async(request, include_recommendations))
-        
+
         logger.info(f"Report generation initiated: {request_id}")
         return request_id
-    
+
     async def _generate_report_async(
         self,
         request: ReportRequest,
@@ -125,7 +125,7 @@ class EnhancedComplianceReporter:
         """Asynchronously generate the report"""
         try:
             request.status = ReportStatus.IN_PROGRESS
-            
+
             # Generate report based on framework
             if request.framework == ComplianceFramework.SOX:
                 report_data = await self._generate_sox_comprehensive_report(
@@ -152,7 +152,7 @@ class EnhancedComplianceReporter:
                 report_data = await self._generate_generic_report(
                     request.framework, request.start_date, request.end_date
                 )
-            
+
             # Add metadata
             report_data["request_metadata"] = {
                 "request_id": request.request_id,
@@ -162,23 +162,23 @@ class EnhancedComplianceReporter:
                 "period_days": (request.end_date - request.start_date).days,
                 "format": request.format.value
             }
-            
+
             # Save report
             file_path = await self._save_report(request, report_data)
-            
+
             # Update request
             request.status = ReportStatus.COMPLETED
             request.completed_at = datetime.utcnow()
             request.file_path = str(file_path)
             request.metadata = report_data.get("summary", {})
-            
+
             logger.info(f"Report generation completed: {request.request_id}")
-            
+
         except Exception as e:
             logger.error(f"Report generation failed for {request.request_id}: {e}")
             request.status = ReportStatus.FAILED
             request.error_message = str(e)
-    
+
     async def _generate_sox_comprehensive_report(
         self,
         start_date: datetime,
@@ -186,10 +186,10 @@ class EnhancedComplianceReporter:
         include_recommendations: bool
     ) -> Dict[str, Any]:
         """Generate comprehensive SOX compliance report"""
-        
+
         # Get base SOX report
         base_report = await self.compliance_reporter.generate_sox_report(start_date, end_date)
-        
+
         # Enhanced analysis
         enhanced_report = {
             **base_report,
@@ -206,12 +206,12 @@ class EnhancedComplianceReporter:
                 "trend_analysis": await self._analyze_compliance_trends(start_date, end_date, ComplianceFramework.SOX)
             }
         }
-        
+
         if include_recommendations:
             enhanced_report["recommendations"] = await self._generate_sox_recommendations(enhanced_report)
-        
+
         return enhanced_report
-    
+
     async def _generate_gdpr_comprehensive_report(
         self,
         start_date: datetime,
@@ -219,10 +219,10 @@ class EnhancedComplianceReporter:
         include_recommendations: bool
     ) -> Dict[str, Any]:
         """Generate comprehensive GDPR compliance report"""
-        
+
         # Get base GDPR report
         base_report = await self.compliance_reporter.generate_gdpr_report(start_date, end_date)
-        
+
         # Get GDPR-specific data
         gdpr_data = {
             "consent_management": await self._analyze_consent_management(start_date, end_date),
@@ -232,19 +232,19 @@ class EnhancedComplianceReporter:
             "retention_compliance": await self._analyze_retention_compliance(start_date, end_date),
             "data_transfers": await self._analyze_data_transfers(start_date, end_date)
         }
-        
+
         enhanced_report = {
             **base_report,
             "gdpr_specific": gdpr_data,
             "privacy_impact": await self._assess_privacy_impact(start_date, end_date),
             "compliance_score": await self._calculate_gdpr_compliance_score(gdpr_data)
         }
-        
+
         if include_recommendations:
             enhanced_report["recommendations"] = await self._generate_gdpr_recommendations(enhanced_report)
-        
+
         return enhanced_report
-    
+
     async def _generate_soc2_comprehensive_report(
         self,
         start_date: datetime,
@@ -252,9 +252,9 @@ class EnhancedComplianceReporter:
         include_recommendations: bool
     ) -> Dict[str, Any]:
         """Generate comprehensive SOC2 compliance report"""
-        
+
         base_report = await self.compliance_reporter.generate_soc2_report(start_date, end_date)
-        
+
         # Trust Service Criteria detailed analysis
         tsc_analysis = {
             "security": await self._analyze_security_controls(start_date, end_date),
@@ -263,19 +263,19 @@ class EnhancedComplianceReporter:
             "confidentiality": await self._analyze_confidentiality_controls(start_date, end_date),
             "privacy": await self._analyze_privacy_controls(start_date, end_date)
         }
-        
+
         enhanced_report = {
             **base_report,
             "trust_service_criteria_detailed": tsc_analysis,
             "control_effectiveness": await self._assess_control_effectiveness(tsc_analysis),
             "exception_analysis": await self._analyze_control_exceptions(start_date, end_date)
         }
-        
+
         if include_recommendations:
             enhanced_report["recommendations"] = await self._generate_soc2_recommendations(enhanced_report)
-        
+
         return enhanced_report
-    
+
     async def _generate_hipaa_comprehensive_report(
         self,
         start_date: datetime,
@@ -283,7 +283,7 @@ class EnhancedComplianceReporter:
         include_recommendations: bool
     ) -> Dict[str, Any]:
         """Generate comprehensive HIPAA compliance report"""
-        
+
         # HIPAA-specific analysis
         hipaa_analysis = {
             "phi_access_controls": await self._analyze_phi_access(start_date, end_date),
@@ -293,7 +293,7 @@ class EnhancedComplianceReporter:
             "physical_safeguards": await self._analyze_physical_safeguards(start_date, end_date),
             "technical_safeguards": await self._analyze_technical_safeguards(start_date, end_date)
         }
-        
+
         enhanced_report = {
             "report_type": "hipaa_compliance",
             "period": {
@@ -303,12 +303,12 @@ class EnhancedComplianceReporter:
             "hipaa_analysis": hipaa_analysis,
             "compliance_assessment": await self._assess_hipaa_compliance(hipaa_analysis)
         }
-        
+
         if include_recommendations:
             enhanced_report["recommendations"] = await self._generate_hipaa_recommendations(enhanced_report)
-        
+
         return enhanced_report
-    
+
     async def _generate_pci_comprehensive_report(
         self,
         start_date: datetime,
@@ -316,7 +316,7 @@ class EnhancedComplianceReporter:
         include_recommendations: bool
     ) -> Dict[str, Any]:
         """Generate comprehensive PCI-DSS compliance report"""
-        
+
         # PCI-DSS requirements analysis
         pci_analysis = {
             "requirement_1": await self._analyze_network_security(start_date, end_date),
@@ -328,7 +328,7 @@ class EnhancedComplianceReporter:
             "requirement_10": await self._analyze_network_monitoring_pci(start_date, end_date),
             "requirement_11": await self._analyze_security_testing(start_date, end_date)
         }
-        
+
         enhanced_report = {
             "report_type": "pci_dss_compliance",
             "period": {
@@ -338,46 +338,46 @@ class EnhancedComplianceReporter:
             "pci_requirements": pci_analysis,
             "compliance_level": await self._assess_pci_compliance_level(pci_analysis)
         }
-        
+
         if include_recommendations:
             enhanced_report["recommendations"] = await self._generate_pci_recommendations(enhanced_report)
-        
+
         return enhanced_report
-    
+
     async def _save_report(self, request: ReportRequest, report_data: Dict[str, Any]) -> Path:
         """Save report to file"""
-        
+
         # Generate filename
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         filename = f"{request.framework.value}_report_{timestamp}_{request.request_id[:8]}"
-        
+
         if request.format == ReportFormat.JSON:
             file_path = self.reports_directory / f"{filename}.json"
             with open(file_path, 'w', encoding='utf-8') as f:
                 json.dump(report_data, f, indent=2, default=str)
-                
+
         elif request.format == ReportFormat.CSV:
             file_path = self.reports_directory / f"{filename}.csv"
             # Convert to CSV (simplified)
             await self._convert_to_csv(report_data, file_path)
-            
+
         elif request.format == ReportFormat.PDF:
             file_path = self.reports_directory / f"{filename}.pdf"
             # Convert to PDF (would require additional libraries)
             await self._convert_to_pdf(report_data, file_path)
-            
+
         else:
             # Default to JSON
             file_path = self.reports_directory / f"{filename}.json"
             with open(file_path, 'w', encoding='utf-8') as f:
                 json.dump(report_data, f, indent=2, default=str)
-        
+
         return file_path
-    
+
     async def get_report_status(self, request_id: str) -> Optional[ReportRequest]:
         """Get report generation status"""
         return self.report_requests.get(request_id)
-    
+
     async def list_reports(
         self,
         framework: Optional[ComplianceFramework] = None,
@@ -385,45 +385,45 @@ class EnhancedComplianceReporter:
         limit: int = 50
     ) -> List[ReportRequest]:
         """List compliance reports"""
-        
+
         reports = list(self.report_requests.values())
-        
+
         # Apply filters
         if framework:
             reports = [r for r in reports if r.framework == framework]
-        
+
         if status:
             reports = [r for r in reports if r.status == status]
-        
+
         # Sort by request time (newest first)
         reports.sort(key=lambda r: r.requested_at, reverse=True)
-        
+
         return reports[:limit]
-    
+
     async def delete_report(self, request_id: str, requested_by: str) -> bool:
         """Delete a compliance report"""
-        
+
         request = self.report_requests.get(request_id)
         if not request:
             return False
-        
+
         # Check permissions (only creator or admin can delete)
         if request.requested_by != requested_by:
             # Would check admin permissions here
             return False
-        
+
         # Delete file if exists
         if request.file_path and Path(request.file_path).exists():
             Path(request.file_path).unlink()
-        
+
         # Remove from tracking
         del self.report_requests[request_id]
-        
+
         logger.info(f"Report deleted: {request_id}")
         return True
-    
+
     # Helper methods for analysis (simplified implementations)
-    
+
     async def _analyze_internal_controls(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
         """Analyze internal control effectiveness"""
         events = await self.audit_logger.query_audit_events(
@@ -431,13 +431,13 @@ class EnhancedComplianceReporter:
             end_time=end_date,
             event_types=[AuditEventType.CONFIG_CHANGED, AuditEventType.ADMIN_ACTION]
         )
-        
+
         return {
             "total_control_events": len(events),
             "unauthorized_changes": len([e for e in events if e.get("outcome") == "failure"]),
             "control_effectiveness_rate": 0.95  # Calculated based on success rate
         }
-    
+
     async def _analyze_consent_management(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
         """Analyze GDPR consent management"""
         # This would integrate with GDPR manager
@@ -447,7 +447,7 @@ class EnhancedComplianceReporter:
             "expired_consents": 8,
             "consent_compliance_rate": 0.92
         }
-    
+
     async def _analyze_data_subject_requests(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
         """Analyze GDPR data subject requests"""
         return {
@@ -458,16 +458,16 @@ class EnhancedComplianceReporter:
             "average_response_time_days": 18,
             "requests_within_30_days": 42
         }
-    
+
     async def _convert_to_csv(self, report_data: Dict[str, Any], file_path: Path):
         """Convert report to CSV format"""
         # Simplified CSV conversion
         import csv
-        
+
         with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(["Section", "Key", "Value"])
-            
+
             def write_dict(data, section=""):
                 for key, value in data.items():
                     if isinstance(value, dict):
@@ -476,38 +476,38 @@ class EnhancedComplianceReporter:
                         writer.writerow([section, key, f"{len(value)} items"])
                     else:
                         writer.writerow([section, key, str(value)])
-            
+
             write_dict(report_data)
-    
+
     async def _convert_to_pdf(self, report_data: Dict[str, Any], file_path: Path):
         """Convert report to PDF format"""
         # Placeholder - would require PDF generation library
         # For now, save as JSON with .pdf extension
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(report_data, f, indent=2, default=str)
-    
+
     # Additional analysis methods would be implemented here
     async def _analyze_segregation_compliance(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
         return {"compliance_rate": 0.98, "violations": 2}
-    
+
     async def _analyze_change_controls(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
         return {"total_changes": 45, "approved_changes": 44, "emergency_changes": 1}
-    
+
     async def _analyze_access_reviews(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
         return {"reviews_completed": 12, "access_revoked": 8, "compliance_rate": 0.95}
-    
+
     async def _analyze_audit_completeness(self, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
         return {"coverage_rate": 0.99, "missing_events": 5, "integrity_verified": True}
-    
+
     async def _identify_high_risk_events(self, start_date: datetime, end_date: datetime, framework: str) -> List[Dict[str, Any]]:
         return [{"event_type": "unauthorized_access", "count": 3, "severity": "high"}]
-    
+
     async def _identify_control_gaps(self, start_date: datetime, end_date: datetime, framework: str) -> List[str]:
         return ["Automated access review process", "Real-time monitoring alerts"]
-    
+
     async def _analyze_compliance_trends(self, start_date: datetime, end_date: datetime, framework: ComplianceFramework) -> Dict[str, Any]:
         return {"trend": "improving", "score_change": "+5%", "key_improvements": ["access controls", "audit coverage"]}
-    
+
     async def _generate_sox_recommendations(self, report_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         return [
             {
@@ -517,7 +517,7 @@ class EnhancedComplianceReporter:
                 "impact": "Improves segregation of duties compliance"
             }
         ]
-    
+
     async def _generate_gdpr_recommendations(self, report_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         return [
             {
@@ -527,7 +527,7 @@ class EnhancedComplianceReporter:
                 "impact": "Reduces expired consent rates"
             }
         ]
-    
+
     async def _generate_soc2_recommendations(self, report_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         return [
             {
@@ -537,7 +537,7 @@ class EnhancedComplianceReporter:
                 "impact": "Improves security control effectiveness"
             }
         ]
-    
+
     async def _generate_hipaa_recommendations(self, report_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         return [
             {
@@ -547,7 +547,7 @@ class EnhancedComplianceReporter:
                 "impact": "Ensures minimum necessary access"
             }
         ]
-    
+
     async def _generate_pci_recommendations(self, report_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         return [
             {
@@ -557,7 +557,7 @@ class EnhancedComplianceReporter:
                 "impact": "Meets PCI-DSS Requirement 4"
             }
         ]
-    
+
     async def _generate_generic_report(self, framework: ComplianceFramework, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
         """Generate generic framework report"""
         events = await self.audit_logger.query_audit_events(
@@ -565,7 +565,7 @@ class EnhancedComplianceReporter:
             end_time=end_date,
             compliance_framework=framework
         )
-        
+
         return {
             "report_type": f"{framework.value}_compliance",
             "period": {

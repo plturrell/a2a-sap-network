@@ -55,13 +55,13 @@ try:
 except ImportError:
     def initialize_agent_trust(*args, **kwargs):
         return {"status": "trust_system_unavailable"}
-    
+
     def get_trust_contract():
         return None
-    
+
     def verify_a2a_message(*args, **kwargs):
         return True, {"status": "trust_system_unavailable"}
-    
+
     def sign_a2a_message(*args, **kwargs):
         return {"message": args[1] if len(args) > 1 else {}, "signature": {"status": "trust_system_unavailable"}}
 
@@ -110,7 +110,7 @@ class StandardizationResult:
     validation_results: Dict[str, Any] = field(default_factory=dict)
 
 
-@dataclass 
+@dataclass
 class SchemaPattern:
     """AI-learned schema patterns for intelligent standardization"""
     pattern_id: str
@@ -124,7 +124,7 @@ class SchemaPattern:
 
 class EnhancedStandardizer:
     """AI-enhanced standardizer with intelligent pattern recognition"""
-    
+
     def __init__(self, ai_framework: AIIntelligenceFramework, data_type: str):
         # Initialize security features
         self._init_security_features()
@@ -134,7 +134,7 @@ class EnhancedStandardizer:
         self.data_type = data_type
         self.schema_patterns = {}
         self.learning_history = []
-        
+
         # L4 hierarchical schema templates
         self.l4_schemas = {
             "account": {
@@ -162,12 +162,12 @@ class EnhancedStandardizer:
                 "L4": {"calculation_method", "source", "timestamp", "metadata"}
             }
         }
-    
+
     async def ai_standardize(self, data: Dict[str, Any], context: StandardizationContext) -> StandardizationResult:
         """AI-enhanced standardization with reasoning and learning"""
         try:
             reasoning_trace = []
-            
+
             # AI-powered data analysis
             data_analysis = await self._ai_analyze_data_structure(data, context)
             reasoning_trace.append({
@@ -175,7 +175,7 @@ class EnhancedStandardizer:
                 "analysis": data_analysis,
                 "timestamp": datetime.utcnow().isoformat()
             })
-            
+
             # Select optimal standardization strategy using AI
             strategy = await self._ai_select_standardization_strategy(data_analysis, context)
             reasoning_trace.append({
@@ -183,7 +183,7 @@ class EnhancedStandardizer:
                 "strategy": strategy,
                 "timestamp": datetime.utcnow().isoformat()
             })
-            
+
             # Perform AI-guided field mapping
             field_mappings = await self._ai_generate_field_mappings(data, data_analysis, strategy)
             reasoning_trace.append({
@@ -191,23 +191,23 @@ class EnhancedStandardizer:
                 "mappings": field_mappings,
                 "timestamp": datetime.utcnow().isoformat()
             })
-            
+
             # Apply standardization transformation
             standardized_data = await self._apply_standardization(data, field_mappings, context)
             reasoning_trace.append({
                 "step": "standardization_transform",
-                "result_preview": {k: str(v)[:50] + "..." if isinstance(v, str) and len(str(v)) > 50 else v 
+                "result_preview": {k: str(v)[:50] + "..." if isinstance(v, str) and len(str(v)) > 50 else v
                                 for k, v in list(standardized_data.items())[:5]},
                 "timestamp": datetime.utcnow().isoformat()
             })
-            
+
             # Calculate confidence and quality metrics
             confidence_score = await self._calculate_standardization_confidence(
                 data, standardized_data, field_mappings, strategy
             )
-            
+
             quality_metrics = await self._calculate_quality_metrics(data, standardized_data, context)
-            
+
             # Create comprehensive result
             result = StandardizationResult(
                 standardized_data=standardized_data,
@@ -223,12 +223,12 @@ class EnhancedStandardizer:
                     "mapping_confidence": sum(m.get("confidence", 0) for m in field_mappings.values()) / len(field_mappings) if field_mappings else 0
                 }
             )
-            
+
             # Learn from this standardization
             await self._learn_from_standardization(data, result, context)
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"AI standardization failed: {str(e)}")
             return StandardizationResult(
@@ -242,7 +242,7 @@ class EnhancedStandardizer:
                     "timestamp": datetime.utcnow().isoformat()
                 }]
             )
-    
+
     async def _ai_analyze_data_structure(self, data: Dict[str, Any], context: StandardizationContext) -> Dict[str, Any]:
         """Use AI reasoning to analyze data structure and patterns"""
         try:
@@ -256,7 +256,7 @@ class EnhancedStandardizer:
                     "known_patterns": list(self.schema_patterns.keys())
                 }
             )
-            
+
             return {
                 "field_count": len(data),
                 "field_types": {k: type(v).__name__ for k, v in data.items()},
@@ -265,7 +265,7 @@ class EnhancedStandardizer:
                 "complexity_score": analysis_result.get("complexity", 0.5),
                 "confidence": analysis_result.get("confidence", 0.7)
             }
-            
+
         except Exception as e:
             logger.error(f"Data structure analysis failed: {str(e)}")
             return {
@@ -274,7 +274,7 @@ class EnhancedStandardizer:
                 "complexity_score": 0.5,
                 "confidence": 0.3
             }
-    
+
     async def _ai_select_standardization_strategy(self, analysis: Dict[str, Any], context: StandardizationContext) -> Dict[str, Any]:
         """Use AI reasoning to select optimal standardization strategy"""
         try:
@@ -292,7 +292,7 @@ class EnhancedStandardizer:
                     "past_performance": {p.pattern_id: p.success_rate for p in self.schema_patterns.values()}
                 }
             )
-            
+
             return {
                 "primary_strategy": strategy_reasoning.get("primary_strategy", "schema_based"),
                 "backup_strategies": strategy_reasoning.get("backup_strategies", []),
@@ -300,11 +300,11 @@ class EnhancedStandardizer:
                 "effectiveness": strategy_reasoning.get("effectiveness", 0.5),
                 "reasoning": strategy_reasoning.get("reasoning", "Default strategy selection")
             }
-            
+
         except Exception as e:
             logger.error(f"Strategy selection failed: {str(e)}")
             return {"primary_strategy": "schema_based", "confidence": 0.5, "effectiveness": 0.5}
-    
+
     async def _ai_generate_field_mappings(
         self, data: Dict[str, Any], analysis: Dict[str, Any], strategy: Dict[str, Any]
     ) -> Dict[str, Dict[str, Any]]:
@@ -322,7 +322,7 @@ class EnhancedStandardizer:
                     "learned_patterns": {p.pattern_id: p.learned_mappings for p in self.schema_patterns.values()}
                 }
             )
-            
+
             field_mappings = {}
             for source_field in data.keys():
                 mapping_info = mapping_reasoning.get("mappings", {}).get(source_field, {})
@@ -333,17 +333,17 @@ class EnhancedStandardizer:
                     "l4_level": mapping_info.get("l4_level", "L4"),
                     "reasoning": mapping_info.get("reasoning", "Default mapping")
                 }
-            
+
             return field_mappings
-            
+
         except Exception as e:
             logger.error(f"Field mapping generation failed: {str(e)}")
             # Fallback to basic mappings
-            return {field: {"target_field": field, "confidence": 0.3, "l4_level": "L4"} 
+            return {field: {"target_field": field, "confidence": 0.3, "l4_level": "L4"}
                    for field in data.keys()}
-    
+
     async def _apply_standardization(
-        self, data: Dict[str, Any], mappings: Dict[str, Dict[str, Any]], 
+        self, data: Dict[str, Any], mappings: Dict[str, Dict[str, Any]],
         context: StandardizationContext
     ) -> Dict[str, Any]:
         """Apply standardization transformation based on AI-generated mappings"""
@@ -361,33 +361,33 @@ class EnhancedStandardizer:
                     "schema_version": "L4_v2.0"
                 }
             }
-            
+
             # Apply field mappings with transformations
             for source_field, value in data.items():
                 mapping_info = mappings.get(source_field, {})
                 target_field = mapping_info.get("target_field", source_field)
                 l4_level = mapping_info.get("l4_level", "L4")
                 transformation = mapping_info.get("transformation", "direct")
-                
+
                 # Apply transformation based on AI reasoning
                 transformed_value = await self._transform_value(value, transformation, context)
-                
+
                 # Place in appropriate L4 hierarchy level
                 if l4_level in standardized:
                     standardized[l4_level][target_field] = transformed_value
-            
+
             # Ensure required L1/L2 fields are present
             if "entity_id" not in standardized["L1"]:
                 standardized["L1"]["entity_id"] = standardized["_metadata"]["entity_id"]
             if "entity_type" not in standardized["L1"]:
                 standardized["L1"]["entity_type"] = self.data_type
-            
+
             return standardized
-            
+
         except Exception as e:
             logger.error(f"Standardization transformation failed: {str(e)}")
             return {"error": str(e), "_metadata": {"entity_type": self.data_type}}
-    
+
     async def _transform_value(self, value: Any, transformation: str, context: StandardizationContext) -> Any:
         """Apply intelligent value transformation"""
         try:
@@ -412,34 +412,34 @@ class EnhancedStandardizer:
                 return value
             else:
                 return value
-                
+
         except Exception as e:
             logger.warning(f"Value transformation failed: {str(e)}")
             return value
-    
+
     async def _calculate_standardization_confidence(
-        self, original: Dict[str, Any], standardized: Dict[str, Any], 
+        self, original: Dict[str, Any], standardized: Dict[str, Any],
         mappings: Dict[str, Dict[str, Any]], strategy: Dict[str, Any]
     ) -> float:
         """Calculate confidence score for standardization result"""
         try:
             # Base confidence from strategy
             base_confidence = strategy.get("confidence", 0.5)
-            
+
             # Mapping quality contribution
             mapping_confidences = [m.get("confidence", 0) for m in mappings.values()]
             mapping_confidence = sum(mapping_confidences) / len(mapping_confidences) if mapping_confidences else 0.5
-            
+
             # Data completeness contribution
             original_fields = len(original)
             standardized_fields = sum(len(level) for level in standardized.values() if isinstance(level, dict))
             completeness_ratio = min(standardized_fields / original_fields, 1.0) if original_fields > 0 else 0
-            
+
             # L4 hierarchy compliance
-            l4_levels_populated = sum(1 for level in ["L1", "L2", "L3", "L4"] 
+            l4_levels_populated = sum(1 for level in ["L1", "L2", "L3", "L4"]
                                      if level in standardized and standardized[level])
             hierarchy_compliance = l4_levels_populated / 4.0
-            
+
             # Combined confidence calculation
             confidence = (
                 base_confidence * 0.3 +
@@ -447,39 +447,39 @@ class EnhancedStandardizer:
                 completeness_ratio * 0.2 +
                 hierarchy_compliance * 0.2
             )
-            
+
             return min(max(confidence, 0.0), 1.0)
-            
+
         except Exception as e:
             logger.error(f"Confidence calculation failed: {str(e)}")
             return 0.5
-    
+
     async def _calculate_quality_metrics(
-        self, original: Dict[str, Any], standardized: Dict[str, Any], 
+        self, original: Dict[str, Any], standardized: Dict[str, Any],
         context: StandardizationContext
     ) -> Dict[str, Any]:
         """Calculate comprehensive quality metrics"""
         try:
             return {
-                "completeness": len(standardized.get("L1", {})) + len(standardized.get("L2", {})) + 
+                "completeness": len(standardized.get("L1", {})) + len(standardized.get("L2", {})) +
                               len(standardized.get("L3", {})) + len(standardized.get("L4", {})),
                 "accuracy": 1.0,  # Placeholder - could be enhanced with validation rules
                 "consistency": 1.0,  # Placeholder - could check against schema patterns
                 "schema_compliance": {
-                    "l4_levels_present": len([l for l in ["L1", "L2", "L3", "L4"] 
+                    "l4_levels_present": len([l for l in ["L1", "L2", "L3", "L4"]
                                            if l in standardized and standardized[l]]),
                     "required_fields_present": True,  # Placeholder
                     "schema_version": "L4_v2.0"
                 },
                 "transformation_success_rate": 1.0  # Placeholder
             }
-            
+
         except Exception as e:
             logger.error(f"Quality metrics calculation failed: {str(e)}")
             return {"error": str(e)}
-    
+
     async def _learn_from_standardization(
-        self, original_data: Dict[str, Any], result: StandardizationResult, 
+        self, original_data: Dict[str, Any], result: StandardizationResult,
         context: StandardizationContext
     ) -> None:
         """Learn from standardization result using adaptive learning"""
@@ -496,9 +496,9 @@ class EnhancedStandardizer:
                 "performance_insights": result.learning_insights,
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
             await self.ai_framework.adaptive_learning.learn_from_feedback(learning_event)
-            
+
             # Update schema patterns
             pattern_id = f"{self.data_type}_{len(self.schema_patterns)}"
             if pattern_id not in self.schema_patterns:
@@ -508,13 +508,13 @@ class EnhancedStandardizer:
                     target_schema=result.standardized_data,
                     confidence=result.confidence_score
                 )
-            
+
             # Update pattern statistics
             pattern = self.schema_patterns[pattern_id]
             pattern.usage_count += 1
-            pattern.success_rate = (pattern.success_rate * (pattern.usage_count - 1) + 
+            pattern.success_rate = (pattern.success_rate * (pattern.usage_count - 1) +
                                    result.confidence_score) / pattern.usage_count
-            
+
         except Exception as e:
             logger.error(f"Learning from standardization failed: {str(e)}")
 
@@ -522,12 +522,12 @@ class EnhancedStandardizer:
 class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
     """
     Enhanced Data Standardization Agent with AI Intelligence Framework Integration
-    
+
     This agent provides advanced data standardization capabilities with sophisticated reasoning,
     adaptive learning from standardization patterns, and autonomous optimization.
-    
+
     AI Intelligence Rating: 70+ out of 100
-    
+
     Enhanced Capabilities:
     - Multi-strategy standardization reasoning (schema-based, pattern-based, semantic, rule-based, probabilistic, hierarchical)
     - Adaptive learning from standardization patterns and schema effectiveness
@@ -536,7 +536,7 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
     - Full explainability of standardization decisions and field mapping reasoning
     - Autonomous schema optimization and standardization rule evolution
     """
-    
+
     def __init__(self, base_url: str, config: Optional[Dict[str, Any]] = None):
         super().__init__(
             agent_id="enhanced_data_standardization_agent",
@@ -549,8 +549,8 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-        
-        
+
+
         # Initialize AI Intelligence Framework
         ai_config = create_enhanced_agent_config(
             agent_type="data_standardization",
@@ -571,13 +571,13 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                 "distributed_standardization", "peer_review"
             ]
         )
-        
+
         self.ai_framework = create_ai_intelligence_framework(ai_config)
-        
+
         # Initialize AI-enhanced standardizers
         self.enhanced_standardizers = {}
         self.standardizer_types = ["account", "product", "location", "measure", "book", "general"]
-        
+
         # Standardization statistics and learning
         self.standardization_stats = {
             "total_processed": 0,
@@ -589,7 +589,7 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
             "quality_metrics": {},
             "performance_trends": {}
         }
-        
+
         # Schema knowledge base
         self.schema_knowledge = {
             "l4_schemas": {},
@@ -603,31 +603,31 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                 "analytical": 0.8
             }
         }
-        
+
         # Initialize storage
         self.output_dir = os.getenv("STANDARDIZATION_OUTPUT_DIR", "/tmp/standardized_data")
         os.makedirs(self.output_dir, exist_ok=True)
-        
+
         # Trust system components
         self.trust_identity = None
         self.trust_contract = None
         self.trusted_agents = set()
-        
+
         logger.info(f"Enhanced Data Standardization Agent initialized with AI Intelligence Framework")
 
     async def initialize(self) -> None:
         """Initialize agent with AI intelligence components"""
         logger.info(f"Initializing {self.name} with AI Intelligence Framework...")
-        
+
         # Initialize AI components
         await self.ai_framework.initialize()
-        
+
         # Initialize AI-enhanced standardizers
         await self._initialize_ai_standardizers()
-        
+
         # Initialize schema knowledge
         await self._initialize_schema_knowledge()
-        
+
         # Initialize HTTP client
         # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
         self.http_client = None  # Disabled for A2A protocol compliance
@@ -635,54 +635,54 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
         #     timeout=httpx.Timeout(30.0),
         #     limits=httpx.Limits(max_connections=10, max_keepalive_connections=5)
         # )
-        
+
         # Initialize trust system
         await self._initialize_trust_system()
-        
+
         # Initialize blockchain integration if enabled
         if self.blockchain_enabled:
             logger.info("Blockchain integration is enabled for Data Standardization Agent")
             await self._register_blockchain_handlers()
-        
+
         logger.info(f"{self.name} initialized successfully with AI intelligence")
 
     async def shutdown(self) -> None:
         """Cleanup with AI intelligence preservation"""
         logger.info(f"Shutting down {self.name}...")
-        
+
         # Save learning insights
         await self._save_learning_insights()
-        
+
         # Close HTTP client
         if hasattr(self, 'http_client') and self.http_client:
             await self.http_client.aclose()
-        
+
         # Shutdown AI framework
         if hasattr(self.ai_framework, 'shutdown'):
             await self.ai_framework.shutdown()
-        
+
         logger.info(f"{self.name} shutdown complete")
-    
+
     async def _register_blockchain_handlers(self):
         """Register blockchain-specific message handlers for data standardization"""
         logger.info("Registering blockchain handlers for Data Standardization Agent")
-        
+
         # Override the base blockchain message handler
         self._handle_blockchain_message = self._handle_standardization_blockchain_message
-        
+
     def _handle_standardization_blockchain_message(self, message: Dict[str, Any]):
         """Handle incoming blockchain messages for data standardization operations"""
         logger.info(f"Data Standardization Agent received blockchain message: {message}")
-        
+
         message_type = message.get('messageType', '')
         content = message.get('content', {})
-        
+
         if isinstance(content, str):
             try:
                 content = json.loads(content)
             except:
                 pass
-        
+
         # Handle standardization-specific blockchain messages
         if message_type == "DATA_PRODUCT_CREATED":
             asyncio.create_task(self._handle_blockchain_new_product(message, content))
@@ -693,21 +693,21 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
         else:
             # Default handling
             logger.info(f"Received blockchain message type: {message_type}")
-            
+
         # Mark message as delivered
         if self.blockchain_integration and message.get('messageId'):
             try:
                 self.blockchain_integration.mark_message_delivered(message['messageId'])
             except Exception as e:
                 logger.error(f"Failed to mark message as delivered: {e}")
-    
+
     async def _handle_blockchain_new_product(self, message: Dict[str, Any], content: Dict[str, Any]):
         """Handle new data product notification from blockchain"""
         try:
             product_id = content.get('product_id')
             if content.get('requires_standardization'):
                 logger.info(f"New data product requires standardization: {product_id}")
-                
+
                 # Request the product data from Data Product Agent
                 requester_address = message.get('from')
                 if requester_address:
@@ -719,25 +719,25 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                         },
                         message_type="DATA_PRODUCT_REQUEST"
                     )
-                    
+
         except Exception as e:
             logger.error(f"Failed to handle new product notification: {e}")
-    
+
     async def _handle_blockchain_standardization_request(self, message: Dict[str, Any], content: Dict[str, Any]):
         """Handle standardization request from blockchain"""
         try:
             data_to_standardize = content.get('data', {})
             data_type = content.get('data_type', 'unknown')
             requester_address = message.get('from')
-            
+
             # Verify trust before processing
             if not self.verify_trust(requester_address):
                 logger.warning(f"Standardization request from untrusted agent: {requester_address}")
                 return
-            
+
             # Perform standardization
             standardization_result = await self._ai_standardize_data(data_to_standardize, data_type)
-            
+
             # Send response via blockchain
             self.send_blockchain_message(
                 to_address=requester_address,
@@ -750,20 +750,20 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                 },
                 message_type="STANDARDIZATION_RESPONSE"
             )
-            
+
         except Exception as e:
             logger.error(f"Failed to handle standardization request: {e}")
-    
+
     async def _handle_blockchain_schema_validation(self, message: Dict[str, Any], content: Dict[str, Any]):
         """Handle schema validation request from blockchain"""
         try:
             schema = content.get('schema', {})
             data_sample = content.get('data_sample', {})
             requester_address = message.get('from')
-            
+
             # Validate schema against data
             validation_result = await self._validate_schema_compliance(schema, data_sample)
-            
+
             # Send validation response via blockchain
             self.send_blockchain_message(
                 to_address=requester_address,
@@ -775,10 +775,10 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                 },
                 message_type="SCHEMA_VALIDATION_RESPONSE"
             )
-            
+
         except Exception as e:
             logger.error(f"Failed to handle schema validation request: {e}")
-    
+
     @a2a_skill(
         name="aiEnhancedStandardization",
         description="Perform AI-enhanced data standardization with intelligent reasoning and learning",
@@ -825,7 +825,7 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
             data_type = request_data.get("data_type", "general")
             context_data = request_data.get("context", {})
             explanation_level = request_data.get("explanation_level", "detailed")
-            
+
             # Create enhanced standardization context
             standardization_context = StandardizationContext(
                 source_schema=context_data.get("source_schema", {}),
@@ -836,29 +836,29 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                 transformation_rules=context_data.get("transformation_rules", []),
                 metadata={"explanation_level": explanation_level}
             )
-            
+
             # Get AI-enhanced standardizer
             if data_type not in self.enhanced_standardizers:
                 await self._initialize_standardizer(data_type)
-            
+
             standardizer = self.enhanced_standardizers[data_type]
-            
+
             # Perform AI-enhanced standardization
             standardization_result = await standardizer.ai_standardize(data, standardization_context)
-            
+
             # Validate result using AI
             validation_result = await self._ai_validate_standardization(
                 standardization_result, standardization_context
             )
-            
+
             # Generate comprehensive explanation
             explanation = await self._ai_generate_standardization_explanation(
                 standardization_result, standardization_context, explanation_level
             )
-            
+
             # Update statistics
             self._update_standardization_stats(data_type, standardization_result)
-            
+
             return create_success_response({
                 "standardization_id": f"std_{datetime.utcnow().timestamp()}",
                 "standardized_data": standardization_result.standardized_data,
@@ -877,7 +877,7 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                     "pattern_recognition": standardization_result.learning_insights.get("pattern_matches", 0)
                 }
             })
-            
+
         except Exception as e:
             logger.error(f"AI-enhanced standardization failed: {str(e)}")
             return create_error_response(
@@ -885,7 +885,7 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                 "standardization_error",
                 {"data_preview": str(request_data.get("data", {}))[:200], "error_trace": traceback.format_exc()}
             )
-    
+
     @a2a_skill(
         name="batchAIStandardization",
         description="Batch AI-enhanced standardization of multiple data records",
@@ -918,7 +918,7 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
             context_data = request_data.get("context", {})
             parallel_processing = context_data.get("parallel_processing", True)
             batch_size = context_data.get("batch_size", 10)
-            
+
             batch_results = {}
             total_records = 0
             successful_records = 0
@@ -927,26 +927,26 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                 "batch_size": batch_size,
                 "data_types": list(batch_data.keys())
             }
-            
+
             # Process each data type
             for data_type, records in batch_data.items():
                 if not isinstance(records, list):
                     continue
-                
+
                 total_records += len(records)
-                
+
                 # AI-optimized batch processing
                 if parallel_processing and len(records) > batch_size:
                     type_results = await self._parallel_standardization(data_type, records, context_data, batch_size)
                 else:
                     type_results = await self._sequential_standardization(data_type, records, context_data)
-                
+
                 batch_results[data_type] = type_results
                 successful_records += type_results.get("successful_records", 0)
-            
+
             # Generate batch insights using AI
             batch_analysis = await self._ai_analyze_batch_results(batch_results, batch_insights)
-            
+
             return create_success_response({
                 "batch_id": f"batch_{datetime.utcnow().timestamp()}",
                 "batch_results": batch_results,
@@ -960,14 +960,14 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                 "batch_analysis": batch_analysis,
                 "performance_metrics": await self._calculate_batch_performance_metrics(batch_results)
             })
-            
+
         except Exception as e:
             logger.error(f"Batch AI standardization failed: {str(e)}")
             return create_error_response(
                 f"Batch standardization error: {str(e)}",
                 "batch_standardization_error"
             )
-    
+
     @a2a_skill(
         name="explainStandardizationReasoning",
         description="Provide detailed explanation of standardization reasoning and decisions",
@@ -997,18 +997,18 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
             standardization_id = request_data["standardization_id"]
             explanation_type = request_data.get("explanation_type", "full_reasoning")
             detail_level = request_data.get("detail_level", "intermediate")
-            
+
             # Retrieve standardization from memory
             standardization_memory = await self.ai_framework.memory_manager.retrieve_memory(
                 "standardization_history", {"standardization_id": standardization_id}
             )
-            
+
             if not standardization_memory:
                 return create_error_response(
                     f"Standardization {standardization_id} not found in memory",
                     "standardization_not_found"
                 )
-            
+
             # Generate detailed explanation using AI explainability
             explanation = await self.ai_framework.explainability_engine.explain_decision(
                 standardization_memory["reasoning_trace"],
@@ -1016,7 +1016,7 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                 detail_level=detail_level,
                 domain_context="data_standardization"
             )
-            
+
             return create_success_response({
                 "standardization_id": standardization_id,
                 "explanation_type": explanation_type,
@@ -1027,14 +1027,14 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                 "quality_assessment": standardization_memory.get("quality_metrics", {}),
                 "confidence_analysis": standardization_memory.get("confidence_analysis", {})
             })
-            
+
         except Exception as e:
             logger.error(f"Standardization explanation failed: {str(e)}")
             return create_error_response(
                 f"Explanation error: {str(e)}",
                 "explanation_error"
             )
-    
+
     @a2a_skill(
         name="optimizeSchemaPatterns",
         description="Optimize schema patterns based on AI learning and performance analysis",
@@ -1063,21 +1063,21 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
             data_type = request_data["data_type"]
             performance_criteria = request_data.get("performance_criteria", ["accuracy", "completeness"])
             learning_window = request_data.get("learning_window", 100)
-            
+
             # Analyze standardization patterns using AI
             pattern_analysis = await self.ai_framework.adaptive_learning.analyze_patterns(
                 context={"data_type": data_type},
                 window_size=learning_window
             )
-            
+
             # Generate optimization recommendations
             optimization_insights = await self._ai_generate_schema_optimization_insights(
                 data_type, performance_criteria, pattern_analysis
             )
-            
+
             # Update schema patterns
             await self._update_schema_patterns(data_type, optimization_insights)
-            
+
             return create_success_response({
                 "data_type": data_type,
                 "optimization_insights": optimization_insights,
@@ -1090,43 +1090,43 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                     "performance_gain": pattern_analysis.get("performance_gain", 0.0)
                 }
             })
-            
+
         except Exception as e:
             logger.error(f"Schema pattern optimization failed: {str(e)}")
             return create_error_response(
                 f"Optimization error: {str(e)}",
                 "optimization_error"
             )
-    
+
     async def _initialize_ai_standardizers(self) -> None:
         """Initialize AI-enhanced standardizers for all data types"""
         try:
             for data_type in self.standardizer_types:
                 await self._initialize_standardizer(data_type)
-            
+
             logger.info(f"Initialized {len(self.enhanced_standardizers)} AI-enhanced standardizers")
-            
+
         except Exception as e:
             logger.error(f"Standardizer initialization failed: {str(e)}")
-    
+
     async def _initialize_standardizer(self, data_type: str) -> None:
         """Initialize AI-enhanced standardizer for specific data type"""
         try:
             self.enhanced_standardizers[data_type] = EnhancedStandardizer(
                 self.ai_framework, data_type
             )
-            
+
             # Load existing patterns from memory
             patterns = await self.ai_framework.memory_manager.retrieve_memory(
                 "schema_patterns", {"data_type": data_type}
             )
-            
+
             if patterns:
                 self.enhanced_standardizers[data_type].schema_patterns = patterns.get("patterns", {})
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize standardizer for {data_type}: {str(e)}")
-    
+
     async def _initialize_schema_knowledge(self) -> None:
         """Initialize schema knowledge base with AI learning"""
         try:
@@ -1146,7 +1146,7 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                 }
                 # Additional schemas would be loaded here
             }
-            
+
             # Load transformation rules with AI learning
             for data_type in self.standardizer_types:
                 transformation_patterns = await self.ai_framework.memory_manager.retrieve_memory(
@@ -1154,12 +1154,12 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                 )
                 if transformation_patterns:
                     self.schema_knowledge["transformation_rules"][data_type] = transformation_patterns.get("rules", [])
-            
+
             logger.info("Schema knowledge base initialized")
-            
+
         except Exception as e:
             logger.error(f"Schema knowledge initialization failed: {str(e)}")
-    
+
     async def _ai_validate_standardization(
         self, result: StandardizationResult, context: StandardizationContext
     ) -> Dict[str, Any]:
@@ -1167,15 +1167,15 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
         try:
             validation_checks = [
                 "schema_compliance",
-                "data_completeness", 
+                "data_completeness",
                 "transformation_accuracy",
                 "l4_hierarchy_structure"
             ]
-            
+
             validation_results = {}
             overall_valid = True
             confidence_adjustments = []
-            
+
             for check in validation_checks:
                 check_result = await self.ai_framework.reasoning_engine.reason(
                     problem=f"Validate standardization result: {check}",
@@ -1186,31 +1186,31 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                         "schema_definition": self.schema_knowledge.get("l4_schemas", {}).get(context.data_type, {})
                     }
                 )
-                
+
                 validation_results[check] = {
                     "valid": check_result.get("valid", True),
                     "confidence": check_result.get("confidence", 0.5),
                     "details": check_result.get("details", ""),
                     "suggestions": check_result.get("suggestions", [])
                 }
-                
+
                 if not check_result.get("valid", True):
                     overall_valid = False
                     confidence_adjustments.append(-0.15)
                 else:
                     confidence_adjustments.append(0.05)
-            
+
             # Calculate adjusted confidence
             adjusted_confidence = result.confidence_score + sum(confidence_adjustments) / len(confidence_adjustments)
             adjusted_confidence = max(0.0, min(1.0, adjusted_confidence))
-            
+
             return {
                 "overall_valid": overall_valid,
                 "adjusted_confidence": adjusted_confidence,
                 "validation_checks": validation_results,
                 "validation_summary": f"Passed {sum(1 for r in validation_results.values() if r['valid'])} of {len(validation_checks)} validation checks"
             }
-            
+
         except Exception as e:
             logger.error(f"Standardization validation failed: {str(e)}")
             return {
@@ -1218,7 +1218,7 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                 "adjusted_confidence": max(0.0, result.confidence_score - 0.3),
                 "validation_error": str(e)
             }
-    
+
     async def _ai_generate_standardization_explanation(
         self, result: StandardizationResult, context: StandardizationContext, detail_level: str
     ) -> Dict[str, Any]:
@@ -1229,16 +1229,16 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                 "context": context.__dict__,
                 "detail_level": detail_level
             }
-            
+
             explanation = await self.ai_framework.explainability_engine.generate_explanation(
                 decision_type="data_standardization",
                 decision_result=result.standardized_data,
                 reasoning_trace=result.reasoning_trace,
                 context=explanation_context
             )
-            
+
             return explanation
-            
+
         except Exception as e:
             logger.error(f"Standardization explanation generation failed: {str(e)}")
             return {
@@ -1247,36 +1247,36 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                 "reasoning_steps": len(result.reasoning_trace),
                 "error": str(e)
             }
-    
+
     async def _parallel_standardization(
-        self, data_type: str, records: List[Dict[str, Any]], 
+        self, data_type: str, records: List[Dict[str, Any]],
         context_data: Dict[str, Any], batch_size: int
     ) -> Dict[str, Any]:
         """Perform parallel standardization processing"""
         try:
             # Split records into batches
             batches = [records[i:i + batch_size] for i in range(0, len(records), batch_size)]
-            
+
             # Process batches in parallel
             batch_tasks = []
             for batch in batches:
                 task = self._process_batch(data_type, batch, context_data)
                 batch_tasks.append(task)
-            
+
             batch_results = await asyncio.gather(*batch_tasks, return_exceptions=True)
-            
+
             # Aggregate results
             successful_records = 0
             all_results = []
-            
+
             for batch_result in batch_results:
                 if isinstance(batch_result, Exception):
                     logger.error(f"Batch processing failed: {str(batch_result)}")
                     continue
-                
+
                 successful_records += batch_result.get("successful_count", 0)
                 all_results.extend(batch_result.get("results", []))
-            
+
             return {
                 "data_type": data_type,
                 "total_records": len(records),
@@ -1284,22 +1284,22 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                 "standardized_data": all_results,
                 "processing_method": "parallel"
             }
-            
+
         except Exception as e:
             logger.error(f"Parallel standardization failed: {str(e)}")
             return {"error": str(e), "data_type": data_type}
-    
+
     async def _sequential_standardization(
         self, data_type: str, records: List[Dict[str, Any]], context_data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Perform sequential standardization processing"""
         try:
             return await self._process_batch(data_type, records, context_data)
-            
+
         except Exception as e:
             logger.error(f"Sequential standardization failed: {str(e)}")
             return {"error": str(e), "data_type": data_type}
-    
+
     async def _process_batch(
         self, data_type: str, records: List[Dict[str, Any]], context_data: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -1307,7 +1307,7 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
         try:
             standardized_records = []
             successful_count = 0
-            
+
             for record in records:
                 try:
                     # Create context for this record
@@ -1319,26 +1319,26 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                         quality_requirements=context_data.get("quality_requirements", {}),
                         metadata=context_data
                     )
-                    
+
                     # Get standardizer
                     if data_type not in self.enhanced_standardizers:
                         await self._initialize_standardizer(data_type)
-                    
+
                     standardizer = self.enhanced_standardizers[data_type]
-                    
+
                     # Perform standardization
                     result = await standardizer.ai_standardize(record, standardization_context)
-                    
+
                     standardized_records.append({
                         "original": record,
                         "standardized": result.standardized_data,
                         "confidence": result.confidence_score,
                         "field_mappings": result.field_mappings
                     })
-                    
+
                     if result.confidence_score > 0.5:
                         successful_count += 1
-                        
+
                 except Exception as e:
                     logger.warning(f"Failed to standardize record: {str(e)}")
                     standardized_records.append({
@@ -1346,17 +1346,17 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                         "standardized": None,
                         "error": str(e)
                     })
-            
+
             return {
                 "results": standardized_records,
                 "successful_count": successful_count,
                 "data_type": data_type
             }
-            
+
         except Exception as e:
             logger.error(f"Batch processing failed: {str(e)}")
             return {"error": str(e), "data_type": data_type}
-    
+
     async def _ai_analyze_batch_results(
         self, batch_results: Dict[str, Any], batch_insights: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -1371,13 +1371,13 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                     "historical_performance": self.standardization_stats
                 }
             )
-            
+
             return analysis_result
-            
+
         except Exception as e:
             logger.error(f"Batch analysis failed: {str(e)}")
             return {"error": str(e), "analysis": "basic"}
-    
+
     async def _calculate_batch_performance_metrics(self, batch_results: Dict[str, Any]) -> Dict[str, Any]:
         """Calculate comprehensive batch performance metrics"""
         try:
@@ -1385,18 +1385,18 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
             successful_records = 0
             processing_times = []
             confidence_scores = []
-            
+
             for data_type, type_results in batch_results.items():
                 if isinstance(type_results, dict):
                     total_records += type_results.get("total_records", 0)
                     successful_records += type_results.get("successful_records", 0)
-                    
+
                     # Extract confidence scores if available
                     standardized_data = type_results.get("standardized_data", [])
                     for item in standardized_data:
                         if isinstance(item, dict) and "confidence" in item:
                             confidence_scores.append(item["confidence"])
-            
+
             return {
                 "throughput": {
                     "total_records": total_records,
@@ -1416,11 +1416,11 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                     "average_batch_size": total_records / len(batch_results) if batch_results else 0
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Performance metrics calculation failed: {str(e)}")
             return {"error": str(e)}
-    
+
     async def _ai_generate_schema_optimization_insights(
         self, data_type: str, criteria: List[str], pattern_analysis: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -1437,66 +1437,66 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                     "schema_knowledge": self.schema_knowledge
                 }
             )
-            
+
             return optimization_reasoning
-            
+
         except Exception as e:
             logger.error(f"Schema optimization insights generation failed: {str(e)}")
             return {"error": str(e), "recommended_patterns": [], "confidence_improvement": 0.0}
-    
+
     async def _update_schema_patterns(self, data_type: str, insights: Dict[str, Any]) -> None:
         """Update schema patterns based on optimization insights"""
         try:
             if data_type not in self.schema_knowledge["learned_patterns"]:
                 self.schema_knowledge["learned_patterns"][data_type] = []
-            
+
             recommended_patterns = insights.get("recommended_patterns", [])
             self.schema_knowledge["learned_patterns"][data_type] = recommended_patterns
-            
+
             # Store in persistent memory
             await self.ai_framework.memory_manager.store_memory(
                 "schema_patterns",
                 {"data_type": data_type, "patterns": recommended_patterns},
                 context={"optimization_round": datetime.utcnow().isoformat()}
             )
-            
+
         except Exception as e:
             logger.error(f"Schema pattern update failed: {str(e)}")
-    
+
     def _update_standardization_stats(self, data_type: str, result: StandardizationResult) -> None:
         """Update standardization statistics for learning"""
         try:
             self.standardization_stats["total_processed"] += 1
-            
+
             if result.confidence_score > 0.6:
                 self.standardization_stats["successful_standardizations"] += 1
-            
+
             if data_type not in self.standardization_stats["data_types_processed"]:
                 self.standardization_stats["data_types_processed"][data_type] = 0
             self.standardization_stats["data_types_processed"][data_type] += 1
-            
+
             # Update running averages
             total = self.standardization_stats["total_processed"]
             current_avg = self.standardization_stats["average_confidence"]
             self.standardization_stats["average_confidence"] = (
                 (current_avg * (total - 1) + result.confidence_score) / total
             )
-            
+
         except Exception as e:
             logger.error(f"Stats update failed: {str(e)}")
-    
+
     async def _initialize_trust_system(self) -> None:
         """Initialize the agent's trust system"""
         try:
             # Initialize trust identity
             self.trust_identity = await initialize_agent_trust(self.agent_id, self.base_url)
-            
+
             if self.trust_identity:
                 logger.info(f"✅ Trust system initialized for {self.agent_id}")
-                
+
                 # Get trust contract reference
                 self.trust_contract = get_trust_contract()
-                
+
                 # Pre-trust essential agents
                 essential_agents = [
                     "agent_manager",
@@ -1504,18 +1504,18 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                     "ai_preparation_agent_2",
                     "vector_processing_agent_3"
                 ]
-                
+
                 for agent_id in essential_agents:
                     self.trusted_agents.add(agent_id)
-                
+
                 logger.info(f"   Pre-trusted agents: {self.trusted_agents}")
             else:
                 logger.warning("⚠️ Trust system initialization failed, running without trust verification")
-                
+
         except Exception as e:
             logger.error(f"❌ Failed to initialize trust system: {e}")
             logger.warning("Continuing without trust verification")
-    
+
     async def _save_learning_insights(self) -> None:
         """Save learning insights for persistence"""
         try:
@@ -1524,14 +1524,14 @@ class EnhancedDataStandardizationAgentSDK(SecureA2AAgent):
                 "schema_knowledge": self.schema_knowledge,
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
             await self.ai_framework.memory_manager.store_memory(
                 "agent_learning_summary",
                 learning_summary,
                 context={"agent": "enhanced_data_standardization_agent"}
             )
-            
+
             logger.info("Learning insights saved successfully")
-            
+
         except Exception as e:
             logger.error(f"Learning insights save failed: {str(e)}")

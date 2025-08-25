@@ -86,7 +86,7 @@ class Notification:
 
 class NotificationService:
     """Service for managing notifications"""
-    
+
     def __init__(self):
         self.notifications: Dict[str, List[Notification]] = {}
         self.notification_counter = 0
@@ -111,11 +111,11 @@ class NotificationService:
         expires_in_hours: Optional[int] = None
     ) -> Notification:
         """Create a new notification"""
-        
+
         notification_id = self._generate_notification_id()
         now = datetime.utcnow()
         expires_at = now + timedelta(hours=expires_in_hours) if expires_in_hours else None
-        
+
         notification = Notification(
             id=notification_id,
             user_id=user_id,
@@ -132,13 +132,13 @@ class NotificationService:
             metadata=metadata or {},
             actions=actions or []
         )
-        
+
         # Store notification
         if user_id not in self.notifications:
             self.notifications[user_id] = []
-        
+
         self.notifications[user_id].append(notification)
-        
+
         logger.info(f"Created notification {notification_id} for user {user_id}: {title}")
         return notification
 
@@ -151,24 +151,24 @@ class NotificationService:
         offset: int = 0
     ) -> List[Notification]:
         """Get notifications for a user with optional filtering"""
-        
+
         user_notifications = self.notifications.get(user_id, [])
-        
+
         # Filter by status
         if status:
             user_notifications = [n for n in user_notifications if n.status == status]
-        
+
         # Filter by type
         if type:
             user_notifications = [n for n in user_notifications if n.type == type]
-        
+
         # Remove expired notifications
         now = datetime.utcnow()
         user_notifications = [
-            n for n in user_notifications 
+            n for n in user_notifications
             if not n.expires_at or n.expires_at > now
         ]
-        
+
         # Sort by priority and creation time
         priority_order = {
             NotificationPriority.CRITICAL: 4,
@@ -176,18 +176,18 @@ class NotificationService:
             NotificationPriority.MEDIUM: 2,
             NotificationPriority.LOW: 1
         }
-        
+
         user_notifications.sort(
             key=lambda n: (priority_order[n.priority], n.created_at),
             reverse=True
         )
-        
+
         # Apply pagination
         return user_notifications[offset:offset + limit]
 
     async def mark_as_read(self, user_id: str, notification_id: str) -> bool:
         """Mark a notification as read"""
-        
+
         user_notifications = self.notifications.get(user_id, [])
         for notification in user_notifications:
             if notification.id == notification_id:
@@ -196,12 +196,12 @@ class NotificationService:
                 notification.updated_at = datetime.utcnow()
                 logger.info(f"Marked notification {notification_id} as read for user {user_id}")
                 return True
-        
+
         return False
 
     async def mark_as_dismissed(self, user_id: str, notification_id: str) -> bool:
         """Mark a notification as dismissed"""
-        
+
         user_notifications = self.notifications.get(user_id, [])
         for notification in user_notifications:
             if notification.id == notification_id:
@@ -210,50 +210,50 @@ class NotificationService:
                 notification.updated_at = datetime.utcnow()
                 logger.info(f"Dismissed notification {notification_id} for user {user_id}")
                 return True
-        
+
         return False
 
     async def mark_all_as_read(self, user_id: str) -> int:
         """Mark all unread notifications as read for a user"""
-        
+
         user_notifications = self.notifications.get(user_id, [])
         count = 0
         now = datetime.utcnow()
-        
+
         for notification in user_notifications:
             if notification.status == NotificationStatus.UNREAD:
                 notification.status = NotificationStatus.READ
                 notification.read_at = now
                 notification.updated_at = now
                 count += 1
-        
+
         logger.info(f"Marked {count} notifications as read for user {user_id}")
         return count
 
     async def delete_notification(self, user_id: str, notification_id: str) -> bool:
         """Delete a notification"""
-        
+
         user_notifications = self.notifications.get(user_id, [])
         for i, notification in enumerate(user_notifications):
             if notification.id == notification_id:
                 del user_notifications[i]
                 logger.info(f"Deleted notification {notification_id} for user {user_id}")
                 return True
-        
+
         return False
 
     async def get_notification_stats(self, user_id: str) -> Dict[str, int]:
         """Get notification statistics for a user"""
-        
+
         user_notifications = self.notifications.get(user_id, [])
         now = datetime.utcnow()
-        
+
         # Filter out expired notifications
         active_notifications = [
-            n for n in user_notifications 
+            n for n in user_notifications
             if not n.expires_at or n.expires_at > now
         ]
-        
+
         stats = {
             "total": len(active_notifications),
             "unread": len([n for n in active_notifications if n.status == NotificationStatus.UNREAD]),
@@ -264,34 +264,34 @@ class NotificationService:
             "medium": len([n for n in active_notifications if n.priority == NotificationPriority.MEDIUM]),
             "low": len([n for n in active_notifications if n.priority == NotificationPriority.LOW])
         }
-        
+
         return stats
 
     async def cleanup_expired_notifications(self) -> int:
         """Clean up expired notifications across all users"""
-        
+
         total_cleaned = 0
         now = datetime.utcnow()
-        
+
         for user_id, user_notifications in self.notifications.items():
             original_count = len(user_notifications)
             self.notifications[user_id] = [
-                n for n in user_notifications 
+                n for n in user_notifications
                 if not n.expires_at or n.expires_at > now
             ]
             cleaned_count = original_count - len(self.notifications[user_id])
             total_cleaned += cleaned_count
-        
+
         if total_cleaned > 0:
             logger.info(f"Cleaned up {total_cleaned} expired notifications")
-        
+
         return total_cleaned
 
     async def create_sample_notifications(self, user_id: str) -> List[Notification]:
         """Create sample notifications for development/demo purposes"""
-        
+
         sample_notifications = []
-        
+
         # System notification
         sample_notifications.append(await self.create_notification(
             user_id=user_id,
@@ -311,7 +311,7 @@ class NotificationService:
                 )
             ]
         ))
-        
+
         # Project notification
         sample_notifications.append(await self.create_notification(
             user_id=user_id,
@@ -339,7 +339,7 @@ class NotificationService:
                 )
             ]
         ))
-        
+
         # Security notification
         sample_notifications.append(await self.create_notification(
             user_id=user_id,
@@ -367,7 +367,7 @@ class NotificationService:
                 )
             ]
         ))
-        
+
         # Agent notification
         sample_notifications.append(await self.create_notification(
             user_id=user_id,
@@ -388,7 +388,7 @@ class NotificationService:
                 )
             ]
         ))
-        
+
         # System maintenance
         sample_notifications.append(await self.create_notification(
             user_id=user_id,
@@ -401,7 +401,7 @@ class NotificationService:
             expires_in_hours=24,
             metadata={"maintenance_window": "2025-08-08T02:00:00Z"}
         ))
-        
+
         logger.info(f"Created {len(sample_notifications)} sample notifications for user {user_id}")
         return sample_notifications
 

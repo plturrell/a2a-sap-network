@@ -26,13 +26,13 @@ def check_dependencies():
         print(f"✗ Missing dependency: {e}")
         print("Please run: pip install -r requirements.txt")
         return False
-    
+
     # Check if A2A Network SDK is accessible
     a2a_network_path = Path(__file__).parent.parent.parent.parent.parent.parent / "a2a_network"
     if not a2a_network_path.exists():
         print(f"✗ A2A Network path not found: {a2a_network_path}")
         return False
-    
+
     print(f"✓ A2A Network found at: {a2a_network_path}")
     return True
 
@@ -58,18 +58,18 @@ def create_test_config():
             }
         }
     }
-    
+
     config_path = Path("portal_config.json")
     with open(config_path, "w") as f:
         json.dump(config, f, indent=2)
-    
+
     print(f"✓ Created test configuration at: {config_path}")
     return config_path
 
 def start_portal():
     """Start the developer portal server"""
     print("\n🚀 Starting A2A Developer Portal with Network Integration...")
-    
+
     # Create launch script
     launch_script = """
 import asyncio
@@ -97,13 +97,13 @@ async def main():
     # Load config
     with open("portal_config.json", "r") as f:
         config = json.load(f)
-    
+
     # Create portal
     portal = create_developer_portal(config)
-    
+
     # Initialize
     await portal.initialize()
-    
+
     # Run server
     uvicorn_config = uvicorn.Config(
         app=portal.app,
@@ -111,20 +111,20 @@ async def main():
         port=config.get("port", 3001),
         log_level="info"
     )
-    
+
     server = uvicorn.Server(uvicorn_config)
     await server.serve()
 
 if __name__ == "__main__":
     asyncio.run(main())
 """
-    
+
     launch_path = Path("launch_portal_with_integration.py")
     with open(launch_path, "w") as f:
         f.write(launch_script)
-    
+
     print(f"✓ Created launch script at: {launch_path}")
-    
+
     # Start the server
     try:
         subprocess.run([sys.executable, str(launch_path)], check=True)
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n✗ Error starting portal: {e}")
         return False
-    
+
     return True
 
 def print_access_info():
@@ -170,21 +170,21 @@ def main():
     """Main deployment function"""
     print("🎯 A2A Developer Portal - Network Integration Deployment")
     print("="*60)
-    
+
     # Check dependencies
     if not check_dependencies():
         return 1
-    
+
     # Create test configuration
     config_path = create_test_config()
-    
+
     # Print access information
     print_access_info()
-    
+
     # Start portal
     if not start_portal():
         return 1
-    
+
     return 0
 
 if __name__ == "__main__":

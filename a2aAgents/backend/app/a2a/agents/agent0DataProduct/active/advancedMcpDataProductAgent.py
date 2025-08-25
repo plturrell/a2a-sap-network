@@ -31,7 +31,6 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
     Advanced Data Product Agent with comprehensive MCP tool integration
     Handles data product lifecycle, validation, and cross-agent coordination
     """
-    
     def __init__(self, base_url: str):
         super().__init__(
             agent_id="advanced_mcp_data_product_agent",
@@ -44,30 +43,28 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-        
-        
+
         # Initialize MCP tool providers
         self.performance_tools = MCPPerformanceTools()
         self.validation_tools = MCPValidationTools()
         self.quality_tools = MCPQualityAssessmentTools()
-        
-        
+
         # Data product management state
         self.data_products = {}
         self.validation_cache = {}
         self.processing_pipelines = {}
         self.quality_metrics = {}
-        
+
         logger.info(f"Initialized {self.name} with comprehensive MCP tool integration")
-    
+
     async def initialize(self):
         """Initialize the agent"""
         logger.info(f"Agent {self.name} initialized successfully")
-    
+
     async def shutdown(self):
         """Shutdown the agent"""
         logger.info(f"Agent {self.name} shutting down")
-    
+
     @mcp_tool(
         name="intelligent_data_product_registration",
         description="Register data products with intelligent validation and quality assessment",
@@ -79,7 +76,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                     "description": "Data product definition with metadata"
                 },
                 "data_source": {
-                    "type": "object", 
+                    "type": "object",
                     "description": "Data source information and connection details"
                 },
                 "validation_rules": {
@@ -112,7 +109,6 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
         """
         registration_id = f"reg_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
         start_time = datetime.now().timestamp()
-        
         try:
             # Step 1: Validate product definition using MCP tools
             definition_validation = await self.validation_tools.validate_schema_compliance(
@@ -121,7 +117,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                 validation_level="strict",
                 return_details=True
             )
-            
+
             if not definition_validation["is_valid"]:
                 return {
                     "status": "error",
@@ -129,24 +125,24 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                     "validation_details": definition_validation,
                     "registration_id": registration_id
                 }
-            
+
             # Step 2: Analyze data source using MCP tools
             source_analysis = await self._analyze_data_source_mcp(data_source)
-            
+
             # Step 3: Cross-agent validation if enabled
             cross_validation_results = {}
             if cross_agent_validation:
                 cross_validation_results = await self._perform_cross_agent_validation_mcp(
                     product_definition, data_source, validation_rules
                 )
-            
+
             # Step 4: Auto-standardization using Agent 1 if enabled
             standardization_results = {}
             if auto_standardization:
                 standardization_results = await self._request_standardization_mcp(
                     product_definition, data_source
                 )
-            
+
             # Step 5: Quality assessment and requirements validation
             quality_assessment = await self.quality_tools.assess_data_product_quality(
                 product_definition=product_definition,
@@ -154,10 +150,10 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                 quality_requirements=quality_requirements or {},
                 assessment_criteria=["completeness", "accuracy", "consistency", "timeliness"]
             )
-            
+
             # Step 6: Generate unique product ID and register
             product_id = self._generate_product_id(product_definition)
-            
+
             data_product = {
                 "product_id": product_id,
                 "registration_id": registration_id,
@@ -173,16 +169,16 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                 "status": "active",
                 "monitoring_enabled": enable_monitoring
             }
-            
+
             self.data_products[product_id] = data_product
-            
+
             # Step 7: Setup monitoring if enabled
             monitoring_setup = {}
             if enable_monitoring:
                 monitoring_setup = await self._setup_product_monitoring_mcp(
                     product_id, data_product
                 )
-            
+
             # Step 8: Performance tracking
             end_time = datetime.now().timestamp()
             performance_metrics = await self.performance_tools.measure_performance_metrics(
@@ -196,7 +192,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                     "standardization_used": auto_standardization
                 }
             )
-            
+
             return {
                 "status": "success",
                 "registration_id": registration_id,
@@ -218,7 +214,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                     "setup_product_monitoring"
                 ]
             }
-            
+
         except Exception as e:
             logger.error(f"Intelligent data product registration failed: {e}")
             return {
@@ -226,7 +222,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                 "registration_id": registration_id,
                 "error": str(e)
             }
-    
+
     @mcp_tool(
         name="advanced_data_pipeline_orchestration",
         description="Orchestrate complex data processing pipelines using multiple agents",
@@ -276,7 +272,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
         """
         pipeline_id = f"pipe_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
         start_time = datetime.now().timestamp()
-        
+
         try:
             # Step 1: Validate pipeline definition and inputs
             pipeline_validation = await self.validation_tools.validate_pipeline_definition(
@@ -285,7 +281,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                 processing_stages=processing_stages,
                 validation_level="comprehensive"
             )
-            
+
             if not pipeline_validation["is_valid"]:
                 return {
                     "status": "error",
@@ -293,11 +289,11 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                     "validation_details": pipeline_validation,
                     "pipeline_id": pipeline_id
                 }
-            
+
             # Step 2: Verify input products exist and are accessible
             input_verification = await self._verify_input_products_mcp(input_products)
             unavailable_products = [p for p, status in input_verification.items() if not status.get("available")]
-            
+
             if unavailable_products:
                 return {
                     "status": "error",
@@ -305,7 +301,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                     "input_verification": input_verification,
                     "pipeline_id": pipeline_id
                 }
-            
+
             # Step 3: Initialize pipeline execution context
             execution_context = {
                 "pipeline_id": pipeline_id,
@@ -317,28 +313,28 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                 "current_stage": 0,
                 "status": "running"
             }
-            
+
             self.processing_pipelines[pipeline_id] = execution_context
-            
+
             # Step 4: Execute processing stages
             stage_execution_results = await self._execute_pipeline_stages_mcp(
                 pipeline_id, processing_stages, parallel_processing, quality_gates, error_handling
             )
-            
+
             # Step 5: Generate output product if specified
             output_product = None
             if output_specification and stage_execution_results.get("success"):
                 output_product = await self._generate_output_product_mcp(
                     pipeline_id, output_specification, stage_execution_results
                 )
-            
+
             # Step 6: Quality assessment of pipeline results
             pipeline_quality = await self.quality_tools.assess_pipeline_quality(
                 pipeline_results=stage_execution_results,
                 expected_outputs=output_specification or {},
                 quality_criteria=["data_integrity", "processing_accuracy", "completeness"]
             )
-            
+
             # Step 7: Performance measurement
             end_time = datetime.now().timestamp()
             performance_metrics = await self.performance_tools.measure_performance_metrics(
@@ -354,7 +350,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                     "pipeline_quality_score": pipeline_quality.get("overall_score", 0)
                 }
             )
-            
+
             # Update pipeline context
             execution_context.update({
                 "status": "completed" if stage_execution_results.get("success") else "failed",
@@ -364,7 +360,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                 "quality_assessment": pipeline_quality,
                 "performance_metrics": performance_metrics
             })
-            
+
             return {
                 "status": "success" if stage_execution_results.get("success") else "failed",
                 "pipeline_id": pipeline_id,
@@ -382,7 +378,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                     "assess_pipeline_quality"
                 ]
             }
-            
+
         except Exception as e:
             logger.error(f"Advanced data pipeline orchestration failed: {e}")
             return {
@@ -390,7 +386,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                 "pipeline_id": pipeline_id,
                 "error": str(e)
             }
-    
+
     @mcp_tool(
         name="intelligent_data_quality_monitoring",
         description="Monitor data product quality with intelligent alerting and remediation",
@@ -436,12 +432,12 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
         """
         monitoring_id = f"mon_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
         start_time = datetime.now().timestamp()
-        
+
         try:
             # Step 1: Validate product IDs and access
             product_validation = await self._validate_product_access_mcp(product_ids)
             accessible_products = [p for p, status in product_validation.items() if status.get("accessible")]
-            
+
             # Step 2: Perform quality assessment for each product
             quality_results = {}
             for product_id in accessible_products:
@@ -449,26 +445,26 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                     product_id, quality_dimensions, monitoring_scope
                 )
                 quality_results[product_id] = product_quality
-            
+
             # Step 3: Cross-product analysis if enabled
             cross_analysis = {}
             if cross_product_analysis and len(accessible_products) > 1:
                 cross_analysis = await self._perform_cross_product_analysis_mcp(
                     accessible_products, quality_results
                 )
-            
+
             # Step 4: Evaluate against alert thresholds
             alert_evaluations = await self._evaluate_quality_thresholds_mcp(
                 quality_results, alert_thresholds or {}
             )
-            
+
             # Step 5: Auto-remediation if enabled and issues detected
             remediation_actions = []
             if auto_remediation and alert_evaluations.get("alerts_triggered"):
                 remediation_actions = await self._perform_auto_remediation_mcp(
                     quality_results, alert_evaluations
                 )
-            
+
             # Step 6: Generate monitoring insights using MCP tools
             monitoring_insights = await self.quality_tools.generate_monitoring_insights(
                 quality_results=quality_results,
@@ -476,7 +472,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                 historical_trends=await self._get_quality_trends_mcp(product_ids),
                 alert_patterns=alert_evaluations
             )
-            
+
             # Step 7: Performance tracking
             end_time = datetime.now().timestamp()
             performance_metrics = await self.performance_tools.measure_performance_metrics(
@@ -491,7 +487,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                     "remediation_actions": len(remediation_actions)
                 }
             )
-            
+
             return {
                 "status": "success",
                 "monitoring_id": monitoring_id,
@@ -514,7 +510,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                     "generate_monitoring_insights"
                 ]
             }
-            
+
         except Exception as e:
             logger.error(f"Intelligent data quality monitoring failed: {e}")
             return {
@@ -522,7 +518,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                 "monitoring_id": monitoring_id,
                 "error": str(e)
             }
-    
+
     @mcp_resource(
         uri="data-product://registry",
         name="Data Product Registry",
@@ -548,7 +544,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
             "quality_summary": self._get_quality_summary(),
             "last_updated": datetime.now().isoformat()
         }
-    
+
     @mcp_resource(
         uri="data-product://pipelines",
         name="Active Data Pipelines",
@@ -573,7 +569,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
             "pipeline_statistics": self._get_pipeline_statistics(),
             "last_updated": datetime.now().isoformat()
         }
-    
+
     @mcp_prompt(
         name="data_product_advisor",
         description="Provide intelligent advice on data product management and optimization",
@@ -595,7 +591,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
         try:
             # Analyze current state using MCP tools
             current_state = await self._analyze_current_product_state_mcp()
-            
+
             # Generate context-specific advice
             if query_type == "quality_improvement":
                 advice = await self._generate_quality_improvement_advice(
@@ -613,15 +609,15 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                 advice = await self._generate_general_advice(
                     current_state, product_context, requirements
                 )
-            
+
             return advice
-            
+
         except Exception as e:
             logger.error(f"Data product advisor failed: {e}")
             return f"I'm having trouble analyzing your data products. Error: {str(e)}"
-    
+
     # Private helper methods for MCP operations
-    
+
     async def _analyze_data_source_mcp(self, data_source: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze data source using MCP tools with real implementation"""
         analysis = {
@@ -630,10 +626,10 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
             "timestamp": datetime.now().isoformat(),
             "metrics": {}
         }
-        
+
         try:
             source_type = data_source.get("type", "").lower()
-            
+
             if source_type == "database":
                 analysis["metrics"] = {
                     "connection_string": bool(data_source.get("connection")),
@@ -645,7 +641,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                     "Use connection pooling for better performance",
                     "Consider adding indexes for frequently queried columns"
                 ]
-                
+
             elif source_type == "file":
                 file_path = data_source.get("path", "")
                 analysis["metrics"] = {
@@ -654,7 +650,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                     "estimated_size": data_source.get("size", 0),
                     "compression": data_source.get("compressed", False)
                 }
-                
+
             elif source_type == "memory":
                 data = data_source.get("data", [])
                 analysis["metrics"] = {
@@ -663,7 +659,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                     "data_structure": type(data).__name__,
                     "immediate_access": True
                 }
-                
+
             # Calculate health score
             quality_factors = [
                 bool(data_source.get("schema")),
@@ -672,16 +668,16 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                 bool(data_source.get("monitoring_enabled"))
             ]
             analysis["health_score"] = sum(quality_factors) / len(quality_factors)
-            
+
         except Exception as e:
             analysis["error"] = str(e)
             analysis["analysis_available"] = False
-            
+
         return analysis
-    
+
     async def _perform_cross_agent_validation_mcp(
-        self, 
-        product_definition: Dict[str, Any], 
+        self,
+        product_definition: Dict[str, Any],
         data_source: Dict[str, Any],
         validation_rules: Optional[List[Dict[str, Any]]]
     ) -> Dict[str, Any]:
@@ -691,20 +687,20 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
             "validations_performed": [],
             "overall_status": "pending"
         }
-        
+
         try:
             # Determine which agents to involve based on data type
             agents_to_validate = []
-            
+
             if product_definition.get("type") == "structured":
                 agents_to_validate.append("agent_1_standardization")
-            
+
             if product_definition.get("type") in ["vector_data", "embedding_data"]:
                 agents_to_validate.append("agent_3_vector_processing")
-                
+
             if any(isinstance(v, (int, float)) for v in str(data_source).split()):
                 agents_to_validate.append("agent_4_calculation")
-            
+
             # Perform validations with real agent calls
             for agent_id in agents_to_validate:
                 try:
@@ -735,21 +731,21 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                                 "data_definition": product_definition
                             }
                         )
-                    
+
                     validation_results["validations_performed"].append({
                         "agent": agent_id,
                         "status": "success" if validation_result.get("success") else "error",
                         "result": validation_result.get("result", {}),
                         "confidence": validation_result.get("result", {}).get("confidence", 0.85)
                     })
-                    
+
                 except Exception as agent_error:
                     validation_results["validations_performed"].append({
                         "agent": agent_id,
                         "status": "error",
                         "error": str(agent_error)
                     })
-            
+
             # Determine overall status
             if all(v["status"] == "success" for v in validation_results["validations_performed"]):
                 validation_results["overall_status"] = "validated"
@@ -757,17 +753,17 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                 validation_results["overall_status"] = "partial"
             else:
                 validation_results["overall_status"] = "not_validated"
-                
+
         except Exception as e:
             logger.error(f"Cross-agent validation failed: {e}")
             validation_results["overall_status"] = "error"
             validation_results["error"] = str(e)
-            
+
         return validation_results
-    
+
     async def _request_standardization_mcp(
-        self, 
-        product_definition: Dict[str, Any], 
+        self,
+        product_definition: Dict[str, Any],
         data_source: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Request standardization from Agent 1 via MCP with real implementation"""
@@ -779,7 +775,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                     sample_data = data_source["data"][0]
                 elif isinstance(data_source["data"], dict):
                     sample_data = data_source["data"]
-            
+
             if sample_data:
                 standardization_result = await self.mcp_client.call_skill_tool(
                     "agent_1_standardization",
@@ -791,7 +787,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                         "cross_validation": False  # Avoid circular validation
                     }
                 )
-                
+
                 if standardization_result.get("success"):
                     return {
                         "standardization_applied": True,
@@ -809,23 +805,23 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                     "standardization_applied": False,
                     "error": "No sample data available for standardization"
                 }
-                
+
         except Exception as e:
             logger.error(f"Standardization request failed: {e}")
             return {"error": str(e), "standardization_applied": False}
-    
+
     def _generate_product_id(self, product_definition: Dict[str, Any]) -> str:
         """Generate unique product ID"""
         product_name = product_definition.get("name", "unknown")
         product_type = product_definition.get("type", "generic")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        
+
         # Create hash of definition for uniqueness
         definition_str = json.dumps(product_definition, sort_keys=True)
         definition_hash = hashlib.md5(definition_str.encode()).hexdigest()[:8]
-        
+
         return f"{product_type}_{product_name}_{timestamp}_{definition_hash}"
-    
+
     def _get_data_product_schema(self) -> Dict[str, Any]:
         """Get the schema for data product validation"""
         return {
@@ -840,7 +836,7 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
             },
             "required": ["name", "type", "schema"]
         }
-    
+
     def _get_product_type_summary(self) -> Dict[str, int]:
         """Get summary of product types"""
         type_counts = {}
@@ -848,19 +844,19 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
             product_type = product.get("definition", {}).get("type", "unknown")
             type_counts[product_type] = type_counts.get(product_type, 0) + 1
         return type_counts
-    
+
     def _get_quality_summary(self) -> Dict[str, Any]:
         """Get quality summary across all products"""
         if not self.data_products:
             return {"average_quality": 0, "quality_distribution": {}}
-        
+
         quality_scores = []
         for product in self.data_products.values():
             score = product.get("quality_assessment", {}).get("overall_score", 0)
             quality_scores.append(score)
-        
+
         avg_quality = sum(quality_scores) / len(quality_scores)
-        
+
         # Quality distribution
         quality_ranges = {"high": 0, "medium": 0, "low": 0}
         for score in quality_scores:
@@ -870,28 +866,28 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                 quality_ranges["medium"] += 1
             else:
                 quality_ranges["low"] += 1
-        
+
         return {
             "average_quality": avg_quality,
             "quality_distribution": quality_ranges,
             "total_assessed": len(quality_scores)
         }
-    
+
     def _get_pipeline_statistics(self) -> Dict[str, Any]:
         """Get pipeline execution statistics"""
         if not self.processing_pipelines:
             return {"total_executed": 0, "success_rate": 0}
-        
+
         total = len(self.processing_pipelines)
         successful = sum(1 for p in self.processing_pipelines.values() if p.get("status") == "completed")
-        
+
         return {
             "total_executed": total,
             "successful": successful,
             "failed": total - successful,
             "success_rate": (successful / total * 100) if total > 0 else 0
         }
-    
+
     async def _setup_product_monitoring_mcp(self, product_id: str, data_product: Dict[str, Any]) -> Dict[str, Any]:
         """Setup monitoring for a data product using MCP tools"""
         try:
@@ -902,25 +898,25 @@ class AdvancedMCPDataProductAgent(SecureA2AAgent):
                 "monitoring_type": "basic",
                 "alerts_enabled": True
             }
-            
+
             # Basic monitoring setup
             if data_product.get("quality_requirements"):
                 monitoring_config["quality_monitoring"] = True
                 monitoring_config["quality_thresholds"] = data_product["quality_requirements"]
-            
+
             # Performance monitoring
             monitoring_config["performance_monitoring"] = True
             monitoring_config["performance_baseline"] = {
                 "setup_time": datetime.now().timestamp(),
                 "initial_quality_score": data_product.get("quality_assessment", {}).get("overall_score", 0.8)
             }
-            
+
             return {
                 "status": "monitoring_setup_complete",
                 "monitoring_config": monitoring_config,
                 "monitoring_id": f"mon_{product_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to setup monitoring for product {product_id}: {e}")
             return {

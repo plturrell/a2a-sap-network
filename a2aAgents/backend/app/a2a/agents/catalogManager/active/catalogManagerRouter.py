@@ -26,7 +26,7 @@ async def json_rpc_handler(request: Request):
     """Handle JSON-RPC 2.0 requests for Catalog Manager"""
     try:
         body = await request.json()
-        
+
         if "jsonrpc" not in body or body["jsonrpc"] != "2.0":
             return JSONResponse(
                 status_code=400,
@@ -39,24 +39,24 @@ async def json_rpc_handler(request: Request):
                     "id": body.get("id")
                 }
             )
-        
+
         method = body.get("method")
         params = body.get("params", {})
         request_id = body.get("id")
-        
+
         if method == "agent.getCard":
             result = await catalog_manager.get_agent_card()
-        
+
         elif method == "agent.processMessage":
             message = A2AMessage(**params.get("message", {}))
             context_id = params.get("contextId", str(datetime.utcnow().timestamp()))
             result = await catalog_manager.process_message(message, context_id)
-        
+
         elif method == "ord.register":
             ord_document = params.get("ord_document")
             enhancement_type = params.get("enhancement_type", "metadata_enrichment")
             ai_powered = params.get("ai_powered", True)
-            
+
             message = A2AMessage(
                 role="user",
                 parts=[
@@ -72,11 +72,11 @@ async def json_rpc_handler(request: Request):
                 ]
             )
             result = await catalog_manager.process_message(message)
-        
+
         elif method == "ord.enhance":
             registration_id = params.get("registration_id")
             enhancement_type = params.get("enhancement_type", "metadata_enrichment")
-            
+
             message = A2AMessage(
                 role="user",
                 parts=[
@@ -91,11 +91,11 @@ async def json_rpc_handler(request: Request):
                 ]
             )
             result = await catalog_manager.process_message(message)
-        
+
         elif method == "ord.search":
             query = params.get("query")
             filters = params.get("filters", {})
-            
+
             message = A2AMessage(
                 role="user",
                 parts=[
@@ -110,11 +110,11 @@ async def json_rpc_handler(request: Request):
                 ]
             )
             result = await catalog_manager.process_message(message)
-        
+
         elif method == "ord.qualityCheck":
             registration_id = params.get("registration_id")
             assessment_type = params.get("assessment_type", "comprehensive")
-            
+
             message = A2AMessage(
                 role="user",
                 parts=[
@@ -129,7 +129,7 @@ async def json_rpc_handler(request: Request):
                 ]
             )
             result = await catalog_manager.process_message(message)
-        
+
         else:
             return JSONResponse(
                 status_code=400,
@@ -142,13 +142,13 @@ async def json_rpc_handler(request: Request):
                     "id": request_id
                 }
             )
-        
+
         return {
             "jsonrpc": "2.0",
             "result": result.model_dump() if hasattr(result, 'model_dump') else result,
             "id": request_id
         }
-        
+
     except Exception as e:
         return JSONResponse(
             status_code=500,
@@ -170,12 +170,12 @@ async def rest_message_handler(request: Request):
     try:
         body = await request.json()
         message_data = body.get("message", {})
-        
+
         # DEBUG: Log incoming message structure
         print(f"🔍 DEBUG: Incoming request body: {body}")
         print(f"🔍 DEBUG: Message data: {message_data}")
         print(f"🔍 DEBUG: Message data keys: {list(message_data.keys())}")
-        
+
         # Transform old 'content' format to new 'parts' format if needed
         if "content" in message_data and "parts" not in message_data:
             content = message_data.pop("content")
@@ -188,19 +188,19 @@ async def rest_message_handler(request: Request):
             print(f"🔍 DEBUG: Applied transformation, new message_data: {message_data}")
         else:
             print(f"🔍 DEBUG: No transformation needed or parts already present")
-        
+
         print(f"🔍 DEBUG: Creating A2AMessage with: {message_data}")
         message = A2AMessage(**message_data)
         print(f"🔍 DEBUG: A2AMessage created successfully: {message.messageId}")
         context_id = body.get("contextId", str(datetime.utcnow().timestamp()))
-        
+
         result = await catalog_manager.process_message(message, context_id)
-        
+
         return {
             "status": "success",
             "result": result.model_dump() if hasattr(result, 'model_dump') else result
         }
-        
+
     except Exception as e:
         return JSONResponse(
             status_code=500,
@@ -293,7 +293,7 @@ async def health_check():
                 "streaming_enabled": queue_status["capabilities"]["streaming_enabled"],
                 "batch_processing_enabled": queue_status["capabilities"]["batch_processing_enabled"]
             }
-        
+
         return {
             "status": "healthy",
             "agent": "Catalog Manager Agent",
@@ -319,10 +319,10 @@ async def register_ord_document(request: Request):
     """Register ORD document with AI enhancement"""
     try:
         body = await request.json()
-        
+
         # DEBUG: Log incoming request to /ord/register
         print(f"🔍 DEBUG [/ord/register]: Incoming request body: {body}")
-        
+
         message_data = {
             "role": "user",
             "parts": [
@@ -337,14 +337,14 @@ async def register_ord_document(request: Request):
                 ).model_dump()
             ]
         }
-        
+
         print(f"🔍 DEBUG [/ord/register]: Creating A2AMessage with: {message_data}")
         message = A2AMessage(**message_data)
         print(f"🔍 DEBUG [/ord/register]: A2AMessage created successfully: {message.messageId}")
-        
+
         result = await catalog_manager.process_message(message)
         return result.model_dump() if hasattr(result, 'model_dump') else result
-        
+
     except Exception as e:
         return JSONResponse(
             status_code=500,
@@ -357,7 +357,7 @@ async def enhance_ord_document(registration_id: str, request: Request):
     """Enhance existing ORD document with AI"""
     try:
         body = await request.json()
-        
+
         message = A2AMessage(
             role="user",
             parts=[
@@ -371,10 +371,10 @@ async def enhance_ord_document(registration_id: str, request: Request):
                 )
             ]
         )
-        
+
         result = await catalog_manager.process_message(message)
         return result.model_dump() if hasattr(result, 'model_dump') else result
-        
+
     except Exception as e:
         return JSONResponse(
             status_code=500,
@@ -399,10 +399,10 @@ async def search_ord_repository(query: str, semantic: bool = True):
                 )
             ]
         )
-        
+
         result = await catalog_manager.process_message(message)
         return result.model_dump() if hasattr(result, 'model_dump') else result
-        
+
     except Exception as e:
         return JSONResponse(
             status_code=500,
@@ -427,10 +427,10 @@ async def assess_ord_quality(registration_id: str, assessment_type: str = "compr
                 )
             ]
         )
-        
+
         result = await catalog_manager.process_message(message)
         return result.model_dump() if hasattr(result, 'model_dump') else result
-        
+
     except Exception as e:
         return JSONResponse(
             status_code=500,

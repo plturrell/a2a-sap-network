@@ -385,11 +385,11 @@ class A2AError(BaseModel):
 
 class ValidationError(A2AError):
     """Validation error for invalid data or constraints"""
-    
+
     def __init__(self, field: str, message: str, value: Any = None):
         """
         Initialize validation error
-        
+
         Args:
             field: The field that failed validation
             message: Descriptive error message
@@ -402,7 +402,7 @@ class ValidationError(A2AError):
         }
         if value is not None:
             error_detail["invalid_value"] = str(value)
-            
+
         super().__init__(
             status="validation_error",
             error=error_detail,
@@ -412,11 +412,11 @@ class ValidationError(A2AError):
 
 class ConflictError(A2AError):
     """Conflict error for resource conflicts"""
-    
+
     def __init__(self, resource_type: str, resource_id: str, conflict_reason: str):
         """
         Initialize conflict error
-        
+
         Args:
             resource_type: Type of resource (e.g., 'agent', 'workflow')
             resource_id: ID of the conflicting resource
@@ -436,11 +436,11 @@ class ConflictError(A2AError):
 
 class NotFoundError(A2AError):
     """Not found error for missing resources"""
-    
+
     def __init__(self, resource_type: str, resource_id: str, search_criteria: Optional[Dict[str, Any]] = None):
         """
         Initialize not found error
-        
+
         Args:
             resource_type: Type of resource not found
             resource_id: ID of the missing resource
@@ -452,11 +452,11 @@ class NotFoundError(A2AError):
             "resource_id": resource_id,
             "message": f"{resource_type} with ID '{resource_id}' not found"
         }
-        
+
         metadata = {"error_code": "RESOURCE_NOT_FOUND"}
         if search_criteria:
             metadata["search_criteria"] = search_criteria
-            
+
         super().__init__(
             status="not_found",
             error=error_detail,

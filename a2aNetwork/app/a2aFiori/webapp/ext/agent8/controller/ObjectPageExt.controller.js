@@ -10,8 +10,8 @@ sap.ui.define([
     "sap/base/security/sanitizeHTML",
     "../../../utils/SharedSecurityUtils",
     "a2a/network/agent8/ext/utils/AuthHandler"
-], function(ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML,
-    encodeURL, escapeRegExp, sanitizeHTML, SecurityUtils, AuthHandler) {
+], (ControllerExtension, MessageBox, MessageToast, Fragment, JSONModel, encodeXML,
+    encodeURL, escapeRegExp, sanitizeHTML, SecurityUtils, AuthHandler) => {
     "use strict";
 
     return ControllerExtension.extend("a2a.network.agent8.ext.controller.ObjectPageExt", {
@@ -137,7 +137,7 @@ sap.ui.define([
                     id: this.base.getView().getId(),
                     name: "a2a.network.agent8.ext.fragment.StoreData",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oStoreDialog = oDialog;
                     this.base.getView().addDependent(this._oStoreDialog);
 
@@ -152,7 +152,7 @@ sap.ui.define([
                     });
                     this._oStoreDialog.setModel(oModel, "store");
                     this._oStoreDialog.open();
-                }.bind(this));
+                });
             } else {
                 this._oStoreDialog.open();
             }
@@ -168,7 +168,7 @@ sap.ui.define([
                     id: this.base.getView().getId(),
                     name: "a2a.network.agent8.ext.fragment.RetrieveData",
                     controller: this
-                }).then(function(oDialog) {
+                }).then((oDialog) => {
                     this._oRetrieveDialog = oDialog;
                     this.base.getView().addDependent(this._oRetrieveDialog);
 
@@ -184,7 +184,7 @@ sap.ui.define([
                     this._oRetrieveDialog.setModel(oModel, "retrieve");
                     this._oRetrieveDialog.open();
                     this._loadAvailableVersions(sDatasetName);
-                }.bind(this));
+                });
             } else {
                 this._oRetrieveDialog.open();
                 this._loadAvailableVersions(sDatasetName);

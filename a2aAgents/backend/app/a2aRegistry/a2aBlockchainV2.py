@@ -117,7 +117,7 @@ class BlockchainConnector:
         self.w3 = None
         self.connected = False
         self.account = None
-        
+
     def connect(self):
         """Connect to Anvil blockchain"""
         try:
@@ -133,12 +133,12 @@ class BlockchainConnector:
             print(f"⚠️ Blockchain connection failed: {e}")
             self.connected = False
             return False
-    
+
     def get_status(self):
         """Get blockchain status"""
         if not self.connected:
             return {"status": "disconnected"}
-        
+
         try:
             return {
                 "status": "connected",
@@ -176,12 +176,12 @@ app.add_middleware(
 async def startup_event():
     """Initialize blockchain A2A network"""
     global trust_system
-    
+
     print("🚀 Starting A2A Blockchain Agent Network v2.0...")
-    
+
     # Connect to blockchain
     blockchain_connected = blockchain.connect()
-    
+
     # Initialize trust system if available
     if TRUST_AVAILABLE:
         try:
@@ -190,10 +190,10 @@ async def startup_event():
         except Exception as e:
             print(f"⚠️ Trust system failed: {e}")
             trust_system = None
-    
+
     # Initialize A2A agents
     await initialize_a2a_agents()
-    
+
     print("🎯 A2A Blockchain Agent Network v2.0 is LIVE!")
     print("   • Protocol: A2A v0.2.9 (100% compliant)")
     print(f"   • Blockchain: {'Connected' if blockchain_connected else 'Simulated'}")
@@ -202,10 +202,10 @@ async def startup_event():
 
 async def initialize_a2a_agents():
     """Initialize A2A compliant blockchain agents"""
-    
+
     # Get blockchain status for metadata
     blockchain_status = blockchain.get_status()
-    
+
     # Agent 1: Financial Agent (your registered blockchain agent)
     financial_agent = A2AAgentCard(
         name="Blockchain Financial Agent v2.0",
@@ -283,7 +283,7 @@ async def initialize_a2a_agents():
             }
         }
     )
-    
+
     # Agent 2: Message Agent (your registered blockchain agent)
     message_agent = A2AAgentCard(
         name="Blockchain Message Agent v2.0",
@@ -361,7 +361,7 @@ async def initialize_a2a_agents():
             }
         }
     )
-    
+
     # Register agents with trust system if available
     if trust_system:
         try:
@@ -370,11 +370,11 @@ async def initialize_a2a_agents():
             print("✅ Agents registered in trust system")
         except Exception as e:
             print(f"⚠️ Trust registration failed: {e}")
-    
+
     # Store agents
     a2a_agents["0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"] = financial_agent
     a2a_agents["0x70997970C51812dc3A010C7d01b50e0d17dc79C8"] = message_agent
-    
+
     print(f"✅ Initialized {len(a2a_agents)} A2A v0.2.9 compliant blockchain agents")
 
 # A2A v0.2.9 Standard Endpoints
@@ -383,7 +383,7 @@ async def initialize_a2a_agents():
 async def root():
     """Root endpoint - A2A network information"""
     blockchain_status = blockchain.get_status()
-    
+
     return {
         "network": "A2A Blockchain Agent Network",
         "version": "2.0.0",
@@ -430,9 +430,9 @@ async def get_agent_card(agent_id: str):
     """A2A v0.2.9 standard agent card endpoint"""
     if agent_id not in a2a_agents:
         raise HTTPException(status_code=404, detail=f"Agent {agent_id} not found")
-    
+
     agent_card = a2a_agents[agent_id]
-    
+
     # Return proper A2A v0.2.9 format
     return {
         "name": agent_card.name,
@@ -457,10 +457,10 @@ async def agent_health(agent_id: str):
     """A2A standard health endpoint"""
     if agent_id not in a2a_agents:
         raise HTTPException(status_code=404, detail=f"Agent {agent_id} not found")
-    
+
     agent = a2a_agents[agent_id]
     blockchain_status = blockchain.get_status()
-    
+
     # Get trust score if available
     trust_score = None
     if trust_system:
@@ -469,7 +469,7 @@ async def agent_health(agent_id: str):
         except Exception as e:
             logger.warning(f"Failed to get trust score for agent {agent_id}: {e}")
             trust_score = None
-    
+
     return {
         "status": "healthy",
         "agent_id": agent_id,
@@ -512,7 +512,7 @@ async def send_message(agent_id: str, message: A2AMessage):
     """A2A v0.2.9 message processing endpoint with blockchain execution"""
     if agent_id not in a2a_agents:
         raise HTTPException(status_code=404, detail=f"Agent {agent_id} not found")
-    
+
     try:
         # Store message
         blockchain_messages[message.messageId] = {
@@ -526,14 +526,14 @@ async def send_message(agent_id: str, message: A2AMessage):
             "status": "processing",
             "blockchain_tx": None
         }
-        
+
         # Process A2A message with blockchain
         results = await process_a2a_message_v2(agent_id, message)
-        
+
         # Update message status
         blockchain_messages[message.messageId]["status"] = "completed"
         blockchain_messages[message.messageId]["results"] = results
-        
+
         return {
             "messageId": message.messageId,
             "status": "processed",
@@ -550,11 +550,11 @@ async def send_message(agent_id: str, message: A2AMessage):
             "processing_time_ms": 287.6,
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         blockchain_messages[message.messageId]["status"] = "failed"
         blockchain_messages[message.messageId]["error"] = str(e)
-        
+
         raise HTTPException(status_code=500, detail=f"A2A message processing failed: {str(e)}")
 
 @app.get("/agents")
@@ -562,7 +562,7 @@ async def list_agents():
     """List all A2A blockchain agents"""
     blockchain_status = blockchain.get_status()
     agents_list = []
-    
+
     for agent_id, agent_card in a2a_agents.items():
         # Get trust score if available
         trust_score = None
@@ -572,7 +572,7 @@ async def list_agents():
             except Exception as e:
                 logger.warning(f"Failed to get trust score for agent {agent_id}: {e}")
                 trust_score = None
-        
+
         agents_list.append({
             "agent_id": agent_id,
             "name": agent_card.name,
@@ -594,7 +594,7 @@ async def list_agents():
             },
             "status": "active"
         })
-    
+
     return {
         "agents": agents_list,
         "total": len(agents_list),
@@ -616,16 +616,16 @@ async def list_agents():
 
 async def process_a2a_message_v2(agent_id: str, message: A2AMessage):
     """Process A2A message with v2.0 enhancements"""
-    
+
     results = []
     agent = a2a_agents[agent_id]
     blockchain_status = blockchain.get_status()
-    
+
     for part in message.parts:
         if part.type == "function-call" and part.name:
             # Verify skill availability
             skill_found = any(skill.id == part.name for skill in agent.skills)
-            
+
             if not skill_found:
                 results.append({
                     "skill": part.name,
@@ -634,7 +634,7 @@ async def process_a2a_message_v2(agent_id: str, message: A2AMessage):
                     "available_skills": [skill.id for skill in agent.skills]
                 })
                 continue
-            
+
             # Execute skill with blockchain integration
             if part.name == "portfolio-analysis":
                 result = await execute_portfolio_analysis_v2(part.arguments or {}, blockchain_status)
@@ -650,9 +650,9 @@ async def process_a2a_message_v2(agent_id: str, message: A2AMessage):
                     "status": "error",
                     "error": "Skill implementation not found"
                 }
-            
+
             results.append(result)
-        
+
         elif part.type == "text":
             results.append({
                 "type": "text_processed",
@@ -660,20 +660,20 @@ async def process_a2a_message_v2(agent_id: str, message: A2AMessage):
                 "content": f"Processed: {part.text[:100]}..." if part.text else "Empty text",
                 "a2a_compliant": True
             })
-    
+
     return results
 
 async def execute_portfolio_analysis_v2(args: Dict[str, Any], blockchain_status: Dict):
     """Execute portfolio analysis v2.0 with blockchain integration"""
-    
+
     portfolio_value = args.get("portfolio_value", 1000000)
     holdings = args.get("holdings", [])
-    
+
     # Simulate blockchain transaction if connected
     blockchain_tx = None
     if blockchain.connected:
         blockchain_tx = f"0x{uuid.uuid4().hex}"
-    
+
     return {
         "skill": "portfolio-analysis",
         "version": "2.0.0",
@@ -727,14 +727,14 @@ async def execute_portfolio_analysis_v2(args: Dict[str, Any], blockchain_status:
 
 async def execute_risk_assessment_v2(args: Dict[str, Any], blockchain_status: Dict):
     """Execute risk assessment v2.0 with blockchain integration"""
-    
+
     confidence_level = args.get("confidence_level", 0.95)
     time_horizon = args.get("time_horizon", 1)  # years
-    
+
     blockchain_tx = None
     if blockchain.connected:
         blockchain_tx = f"0x{uuid.uuid4().hex}"
-    
+
     return {
         "skill": "risk-assessment",
         "version": "2.0.0",
@@ -795,14 +795,14 @@ async def execute_risk_assessment_v2(args: Dict[str, Any], blockchain_status: Di
 
 async def execute_message_routing_v2(args: Dict[str, Any], blockchain_status: Dict):
     """Execute message routing v2.0 with blockchain integration"""
-    
+
     destination = args.get("destination", "default")
     message_type = args.get("message_type", "a2a")
-    
+
     blockchain_tx = None
     if blockchain.connected:
         blockchain_tx = f"0x{uuid.uuid4().hex}"
-    
+
     return {
         "skill": "message-routing",
         "version": "2.0.0",
@@ -840,15 +840,15 @@ async def execute_message_routing_v2(args: Dict[str, Any], blockchain_status: Di
 
 async def execute_data_transformation_v2(args: Dict[str, Any], blockchain_status: Dict):
     """Execute data transformation v2.0 with blockchain integration"""
-    
+
     input_data = args.get("data", {})
     input_format = args.get("input_format", "json")
     target_format = args.get("target_format", "a2a")
-    
+
     blockchain_tx = None
     if blockchain.connected:
         blockchain_tx = f"0x{uuid.uuid4().hex}"
-    
+
     return {
         "skill": "data-transformation",
         "version": "2.0.0",
@@ -896,7 +896,7 @@ if __name__ == "__main__":
     print("   • Server: http://localhost:8084")
     print("   • Agent Cards: /.well-known/agent.json")
     print("   • Version: 2.0.0")
-    
+
     uvicorn.run(
         app,
         host="0.0.0.0",

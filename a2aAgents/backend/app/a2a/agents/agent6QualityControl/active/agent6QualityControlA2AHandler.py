@@ -27,7 +27,7 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
     A2A-compliant handler for Agent 6 - Quality Control Manager
     All communication through blockchain messaging only
     """
-    
+
     def __init__(self, agent_sdk: ComprehensiveQualityControlSDK):
         """Initialize A2A handler with agent SDK"""
         # Configure secure agent
@@ -62,23 +62,23 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
             rate_limit_requests=100,
             rate_limit_window=60
         )
-        
+
         super().__init__(config)
-        
+
         self.agent_sdk = agent_sdk
-        
+
         # Initialize A2A blockchain client
         self.a2a_client = A2ANetworkClient(
             agent_id=config.agent_id,
             private_key=os.getenv('A2A_PRIVATE_KEY'),
             rpc_url=os.getenv('A2A_RPC_URL', 'http://localhost:8545')
         )
-        
+
         # Register message handlers
         self._register_handlers()
-        
+
         logger.info(f"A2A-compliant handler initialized for {config.agent_name}")
-    
+
     def _register_handlers(self):
         """Register A2A message handlers"""
 
@@ -98,7 +98,7 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                         "iso_9001", "six_sigma", "lean", "cmmi", "itil"
                     ]
                 }
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="get_supported_formats",
@@ -106,9 +106,9 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to get_supported_formats: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -119,7 +119,7 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
             """Handle comprehensive quality assessment"""
             try:
                 result = await self.agent_sdk.assess_quality(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="quality_assessment",
@@ -127,9 +127,9 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to quality_assessment: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -141,11 +141,11 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                 # Make routing decision based on quality assessment
                 quality_metrics = data.get("quality_metrics", {})
                 routing_options = data.get("routing_options", [])
-                
+
                 # Assess quality of each option
                 best_route = None
                 best_score = 0.0
-                
+
                 for option in routing_options:
                     assessment = await self.agent_sdk.assess_quality({
                         "target": option.get("target", "unknown"),
@@ -154,14 +154,14 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                     if assessment.get("success") and assessment["data"]["overall_score"] > best_score:
                         best_score = assessment["data"]["overall_score"]
                         best_route = option
-                
+
                 result = {
                     "selected_route": best_route,
                     "confidence_score": best_score,
                     "routing_rationale": f"Selected based on highest quality score: {best_score:.2f}",
                     "alternatives_evaluated": len(routing_options)
                 }
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="routing_decision",
@@ -169,9 +169,9 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to routing_decision: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -181,7 +181,7 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
             """Handle generation of improvement recommendations"""
             try:
                 result = await self.agent_sdk.continuous_improvement(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="improvement_recommendations",
@@ -189,9 +189,9 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to improvement_recommendations: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -202,13 +202,13 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
             try:
                 workflow_data = data.get("workflow", {})
                 quality_thresholds = data.get("quality_thresholds", {})
-                
+
                 # Monitor workflow quality
                 quality_check = await self.agent_sdk.monitor_trends({
                     "target": workflow_data.get("workflow_id", "unknown"),
                     "time_period": "1h"
                 })
-                
+
                 # Make control decision based on quality trends
                 control_action = "continue"
                 if quality_check.get("success"):
@@ -217,14 +217,14 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                         control_action = "investigate"
                         if any(t.get("severity") == "critical" for t in trends):
                             control_action = "halt"
-                
+
                 result = {
                     "workflow_id": workflow_data.get("workflow_id"),
                     "control_action": control_action,
                     "quality_status": quality_check.get("data", {}),
                     "action_reason": f"Based on quality trend analysis: {len(trends) if quality_check.get('success') else 0} anomalies detected"
                 }
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="workflow_control",
@@ -232,9 +232,9 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to workflow_control: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -246,23 +246,23 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                 agent_id = data.get("agent_id")
                 trust_metrics = data.get("trust_metrics", {})
                 verification_level = data.get("verification_level", "standard")
-                
+
                 # Assess trust based on quality metrics
                 trust_assessment = await self.agent_sdk.assess_quality({
                     "target": f"agent_{agent_id}",
                     "metrics": trust_metrics,
                     "standards": ["iso_9001"] if verification_level == "high" else []
                 })
-                
+
                 # Determine trust score
                 trust_verified = False
                 trust_score = 0.0
-                
+
                 if trust_assessment.get("success"):
                     trust_score = trust_assessment["data"]["overall_score"]
                     threshold = 0.9 if verification_level == "high" else 0.7
                     trust_verified = trust_score >= threshold
-                
+
                 result = {
                     "agent_id": agent_id,
                     "trust_verified": trust_verified,
@@ -270,7 +270,7 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                     "verification_level": verification_level,
                     "verification_details": trust_assessment.get("data", {})
                 }
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="trust_verification",
@@ -278,9 +278,9 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to trust_verification: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -291,7 +291,7 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
             """Handle comprehensive quality assessment with ML"""
             try:
                 result = await self.agent_sdk.assess_quality(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="assess_quality",
@@ -299,9 +299,9 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to assess_quality: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -312,7 +312,7 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
             try:
                 result = await self.handle_routing_decision(message, context_id, data)
                 return result
-                
+
             except Exception as e:
                 logger.error(f"Failed to make_routing_decision: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -322,7 +322,7 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
             """Handle generation of quality improvement recommendations"""
             try:
                 result = await self.agent_sdk.continuous_improvement(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="generate_recommendations",
@@ -330,9 +330,9 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to generate_recommendations: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -343,7 +343,7 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
             try:
                 result = await self.handle_workflow_control(message, context_id, data)
                 return result
-                
+
             except Exception as e:
                 logger.error(f"Failed to control_workflow: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -354,7 +354,7 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
             try:
                 result = await self.handle_trust_verification(message, context_id, data)
                 return result
-                
+
             except Exception as e:
                 logger.error(f"Failed to verify_trust: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -376,7 +376,7 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                     "available_operations": list(self.config.allowed_operations)
                 }
                 result = health_status
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="health_check",
@@ -384,9 +384,9 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to health_check: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -396,7 +396,7 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
             """Handle anomaly detection operations"""
             try:
                 result = await self.agent_sdk.detect_anomalies(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="detect_anomalies",
@@ -404,9 +404,9 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to detect_anomalies: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -416,7 +416,7 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
             """Handle quality trend monitoring"""
             try:
                 result = await self.agent_sdk.monitor_trends(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="monitor_trends",
@@ -424,9 +424,9 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to monitor_trends: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -436,7 +436,7 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
             """Handle continuous improvement operations"""
             try:
                 result = await self.agent_sdk.continuous_improvement(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="continuous_improvement",
@@ -444,9 +444,9 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to continuous_improvement: {e}")
                 return self.create_secure_response(str(e), status="error")
@@ -456,7 +456,7 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
             """Handle compliance audit operations"""
             try:
                 result = await self.agent_sdk.compliance_audit(data)
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="compliance_audit",
@@ -464,13 +464,13 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to compliance_audit: {e}")
                 return self.create_secure_response(str(e), status="error")
-    
+
     async def process_a2a_message(self, message: A2AMessage) -> Dict[str, Any]:
         """
         Main entry point for A2A messages
@@ -480,19 +480,19 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
             # Extract operation from message
             operation = None
             data = {}
-            
+
             if message.parts and len(message.parts) > 0:
                 part = message.parts[0]
                 if part.data:
                     operation = part.data.get("operation")
                     data = part.data.get("data", {})
-            
+
             if not operation:
                 return self.create_secure_response(
                     "No operation specified in message",
                     status="error"
                 )
-            
+
             # Get handler for operation
             handler = self.handlers.get(operation)
             if not handler:
@@ -500,17 +500,17 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                     f"Unknown operation: {operation}",
                     status="error"
                 )
-            
+
             # Create context ID
             context_id = f"{message.sender_id}:{operation}:{datetime.utcnow().timestamp()}"
-            
+
             # Process through handler
             return await handler(message, context_id, data)
-            
+
         except Exception as e:
             logger.error(f"Failed to process A2A message: {e}")
             return self.create_secure_response(str(e), status="error")
-    
+
     async def _log_blockchain_transaction(self, operation: str, data_hash: str, result_hash: str, context_id: str):
         """Log transaction to blockchain for audit trail"""
         try:
@@ -522,33 +522,33 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
                 "context_id": context_id,
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
             # Send to blockchain through A2A client
             await self.a2a_client.log_transaction(transaction_data)
-            
+
         except Exception as e:
             logger.error(f"Failed to log blockchain transaction: {e}")
-    
+
     def _hash_data(self, data: Any) -> str:
         """Create hash of data for blockchain logging"""
         import hashlib
         json_str = json.dumps(data, sort_keys=True, default=str)
         return hashlib.sha256(json_str.encode()).hexdigest()
-    
+
     async def _check_blockchain_connection(self) -> bool:
         """Check if blockchain connection is active"""
         try:
             return await self.a2a_client.is_connected()
         except Exception:
             return False
-    
+
     async def start(self):
         """Start the A2A handler"""
         logger.info(f"Starting A2A handler for {self.config.agent_name}")
-        
+
         # Connect to blockchain
         await self.a2a_client.connect()
-        
+
         # Register agent on blockchain
         await self.a2a_client.register_agent({
             "agent_id": self.config.agent_id,
@@ -556,22 +556,22 @@ class Agent6QualityControlA2AHandler(SecureA2AAgent):
             "capabilities": list(self.config.allowed_operations),
             "version": self.config.agent_version
         })
-        
+
         logger.info(f"A2A handler started and registered on blockchain")
-    
+
     async def stop(self):
         """Stop the A2A handler"""
         logger.info(f"Stopping A2A handler for {self.config.agent_name}")
-        
+
         # Unregister from blockchain
         await self.a2a_client.unregister_agent(self.config.agent_id)
-        
+
         # Disconnect
         await self.a2a_client.disconnect()
-        
+
         # Parent cleanup
         await self.shutdown()
-        
+
         logger.info(f"A2A handler stopped")
 
 
@@ -587,14 +587,14 @@ To migrate from REST endpoints to A2A messaging:
 
 1. Replace router initialization:
    # OLD: router = APIRouter(...)
-   # NEW: 
+   # NEW:
    handler = create_agent6_quality_control_a2a_handler(quality_control_sdk)
 
 2. Replace FastAPI app with A2A listener:
    # OLD: app.include_router(router)
    # NEW:
    await handler.start()
-   
+
 3. Process messages through A2A:
    # Messages arrive through blockchain
    result = await handler.process_a2a_message(a2a_message)

@@ -38,7 +38,7 @@ class PerplexityConfig:
 
 class PerplexityClient:
     """Production-ready Perplexity API client for A2A agents"""
-    
+
     def __init__(self, config: Optional[PerplexityConfig] = None):
         """Initialize Perplexity client with configuration"""
         if config is None:
@@ -47,18 +47,18 @@ class PerplexityClient:
                 base_url="https://api.perplexity.ai",
                 model="sonar"
             )
-        
+
         if not config.api_key:
             raise ValueError("Perplexity API key is required")
-        
+
         self.config = config
         self.headers = {
             "Authorization": f"Bearer {config.api_key}",
             "Content-Type": "application/json"
         }
-        
+
         logger.info(f"Perplexity client initialized with model: {config.model}")
-    
+
     async def chat_completion(
         self,
         messages: List[Dict[str, str]],
@@ -75,20 +75,20 @@ class PerplexityClient:
                 "temperature": temperature,
                 **kwargs
             }
-            
+
             if max_tokens:
                 payload["max_tokens"] = max_tokens
-            
+
             async with httpx.AsyncClient(timeout=self.config.timeout) as client:
                 response = await client.post(
                     f"{self.config.base_url}/chat/completions",
                     headers=self.headers,
                     json=payload
                 )
-                
+
                 if response.status_code == 200:
                     data = response.json()
-                    
+
                     return PerplexityResponse(
                         content=data['choices'][0]['message']['content'],
                         model=data['model'],
@@ -99,11 +99,11 @@ class PerplexityClient:
                     )
                 else:
                     raise Exception(f"HTTP {response.status_code}: {response.text}")
-        
+
         except Exception as e:
             logger.error(f"Perplexity chat completion error: {e}")
             raise
-    
+
     async def search_real_time(
         self,
         query: str,
@@ -112,21 +112,21 @@ class PerplexityClient:
     ) -> PerplexityResponse:
         """Search for real-time information"""
         system_prompt = "You are a research assistant with access to real-time information. Provide accurate, up-to-date information with proper citations."
-        
+
         user_message = f"Context: {context}\n\nSearch query: {query}" if context else query
-        
+
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_message}
         ]
-        
+
         return await self.chat_completion(
             messages=messages,
             temperature=0.2,
             max_tokens=max_tokens,
             model="sonar"
         )
-    
+
     async def analyze_financial_news(
         self,
         topic: str,
@@ -135,7 +135,7 @@ class PerplexityClient:
     ) -> PerplexityResponse:
         """Analyze recent financial news on a specific topic"""
         query = f"Latest {time_range} financial news and analysis about {topic}. Provide {analysis_type} with key insights and market implications."
-        
+
         messages = [
             {
                 "role": "system",
@@ -143,14 +143,14 @@ class PerplexityClient:
             },
             {"role": "user", "content": query}
         ]
-        
+
         return await self.chat_completion(
             messages=messages,
             temperature=0.3,
             max_tokens=800,
             model="sonar-pro"
         )
-    
+
     async def research_company(
         self,
         company_name: str,
@@ -159,10 +159,10 @@ class PerplexityClient:
         """Research company information with real-time data"""
         if research_focus is None:
             research_focus = ["financial performance", "recent news", "market position"]
-        
+
         focus_areas = ", ".join(research_focus)
         query = f"Research {company_name} focusing on: {focus_areas}. Include recent developments, financial metrics, and market analysis."
-        
+
         messages = [
             {
                 "role": "system",
@@ -170,14 +170,14 @@ class PerplexityClient:
             },
             {"role": "user", "content": query}
         ]
-        
+
         return await self.chat_completion(
             messages=messages,
             temperature=0.2,
             max_tokens=1000,
             model="sonar-pro"
         )
-    
+
     async def get_market_insights(
         self,
         market_sector: str,
@@ -185,7 +185,7 @@ class PerplexityClient:
     ) -> PerplexityResponse:
         """Get real-time market insights for specific sectors"""
         query = f"Current {insight_type} and analysis for {market_sector} sector. Include recent developments, key players, and market outlook."
-        
+
         messages = [
             {
                 "role": "system",
@@ -193,14 +193,14 @@ class PerplexityClient:
             },
             {"role": "user", "content": query}
         ]
-        
+
         return await self.chat_completion(
             messages=messages,
             temperature=0.3,
             max_tokens=700,
             model="sonar"
         )
-    
+
     async def validate_financial_information(
         self,
         information: str,
@@ -208,7 +208,7 @@ class PerplexityClient:
     ) -> PerplexityResponse:
         """Validate financial information against real-time sources"""
         query = f"Validate this financial information for {validation_type}: {information}. Check against current sources and provide verification status."
-        
+
         messages = [
             {
                 "role": "system",
@@ -216,14 +216,14 @@ class PerplexityClient:
             },
             {"role": "user", "content": query}
         ]
-        
+
         return await self.chat_completion(
             messages=messages,
             temperature=0.1,
             max_tokens=400,
             model="sonar"
         )
-    
+
     async def process_a2a_research_request(
         self,
         research_topic: str,
@@ -233,7 +233,7 @@ class PerplexityClient:
         """Process A2A agent research requests"""
         context_str = f"A2A Context: {request_context}"
         query = f"{context_str}\n\nResearch topic: {research_topic}\nOutput format: {output_format}"
-        
+
         messages = [
             {
                 "role": "system",
@@ -241,13 +241,13 @@ class PerplexityClient:
             },
             {"role": "user", "content": query}
         ]
-        
+
         return await self.chat_completion(
             messages=messages,
             temperature=0.4,
             max_tokens=600
         )
-    
+
     async def health_check(self) -> Dict[str, Any]:
         """Health check for the Perplexity client"""
         try:
@@ -258,7 +258,7 @@ class PerplexityClient:
                 max_tokens=10,
                 temperature=0
             )
-            
+
             return {
                 "status": "healthy",
                 "model": self.config.model,
@@ -266,13 +266,13 @@ class PerplexityClient:
                 "response": response.content.strip(),
                 "usage": response.usage
             }
-        
+
         except Exception as e:
             return {
                 "status": "unhealthy",
                 "error": str(e)
             }
-    
+
     async def close(self):
         """Close client connections (if any persistent connections exist)"""
         logger.info("Perplexity client connections closed")
@@ -290,8 +290,8 @@ _perplexity_client_instance: Optional[PerplexityClient] = None
 def get_perplexity_client() -> PerplexityClient:
     """Get singleton Perplexity client instance"""
     global _perplexity_client_instance
-    
+
     if _perplexity_client_instance is None:
         _perplexity_client_instance = create_perplexity_client()
-    
+
     return _perplexity_client_instance

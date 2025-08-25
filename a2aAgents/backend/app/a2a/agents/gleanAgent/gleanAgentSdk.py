@@ -82,11 +82,11 @@ except ImportError:
     class WorkflowContextManager:
         def __init__(self):
             pass
-    
+
     class WorkflowMonitor:
         def __init__(self):
             pass
-    
+
     workflowContextManager = WorkflowContextManager()
     workflowMonitor = WorkflowMonitor()
 
@@ -174,10 +174,10 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     A2A Compliant Glean Agent for comprehensive code analysis
     """
-    
+
     def __init__(self, base_url: str = None):
         agent_id = create_agent_id("glean_agent", "code_analysis")
-        
+
         # Create agent configuration
         config = AgentConfig(
             agent_id=agent_id,
@@ -186,26 +186,26 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             version="1.0.0",
             base_url=base_url or os.getenv("GLEAN_AGENT_URL")
         )
-        
+
         # Initialize parent classes properly
         # Initialize SecureA2AAgent (which will call A2AAgentBase.__init__)
         SecureA2AAgent.__init__(self, config)
-        
+
         # Set blockchain_enabled before initializing the mixin
         self.blockchain_enabled = os.getenv("BLOCKCHAIN_ENABLED", "true").lower() == "true"
-        
+
         # Initialize blockchain integration
         BlockchainIntegrationMixin.__init__(self)
-        
+
         # Initialize database for storing analysis results
         self.db_path = Path(__file__).parent / "glean_analysis.db"
         self._init_database()
-        
+
         # Initialize async result cache
         self._result_cache = {}
         self._cache_locks = {}
         self._cache_ttl = 3600  # 1 hour TTL
-        
+
         # Tool configurations
         self.linters = {
             "python": ["pylint", "flake8", "mypy", "bandit", "vulture"],
@@ -221,25 +221,25 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "cds": ["cds-lint", "@sap/cds-dk", "cds-compiler-check"],
             "solidity": ["solhint", "slither", "mythril", "solc", "echidna"]
         }
-        
+
         # Glean service endpoint
         self.glean_service_url = os.getenv("GLEAN_SERVICE_URL", "http://localhost:4000/api/glean")
-        
+
         # Initialize trust
         self.trust_info = initialize_agent_trust(
             agent_id=self.agent_id,
             agent_type="analysis"
         )
-        
+
         # Store capabilities separately
         self.capabilities = ["code_analysis", "linting", "testing", "security_scan"]
-        
+
         logger.info(f"Initialized Glean Agent: {self.agent_id}")
-    
+
     def _init_database(self):
         """Initialize SQLite database for analysis results"""
         self.db_path.parent.mkdir(exist_ok=True)
-        
+
         with sqlite3.connect(self.db_path) as conn:
             conn.executescript("""
                 CREATE TABLE IF NOT EXISTS analysis_results (
@@ -252,7 +252,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     timestamp TEXT,
                     results TEXT
                 );
-                
+
                 CREATE TABLE IF NOT EXISTS code_issues (
                     id TEXT PRIMARY KEY,
                     analysis_id TEXT,
@@ -270,26 +270,26 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     created_at TEXT,
                     FOREIGN KEY (analysis_id) REFERENCES analysis_results(id)
                 );
-                
+
                 CREATE INDEX IF NOT EXISTS idx_issues_severity ON code_issues(severity);
                 CREATE INDEX IF NOT EXISTS idx_issues_type ON code_issues(issue_type);
                 CREATE INDEX IF NOT EXISTS idx_issues_file ON code_issues(file_path);
             """)
-    
+
     def _generate_cache_key(self, operation: str, **kwargs) -> str:
         """Generate a cache key for the given operation and parameters"""
         import hashlib
         key_data = f"{operation}:{':'.join(f'{k}={v}' for k, v in sorted(kwargs.items()))}"
         return hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()
-    
+
     async def _get_cached_result(self, cache_key: str) -> Optional[Dict[str, Any]]:
         """Get cached result if available and not expired"""
         if cache_key not in self._result_cache:
             return None
-        
+
         cached_data = self._result_cache[cache_key]
         cache_time = cached_data.get('timestamp', 0)
-        
+
         # Check if cache has expired
         if time.time() - cache_time > self._cache_ttl:
             # Remove expired cache
@@ -297,46 +297,46 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             if cache_key in self._cache_locks:
                 del self._cache_locks[cache_key]
             return None
-        
+
         return cached_data.get('result')
-    
+
     async def _set_cached_result(self, cache_key: str, result: Dict[str, Any]) -> None:
         """Set result in cache with timestamp"""
         self._result_cache[cache_key] = {
             'result': result,
             'timestamp': time.time()
         }
-    
+
     async def _with_cache(self, operation: str, func, **kwargs) -> Dict[str, Any]:
         """Execute function with caching support"""
         cache_key = self._generate_cache_key(operation, **kwargs)
-        
+
         # Check cache first
         cached_result = await self._get_cached_result(cache_key)
         if cached_result:
             logger.debug(f"Using cached result for {operation}")
             return cached_result
-        
+
         # Use locks to prevent concurrent execution of same operation
         if cache_key not in self._cache_locks:
             self._cache_locks[cache_key] = asyncio.Lock()
-        
+
         async with self._cache_locks[cache_key]:
             # Double-check cache after acquiring lock
             cached_result = await self._get_cached_result(cache_key)
             if cached_result:
                 return cached_result
-            
+
             # Execute the function
             if asyncio.iscoroutinefunction(func):
                 result = await func(**kwargs)
             else:
                 result = func(**kwargs)
-            
+
             # Cache the result
             await self._set_cached_result(cache_key, result)
             return result
-    
+
     def clear_cache(self, pattern: str = None) -> int:
         """Clear cache entries, optionally matching a pattern"""
         if pattern is None:
@@ -344,16 +344,16 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             self._result_cache.clear()
             self._cache_locks.clear()
             return count
-        
+
         # Clear entries matching pattern
         keys_to_remove = [key for key in self._result_cache.keys() if pattern in key]
         for key in keys_to_remove:
             del self._result_cache[key]
             if key in self._cache_locks:
                 del self._cache_locks[key]
-        
+
         return len(keys_to_remove)
-    
+
     async def _run_command(self, command: str, cwd: str = None) -> Dict[str, str]:
         """Run a shell command and return stdout/stderr"""
         try:
@@ -363,9 +363,9 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 stderr=asyncio.subprocess.PIPE,
                 cwd=cwd
             )
-            
+
             stdout, stderr = await process.communicate()
-            
+
             return {
                 "stdout": stdout.decode('utf-8', errors='ignore'),
                 "stderr": stderr.decode('utf-8', errors='ignore'),
@@ -377,15 +377,15 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "stderr": str(e),
                 "returncode": -1
             }
-    
-    def _create_issue(self, file_path: str, line: int, message: str, severity: str, tool: str, 
+
+    def _create_issue(self, file_path: str, line: int, message: str, severity: str, tool: str,
                       column: int = 0, rule: str = None, suggestion: str = None) -> Dict[str, Any]:
         """Create a standardized issue dictionary"""
         import hashlib
-        
+
         # Generate unique ID for the issue
         issue_id = hashlib.md5(f'{file_path}{line}{column}{tool}{message}'.encode(), usedforsecurity=False).hexdigest()[:8]
-        
+
         # Map tool to issue type
         issue_type_mapping = {
             "pylint": IssueType.STYLE,
@@ -415,9 +415,9 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "sol-security": IssueType.SECURITY,
             "sol-gas": IssueType.PERFORMANCE
         }
-        
+
         issue_type = issue_type_mapping.get(tool, IssueType.CODE_SMELL)
-        
+
         # Map severity string to enum
         severity_mapping = {
             "error": IssueSeverity.ERROR,
@@ -428,7 +428,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "minor": IssueSeverity.MINOR
         }
         severity_enum = severity_mapping.get(severity.lower(), IssueSeverity.INFO)
-        
+
         # Try to extract code snippet if file exists
         code_snippet = ""
         try:
@@ -438,7 +438,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     code_snippet = lines[line - 1].rstrip()
         except:
             code_snippet = ""
-        
+
         return {
             "id": f"{tool}_{issue_id}",
             "file_path": file_path,
@@ -454,7 +454,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "auto_fixable": False,
             "created_at": datetime.utcnow()
         }
-    
+
     async def _retry_with_exponential_backoff(
         self,
         func,
@@ -466,7 +466,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
     ) -> Any:
         """Execute function with exponential backoff retry logic"""
         last_exception = None
-        
+
         for attempt in range(max_retries + 1):
             try:
                 if asyncio.iscoroutinefunction(func):
@@ -475,18 +475,18 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     return func(**kwargs)
             except exceptions as e:
                 last_exception = e
-                
+
                 if attempt == max_retries:
                     logger.error(f"Function {func.__name__} failed after {max_retries} retries: {e}")
                     raise e
-                
+
                 # Calculate delay with exponential backoff
                 delay = min(initial_delay * (2 ** attempt), max_delay)
                 logger.warning(f"Attempt {attempt + 1} failed for {func.__name__}: {e}. Retrying in {delay:.1f}s")
                 await asyncio.sleep(delay)
-        
+
         raise last_exception
-    
+
     def _handle_analysis_error(self, operation: str, error: Exception, context: Dict[str, Any] = None) -> Dict[str, Any]:
         """Standardized error handling for analysis operations"""
         error_info = {
@@ -497,7 +497,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "timestamp": datetime.utcnow().isoformat(),
             "context": context or {}
         }
-        
+
         # Log the error with appropriate level
         if isinstance(error, (FileNotFoundError, PermissionError)):
             logger.warning(f"File system error in {operation}: {error}")
@@ -507,9 +507,9 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             logger.error(f"Network error in {operation}: {error}")
         else:
             logger.error(f"Unexpected error in {operation}: {error}", exc_info=True)
-        
+
         return error_info
-    
+
     async def _safe_subprocess_run(
         self,
         cmd: List[str],
@@ -529,9 +529,9 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 ),
                 timeout=timeout
             )
-            
+
             stdout, stderr = await result.communicate()
-            
+
             return {
                 "success": result.returncode == 0,
                 "returncode": result.returncode,
@@ -539,7 +539,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "stderr": stderr.decode('utf-8', errors='replace'),
                 "command": ' '.join(cmd)
             }
-            
+
         except asyncio.TimeoutError:
             return {
                 "success": False,
@@ -554,7 +554,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "error_type": type(e).__name__,
                 "command": ' '.join(cmd)
             }
-    
+
     async def _run_parallel_analysis(
         self,
         analysis_tasks: List[Dict[str, Any]],
@@ -562,13 +562,13 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
     ) -> List[Dict[str, Any]]:
         """Run multiple analysis tasks in parallel with concurrency control"""
         semaphore = asyncio.Semaphore(max_concurrent)
-        
+
         async def run_single_task(task: Dict[str, Any]) -> Dict[str, Any]:
             async with semaphore:
                 try:
                     task_type = task.get('type')
                     task_params = task.get('params', {})
-                    
+
                     if task_type == 'lint':
                         return await self._perform_lint_analysis(**task_params)
                     elif task_type == 'glean':
@@ -583,16 +583,16 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         return await self.analyze_code_refactoring(**task_params)
                     else:
                         return {"error": f"Unknown task type: {task_type}"}
-                        
+
                 except Exception as e:
                     return self._handle_analysis_error(task_type, e, task_params)
-        
+
         # Execute all tasks in parallel
         results = await asyncio.gather(
             *[run_single_task(task) for task in analysis_tasks],
             return_exceptions=True
         )
-        
+
         # Convert exceptions to error dictionaries
         processed_results = []
         for i, result in enumerate(results):
@@ -603,9 +603,9 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 )
             else:
                 processed_results.append(result)
-        
+
         return processed_results
-    
+
     async def analyze_project_comprehensive_parallel(
         self,
         directory: str,
@@ -616,48 +616,48 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         """Run comprehensive analysis with parallel execution"""
         start_time = time.time()
         analysis_id = f"analysis_{int(start_time * 1000)}"
-        
+
         if analysis_types is None:
             analysis_types = ["lint", "security", "coverage", "complexity"]
-        
+
         if file_patterns is None:
             file_patterns = ["*.py", "*.js", "*.ts"]
-        
+
         logger.info(f"Starting parallel comprehensive analysis {analysis_id} for {directory}")
-        
+
         # Prepare analysis tasks
         tasks = []
-        
+
         if "lint" in analysis_types:
             tasks.append({
                 "type": "lint",
                 "params": {"directory": directory, "file_patterns": file_patterns}
             })
-        
+
         if "glean" in analysis_types:
             tasks.append({
-                "type": "glean", 
+                "type": "glean",
                 "params": {"directory": directory}
             })
-        
+
         if "security" in analysis_types:
             tasks.append({
                 "type": "security",
                 "params": {"directory": directory, "scan_dev_dependencies": True}
             })
-        
+
         if "coverage" in analysis_types:
             tasks.append({
                 "type": "coverage",
                 "params": {"directory": directory, "coverage_threshold": 80.0}
             })
-        
+
         if "complexity" in analysis_types:
             tasks.append({
                 "type": "complexity",
                 "params": {"directory": directory}
             })
-        
+
         if "refactoring" in analysis_types:
             # For refactoring, we'll analyze Python files individually
             python_files = list(Path(directory).rglob("*.py"))
@@ -666,11 +666,11 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     "type": "refactoring",
                     "params": {"file_path": str(py_file)}
                 })
-        
+
         # Run analysis tasks in parallel
         try:
             results = await self._run_parallel_analysis(tasks, max_concurrent)
-            
+
             # Aggregate results
             aggregated_result = {
                 "analysis_id": analysis_id,
@@ -696,16 +696,16 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     "quality_score": 0.0
                 }
             }
-            
+
             # Process results by type
             for i, result in enumerate(results):
                 task_type = tasks[i].get('type')
-                
+
                 if task_type == "refactoring":
                     aggregated_result["results"]["refactoring"].append(result)
                 else:
                     aggregated_result["results"][task_type] = result
-                
+
                 # Update summary
                 if isinstance(result, dict) and not result.get("error"):
                     if "total_issues" in result:
@@ -714,29 +714,29 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         aggregated_result["summary"]["critical_issues"] += result["critical_issues"]
                     if "files_analyzed" in result:
                         aggregated_result["summary"]["files_analyzed"] += result["files_analyzed"]
-            
+
             # Calculate overall quality score
             total_issues = aggregated_result["summary"]["total_issues"]
             files_analyzed = aggregated_result["summary"]["files_analyzed"]
-            
+
             if files_analyzed > 0:
                 issues_per_file = total_issues / files_analyzed
                 quality_score = max(0, 100 - (issues_per_file * 10))
                 aggregated_result["summary"]["quality_score"] = quality_score
-            
+
             # Store results in database
             await self._store_analysis_results(analysis_id, aggregated_result)
-            
+
             logger.info(f"Parallel analysis {analysis_id} completed in {aggregated_result['duration']:.2f}s")
             return aggregated_result
-            
+
         except Exception as e:
             logger.error(f"Parallel analysis failed: {e}")
             return self._handle_analysis_error("parallel_analysis", e, {
                 "directory": directory,
                 "analysis_types": analysis_types
             })
-    
+
     async def compare_analysis_results(
         self,
         analysis_id_1: str,
@@ -747,14 +747,14 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             # Retrieve both analysis results
             result_1 = await self._get_analysis_result(analysis_id_1)
             result_2 = await self._get_analysis_result(analysis_id_2)
-            
+
             if not result_1 or not result_2:
                 return {
                     "error": "One or both analysis results not found",
                     "analysis_id_1": analysis_id_1,
                     "analysis_id_2": analysis_id_2
                 }
-            
+
             comparison = {
                 "comparison_id": f"diff_{int(time.time() * 1000)}",
                 "analysis_1": {
@@ -763,7 +763,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     "duration": result_1.get("duration")
                 },
                 "analysis_2": {
-                    "id": analysis_id_2, 
+                    "id": analysis_id_2,
                     "timestamp": result_2.get("timestamp"),
                     "duration": result_2.get("duration")
                 },
@@ -781,35 +781,35 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 ),
                 "improvement_suggestions": []
             }
-            
+
             # Generate improvement suggestions based on comparison
             comparison["improvement_suggestions"] = self._generate_improvement_suggestions(comparison)
-            
+
             return comparison
-            
+
         except Exception as e:
             return self._handle_analysis_error("compare_analysis", e, {
                 "analysis_id_1": analysis_id_1,
                 "analysis_id_2": analysis_id_2
             })
-    
+
     def _compare_summaries(self, summary_1: Dict[str, Any], summary_2: Dict[str, Any]) -> Dict[str, Any]:
         """Compare summary statistics between two analyses"""
         metrics = ["total_issues", "critical_issues", "files_analyzed", "quality_score"]
         comparison = {"changes": {}, "improvements": [], "regressions": []}
-        
+
         for metric in metrics:
             val_1 = summary_1.get(metric, 0)
             val_2 = summary_2.get(metric, 0)
             change = val_2 - val_1
-            
+
             comparison["changes"][metric] = {
                 "from": val_1,
                 "to": val_2,
                 "change": change,
                 "percent_change": (change / val_1 * 100) if val_1 > 0 else 0
             }
-            
+
             # Determine if this is an improvement or regression
             if metric in ["total_issues", "critical_issues"]:
                 if change < 0:
@@ -821,33 +821,33 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     comparison["improvements"].append(f"Improved {metric} by {change:.1f} points")
                 elif change < 0:
                     comparison["regressions"].append(f"Decreased {metric} by {abs(change):.1f} points")
-        
+
         return comparison
-    
+
     def _compare_issues(self, issues_1: List[Dict], issues_2: List[Dict]) -> Dict[str, Any]:
         """Compare issues between two analyses"""
         # Create issue fingerprints for comparison
         def issue_fingerprint(issue):
             return f"{issue.get('file_path', '')}:{issue.get('line', 0)}:{issue.get('rule', '')}"
-        
+
         fingerprints_1 = {issue_fingerprint(issue): issue for issue in issues_1}
         fingerprints_2 = {issue_fingerprint(issue): issue for issue in issues_2}
-        
+
         # Find new, resolved, and persistent issues
         new_issues = []
         resolved_issues = []
         persistent_issues = []
-        
+
         for fp, issue in fingerprints_2.items():
             if fp not in fingerprints_1:
                 new_issues.append(issue)
             else:
                 persistent_issues.append(issue)
-        
+
         for fp, issue in fingerprints_1.items():
             if fp not in fingerprints_2:
                 resolved_issues.append(issue)
-        
+
         return {
             "new_issues": new_issues,
             "resolved_issues": resolved_issues,
@@ -858,17 +858,17 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "persistent_count": len(persistent_issues)
             }
         }
-    
+
     def _compare_metrics(self, metrics_1: Dict[str, Any], metrics_2: Dict[str, Any]) -> Dict[str, Any]:
         """Compare metrics between two analyses"""
         comparison = {"changed_metrics": {}, "new_metrics": {}, "removed_metrics": {}}
-        
+
         all_keys = set(metrics_1.keys()) | set(metrics_2.keys())
-        
+
         for key in all_keys:
             val_1 = metrics_1.get(key)
             val_2 = metrics_2.get(key)
-            
+
             if val_1 is None and val_2 is not None:
                 comparison["new_metrics"][key] = val_2
             elif val_1 is not None and val_2 is None:
@@ -878,43 +878,43 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     "from": val_1,
                     "to": val_2
                 }
-        
+
         return comparison
-    
+
     def _generate_improvement_suggestions(self, comparison: Dict[str, Any]) -> List[str]:
         """Generate improvement suggestions based on analysis comparison"""
         suggestions = []
-        
+
         # Check for regressions and suggest fixes
         summary_comp = comparison.get("summary_comparison", {})
         regressions = summary_comp.get("regressions", [])
-        
+
         if regressions:
             suggestions.append("Address the following regressions: " + ", ".join(regressions))
-        
+
         # Check new issues
         issues_diff = comparison.get("issues_diff", {})
         new_issues_count = issues_diff.get("summary", {}).get("new_count", 0)
-        
+
         if new_issues_count > 0:
             suggestions.append(f"Review and fix {new_issues_count} new issues introduced")
-        
+
         # Check for persistent high-severity issues
         persistent_critical = len([
             issue for issue in issues_diff.get("persistent_issues", [])
             if issue.get("severity") == "critical"
         ])
-        
+
         if persistent_critical > 0:
             suggestions.append(f"Prioritize fixing {persistent_critical} persistent critical issues")
-        
+
         # Positive reinforcement for improvements
         improvements = summary_comp.get("improvements", [])
         if improvements:
             suggestions.append("Great progress: " + ", ".join(improvements))
-        
+
         return suggestions
-    
+
     async def _get_analysis_result(self, analysis_id: str) -> Optional[Dict[str, Any]]:
         """Retrieve analysis result from database"""
         try:
@@ -933,8 +933,8 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         except Exception as e:
             logger.error(f"Failed to retrieve analysis result {analysis_id}: {e}")
             return None
-    
-    
+
+
     async def get_quality_trends(
         self,
         directory: str,
@@ -944,41 +944,41 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         try:
             # Get analyses from the last N days
             cutoff_date = (datetime.utcnow() - timedelta(days=days)).isoformat()
-            
+
             with sqlite3.connect(self.db_path) as conn:
                 conn.row_factory = sqlite3.Row
                 cursor = conn.execute("""
-                    SELECT * FROM analysis_results 
+                    SELECT * FROM analysis_results
                     WHERE directory = ? AND timestamp >= ?
                     ORDER BY timestamp ASC
                 """, (directory, cutoff_date))
-                
+
                 rows = cursor.fetchall()
-                
+
                 if not rows:
                     return {
                         "directory": directory,
                         "days": days,
                         "message": "No analysis data found for the specified period"
                     }
-                
+
                 # Extract trend data
                 timestamps = []
                 quality_scores = []
                 total_issues = []
                 critical_issues = []
                 files_analyzed = []
-                
+
                 for row in rows:
                     results = json.loads(row["results"])
                     summary = results.get("summary", {})
-                    
+
                     timestamps.append(row["timestamp"])
                     quality_scores.append(summary.get("quality_score", 0))
                     total_issues.append(summary.get("total_issues", 0))
                     critical_issues.append(summary.get("critical_issues", 0))
                     files_analyzed.append(summary.get("files_analyzed", 0))
-                
+
                 # Calculate trends
                 trends = {
                     "directory": directory,
@@ -1013,56 +1013,56 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     },
                     "insights": self._generate_trend_insights(quality_scores, total_issues, critical_issues)
                 }
-                
+
                 return trends
-                
+
         except Exception as e:
             return self._handle_analysis_error("get_trends", e, {
                 "directory": directory,
                 "days": days
             })
-    
+
     def _calculate_trend(self, values: List[float], inverse: bool = False) -> Dict[str, Any]:
         """Calculate trend direction and statistics"""
         if len(values) < 2:
             return {"direction": "insufficient_data", "change": 0, "percentage": 0}
-        
+
         # Simple linear trend calculation
         start_val = values[0]
         end_val = values[-1]
         change = end_val - start_val
         percentage = (change / start_val * 100) if start_val != 0 else 0
-        
+
         # For inverse metrics (like issue counts), flip the direction
         if inverse:
             change = -change
             percentage = -percentage
-        
+
         if abs(percentage) < 5:
             direction = "stable"
         elif percentage > 0:
             direction = "improving"
         else:
             direction = "declining"
-        
+
         return {
             "direction": direction,
             "change": change,
             "percentage": round(percentage, 2)
         }
-    
+
     def _generate_trend_insights(
         self,
         quality_scores: List[float],
-        total_issues: List[float], 
+        total_issues: List[float],
         critical_issues: List[float]
     ) -> List[str]:
         """Generate insights based on trend analysis"""
         insights = []
-        
+
         if not quality_scores:
             return ["Insufficient data for trend analysis"]
-        
+
         # Quality score insights
         quality_trend = self._calculate_trend(quality_scores)
         if quality_trend["direction"] == "improving":
@@ -1071,7 +1071,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             insights.append(f"⚠️ Quality score is declining by {abs(quality_trend['percentage']):.1f}%")
         else:
             insights.append("📊 Quality score is stable")
-        
+
         # Issue trends
         if total_issues:
             issue_trend = self._calculate_trend(total_issues, inverse=True)
@@ -1079,7 +1079,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 insights.append(f"✅ Total issues decreasing by {abs(issue_trend['percentage']):.1f}%")
             elif issue_trend["direction"] == "declining":
                 insights.append(f"⚠️ Total issues increasing by {issue_trend['percentage']:.1f}%")
-        
+
         # Critical issue trends
         if critical_issues:
             critical_trend = self._calculate_trend(critical_issues, inverse=True)
@@ -1087,7 +1087,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 insights.append("🎯 Critical issues are being resolved effectively")
             elif critical_trend["direction"] == "declining":
                 insights.append("🚨 Critical issues are increasing - immediate attention needed")
-        
+
         # Overall assessment
         current_quality = quality_scores[-1] if quality_scores else 0
         if current_quality > 80:
@@ -1098,13 +1098,13 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             insights.append("⚡ Code quality needs improvement")
         else:
             insights.append("🔧 Code quality requires significant attention")
-        
+
         return insights
-    
+
     def _detect_project_type(self, directory: str) -> str:
         """Detect project type based on files and structure"""
         path = Path(directory)
-        
+
         # Check for specific files that indicate project type
         if (path / "package.json").exists():
             if (path / "tsconfig.json").exists():
@@ -1148,7 +1148,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "generic": 1
             }
             return max(file_counts, key=file_counts.get)
-    
+
     def _get_project_config(self, project_type: str) -> Dict[str, Any]:
         """Get configuration settings for different project types"""
         configs = {
@@ -1344,17 +1344,17 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "security_scanners": []
             }
         }
-        
+
         return configs.get(project_type, configs["generic"])
-    
+
     async def configure_for_project(self, directory: str, project_type: str = None) -> Dict[str, Any]:
         """Configure GleanAgent for a specific project type"""
         try:
             if project_type is None:
                 project_type = self._detect_project_type(directory)
-            
+
             config = self._get_project_config(project_type)
-            
+
             # Update agent configuration
             self.project_config = {
                 "directory": directory,
@@ -1362,27 +1362,27 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "detected_at": datetime.utcnow().isoformat(),
                 **config
             }
-            
+
             logger.info(f"Configured GleanAgent for {project_type} project at {directory}")
-            
+
             return {
                 "success": True,
                 "project_type": project_type,
                 "configuration": config,
                 "recommendations": self._get_project_recommendations(project_type, directory)
             }
-            
+
         except Exception as e:
             return self._handle_analysis_error("configure_project", e, {
                 "directory": directory,
                 "project_type": project_type
             })
-    
+
     def _get_project_recommendations(self, project_type: str, directory: str) -> List[str]:
         """Get setup recommendations for the project type"""
         recommendations = []
         path = Path(directory)
-        
+
         if project_type == "python":
             if not (path / "pyproject.toml").exists() and not (path / "requirements.txt").exists():
                 recommendations.append("Consider creating requirements.txt or pyproject.toml for dependency management")
@@ -1390,7 +1390,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 recommendations.append("Add .gitignore file with Python-specific patterns")
             if not list(path.rglob("test_*.py")) and not (path / "tests").exists():
                 recommendations.append("Create test files to improve code coverage")
-        
+
         elif project_type == "javascript" or project_type == "typescript":
             if not (path / "package.json").exists():
                 recommendations.append("Initialize npm package with 'npm init'")
@@ -1398,31 +1398,31 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 recommendations.append("Set up ESLint configuration for code quality")
             if project_type == "typescript" and not (path / "tsconfig.json").exists():
                 recommendations.append("Create tsconfig.json for TypeScript configuration")
-        
+
         elif project_type == "java":
             if not (path / "pom.xml").exists() and not (path / "build.gradle").exists():
                 recommendations.append("Set up Maven (pom.xml) or Gradle (build.gradle) for build management")
-        
+
         # General recommendations
         if not (path / "README.md").exists():
             recommendations.append("Add README.md file for project documentation")
-        
+
         return recommendations
-    
+
     async def initialize(self) -> None:
         """Initialize agent resources"""
         logger.info("Initializing Glean Agent resources")
-        
+
         # Establish standard trust relationships FIRST
         await self.establish_standard_trust_relationships()
-        
+
         # Initialize blockchain integration
         try:
             await self.initialize_blockchain()
             logger.info("✅ Blockchain integration initialized for Glean Agent")
         except Exception as e:
             logger.warning(f"⚠️ Blockchain initialization failed: {e}")
-        
+
         # Test connection to Glean service
         try:
             # A2A Protocol: Use blockchain messaging instead of httpx
@@ -1436,7 +1436,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             logger.info("Glean service health check skipped - A2A protocol compliance")
         except Exception as e:
             logger.warning(f"Could not connect to Glean service: {e}")
-        
+
         # Verify linting tools are available
         for lang, tools in self.linters.items():
             for tool in tools:
@@ -1444,19 +1444,19 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     logger.info(f"Linting tool '{tool}' is available")
                 else:
                     logger.warning(f"Linting tool '{tool}' is not available")
-        
+
         # Register with A2A Registry
         await self._register_with_a2a_registry()
-        
+
         # Register MCP tools and resources
         self._register_mcp_components()
-        
+
         # Discover code processing agents for collaboration
         available_agents = await self.discover_agents(
             capabilities=["code_processing", "quality_control", "validation", "ai_preparation"],
             agent_types=["analysis", "validation", "quality", "ai"]
         )
-        
+
         # Store discovered agents for collaboration
         self.code_agents = {
             "quality_agents": [agent for agent in available_agents if "quality" in agent.get("capabilities", [])],
@@ -1464,13 +1464,13 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "ai_agents": [agent for agent in available_agents if "ai" in agent.get("agent_type", "")],
             "analysis_agents": [agent for agent in available_agents if "analysis" in agent.get("agent_type", "")]
         }
-        
+
         logger.info(f"Glean Agent discovered {len(available_agents)} code processing agents")
-    
+
     async def shutdown(self) -> None:
         """Cleanup agent resources"""
         logger.info("Shutting down Glean Agent")
-    
+
     def _check_tool_available(self, tool: str) -> bool:
         """Check if a linting tool is available"""
         # SECURITY FIX: Whitelist allowed tools to prevent command injection
@@ -1479,24 +1479,24 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             'bandit', 'safety', 'prospector', 'radon', 'xenon',
             'pycodestyle', 'pydocstyle', 'pyflakes', 'vulture'
         }
-        
+
         # Validate tool name against whitelist
         if tool not in ALLOWED_TOOLS:
             logger.warning(f"Tool '{tool}' not in allowed tools whitelist")
             return False
-        
+
         # Additional validation: ensure no path separators or special characters
         if any(char in tool for char in ['/', '\\', ';', '&', '|', '$', '`', '\n', '\r']):
             logger.error(f"Invalid characters in tool name: {tool}")
             return False
-        
+
         try:
             # Use absolute path to tool or rely on PATH, but never user input directly
             subprocess.run([tool, "--version"], capture_output=True, check=False, shell=False)
             return True
         except (subprocess.SubprocessError, FileNotFoundError):
             return False
-    
+
     @a2a_handler("analyze_code")
     async def handle_analyze_code(self, message: A2AMessage, context_id: str) -> Dict[str, Any]:
         """Handle code analysis requests"""
@@ -1505,18 +1505,18 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             directory = data.get("directory", ".")
             analysis_types = data.get("analysis_types", [AnalysisType.FULL])
             file_patterns = data.get("file_patterns", ["*.py", "*.js", "*.ts"])
-            
+
             result = await self.analyze_code_comprehensive(
                 directory=directory,
                 analysis_types=analysis_types,
                 file_patterns=file_patterns
             )
-            
+
             return create_success_response(result)
         except Exception as e:
             logger.error(f"Code analysis failed: {e}")
             return create_error_response(str(e))
-    
+
     @a2a_skill("analyze_code_comprehensive", "Perform comprehensive code analysis")
     async def analyze_code_comprehensive(
         self,
@@ -1531,40 +1531,40 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             analysis_types = [AnalysisType.FULL]
         if file_patterns is None:
             file_patterns = ["*.py", "*.js", "*.ts"]
-        
+
         analysis_id = f"analysis_{hashlib.md5(f'{directory}{time.time()}'.encode(), usedforsecurity=False).hexdigest()[:12]}"
         start_time = time.time()
-        
+
         results = {
             "analysis_id": analysis_id,
             "directory": directory,
             "timestamp": datetime.utcnow().isoformat(),
             "analyses": {}
         }
-        
+
         # Perform Glean semantic analysis
         if AnalysisType.GLEAN_SEMANTIC in analysis_types or AnalysisType.FULL in analysis_types:
             results["analyses"]["glean"] = await self._perform_glean_analysis(directory)
-        
+
         # Perform linting
         if AnalysisType.LINT in analysis_types or AnalysisType.FULL in analysis_types:
             results["analyses"]["lint"] = await self._perform_lint_analysis(directory, file_patterns)
-        
+
         # Run tests
         if AnalysisType.TEST in analysis_types or AnalysisType.FULL in analysis_types:
             results["analyses"]["test"] = await self._run_tests(directory)
-        
+
         # Security analysis
         if AnalysisType.SECURITY in analysis_types or AnalysisType.FULL in analysis_types:
             results["analyses"]["security"] = await self._perform_security_analysis(directory)
-        
+
         # Calculate overall metrics
         results["summary"] = self._calculate_summary_metrics(results["analyses"])
         results["duration"] = time.time() - start_time
-        
+
         # Store results in database
         await self._store_analysis_results(analysis_id, results)
-        
+
         # Store comprehensive analysis data in data_manager
         await self.store_agent_data(
             data_type="code_analysis_result",
@@ -1586,7 +1586,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "file_patterns": file_patterns
             }
         )
-        
+
         # Update agent status with agent_manager
         await self.update_agent_status(
             status="active",
@@ -1599,16 +1599,16 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "active_capabilities": ["glean_analysis", "code_linting", "security_scan", "test_execution"]
             }
         )
-        
+
         return results
-    
+
     async def _perform_glean_analysis(self, directory: str) -> Dict[str, Any]:
         """Perform real semantic code analysis using AST and dependency parsing"""
         try:
             import ast
             import importlib.util
             start_time = time.time()
-            
+
             analysis_results = {
                 "directory": directory,
                 "files_analyzed": 0,
@@ -1621,78 +1621,78 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "dead_code_candidates": [],
                 "duration": 0.0
             }
-            
+
             # Find Python files for semantic analysis
             path = Path(directory)
             python_files = list(path.rglob("*.py"))
-            
+
             # Filter out ignored files
             ignore_patterns = ["__pycache__", ".git", "venv", "env", ".pytest_cache"]
             filtered_files = [
-                f for f in python_files 
+                f for f in python_files
                 if not any(pattern in str(f) for pattern in ignore_patterns)
             ]
-            
+
             analysis_results["files_analyzed"] = len(filtered_files)
-            
+
             # Perform semantic analysis on each file
             all_imports = {}
             all_functions = {}
             all_classes = {}
             call_graph = {}
-            
+
             for file_path in filtered_files:
                 try:
                     file_analysis = await self._analyze_file_semantics(file_path)
-                    
+
                     # Collect imports
                     file_key = str(file_path)
                     all_imports[file_key] = file_analysis["imports"]
                     all_functions[file_key] = file_analysis["functions"]
                     all_classes[file_key] = file_analysis["classes"]
                     call_graph[file_key] = file_analysis["function_calls"]
-                    
+
                 except Exception as e:
                     logger.warning(f"Failed semantic analysis for {file_path}: {e}")
-            
+
             # Build dependency graph
             analysis_results["dependency_graph"] = self._build_dependency_graph(all_imports)
             analysis_results["import_analysis"] = self._analyze_imports(all_imports)
             analysis_results["function_call_graph"] = call_graph
-            
+
             # Find similar code blocks
             analysis_results["similar_code_blocks"] = self._find_similar_code_blocks(all_functions)
-            
+
             # Identify refactoring opportunities
             analysis_results["refactoring_opportunities"] = self._identify_refactoring_opportunities(
                 all_functions, all_classes, call_graph
             )
-            
+
             # Find dead code candidates
             analysis_results["dead_code_candidates"] = self._find_dead_code_candidates(
                 all_functions, call_graph
             )
-            
+
             # Analyze code patterns
             analysis_results["code_patterns"] = self._analyze_code_patterns(all_functions, all_classes)
-            
+
             analysis_results["duration"] = time.time() - start_time
             return analysis_results
-            
+
         except Exception as e:
             logger.error(f"Glean semantic analysis error: {e}")
             return {"error": str(e)}
-    
+
     async def _analyze_file_semantics(self, file_path: Path) -> Dict[str, Any]:
         """Perform semantic analysis on a single Python file"""
         import ast
-        
+
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
-            
+
             tree = ast.parse(content)
-            
+
             file_analysis = {
                 "imports": [],
                 "functions": [],
@@ -1701,12 +1701,12 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "variables": [],
                 "constants": []
             }
-            
+
             class SemanticVisitor(ast.NodeVisitor):
                 def __init__(self):
                     self.current_class = None
                     self.current_function = None
-                
+
                 def visit_Import(self, node):
                     for alias in node.names:
                         file_analysis["imports"].append({
@@ -1716,7 +1716,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             "line": node.lineno
                         })
                     self.generic_visit(node)
-                
+
                 def visit_ImportFrom(self, node):
                     for alias in node.names:
                         file_analysis["imports"].append({
@@ -1727,7 +1727,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             "line": node.lineno
                         })
                     self.generic_visit(node)
-                
+
                 def visit_FunctionDef(self, node):
                     func_info = {
                         "name": node.name,
@@ -1738,11 +1738,11 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         "calls": [],
                         "class": self.current_class
                     }
-                    
+
                     # Analyze function body for calls
                     old_function = self.current_function
                     self.current_function = node.name
-                    
+
                     for child in ast.walk(node):
                         if isinstance(child, ast.Call):
                             call_name = self._get_call_name(child)
@@ -1753,11 +1753,11 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                     "to": call_name,
                                     "line": child.lineno
                                 })
-                    
+
                     file_analysis["functions"].append(func_info)
                     self.current_function = old_function
                     self.generic_visit(node)
-                
+
                 def visit_ClassDef(self, node):
                     class_info = {
                         "name": node.name,
@@ -1766,19 +1766,19 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         "methods": [],
                         "decorators": [self._get_decorator_name(d) for d in node.decorator_list]
                     }
-                    
+
                     old_class = self.current_class
                     self.current_class = node.name
-                    
+
                     # Find methods
                     for item in node.body:
                         if isinstance(item, ast.FunctionDef):
                             class_info["methods"].append(item.name)
-                    
+
                     file_analysis["classes"].append(class_info)
                     self.current_class = old_class
                     self.generic_visit(node)
-                
+
                 def _get_decorator_name(self, decorator):
                     if isinstance(decorator, ast.Name):
                         return decorator.id
@@ -1790,14 +1790,14 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     elif isinstance(decorator, ast.Call):
                         return self._get_decorator_name(decorator.func)
                     return "unknown"
-                
+
                 def _get_call_name(self, call):
                     if isinstance(call.func, ast.Name):
                         return call.func.id
                     elif isinstance(call.func, ast.Attribute):
                         return f"{call.func.attr}"
                     return None
-                
+
                 def _get_base_name(self, base):
                     if isinstance(base, ast.Name):
                         return base.id
@@ -1807,7 +1807,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             return f"{value_name}.{base.attr}"
                         return base.attr
                     return "unknown"
-                
+
                 def _get_node_name(self, node):
                     """Recursively get the name of a node"""
                     if isinstance(node, ast.Name):
@@ -1820,16 +1820,16 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     elif isinstance(node, ast.Call):
                         return self._get_node_name(node.func)
                     return None
-            
+
             visitor = SemanticVisitor()
             visitor.visit(tree)
-            
+
             return file_analysis
-            
+
         except Exception as e:
             logger.error(f"Failed to analyze semantics for {file_path}: {e}")
             return {"imports": [], "functions": [], "classes": [], "function_calls": [], "variables": []}
-    
+
     def _build_dependency_graph(self, all_imports: Dict[str, List]) -> Dict[str, Any]:
         """Build a dependency graph from import analysis"""
         graph = {
@@ -1839,12 +1839,12 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "internal_dependencies": set(),
             "circular_dependencies": []
         }
-        
+
         # Collect all modules and dependencies
         for file_path, imports in all_imports.items():
             file_name = Path(file_path).stem
             graph["nodes"].add(file_name)
-            
+
             for imp in imports:
                 module = imp["module"]
                 if module:
@@ -1856,14 +1856,14 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         # External dependency
                         graph["external_dependencies"].add(module)
                         graph["edges"].append({"from": file_name, "to": module, "type": "external"})
-        
+
         return {
             "total_nodes": len(graph["nodes"]),
             "total_edges": len(graph["edges"]),
             "external_dependencies": sorted(list(graph["external_dependencies"])),
             "internal_dependencies": sorted(list(graph["internal_dependencies"]))
         }
-    
+
     def _analyze_imports(self, all_imports: Dict[str, List]) -> Dict[str, Any]:
         """Analyze import patterns across the codebase"""
         import_analysis = {
@@ -1874,42 +1874,42 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "relative_imports": 0,
             "absolute_imports": 0
         }
-        
+
         module_counts = {}
-        
+
         for file_path, imports in all_imports.items():
             import_analysis["total_imports"] += len(imports)
-            
+
             for imp in imports:
                 module = imp["module"]
                 if module:
                     import_analysis["unique_modules"].add(module)
                     module_counts[module] = module_counts.get(module, 0) + 1
-                    
+
                     if imp["type"] == "from_import" and module.startswith("."):
                         import_analysis["relative_imports"] += 1
                     else:
                         import_analysis["absolute_imports"] += 1
-        
+
         # Find most imported modules
         import_analysis["most_imported"] = dict(
             sorted(module_counts.items(), key=lambda x: x[1], reverse=True)[:10]
         )
         import_analysis["unique_modules"] = len(import_analysis["unique_modules"])
-        
+
         return import_analysis
-    
+
     def _find_similar_code_blocks(self, all_functions: Dict[str, List]) -> List[Dict]:
         """Find similar code blocks across functions"""
         similar_blocks = []
-        
+
         # Simple similarity detection based on function signatures and call patterns
         functions = []
         for file_path, funcs in all_functions.items():
             for func in funcs:
                 func["file"] = file_path
                 functions.append(func)
-        
+
         # Compare functions pairwise
         for i, func1 in enumerate(functions):
             for func2 in functions[i+1:]:
@@ -1921,36 +1921,36 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         "similarity": similarity,
                         "reason": "Similar function signatures and call patterns"
                     })
-        
+
         return similar_blocks[:10]  # Limit to top 10
-    
+
     def _calculate_function_similarity(self, func1: Dict, func2: Dict) -> float:
         """Calculate similarity between two functions"""
         if func1["name"] == func2["name"]:
             return 0.0  # Skip identical names
-        
+
         score = 0.0
-        
+
         # Compare argument count
         if len(func1["args"]) == len(func2["args"]):
             score += 0.3
-        
+
         # Compare function calls
         calls1 = set(func1.get("calls", []))
         calls2 = set(func2.get("calls", []))
-        
+
         if calls1 and calls2:
             intersection = len(calls1.intersection(calls2))
             union = len(calls1.union(calls2))
             if union > 0:
                 score += 0.7 * (intersection / union)
-        
+
         return score
-    
+
     def _identify_refactoring_opportunities(self, all_functions: Dict, all_classes: Dict, call_graph: Dict) -> List[Dict]:
         """Identify refactoring opportunities in the codebase"""
         opportunities = []
-        
+
         # Find long functions that could be split
         for file_path, functions in all_functions.items():
             for func in functions:
@@ -1963,7 +1963,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         "reason": f"Function has {len(func['calls'])} calls - consider extracting methods",
                         "priority": "medium"
                     })
-        
+
         # Find classes with too many methods
         for file_path, classes in all_classes.items():
             for cls in classes:
@@ -1976,27 +1976,27 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         "reason": f"Class has {len(cls['methods'])} methods - consider splitting",
                         "priority": "high"
                     })
-        
+
         return opportunities[:15]  # Limit to top 15
-    
+
     def _find_dead_code_candidates(self, all_functions: Dict, call_graph: Dict) -> List[Dict]:
         """Find potential dead code candidates"""
         candidates = []
-        
+
         # Build set of all called functions
         called_functions = set()
         for file_calls in call_graph.values():
             for call in file_calls:
                 called_functions.add(call["to"])
-        
+
         # Find functions that are never called
         for file_path, functions in all_functions.items():
             for func in functions:
                 # Skip special methods and private methods
-                if (func["name"] not in called_functions and 
-                    not func["name"].startswith("__") and 
+                if (func["name"] not in called_functions and
+                    not func["name"].startswith("__") and
                     not func["name"] in ["main", "setup", "teardown"]):
-                    
+
                     candidates.append({
                         "file": file_path,
                         "function": func["name"],
@@ -2004,9 +2004,9 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         "confidence": "medium",
                         "reason": "Function is defined but never called"
                     })
-        
+
         return candidates[:10]  # Limit to 10 candidates
-    
+
     def _analyze_code_patterns(self, all_functions: Dict, all_classes: Dict) -> Dict[str, Any]:
         """Analyze common code patterns in the codebase"""
         patterns = {
@@ -2014,10 +2014,10 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "anti_patterns": [],
             "statistics": {}
         }
-        
+
         total_functions = sum(len(funcs) for funcs in all_functions.values())
         total_classes = sum(len(classes) for classes in all_classes.values())
-        
+
         # Look for design patterns
         for file_path, classes in all_classes.items():
             for cls in classes:
@@ -2029,7 +2029,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         "class": cls["name"],
                         "confidence": "low"
                     })
-        
+
         # Look for anti-patterns
         for file_path, functions in all_functions.items():
             for func in functions:
@@ -2041,43 +2041,43 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         "function": func["name"],
                         "severity": "high"
                     })
-        
+
         patterns["statistics"] = {
             "total_functions": total_functions,
             "total_classes": total_classes,
             "functions_with_decorators": sum(
-                1 for funcs in all_functions.values() 
+                1 for funcs in all_functions.values()
                 for func in funcs if func.get("decorators")
             )
         }
-        
+
         return patterns
-    
+
     async def _perform_lint_analysis(self, directory: str, file_patterns: List[str], options: Dict[str, Any] = None) -> Dict[str, Any]:
         """Perform multi-tool linting analysis with real tool execution"""
         start_time = time.time()
         issues = []
         files_analyzed = 0
         linter_results = {}
-        
+
         # Find files matching patterns
         path = Path(directory)
         files = []
         for pattern in file_patterns:
             files.extend(path.rglob(pattern))
-        
+
         # Filter out files in ignore patterns
         ignore_patterns = [".git", "__pycache__", "node_modules", ".pytest_cache", "venv", "env"]
         filtered_files = []
         for file_path in files:
             if not any(ignore in str(file_path) for ignore in ignore_patterns):
                 filtered_files.append(file_path)
-        
+
         files_analyzed = len(filtered_files)
-        
+
         # Group files by language for efficient processing (limit files per language to prevent timeout)
         max_files_per_language = 100  # Prevent overwhelming the linters
-        
+
         python_files = [f for f in filtered_files if f.suffix.lower() == ".py"][:max_files_per_language]
         js_files = [f for f in filtered_files if f.suffix.lower() in [".js", ".jsx"]][:max_files_per_language]
         ts_files = [f for f in filtered_files if f.suffix.lower() in [".ts", ".tsx"]][:max_files_per_language]
@@ -2090,11 +2090,11 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         scss_files = [f for f in filtered_files if f.suffix.lower() in [".scss", ".sass"]][:max_files_per_language]
         cds_files = [f for f in filtered_files if f.suffix.lower() == ".cds"][:max_files_per_language]
         solidity_files = [f for f in filtered_files if f.suffix.lower() == ".sol"][:max_files_per_language]
-        
+
         # Initialize options if not provided
         if options is None:
             options = {}
-        
+
         # Define all language groups
         all_language_groups = [
             ("python", "Python", python_files, self._run_python_linters_batch),
@@ -2110,18 +2110,18 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             ("cds", "CDS", cds_files, self._run_cds_linters_batch),
             ("solidity", "Solidity", solidity_files, self._run_solidity_linters_batch)
         ]
-        
+
         # Filter language groups based on options
         selected_languages = options.get("languages", [])
         if selected_languages:
             # Only scan selected languages
-            language_groups = [(key, name, files, func) for key, name, files, func in all_language_groups 
+            language_groups = [(key, name, files, func) for key, name, files, func in all_language_groups
                               if key in selected_languages]
             print(f"🎯 Scanning only selected languages: {', '.join([name for _, name, _, _ in language_groups])}")
         else:
             # Scan all languages with files
             language_groups = [(key, name, files, func) for key, name, files, func in all_language_groups]
-        
+
         # Process each language group sequentially with timeout
         languages_scanned = []
         for lang_key, lang_name, file_list, linter_func in language_groups:
@@ -2130,7 +2130,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 try:
                     # Add timeout for each language (60 seconds)
                     result = await asyncio.wait_for(
-                        linter_func(file_list, directory), 
+                        linter_func(file_list, directory),
                         timeout=60.0
                     )
                     if isinstance(result, dict):
@@ -2146,11 +2146,11 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 except Exception as e:
                     print(f"❌ {lang_name}: Linting failed: {e}")
                     logger.error(f"Linting {lang_name} files failed: {e}")
-        
+
         # Group issues by severity and type
         severity_counts = {}
         type_counts = {}
-        
+
         for issue in issues:
             if hasattr(issue, 'severity'):
                 severity = issue.severity
@@ -2159,10 +2159,10 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 # Handle dict format
                 severity = issue.get('severity', 'unknown')
                 issue_type = issue.get('issue_type', 'unknown')
-            
+
             severity_counts[severity] = severity_counts.get(severity, 0) + 1
             type_counts[issue_type] = type_counts.get(issue_type, 0) + 1
-        
+
         return {
             "files_analyzed": files_analyzed,
             "total_issues": len(issues),
@@ -2174,22 +2174,22 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "languages_scanned": languages_scanned,
             "duration": time.time() - start_time
         }
-    
+
     async def _run_python_linters_batch(self, files: List[Path], directory: str) -> Dict[str, Any]:
         """Run Python linters on a batch of files"""
         issues = []
         linter_results = {}
-        
+
         # Check which Python linters are available
         available_linters = []
         for linter in ["pylint", "flake8", "mypy", "bandit"]:
             if self._check_tool_available(linter):
                 available_linters.append(linter)
-        
+
         if not available_linters:
             logger.warning("No Python linters available")
             return {"issues": [], "linter_results": {}}
-        
+
         # Run each available linter
         for linter in available_linters:
             try:
@@ -2201,20 +2201,20 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     result = await self._run_mypy(files, directory)
                 elif linter == "bandit":
                     result = await self._run_bandit(files, directory)
-                
+
                 issues.extend(result.get("issues", []))
                 linter_results[linter] = result.get("raw_output", "")
-                
+
             except Exception as e:
                 logger.error(f"Error running {linter}: {e}")
                 linter_results[linter] = f"Error: {str(e)}"
-        
+
         return {"issues": issues, "linter_results": linter_results}
-    
+
     async def _run_pylint(self, files: List[Path], directory: str) -> Dict[str, Any]:
         """Run pylint on Python files"""
         issues = []
-        
+
         # Convert absolute paths to relative paths from the directory
         dir_path = Path(directory).resolve()
         relative_files = []
@@ -2224,12 +2224,12 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             except ValueError:
                 # If file is not under directory, use the absolute path
                 relative_files.append(str(f))
-        
+
         # Create pylint command with relative paths and disable import errors
         cmd = ["pylint", "--output-format=json", "--disable=import-error,no-name-in-module"] + relative_files
-        
+
         result = await self._safe_subprocess_run(cmd, cwd=directory, timeout=120)
-        
+
         if result.get("success", False) or result.get("returncode") in [0, 1, 2, 4, 8, 16]:
             # Parse pylint JSON output
             try:
@@ -2253,13 +2253,13 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         issues.append(issue)
             except json.JSONDecodeError:
                 logger.warning("Failed to parse pylint JSON output")
-        
+
         return {"issues": issues, "raw_output": result.get("stdout", "")}
-    
+
     async def _run_flake8(self, files: List[Path], directory: str) -> Dict[str, Any]:
         """Run flake8 on Python files"""
         issues = []
-        
+
         # Convert absolute paths to relative paths from the directory
         dir_path = Path(directory).resolve()
         relative_files = []
@@ -2269,12 +2269,12 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             except ValueError:
                 # If file is not under directory, use the absolute path
                 relative_files.append(str(f))
-        
+
         # Create flake8 command with relative paths
         cmd = ["flake8", "--format=%(path)s:%(row)d:%(col)d:%(code)s:%(text)s"] + relative_files
-        
+
         result = await self._safe_subprocess_run(cmd, cwd=directory, timeout=60)
-        
+
         if result.get("stdout"):
             for line in result["stdout"].strip().split('\n'):
                 if line and ':' in line:
@@ -2294,13 +2294,13 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             "auto_fixable": parts[3] in ["W291", "W292", "W293"]  # Whitespace issues
                         }
                         issues.append(issue)
-        
+
         return {"issues": issues, "raw_output": result.get("stdout", "")}
-    
+
     async def _run_mypy(self, files: List[Path], directory: str) -> Dict[str, Any]:
         """Run mypy on Python files"""
         issues = []
-        
+
         # Convert absolute paths to relative paths from the directory
         dir_path = Path(directory).resolve()
         relative_files = []
@@ -2310,12 +2310,12 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             except ValueError:
                 # If file is not under directory, use the absolute path
                 relative_files.append(str(f))
-        
+
         # Create mypy command with relative paths
         cmd = ["mypy", "--show-error-codes"] + relative_files
-        
+
         result = await self._safe_subprocess_run(cmd, cwd=directory, timeout=90)
-        
+
         if result.get("stdout"):
             for line in result["stdout"].strip().split('\n'):
                 if ':' in line and ' error:' in line:
@@ -2325,14 +2325,14 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         file_path = parts[0]
                         line_num = int(parts[1]) if parts[1].isdigit() else 0
                         message_part = parts[2].strip()
-                        
+
                         if message_part.startswith('error:'):
                             message = message_part[6:].strip()
                             error_code = ""
                             if '[' in message and ']' in message:
                                 error_code = message[message.rfind('[')+1:message.rfind(']')]
                                 message = message[:message.rfind('[')].strip()
-                            
+
                             issue_key = f'{file_path}{line_num}{error_code}'
                             issue = {
                                 "id": f"mypy_{hashlib.md5(issue_key.encode(), usedforsecurity=False).hexdigest()[:8]}",
@@ -2348,13 +2348,13 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 "auto_fixable": False
                             }
                             issues.append(issue)
-        
+
         return {"issues": issues, "raw_output": result.get("stdout", "")}
-    
+
     async def _run_bandit(self, files: List[Path], directory: str) -> Dict[str, Any]:
         """Run bandit security linter on Python files"""
         issues = []
-        
+
         # Convert absolute paths to relative paths from the directory
         dir_path = Path(directory).resolve()
         relative_files = []
@@ -2364,12 +2364,12 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             except ValueError:
                 # If file is not under directory, use the absolute path
                 relative_files.append(str(f))
-        
+
         # Create bandit command with relative paths
         cmd = ["bandit", "-f", "json"] + relative_files
-        
+
         result = await self._safe_subprocess_run(cmd, cwd=directory, timeout=60)
-        
+
         if result.get("stdout"):
             try:
                 bandit_data = json.loads(result["stdout"])
@@ -2391,26 +2391,26 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     issues.append(issue)
             except json.JSONDecodeError:
                 logger.warning("Failed to parse bandit JSON output")
-        
+
         return {"issues": issues, "raw_output": result.get("stdout", "")}
-    
+
     async def _run_javascript_linters_batch(self, files: List[Path], directory: str) -> Dict[str, Any]:
         """Run enhanced JavaScript linters and analysis on a batch of files"""
         issues = []
         linter_results = {}
-        
+
         # Ensure we have relative paths for tools
         relative_files = [str(f.relative_to(directory)) for f in files]
-        
+
         # 1. ESLint with comprehensive rules
         if shutil.which("eslint") or shutil.which("npx"):
             try:
                 # Create enhanced ESLint config if none exists
                 await self._ensure_javascript_eslint_config(directory)
-                
+
                 cmd = ["eslint", "--format=json", "--ext", ".js,.jsx,.mjs,.cjs"] + relative_files
                 result = await self._safe_subprocess_run(cmd, cwd=directory, timeout=90)
-                
+
                 if result.get("stdout"):
                     try:
                         eslint_data = json.loads(result["stdout"])
@@ -2426,21 +2426,21 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 ))
                     except json.JSONDecodeError:
                         pass
-                
+
                 linter_results["eslint"] = f"Found {len([i for i in issues if i.get('tool') == 'eslint'])} style issues"
             except Exception as e:
                 linter_results["eslint"] = f"Error: {str(e)}"
         else:
             linter_results["eslint"] = "ESLint not available"
-        
+
         # 2. JSHint for additional checks
         if shutil.which("jshint"):
             try:
                 await self._ensure_jshint_config(directory)
-                
+
                 cmd = ["jshint", "--reporter=json"] + relative_files
                 result = await self._safe_subprocess_run(cmd, cwd=directory, timeout=60)
-                
+
                 if result.get("stdout"):
                     try:
                         jshint_data = json.loads(result["stdout"])
@@ -2455,44 +2455,44 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 ))
                     except json.JSONDecodeError:
                         pass
-                
+
                 linter_results["jshint"] = f"Found {len([i for i in issues if i.get('tool') == 'jshint'])} issues"
             except Exception as e:
                 linter_results["jshint"] = f"Error: {str(e)}"
         else:
             linter_results["jshint"] = "JSHint not available"
-        
+
         # 3. JavaScript semantic analysis
         js_analysis = await self._analyze_javascript_semantics(files)
         issues.extend(js_analysis.get("issues", []))
         linter_results["js-semantics"] = f"Found {len(js_analysis.get('issues', []))} semantic issues"
-        
+
         # 4. JavaScript security analysis
         js_security = await self._analyze_javascript_security(files)
         issues.extend(js_security.get("issues", []))
         linter_results["js-security"] = f"Found {len(js_security.get('issues', []))} security issues"
-        
+
         # 5. JavaScript performance analysis
         js_performance = await self._analyze_javascript_performance(files)
         issues.extend(js_performance.get("issues", []))
         linter_results["js-performance"] = f"Found {len(js_performance.get('issues', []))} performance issues"
-        
+
         return {"issues": issues, "linter_results": linter_results}
-    
+
     async def _analyze_javascript_semantics(self, files: List[Path]) -> Dict[str, Any]:
         """Perform JavaScript-specific semantic analysis"""
         issues = []
-        
+
         for file_path in files:
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                
+
                 lines = content.split('\n')
-                
+
                 for line_num, line in enumerate(lines, 1):
                     line = line.strip()
-                    
+
                     # 1. Var usage (should use let/const)
                     if line.startswith('var '):
                         issues.append(self._create_issue(
@@ -2502,7 +2502,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="js-semantics"
                         ))
-                    
+
                     # 2. == instead of === (loose equality)
                     if '==' in line and '===' not in line and '!=' in line and '!==' not in line:
                         issues.append(self._create_issue(
@@ -2512,7 +2512,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="js-semantics"
                         ))
-                    
+
                     # 3. Missing semicolons (for statement-ending lines)
                     if line and not line.endswith((';', '{', '}', ',', ':')) and not line.startswith(('if', 'else', 'for', 'while', 'function', '//', '/*', '*')):
                         if any(keyword in line for keyword in ['const', 'let', 'var', 'return', 'break', 'continue']):
@@ -2523,7 +2523,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="info",
                                 tool="js-semantics"
                             ))
-                    
+
                     # 4. Callback hell detection
                     if line.count('function') > 1 or (')' in line and '{' in line and line.count(')') > 2):
                         issues.append(self._create_issue(
@@ -2533,7 +2533,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="info",
                             tool="js-semantics"
                         ))
-                    
+
                     # 5. Unused variables (basic detection)
                     if 'const ' in line or 'let ' in line or 'var ' in line:
                         var_match = re.search(r'(?:const|let|var)\s+(\w+)', line)
@@ -2549,7 +2549,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                     severity="warning",
                                     tool="js-semantics"
                                 ))
-                    
+
                     # 6. Arrow functions vs regular functions
                     if 'function(' in line and '=>' not in line:
                         issues.append(self._create_issue(
@@ -2559,7 +2559,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="info",
                             tool="js-semantics"
                         ))
-                    
+
                     # 7. Template literals opportunity
                     if '+' in line and ('"' in line or "'" in line) and 'string' not in line.lower():
                         if line.count('+') >= 2 and (line.count('"') >= 2 or line.count("'") >= 2):
@@ -2570,7 +2570,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="info",
                                 tool="js-semantics"
                             ))
-                    
+
                     # 8. Promise without catch
                     if '.then(' in line and '.catch(' not in line and 'await' not in line:
                         issues.append(self._create_issue(
@@ -2580,26 +2580,26 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="js-semantics"
                         ))
-                
+
             except Exception as e:
                 print(f"Error analyzing JavaScript semantics for {file_path}: {e}")
-        
+
         return {"issues": issues}
-    
+
     async def _analyze_javascript_security(self, files: List[Path]) -> Dict[str, Any]:
         """Perform JavaScript security analysis"""
         issues = []
-        
+
         for file_path in files:
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                
+
                 lines = content.split('\n')
-                
+
                 for line_num, line in enumerate(lines, 1):
                     line_lower = line.lower().strip()
-                    
+
                     # 1. eval() usage
                     if 'eval(' in line_lower:
                         issues.append(self._create_issue(
@@ -2609,7 +2609,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="error",
                             tool="js-security"
                         ))
-                    
+
                     # 2. innerHTML usage (XSS risk)
                     if 'innerhtml' in line_lower:
                         issues.append(self._create_issue(
@@ -2619,7 +2619,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="js-security"
                         ))
-                    
+
                     # 3. document.write usage
                     if 'document.write' in line_lower:
                         issues.append(self._create_issue(
@@ -2629,7 +2629,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="js-security"
                         ))
-                    
+
                     # 4. Hardcoded secrets/tokens
                     if any(secret in line_lower for secret in ['password', 'secret', 'apikey', 'api_key', 'token']):
                         if '=' in line and ('"' in line or "'" in line):
@@ -2640,7 +2640,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="error",
                                 tool="js-security"
                             ))
-                    
+
                     # 5. HTTP instead of HTTPS
                     if 'http://' in line_lower and 'localhost' not in line_lower:
                         issues.append(self._create_issue(
@@ -2650,7 +2650,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="js-security"
                         ))
-                    
+
                     # 6. SQL injection risk
                     if 'query(' in line_lower and ('+' in line or '${' in line):
                         issues.append(self._create_issue(
@@ -2660,7 +2660,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="error",
                             tool="js-security"
                         ))
-                    
+
                     # 7. Unsafe regex
                     if 'regexp(' in line_lower or 'new regexp' in line_lower:
                         if '.*' in line or '.+' in line:
@@ -2671,7 +2671,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="warning",
                                 tool="js-security"
                             ))
-                    
+
                     # 8. Command injection risk
                     if any(cmd in line_lower for cmd in ['exec(', 'execsync(', 'spawn(', 'spawnsync(']):
                         issues.append(self._create_issue(
@@ -2681,7 +2681,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="error",
                             tool="js-security"
                         ))
-                    
+
                     # 9. CORS misconfiguration
                     if 'access-control-allow-origin' in line_lower and '*' in line:
                         issues.append(self._create_issue(
@@ -2691,7 +2691,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="js-security"
                         ))
-                    
+
                     # 10. Insecure random
                     if 'math.random' in line_lower:
                         issues.append(self._create_issue(
@@ -2701,26 +2701,26 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="info",
                             tool="js-security"
                         ))
-                
+
             except Exception as e:
                 print(f"Error analyzing JavaScript security for {file_path}: {e}")
-        
+
         return {"issues": issues}
-    
+
     async def _analyze_javascript_performance(self, files: List[Path]) -> Dict[str, Any]:
         """Analyze JavaScript code for performance issues"""
         issues = []
-        
+
         for file_path in files:
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                
+
                 lines = content.split('\n')
-                
+
                 for line_num, line in enumerate(lines, 1):
                     line = line.strip()
-                    
+
                     # 1. Synchronous file operations
                     if any(sync_op in line for sync_op in ['readFileSync', 'writeFileSync', 'appendFileSync']):
                         issues.append(self._create_issue(
@@ -2730,7 +2730,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="js-performance"
                         ))
-                    
+
                     # 2. Array operations in loops
                     if 'for' in line and any(method in line for method in ['.push(', '.unshift(', '.splice(']):
                         issues.append(self._create_issue(
@@ -2740,7 +2740,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="info",
                             tool="js-performance"
                         ))
-                    
+
                     # 3. jQuery in modern code
                     if '$(' in line or 'jQuery(' in line:
                         issues.append(self._create_issue(
@@ -2750,7 +2750,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="info",
                             tool="js-performance"
                         ))
-                    
+
                     # 4. Multiple DOM queries
                     if line.count('getElementById') > 1 or line.count('querySelector') > 1:
                         issues.append(self._create_issue(
@@ -2760,7 +2760,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="info",
                             tool="js-performance"
                         ))
-                    
+
                     # 5. Large array operations
                     if '.map(' in line and '.filter(' in line:
                         issues.append(self._create_issue(
@@ -2770,7 +2770,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="info",
                             tool="js-performance"
                         ))
-                    
+
                     # 6. console.log in production
                     if 'console.' in line:
                         issues.append(self._create_issue(
@@ -2780,7 +2780,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="info",
                             tool="js-performance"
                         ))
-                    
+
                     # 7. Inefficient string concatenation in loops
                     if 'for' in line or 'while' in line:
                         next_lines = lines[line_num:min(line_num + 5, len(lines))]
@@ -2793,12 +2793,12 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="warning",
                                 tool="js-performance"
                             ))
-                
+
             except Exception as e:
                 print(f"Error analyzing JavaScript performance for {file_path}: {e}")
-        
+
         return {"issues": issues}
-    
+
     async def _ensure_javascript_eslint_config(self, directory: str) -> None:
         """Ensure JavaScript ESLint configuration exists"""
         eslintrc_path = Path(directory) / ".eslintrc.json"
@@ -2835,10 +2835,10 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     "prefer-arrow-callback": "warn"
                 }
             }
-            
+
             with open(eslintrc_path, 'w') as f:
                 json.dump(config, f, indent=2)
-    
+
     async def _ensure_jshint_config(self, directory: str) -> None:
         """Ensure JSHint configuration exists"""
         jshintrc_path = Path(directory) / ".jshintrc"
@@ -2868,14 +2868,14 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "maxdepth": 4,
                 "maxcomplexity": 10
             }
-            
+
             with open(jshintrc_path, 'w') as f:
                 json.dump(config, f, indent=2)
-    
+
     async def _run_eslint(self, files: List[Path], directory: str) -> Dict[str, Any]:
         """Run ESLint on JavaScript/TypeScript files"""
         issues = []
-        
+
         # Convert absolute paths to relative paths from the directory
         dir_path = Path(directory).resolve()
         relative_files = []
@@ -2885,15 +2885,15 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             except ValueError:
                 # If file is not under directory, use the absolute path
                 relative_files.append(str(f))
-        
+
         # Create ESLint config on-the-fly if none exists
         await self._ensure_eslint_config(directory)
-        
+
         # Create eslint command with relative paths and enhanced rules
         cmd = ["eslint", "--format=json", "--ext", ".js,.jsx,.ts,.tsx"] + relative_files
-        
+
         result = await self._safe_subprocess_run(cmd, cwd=directory, timeout=90)
-        
+
         if result.get("stdout"):
             try:
                 eslint_data = json.loads(result["stdout"])
@@ -2917,13 +2917,13 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         issues.append(issue)
             except json.JSONDecodeError:
                 logger.warning("Failed to parse ESLint JSON output")
-        
+
         return {"issues": issues, "raw_output": result.get("stdout", "")}
-    
+
     async def _run_jshint(self, files: List[Path], directory: str) -> Dict[str, Any]:
         """Run JSHint on JavaScript files"""
         issues = []
-        
+
         # Convert absolute paths to relative paths from the directory
         dir_path = Path(directory).resolve()
         relative_files = []
@@ -2933,12 +2933,12 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             except ValueError:
                 # If file is not under directory, use the absolute path
                 relative_files.append(str(f))
-        
+
         # Create JSHint command with reporter for easier parsing
         cmd = ["jshint", "--reporter=unix"] + relative_files
-        
+
         result = await self._safe_subprocess_run(cmd, cwd=directory, timeout=60)
-        
+
         if result.get("stdout"):
             # Parse JSHint output (format: filename:line:col: message)
             for line in result["stdout"].split('\n'):
@@ -2951,7 +2951,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             line_num = int(parts[1]) if parts[1].isdigit() else 0
                             col_num = int(parts[2]) if parts[2].isdigit() else 0
                             message = parts[3].strip()
-                            
+
                             # Create unique issue ID
                             issue_key = f'{file_path}{line_num}{col_num}{message}'
                             issue = {
@@ -2971,27 +2971,27 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     except (ValueError, IndexError):
                         # Skip malformed lines
                         continue
-        
+
         return {"issues": issues, "raw_output": result.get("stdout", "")}
-    
+
     async def _run_typescript_linters_batch(self, files: List[Path], directory: str) -> Dict[str, Any]:
         """Run enhanced TypeScript linters on a batch of files with comprehensive analysis"""
         issues = []
         linter_results = {}
-        
+
         # Ensure we have relative paths for tools
         relative_files = [str(f.relative_to(directory)) for f in files]
-        
+
         # 1. TypeScript Compiler Check (tsc) with strict settings
         if shutil.which("tsc") or shutil.which("npx"):
             try:
                 # Create temporary tsconfig if none exists
                 await self._ensure_typescript_config(directory)
-                
+
                 # Run TypeScript compiler for type checking
                 cmd = ["tsc", "--noEmit", "--strict", "--exactOptionalPropertyTypes", "--noImplicitReturns", "--noFallthroughCasesInSwitch"] + relative_files
                 result = await self._safe_subprocess_run(cmd, cwd=directory, timeout=120)
-                
+
                 if result.get("stderr"):
                     # Parse TypeScript compiler errors
                     for line in result["stderr"].split("\n"):
@@ -3000,13 +3000,13 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             if len(parts) >= 2:
                                 file_line_info = parts[0]
                                 error_info = parts[1]
-                                
+
                                 # Extract file and line
                                 if "(" in file_line_info and "," in file_line_info:
                                     file_path = file_line_info.split("(")[0]
                                     line_col = file_line_info.split("(")[1].split(")")[0]
                                     line_num = int(line_col.split(",")[0]) if "," in line_col else 1
-                                    
+
                                     issues.append(self._create_issue(
                                         file_path=file_path,
                                         line=line_num,
@@ -3014,21 +3014,21 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                         severity="error",
                                         tool="tsc"
                                     ))
-                
+
                 linter_results["tsc"] = f"Found {len([i for i in issues if i.get('tool') == 'tsc'])} type errors" if issues else "Type checking passed"
             except Exception as e:
                 linter_results["tsc"] = f"Error: {str(e)}"
         else:
             linter_results["tsc"] = "TypeScript compiler not available"
-        
+
         # 2. ESLint with TypeScript rules
         if shutil.which("eslint") or shutil.which("npx"):
             try:
                 await self._ensure_typescript_eslint_config(directory)
-                
+
                 cmd = ["eslint", "--format=json", "--ext", ".ts,.tsx"] + relative_files
                 result = await self._safe_subprocess_run(cmd, cwd=directory, timeout=90)
-                
+
                 if result.get("stdout"):
                     try:
                         eslint_data = json.loads(result["stdout"])
@@ -3044,39 +3044,39 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 ))
                     except json.JSONDecodeError:
                         pass
-                
+
                 linter_results["eslint"] = f"Found {len([i for i in issues if i.get('tool') == 'eslint'])} style issues"
             except Exception as e:
                 linter_results["eslint"] = f"Error: {str(e)}"
         else:
             linter_results["eslint"] = "ESLint not available"
-        
+
         # 3. TypeScript-specific semantic analysis
         ts_analysis = await self._analyze_typescript_semantics(files, directory)
         issues.extend(ts_analysis.get("issues", []))
         linter_results["ts-semantics"] = f"Found {len(ts_analysis.get('issues', []))} semantic issues"
-        
+
         # 4. TypeScript security analysis
         ts_security = await self._analyze_typescript_security(files, directory)
         issues.extend(ts_security.get("issues", []))
         linter_results["ts-security"] = f"Found {len(ts_security.get('issues', []))} security issues"
-        
+
         return {"issues": issues, "linter_results": linter_results}
-    
+
     async def _analyze_typescript_semantics(self, files: List[Path], directory: str) -> Dict[str, Any]:
         """Perform TypeScript-specific semantic analysis"""
         issues = []
-        
+
         for file_path in files:
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                
+
                 lines = content.split('\n')
-                
+
                 for line_num, line in enumerate(lines, 1):
                     line = line.strip()
-                    
+
                     # 1. Usage of 'any' type (reduces type safety)
                     if ': any' in line or 'any[]' in line or 'any>' in line:
                         issues.append(self._create_issue(
@@ -3086,7 +3086,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="ts-semantics"
                         ))
-                    
+
                     # 2. Type assertions that could be dangerous
                     if 'as ' in line and ('as any' in line or 'as unknown' in line):
                         issues.append(self._create_issue(
@@ -3096,7 +3096,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="ts-semantics"
                         ))
-                    
+
                     # 3. Non-null assertion operator misuse
                     if '!' in line and ('!' not in line.split('//')[0] or line.count('!') > 1):
                         if '!.' in line or '!;' in line or '!,' in line:
@@ -3107,7 +3107,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="info",
                                 tool="ts-semantics"
                             ))
-                    
+
                     # 4. Unused imports (basic detection)
                     if line.startswith('import ') and ' from ' in line:
                         import_match = re.search(r'import\s+.*?\s+from\s+["\']([^"\']+)["\']', line)
@@ -3127,7 +3127,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                                 severity="info",
                                                 tool="ts-semantics"
                                             ))
-                    
+
                     # 5. Promise handling issues
                     if 'Promise' in line and 'await' not in line and 'return' not in line and '.then' not in line and '.catch' not in line:
                         if 'new Promise' in line or 'Promise.resolve' in line or 'Promise.reject' in line:
@@ -3138,7 +3138,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="warning",
                                 tool="ts-semantics"
                             ))
-                    
+
                     # 6. Missing return type annotations for functions
                     if 'function ' in line or '=>' in line:
                         if ': void' not in line and ': ' not in line.split('=>')[0] and 'return' in content:
@@ -3149,7 +3149,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="info",
                                 tool="ts-semantics"
                             ))
-                    
+
                     # 7. Interface vs Type usage
                     if line.startswith('type ') and '{' in line:
                         issues.append(self._create_issue(
@@ -3159,7 +3159,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="info",
                             tool="ts-semantics"
                         ))
-                    
+
                     # 8. Enum usage best practices
                     if line.startswith('enum '):
                         if 'const enum' not in line:
@@ -3170,7 +3170,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="info",
                                 tool="ts-semantics"
                             ))
-                    
+
                     # 9. Optional chaining opportunities
                     if '&&' in line and '.' in line and '!=' in line:
                         if 'null' in line or 'undefined' in line:
@@ -3181,7 +3181,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="info",
                                 tool="ts-semantics"
                             ))
-                    
+
                     # 10. Strict equality checks
                     if '==' in line and '===' not in line and '!=' in line and '!==' not in line:
                         issues.append(self._create_issue(
@@ -3191,26 +3191,26 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="ts-semantics"
                         ))
-                
+
             except Exception as e:
                 print(f"Error analyzing TypeScript semantics for {file_path}: {e}")
-        
+
         return {"issues": issues}
-    
+
     async def _analyze_typescript_security(self, files: List[Path], directory: str) -> Dict[str, Any]:
         """Perform TypeScript security analysis"""
         issues = []
-        
+
         for file_path in files:
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                
+
                 lines = content.split('\n')
-                
+
                 for line_num, line in enumerate(lines, 1):
                     line_lower = line.lower().strip()
-                    
+
                     # 1. Potential XSS vulnerabilities
                     if 'dangerouslysetinnerhtml' in line_lower:
                         issues.append(self._create_issue(
@@ -3220,7 +3220,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="error",
                             tool="ts-security"
                         ))
-                    
+
                     # 2. Eval and Function constructor usage
                     if 'eval(' in line_lower or 'new function(' in line_lower:
                         issues.append(self._create_issue(
@@ -3230,7 +3230,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="error",
                             tool="ts-security"
                         ))
-                    
+
                     # 3. Local storage of sensitive data
                     storage_check = ('localstorage' in line_lower or 'sessionstorage' in line_lower)
                     sensitive_keywords = ['password', 'token', 'secret', 'key', 'credential']
@@ -3242,7 +3242,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="error",
                             tool="ts-security"
                         ))
-                    
+
                     # 4. HTTP instead of HTTPS
                     if 'http://' in line_lower and 'localhost' not in line_lower:
                         issues.append(self._create_issue(
@@ -3252,7 +3252,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="ts-security"
                         ))
-                    
+
                     # 5. Insecure randomness
                     if 'math.random' in line_lower:
                         issues.append(self._create_issue(
@@ -3262,7 +3262,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="ts-security"
                         ))
-                    
+
                     # 6. Direct DOM manipulation
                     if 'document.write' in line_lower or 'innerhtml' in line_lower:
                         issues.append(self._create_issue(
@@ -3272,7 +3272,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="ts-security"
                         ))
-                    
+
                     # 7. Console.log in production
                     if 'console.' in line_lower and 'log' in line_lower:
                         issues.append(self._create_issue(
@@ -3282,7 +3282,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="info",
                             tool="ts-security"
                         ))
-                    
+
                     # 8. Hardcoded credentials or secrets
                     if any(keyword in line_lower for keyword in ['password', 'secret', 'apikey', 'token']) and '=' in line:
                         if '"' in line or "'" in line:
@@ -3293,7 +3293,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="error",
                                 tool="ts-security"
                             ))
-                    
+
                     # 9. Unsafe window object usage
                     if 'window[' in line and ('"' in line or "'" in line):
                         issues.append(self._create_issue(
@@ -3303,7 +3303,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="ts-security"
                         ))
-                    
+
                     # 10. Prototype pollution possibilities
                     if '__proto__' in line_lower or 'prototype' in line_lower and '[' in line:
                         issues.append(self._create_issue(
@@ -3313,12 +3313,12 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="ts-security"
                         ))
-                
+
             except Exception as e:
                 print(f"Error analyzing TypeScript security for {file_path}: {e}")
-        
+
         return {"issues": issues}
-    
+
     async def _ensure_typescript_config(self, directory: str) -> None:
         """Ensure TypeScript configuration exists"""
         tsconfig_path = Path(directory) / "tsconfig.json"
@@ -3345,10 +3345,10 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "include": ["**/*.ts", "**/*.tsx"],
                 "exclude": ["node_modules", "dist", "build"]
             }
-            
+
             with open(tsconfig_path, 'w') as f:
                 json.dump(config, f, indent=2)
-    
+
     async def _ensure_typescript_eslint_config(self, directory: str) -> None:
         """Ensure TypeScript ESLint configuration exists"""
         eslintrc_path = Path(directory) / ".eslintrc.json"
@@ -3380,21 +3380,21 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     "eqeqeq": "error"
                 }
             }
-            
+
             with open(eslintrc_path, 'w') as f:
                 json.dump(config, f, indent=2)
-    
+
     async def _run_html_linters_batch(self, files: List[Path], directory: str) -> Dict[str, Any]:
         """Run HTML linters on a batch of files"""
         issues = []
         linter_results = {}
-        
+
         # HTMLHint
         if shutil.which("htmlhint"):
             try:
                 file_list = " ".join([f'"{str(f)}"' for f in files])
                 result = await self._run_command(f"htmlhint {file_list}", cwd=directory)
-                
+
                 if result["stderr"] and "Error" in result["stderr"]:
                     for line in result["stderr"].split("\n"):
                         if line.strip():
@@ -3405,25 +3405,25 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="error",
                                 tool="htmlhint"
                             ))
-                
+
                 linter_results["htmlhint"] = result["stdout"] or "No issues found"
             except Exception as e:
                 logger.error(f"Error running htmlhint: {e}")
                 linter_results["htmlhint"] = f"Error: {str(e)}"
-        
+
         return {"issues": issues, "linter_results": linter_results}
-    
+
     async def _run_xml_linters_batch(self, files: List[Path], directory: str) -> Dict[str, Any]:
         """Run XML linters on a batch of files"""
         issues = []
         linter_results = {}
-        
+
         # xmllint
         if shutil.which("xmllint"):
             for file_path in files:
                 try:
                     result = await self._run_command(f'xmllint --noout "{str(file_path)}"', cwd=directory)
-                    
+
                     if result["stderr"]:
                         for line in result["stderr"].split("\n"):
                             if ":" in line and "error" in line.lower():
@@ -3434,25 +3434,25 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                     severity="error",
                                     tool="xmllint"
                                 ))
-                    
+
                     linter_results[f"xmllint_{file_path.name}"] = "Valid XML" if not result["stderr"] else result["stderr"]
                 except Exception as e:
                     logger.error(f"Error running xmllint on {file_path}: {e}")
                     linter_results[f"xmllint_{file_path.name}"] = f"Error: {str(e)}"
-        
+
         return {"issues": issues, "linter_results": linter_results}
-    
+
     async def _run_yaml_linters_batch(self, files: List[Path], directory: str) -> Dict[str, Any]:
         """Run YAML linters on a batch of files"""
         issues = []
         linter_results = {}
-        
+
         # yamllint
         if shutil.which("yamllint"):
             try:
                 file_list = " ".join([f'"{str(f)}"' for f in files])
                 result = await self._run_command(f"yamllint -f parsable {file_list}", cwd=directory)
-                
+
                 if result["stdout"]:
                     for line in result["stdout"].split("\n"):
                         if line.strip():
@@ -3463,7 +3463,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 line_num = int(parts[1]) if parts[1].isdigit() else 1
                                 message = parts[4].strip()
                                 severity = "warning" if "warning" in message else "error"
-                                
+
                                 issues.append(self._create_issue(
                                     file_path=file_path,
                                     line=line_num,
@@ -3471,22 +3471,22 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                     severity=severity,
                                     tool="yamllint"
                                 ))
-                
+
                 linter_results["yamllint"] = result["stdout"] or "No issues found"
             except Exception as e:
                 logger.error(f"Error running yamllint: {e}")
                 linter_results["yamllint"] = f"Error: {str(e)}"
-        
+
         return {"issues": issues, "linter_results": linter_results}
-    
+
     async def _run_json_linters_batch(self, files: List[Path], directory: str) -> Dict[str, Any]:
         """Run JSON linters on a batch of files"""
         issues = []
         linter_results = {}
-        
+
         # Use Python's json module for validation
         import json
-        
+
         for file_path in files:
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
@@ -3504,20 +3504,20 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             except Exception as e:
                 logger.error(f"Error validating JSON in {file_path}: {e}")
                 linter_results[f"json_{file_path.name}"] = f"Error: {str(e)}"
-        
+
         return {"issues": issues, "linter_results": linter_results}
-    
+
     async def _run_shell_linters_batch(self, files: List[Path], directory: str) -> Dict[str, Any]:
         """Run Shell script linters on a batch of files"""
         issues = []
         linter_results = {}
-        
+
         # ShellCheck
         if shutil.which("shellcheck"):
             try:
                 file_list = " ".join([f'"{str(f)}"' for f in files])
                 result = await self._run_command(f"shellcheck -f gcc {file_list}", cwd=directory)
-                
+
                 if result["stdout"]:
                     for line in result["stdout"].split("\n"):
                         if line.strip():
@@ -3528,7 +3528,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 line_num = int(parts[1]) if parts[1].isdigit() else 1
                                 severity = parts[3].strip().lower()
                                 message = parts[4].strip()
-                                
+
                                 issues.append(self._create_issue(
                                     file_path=file_path,
                                     line=line_num,
@@ -3536,30 +3536,30 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                     severity=severity if severity in ["error", "warning"] else "warning",
                                     tool="shellcheck"
                                 ))
-                
+
                 linter_results["shellcheck"] = result["stdout"] or "No issues found"
             except Exception as e:
                 logger.error(f"Error running shellcheck: {e}")
                 linter_results["shellcheck"] = f"Error: {str(e)}"
-        
+
         return {"issues": issues, "linter_results": linter_results}
-    
+
     async def _run_css_linters_batch(self, files: List[Path], directory: str) -> Dict[str, Any]:
         """Run CSS linters on a batch of files"""
         issues = []
         linter_results = {}
-        
+
         # Stylelint
         if shutil.which("stylelint"):
             try:
                 file_list = " ".join([f'"{str(f)}"' for f in files])
                 result = await self._run_command(f"stylelint {file_list} --formatter json", cwd=directory)
-                
+
                 if result["stdout"]:
                     try:
                         import json
                         lint_results = json.loads(result["stdout"])
-                        
+
                         for file_result in lint_results:
                             for warning in file_result.get("warnings", []):
                                 issues.append(self._create_issue(
@@ -3572,34 +3572,34 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     except json.JSONDecodeError:
                         # Fallback to plain text parsing
                         linter_results["stylelint"] = result["stdout"]
-                
+
                 linter_results["stylelint"] = f"Found {len(issues)} issues" if issues else "No issues found"
             except Exception as e:
                 logger.error(f"Error running stylelint: {e}")
                 linter_results["stylelint"] = f"Error: {str(e)}"
-        
+
         return {"issues": issues, "linter_results": linter_results}
-    
+
     async def _run_scss_linters_batch(self, files: List[Path], directory: str) -> Dict[str, Any]:
         """Run SCSS/SASS linters on a batch of files with SCSS-specific analysis"""
         issues = []
         linter_results = {}
-        
+
         # Stylelint with SCSS configuration
         if shutil.which("stylelint"):
             try:
                 file_list = " ".join([f'"{str(f)}"' for f in files])
                 # Use SCSS-specific stylelint config
                 result = await self._run_command(
-                    f"stylelint {file_list} --syntax scss --formatter json", 
+                    f"stylelint {file_list} --syntax scss --formatter json",
                     cwd=directory
                 )
-                
+
                 if result["stdout"]:
                     try:
                         import json
                         lint_results = json.loads(result["stdout"])
-                        
+
                         for file_result in lint_results:
                             for warning in file_result.get("warnings", []):
                                 issues.append(self._create_issue(
@@ -3612,23 +3612,23 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     except json.JSONDecodeError:
                         # Fallback to plain text parsing
                         linter_results["stylelint-scss"] = result["stdout"]
-                
+
                 linter_results["stylelint-scss"] = f"Found {len([i for i in issues if i.get('tool') == 'stylelint-scss'])} issues" if issues else "No issues found"
             except Exception as e:
                 logger.error(f"Error running stylelint on SCSS: {e}")
                 linter_results["stylelint-scss"] = f"Error: {str(e)}"
-        
+
         # Sass-lint (if available)
         if shutil.which("sass-lint"):
             try:
                 file_list = " ".join([f'"{str(f)}"' for f in files])
                 result = await self._run_command(f"sass-lint {file_list} --format json", cwd=directory)
-                
+
                 if result["stdout"]:
                     try:
                         import json
                         lint_results = json.loads(result["stdout"])
-                        
+
                         for file_result in lint_results:
                             file_path = file_result.get("filePath", "unknown")
                             for message in file_result.get("messages", []):
@@ -3641,36 +3641,36 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 ))
                     except json.JSONDecodeError:
                         linter_results["sass-lint"] = result["stdout"]
-                
+
                 linter_results["sass-lint"] = f"Found {len([i for i in issues if i.get('tool') == 'sass-lint'])} issues" if issues else "No issues found"
             except Exception as e:
                 logger.error(f"Error running sass-lint: {e}")
                 linter_results["sass-lint"] = f"Error: {str(e)}"
-        
+
         # SCSS-specific semantic analysis
         scss_analysis = await self._analyze_scss_semantics(files)
         issues.extend(scss_analysis.get("issues", []))
         linter_results["scss-semantics"] = f"Found {len(scss_analysis.get('issues', []))} semantic issues"
-        
+
         return {"issues": issues, "linter_results": linter_results}
-    
+
     async def _analyze_scss_semantics(self, files: List[Path]) -> Dict[str, Any]:
         """Perform SCSS-specific semantic analysis"""
         issues = []
-        
+
         for file_path in files:
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                
+
                 # Analyze SCSS-specific patterns
                 lines = content.split('\n')
-                
+
                 for line_num, line in enumerate(lines, 1):
                     line = line.strip()
-                    
+
                     # Check for common SCSS issues
-                    
+
                     # 1. Undefined variables
                     if '$' in line and ':' not in line and not line.startswith('//'):
                         # Variable usage without definition in same file
@@ -3685,7 +3685,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                     severity="warning",
                                     tool="scss-semantics"
                                 ))
-                    
+
                     # 2. Deep nesting (more than 4 levels)
                     indent_level = (len(line) - len(line.lstrip())) // 2
                     if indent_level > 4 and line and not line.startswith('//'):
@@ -3696,7 +3696,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="scss-semantics"
                         ))
-                    
+
                     # 3. Missing semicolons
                     if ':' in line and not line.endswith((';', '{', '}')) and not line.startswith('//') and line.strip():
                         issues.append(self._create_issue(
@@ -3706,7 +3706,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="error",
                             tool="scss-semantics"
                         ))
-                    
+
                     # 4. Unused mixins (basic check)
                     if line.startswith('@mixin'):
                         mixin_match = re.search(r'@mixin\s+([a-zA-Z_-][a-zA-Z0-9_-]*)', line)
@@ -3720,7 +3720,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                     severity="info",
                                     tool="scss-semantics"
                                 ))
-                    
+
                     # 5. Invalid nesting of media queries
                     if '@media' in line and indent_level > 0:
                         issues.append(self._create_issue(
@@ -3730,7 +3730,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="scss-semantics"
                         ))
-                    
+
                     # 6. Duplicate selectors (basic check)
                     if line.endswith('{') and not line.startswith('@'):
                         selector = line.replace('{', '').strip()
@@ -3742,22 +3742,22 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="warning",
                                 tool="scss-semantics"
                             ))
-                
+
             except Exception as e:
                 logger.error(f"Error analyzing SCSS semantics for {file_path}: {e}")
-        
+
         return {"issues": issues}
-    
+
     async def _run_cds_linters_batch(self, files: List[Path], directory: str) -> Dict[str, Any]:
         """Run CDS (SAP CAP) linters on a batch of files with comprehensive analysis"""
         issues = []
         linter_results = {}
-        
+
         # CDS Compiler Check (using @sap/cds-dk)
         if shutil.which("cds"):
             try:
                 result = await self._run_command("cds compile --to sql", cwd=directory)
-                
+
                 if result["stderr"]:
                     # Parse CDS compilation errors
                     for line in result["stderr"].split("\n"):
@@ -3770,7 +3770,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                     line_info = parts[1].split(" ")[0] if " " in parts[1] else "1"
                                     line_num = int(line_info) if line_info.isdigit() else 1
                                     message = line.split("ERROR")[-1].strip() if "ERROR" in line else line.strip()
-                                    
+
                                     issues.append(self._create_issue(
                                         file_path=f"{file_info}.cds",
                                         line=line_num,
@@ -3778,63 +3778,63 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                         severity="error",
                                         tool="cds-compiler"
                                     ))
-                
+
                 linter_results["cds-compiler"] = f"Found {len([i for i in issues if i.get('tool') == 'cds-compiler'])} compilation issues" if issues else "Compilation successful"
             except Exception as e:
                 linter_results["cds-compiler"] = f"Error: {str(e)}"
         else:
             linter_results["cds-compiler"] = "CDS CLI not installed"
-        
+
         # CDS-specific semantic analysis
         cds_analysis = await self._analyze_cds_semantics(files)
         issues.extend(cds_analysis.get("issues", []))
         linter_results["cds-semantics"] = f"Found {len(cds_analysis.get('issues', []))} semantic issues"
-        
+
         # CDS Security Analysis
         security_analysis = await self._analyze_cds_security(files)
         issues.extend(security_analysis.get("issues", []))
         linter_results["cds-security"] = f"Found {len(security_analysis.get('issues', []))} security issues"
-        
+
         return {"issues": issues, "linter_results": linter_results}
-    
+
     async def _analyze_cds_semantics(self, files: List[Path]) -> Dict[str, Any]:
         """Perform CDS-specific semantic analysis"""
         issues = []
-        
+
         for file_path in files:
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                
+
                 lines = content.split('\n')
-                
+
                 # Track entities, services, and types for cross-reference checking
                 defined_entities = set()
                 defined_services = set()
                 used_entities = set()
-                
+
                 for line_num, line in enumerate(lines, 1):
                     line = line.strip()
-                    
+
                     # 1. Entity definition tracking
                     if line.startswith('entity '):
                         entity_match = re.search(r'entity\s+([a-zA-Z_][a-zA-Z0-9_]*)', line)
                         if entity_match:
                             defined_entities.add(entity_match.group(1))
-                    
+
                     # 2. Service definition tracking
                     if line.startswith('service '):
                         service_match = re.search(r'service\s+([a-zA-Z_][a-zA-Z0-9_]*)', line)
                         if service_match:
                             defined_services.add(service_match.group(1))
-                    
+
                     # 3. Association/Composition validation
                     if 'Association to' in line or 'Composition of' in line:
                         assoc_match = re.search(r'(?:Association to|Composition of)\s+([a-zA-Z_][a-zA-Z0-9_.]*)', line)
                         if assoc_match:
                             target_entity = assoc_match.group(1).split('.')[-1]  # Handle namespaced entities
                             used_entities.add(target_entity)
-                    
+
                     # 4. Missing semicolons in CDS
                     if line.endswith(':') and not any(keyword in line for keyword in ['@', '//', 'service', 'entity', 'type', 'using']):
                         issues.append(self._create_issue(
@@ -3844,7 +3844,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="cds-semantics"
                         ))
-                    
+
                     # 5. Deprecated CDS syntax
                     if '@sap.semantics' in line:
                         issues.append(self._create_issue(
@@ -3854,7 +3854,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="cds-semantics"
                         ))
-                    
+
                     # 6. Missing key fields
                     if line.startswith('entity ') and 'cuid' not in line and 'managed' not in line:
                         if not re.search(r'key\s+\w+', content):
@@ -3865,7 +3865,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="warning",
                                 tool="cds-semantics"
                             ))
-                    
+
                     # 7. Namespace validation
                     if line.startswith('namespace ') and not re.match(r'namespace\s+[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)*;', line):
                         issues.append(self._create_issue(
@@ -3875,7 +3875,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="info",
                             tool="cds-semantics"
                         ))
-                    
+
                     # 8. Service exposure check
                     if 'projection on' in line and '@readonly' not in content and 'draft.enabled' not in content:
                         issues.append(self._create_issue(
@@ -3885,7 +3885,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="info",
                             tool="cds-semantics"
                         ))
-                
+
                 # 9. Check for undefined entity references
                 for used_entity in used_entities:
                     if used_entity not in defined_entities and used_entity not in ['Users', 'Languages', 'Countries', 'Currencies']:
@@ -3900,26 +3900,26 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                     tool="cds-semantics"
                                 ))
                                 break
-                
+
             except Exception as e:
                 print(f"Error analyzing CDS semantics for {file_path}: {e}")
-        
+
         return {"issues": issues}
-    
+
     async def _analyze_cds_security(self, files: List[Path]) -> Dict[str, Any]:
         """Perform CDS security analysis"""
         issues = []
-        
+
         for file_path in files:
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                
+
                 lines = content.split('\n')
-                
+
                 for line_num, line in enumerate(lines, 1):
                     line = line.strip()
-                    
+
                     # 1. Missing authentication requirements
                     if line.startswith('service ') and '@requires' not in content:
                         issues.append(self._create_issue(
@@ -3929,7 +3929,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="cds-security"
                         ))
-                    
+
                     # 2. Unrestricted service access
                     if '@requires:' in line and "''" in line:
                         issues.append(self._create_issue(
@@ -3939,7 +3939,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="error",
                             tool="cds-security"
                         ))
-                    
+
                     # 3. Sensitive data exposure
                     sensitive_fields = ['password', 'secret', 'token', 'key', 'credential']
                     for sensitive in sensitive_fields:
@@ -3951,7 +3951,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="error",
                                 tool="cds-security"
                             ))
-                    
+
                     # 4. Missing field-level restrictions
                     if 'email' in line.lower() and '@assert.format' not in content:
                         issues.append(self._create_issue(
@@ -3961,27 +3961,27 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="info",
                             tool="cds-security"
                         ))
-                
+
             except Exception as e:
                 print(f"Error analyzing CDS security for {file_path}: {e}")
-        
+
         return {"issues": issues}
-    
+
     async def _run_solidity_linters_batch(self, files: List[Path], directory: str) -> Dict[str, Any]:
         """Run comprehensive Solidity linters and security analysis on a batch of files"""
         issues = []
         linter_results = {}
-        
+
         # Ensure we have relative paths for tools
         relative_files = [str(f.relative_to(directory)) for f in files]
-        
+
         # 1. Solidity Compiler (solc) check
         if shutil.which("solc"):
             try:
                 # Run solidity compiler for compilation errors
                 cmd = ["solc", "--combined-json", "abi,bin", "--optimize"] + relative_files
                 result = await self._run_command(" ".join(cmd), cwd=directory)
-                
+
                 if result.get("stderr"):
                     # Parse solc compilation errors
                     for line in result["stderr"].split("\n"):
@@ -3994,7 +3994,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 line_num = int(line_col) if line_col.isdigit() else 1
                                 message = line.split("Error:")[-1].strip() if "Error:" in line else line.split("Warning:")[-1].strip()
                                 severity = "error" if "Error:" in line else "warning"
-                                
+
                                 issues.append(self._create_issue(
                                     file_path=file_path,
                                     line=line_num,
@@ -4002,7 +4002,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                     severity=severity,
                                     tool="solc"
                                 ))
-                
+
                 solc_issues = [i for i in issues if i.get('tool') == 'solc']
                 if solc_issues:
                     linter_results["solc"] = f"Found {len(solc_issues)} compilation issues"
@@ -4012,13 +4012,13 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 linter_results["solc"] = f"Error: {str(e)}"
         else:
             linter_results["solc"] = "Solidity compiler not available"
-        
+
         # 2. Slither security analyzer
         if shutil.which("slither"):
             try:
                 cmd = ["slither", directory, "--json-types", "detectors"]
                 result = await self._run_command(" ".join(cmd), cwd=directory)
-                
+
                 if result.get("stdout"):
                     try:
                         slither_data = json.loads(result["stdout"])
@@ -4028,7 +4028,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                     if "source_mapping" in element and "filename_absolute" in element["source_mapping"]:
                                         file_path = element["source_mapping"]["filename_absolute"]
                                         line_num = element["source_mapping"].get("lines", [1])[0]
-                                        
+
                                         issues.append(self._create_issue(
                                             file_path=file_path,
                                             line=line_num,
@@ -4038,44 +4038,44 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                         ))
                     except json.JSONDecodeError:
                         pass
-                
+
                 linter_results["slither"] = f"Found {len([i for i in issues if i.get('tool') == 'slither'])} security issues"
             except Exception as e:
                 linter_results["slither"] = f"Error: {str(e)}"
         else:
             linter_results["slither"] = "Slither not available"
-        
+
         # 3. Solidity semantic analysis
         sol_analysis = await self._analyze_solidity_semantics(files)
         issues.extend(sol_analysis.get("issues", []))
         linter_results["sol-semantics"] = f"Found {len(sol_analysis.get('issues', []))} semantic issues"
-        
+
         # 4. Solidity security analysis
         sol_security = await self._analyze_solidity_security(files)
         issues.extend(sol_security.get("issues", []))
         linter_results["sol-security"] = f"Found {len(sol_security.get('issues', []))} security issues"
-        
+
         # 5. Gas optimization analysis
         gas_analysis = await self._analyze_solidity_gas_optimization(files)
         issues.extend(gas_analysis.get("issues", []))
         linter_results["sol-gas"] = f"Found {len(gas_analysis.get('issues', []))} gas optimization opportunities"
-        
+
         return {"issues": issues, "linter_results": linter_results}
-    
+
     async def _analyze_solidity_semantics(self, files: List[Path]) -> Dict[str, Any]:
         """Perform Solidity-specific semantic analysis"""
         issues = []
-        
+
         for file_path in files:
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                
+
                 lines = content.split('\n')
-                
+
                 for line_num, line in enumerate(lines, 1):
                     line = line.strip()
-                    
+
                     # 1. Pragma version specification
                     if line.startswith('pragma solidity'):
                         if '^' in line:
@@ -4086,7 +4086,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="info",
                                 tool="sol-semantics"
                             ))
-                    
+
                     # 2. Function visibility modifiers
                     if 'function ' in line and 'public' not in line and 'private' not in line and 'internal' not in line and 'external' not in line:
                         if 'constructor' not in line:
@@ -4097,7 +4097,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="warning",
                                 tool="sol-semantics"
                             ))
-                    
+
                     # 3. State variable visibility
                     if any(keyword in line for keyword in ['uint', 'int', 'bool', 'address', 'string', 'bytes']) and '=' in line and 'function' not in line:
                         if 'public' not in line and 'private' not in line and 'internal' not in line:
@@ -4108,7 +4108,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="warning",
                                 tool="sol-semantics"
                             ))
-                    
+
                     # 4. Events should be declared
                     if 'emit ' in line:
                         event_name = line.split('emit ')[1].split('(')[0].strip()
@@ -4120,7 +4120,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="error",
                                 tool="sol-semantics"
                             ))
-                    
+
                     # 5. NatSpec documentation
                     if line.startswith('function ') and 'public' in line:
                         # Check if there's documentation above this function
@@ -4137,26 +4137,26 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="info",
                                 tool="sol-semantics"
                             ))
-                
+
             except Exception as e:
                 print(f"Error analyzing Solidity semantics for {file_path}: {e}")
-        
+
         return {"issues": issues}
-    
+
     async def _analyze_solidity_security(self, files: List[Path]) -> Dict[str, Any]:
         """Perform comprehensive Solidity security analysis"""
         issues = []
-        
+
         for file_path in files:
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                
+
                 lines = content.split('\n')
-                
+
                 for line_num, line in enumerate(lines, 1):
                     line = line.strip()
-                    
+
                     # 1. Reentrancy vulnerability patterns
                     if '.call(' in line and 'value:' in line:
                         issues.append(self._create_issue(
@@ -4166,7 +4166,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="error",
                             tool="sol-security"
                         ))
-                    
+
                     # 2. tx.origin usage (should use msg.sender)
                     if 'tx.origin' in line:
                         issues.append(self._create_issue(
@@ -4176,7 +4176,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="error",
                             tool="sol-security"
                         ))
-                    
+
                     # 3. Block timestamp dependence
                     if 'block.timestamp' in line or 'now' in line:
                         issues.append(self._create_issue(
@@ -4186,7 +4186,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="sol-security"
                         ))
-                    
+
                     # 4. Unsafe low-level calls
                     if '.call(' in line or '.delegatecall(' in line or '.staticcall(' in line:
                         issues.append(self._create_issue(
@@ -4196,7 +4196,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="warning",
                             tool="sol-security"
                         ))
-                    
+
                     # 5. Integer overflow/underflow (pre-0.8.0)
                     if any(op in line for op in ['+', '-', '*', '/']):
                         if 'SafeMath' not in content and 'pragma solidity' in content:
@@ -4209,7 +4209,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                     severity="warning",
                                     tool="sol-security"
                                 ))
-                    
+
                     # 6. Unchecked external calls
                     if '.call(' in line and 'require(' not in line and 'assert(' not in line:
                         issues.append(self._create_issue(
@@ -4219,7 +4219,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="error",
                             tool="sol-security"
                         ))
-                    
+
                     # 7. Access control issues
                     if 'onlyOwner' in line and 'modifier onlyOwner' not in content:
                         issues.append(self._create_issue(
@@ -4229,7 +4229,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="error",
                             tool="sol-security"
                         ))
-                    
+
                     # 8. Hardcoded addresses
                     if '0x' in line and len([x for x in line.split() if x.startswith('0x') and len(x) == 42]) > 0:
                         issues.append(self._create_issue(
@@ -4239,26 +4239,26 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="info",
                             tool="sol-security"
                         ))
-                
+
             except Exception as e:
                 print(f"Error analyzing Solidity security for {file_path}: {e}")
-        
+
         return {"issues": issues}
-    
+
     async def _analyze_solidity_gas_optimization(self, files: List[Path]) -> Dict[str, Any]:
         """Analyze Solidity code for gas optimization opportunities"""
         issues = []
-        
+
         for file_path in files:
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                
+
                 lines = content.split('\n')
-                
+
                 for line_num, line in enumerate(lines, 1):
                     line = line.strip()
-                    
+
                     # 1. Use of storage vs memory
                     if 'storage' in line and 'function' in line:
                         issues.append(self._create_issue(
@@ -4268,7 +4268,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="info",
                             tool="sol-gas"
                         ))
-                    
+
                     # 2. Loop optimizations
                     if 'for (' in line:
                         if '.length' in line:
@@ -4279,7 +4279,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="info",
                                 tool="sol-gas"
                             ))
-                    
+
                     # 3. Public vs external functions
                     if 'function ' in line and 'public' in line and 'view' not in line:
                         issues.append(self._create_issue(
@@ -4289,7 +4289,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             severity="info",
                             tool="sol-gas"
                         ))
-                    
+
                     # 4. Unnecessary storage reads
                     state_vars = re.findall(r'\b(\w+)\s*=', line)
                     for var in state_vars:
@@ -4301,16 +4301,16 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 severity="info",
                                 tool="sol-gas"
                             ))
-                
+
             except Exception as e:
                 print(f"Error analyzing Solidity gas optimization for {file_path}: {e}")
-        
+
         return {"issues": issues}
-    
+
     async def _run_python_linters(self, file_path: str) -> List[CodeIssue]:
         """Run Python linting tools"""
         issues = []
-        
+
         # Run pylint
         if self._check_tool_available("pylint"):
             try:
@@ -4339,7 +4339,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         ))
             except Exception as e:
                 logger.error(f"Pylint error for {file_path}: {e}")
-        
+
         # Run flake8
         if self._check_tool_available("flake8"):
             try:
@@ -4367,13 +4367,13 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 ))
             except Exception as e:
                 logger.error(f"Flake8 error for {file_path}: {e}")
-        
+
         return issues
-    
+
     async def _run_javascript_linters(self, file_path: str) -> List[CodeIssue]:
         """Run JavaScript linting tools"""
         issues = []
-        
+
         if self._check_tool_available("eslint"):
             try:
                 result = subprocess.run(
@@ -4403,14 +4403,14 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             ))
             except Exception as e:
                 logger.error(f"ESLint error for {file_path}: {e}")
-        
+
         return issues
-    
+
     async def _run_typescript_linters(self, file_path: str) -> List[CodeIssue]:
         """Run TypeScript linting tools"""
         # Similar to JavaScript but with TypeScript-specific tools
         return await self._run_javascript_linters(file_path)
-    
+
     async def _run_tests(self, directory: str) -> Dict[str, Any]:
         """Run tests and collect coverage data"""
         test_results = {
@@ -4421,7 +4421,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "coverage": None,
             "errors": []
         }
-        
+
         # Try pytest for Python projects
         if Path(directory).glob("**/test_*.py") or Path(directory).glob("**/*_test.py"):
             try:
@@ -4431,7 +4431,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     text=True,
                     cwd=directory
                 )
-                
+
                 # Read test results
                 report_path = Path("/tmp/pytest_report.json")
                 if report_path.exists():
@@ -4443,7 +4443,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         test_results["tests_failed"] = report.get("summary", {}).get("failed", 0)
             except Exception as e:
                 test_results["errors"].append(f"pytest error: {str(e)}")
-        
+
         # Try jest/npm test for JavaScript projects
         package_json = Path(directory) / "package.json"
         if package_json.exists():
@@ -4459,13 +4459,13 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     # Parse jest output if available
             except Exception as e:
                 test_results["errors"].append(f"npm test error: {str(e)}")
-        
+
         return test_results
-    
+
     async def _perform_security_analysis(self, directory: str) -> Dict[str, Any]:
         """Perform security vulnerability analysis"""
         security_issues = []
-        
+
         # Run bandit for Python security
         if self._check_tool_available("bandit"):
             try:
@@ -4488,16 +4488,16 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         })
             except Exception as e:
                 logger.error(f"Bandit error: {e}")
-        
+
         # Check for known vulnerable dependencies
         # This would integrate with tools like safety, npm audit, etc.
-        
+
         return {
             "total_issues": len(security_issues),
             "critical_issues": len([i for i in security_issues if i.get("severity") == "high"]),
             "issues": security_issues[:50]  # Limit to first 50
         }
-    
+
     def _calculate_summary_metrics(self, analyses: Dict[str, Any]) -> Dict[str, Any]:
         """Calculate summary metrics from all analyses"""
         summary = {
@@ -4507,24 +4507,24 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "test_coverage": None,
             "quality_score": 100.0
         }
-        
+
         # Aggregate lint issues
         if "lint" in analyses:
             lint_data = analyses["lint"]
             summary["total_issues"] += lint_data.get("total_issues", 0)
             summary["files_analyzed"] = lint_data.get("files_analyzed", 0)
-            
+
             # Count critical issues
             severity_counts = lint_data.get("issues_by_severity", {})
             summary["critical_issues"] += severity_counts.get(IssueSeverity.CRITICAL, 0)
             summary["critical_issues"] += severity_counts.get(IssueSeverity.HIGH, 0)
-        
+
         # Add security issues
         if "security" in analyses:
             security_data = analyses["security"]
             summary["total_issues"] += security_data.get("total_issues", 0)
             summary["critical_issues"] += security_data.get("critical_issues", 0)
-        
+
         # Test results
         if "test" in analyses:
             test_data = analyses["test"]
@@ -4532,36 +4532,36 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 pass_rate = test_data.get("tests_passed", 0) / test_data["tests_run"]
                 summary["test_pass_rate"] = pass_rate
                 summary["quality_score"] *= pass_rate
-        
+
         # Calculate industry-standard quality score
         summary["quality_score"] = self._calculate_comprehensive_quality_score(summary, analyses)
-        
+
         return summary
-    
+
     def _calculate_comprehensive_quality_score(self, summary: Dict[str, Any], analyses: Dict[str, Any]) -> float:
         """
         Calculate comprehensive quality score based on industry standards
         Uses weighted metrics from multiple dimensions:
         - Code Quality (40%): Issues, complexity, maintainability
-        - Test Quality (25%): Coverage, test pass rate, test completeness  
+        - Test Quality (25%): Coverage, test pass rate, test completeness
         - Security (20%): Vulnerabilities, security issues
         - Documentation (10%): Docstrings, comments, README
         - Architecture (5%): Dependencies, patterns, structure
         """
-        
+
         # Base score starts at 100
         total_score = 100.0
-        
+
         # 1. CODE QUALITY DIMENSION (40% weight)
         code_quality_score = 100.0
-        
+
         if summary["files_analyzed"] > 0:
             # Critical issues have major impact
             critical_issues = summary.get("critical_issues", 0)
             if critical_issues > 0:
                 critical_penalty = min(critical_issues * 15, 60)  # Up to 60 point penalty
                 code_quality_score -= critical_penalty
-            
+
             # General issue density
             total_issues = summary.get("total_issues", 0)
             if total_issues > 0:
@@ -4572,7 +4572,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 elif issue_density > 5:  # 5-10 issues per file is moderate
                     density_penalty = (issue_density - 5) * 2
                     code_quality_score -= density_penalty
-        
+
         # Complexity analysis from complexity results
         if "complexity" in analyses:
             complexity_data = analyses["complexity"]
@@ -4581,12 +4581,12 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 code_quality_score -= min((avg_complexity - 15) * 2, 20)
             elif avg_complexity > 10:  # High complexity
                 code_quality_score -= (avg_complexity - 10) * 1
-        
+
         code_quality_score = max(0, code_quality_score)
-        
+
         # 2. TEST QUALITY DIMENSION (25% weight)
         test_quality_score = 100.0
-        
+
         # Test coverage impact
         test_coverage = summary.get("test_coverage")
         if test_coverage is not None:
@@ -4597,7 +4597,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 test_quality_score += 5  # Bonus
         else:
             test_quality_score -= 50  # No coverage data is a major penalty
-        
+
         # Test pass rate
         test_pass_rate = summary.get("test_pass_rate")
         if test_pass_rate is not None:
@@ -4606,99 +4606,99 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 test_quality_score -= pass_penalty
         else:
             test_quality_score -= 30  # No test execution data
-        
+
         test_quality_score = max(0, test_quality_score)
-        
+
         # 3. SECURITY DIMENSION (20% weight)
         security_score = 100.0
-        
+
         if "security" in analyses:
             security_data = analyses["security"]
             vulnerabilities = security_data.get("total_vulnerabilities", 0)
-            
+
             if vulnerabilities > 0:
                 # High/critical vulnerabilities are heavily penalized
-                high_vulns = len([v for v in security_data.get("vulnerabilities", []) 
+                high_vulns = len([v for v in security_data.get("vulnerabilities", [])
                                 if v.get("severity") in ["high", "critical"]])
                 if high_vulns > 0:
                     security_score -= high_vulns * 25  # 25 points per high/critical vuln
-                
+
                 # Medium vulnerabilities
-                medium_vulns = len([v for v in security_data.get("vulnerabilities", []) 
+                medium_vulns = len([v for v in security_data.get("vulnerabilities", [])
                                   if v.get("severity") == "medium"])
                 if medium_vulns > 0:
                     security_score -= medium_vulns * 10  # 10 points per medium vuln
-                
+
                 # Low vulnerabilities
                 low_vulns = vulnerabilities - high_vulns - medium_vulns
                 if low_vulns > 0:
                     security_score -= low_vulns * 3  # 3 points per low vuln
-        
+
         security_score = max(0, security_score)
-        
+
         # 4. DOCUMENTATION DIMENSION (10% weight)
         documentation_score = 100.0
-        
+
         # Check if functions have docstrings (from complexity analysis)
         if "complexity" in analyses:
             complexity_data = analyses["complexity"]
             functions_with_docs = 0
             total_functions = 0
-            
+
             for file_complexity in complexity_data.get("file_complexities", []):
                 total_functions += file_complexity.get("functions", 0)
                 # This is a simplification - in real implementation we'd check actual docstrings
                 functions_with_docs += file_complexity.get("functions", 0) * 0.6  # Assume 60% have docs
-            
+
             if total_functions > 0:
                 doc_ratio = functions_with_docs / total_functions
                 if doc_ratio < 0.5:  # Less than 50% documented
                     documentation_score -= (0.5 - doc_ratio) * 100
-        
+
         documentation_score = max(0, documentation_score)
-        
+
         # 5. ARCHITECTURE DIMENSION (5% weight)
         architecture_score = 100.0
-        
+
         if "glean" in analyses:
             glean_data = analyses["glean"]
-            
+
             # Circular dependencies are bad
             circular_deps = len(glean_data.get("dependency_graph", {}).get("circular_dependencies", []))
             if circular_deps > 0:
                 architecture_score -= circular_deps * 15
-            
+
             # Dead code is problematic
             dead_code = len(glean_data.get("dead_code_candidates", []))
             if dead_code > 0:
                 architecture_score -= dead_code * 5
-        
+
         architecture_score = max(0, architecture_score)
-        
+
         # Calculate weighted final score
         final_score = (
             code_quality_score * 0.40 +      # 40% weight
-            test_quality_score * 0.25 +      # 25% weight  
+            test_quality_score * 0.25 +      # 25% weight
             security_score * 0.20 +          # 20% weight
             documentation_score * 0.10 +     # 10% weight
             architecture_score * 0.05        # 5% weight
         )
-        
+
         # Apply additional modifiers
         if final_score > 95:
             final_score = min(100, final_score + 2)  # Excellence bonus
         elif final_score < 20:
             final_score = max(0, final_score - 5)   # Poor quality penalty
-        
+
         return round(final_score, 1)
-    
+
     async def _store_analysis_results(self, analysis_id: str, results: Dict[str, Any]) -> None:
         """Store analysis results in database"""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 # Store main analysis record
                 conn.execute("""
-                    INSERT INTO analysis_results 
+                    INSERT INTO analysis_results
                     (id, analysis_type, directory, files_analyzed, issue_count, duration, timestamp, results)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
@@ -4711,14 +4711,14 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     results["timestamp"],
                     json.dumps(results)
                 ))
-                
+
                 # Store individual issues
                 if "lint" in results["analyses"]:
                     for issue_dict in results["analyses"]["lint"].get("issues", []):
                         issue = CodeIssue(**issue_dict)
                         conn.execute("""
                             INSERT INTO code_issues
-                            (id, analysis_id, file_path, line, column, tool, issue_type, 
+                            (id, analysis_id, file_path, line, column, tool, issue_type,
                              severity, code, message, rule, suggestion, auto_fixable, created_at)
                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """, (
@@ -4737,11 +4737,11 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             issue.auto_fixable,
                             issue.created_at.isoformat()
                         ))
-                
+
                 conn.commit()
         except Exception as e:
             logger.error(f"Failed to store analysis results: {e}")
-    
+
     @a2a_skill("get_analysis_history", "Retrieve historical analysis results")
     async def get_analysis_history(
         self,
@@ -4752,32 +4752,32 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         try:
             with sqlite3.connect(self.db_path) as conn:
                 conn.row_factory = sqlite3.Row
-                
+
                 if directory:
                     cursor = conn.execute("""
-                        SELECT * FROM analysis_results 
-                        WHERE directory = ? 
-                        ORDER BY timestamp DESC 
+                        SELECT * FROM analysis_results
+                        WHERE directory = ?
+                        ORDER BY timestamp DESC
                         LIMIT ?
                     """, (directory, limit))
                 else:
                     cursor = conn.execute("""
-                        SELECT * FROM analysis_results 
-                        ORDER BY timestamp DESC 
+                        SELECT * FROM analysis_results
+                        ORDER BY timestamp DESC
                         LIMIT ?
                     """, (limit,))
-                
+
                 results = []
                 for row in cursor:
                     result = dict(row)
                     result["results"] = json.loads(result["results"])
                     results.append(result)
-                
+
                 return results
         except Exception as e:
             logger.error(f"Failed to retrieve analysis history: {e}")
             return []
-    
+
     @a2a_skill("code_refactoring_suggestions", "Generate AI-powered refactoring suggestions using AST analysis")
     async def analyze_code_refactoring(
         self,
@@ -4791,16 +4791,16 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             import ast
             import re
             from collections import defaultdict
-            
+
             if not Path(file_path).exists():
                 return {"error": "File not found", "suggestions": []}
-            
+
             suggestions = []
-            
+
             # Read the file
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
-            
+
             # Parse AST for real analysis
             try:
                 tree = ast.parse(content)
@@ -4810,26 +4810,26 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     "suggestions": [],
                     "file_path": file_path
                 }
-            
+
             lines = content.split('\n')
-            
+
             # Real AST-based analysis
             suggestions.extend(await self._analyze_ast_for_refactoring(tree, lines, file_path))
-            
+
             # Additional pattern-based analysis for things AST doesn't catch
             suggestions.extend(await self._analyze_patterns_for_refactoring(lines, file_path))
-            
+
             # Remove duplicates and sort by priority
             unique_suggestions = self._deduplicate_suggestions(suggestions)
-            
+
             # Sort by severity and limit results
             severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
             unique_suggestions.sort(key=lambda x: (severity_order.get(x["severity"], 4), x["line"]))
             unique_suggestions = unique_suggestions[:max_suggestions]
-            
+
             # Calculate refactoring metrics
             metrics = self._calculate_refactoring_metrics(tree, unique_suggestions)
-            
+
             return {
                 "file_path": file_path,
                 "total_suggestions": len(unique_suggestions),
@@ -4843,11 +4843,11 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "metrics": metrics,
                 "analysis_timestamp": datetime.utcnow().isoformat()
             }
-            
+
         except Exception as e:
             logger.error(f"Refactoring analysis failed for {file_path}: {e}")
             return {"error": str(e), "suggestions": []}
-    
+
     @a2a_skill("dependency_vulnerability_scan", "Scan dependencies for security vulnerabilities")
     async def scan_dependency_vulnerabilities(
         self,
@@ -4860,14 +4860,14 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         try:
             vulnerabilities = []
             scanned_files = []
-            
+
             # Check for Python requirements files
             req_files = ["requirements.txt", "requirements-dev.txt", "pyproject.toml", "Pipfile"]
             for req_file in req_files:
                 req_path = Path(directory) / req_file
                 if req_path.exists():
                     scanned_files.append(str(req_path))
-                    
+
                     if req_file == "requirements.txt" or (req_file == "requirements-dev.txt" and scan_dev_dependencies):
                         # Use safety for Python dependency scanning
                         if self._check_tool_available("safety"):
@@ -4890,7 +4890,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                         })
                             except Exception as e:
                                 logger.warning(f"Safety scan failed for {req_path}: {e}")
-                    
+
                     elif req_file == "pyproject.toml":
                         # Basic pyproject.toml parsing for known vulnerable packages
                         try:
@@ -4903,7 +4903,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                     ("flask", "< 2.0.0", "Security improvements in Flask 2.0+"),
                                     ("requests", "< 2.25.0", "Various security fixes")
                                 ]
-                                
+
                                 for package, version_check, description in vulnerable_patterns:
                                     if package in content.lower():
                                         vulnerabilities.append({
@@ -4916,14 +4916,14 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                         })
                         except Exception as e:
                             logger.warning(f"pyproject.toml parsing failed: {e}")
-            
+
             # Check for Node.js package files
             node_files = ["package.json", "package-lock.json", "yarn.lock"]
             for node_file in node_files:
                 node_path = Path(directory) / node_file
                 if node_path.exists():
                     scanned_files.append(str(node_path))
-                    
+
                     # Use npm audit for Node.js dependency scanning
                     if node_file == "package.json" and self._check_tool_available("npm"):
                         try:
@@ -4947,30 +4947,30 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                     })
                         except Exception as e:
                             logger.warning(f"npm audit failed: {e}")
-            
+
             # Enhanced: Add built-in vulnerability database scanning
             builtin_vulns = await self._scan_with_builtin_vulnerability_database(directory, scan_dev_dependencies)
             vulnerabilities.extend(builtin_vulns)
-            
+
             # Enhanced: Add code pattern analysis for security issues
             code_vulns = await self._scan_code_for_security_patterns(directory)
             vulnerabilities.extend(code_vulns)
-            
+
             # Count source files scanned for security patterns
-            source_files_scanned = len([f for f in Path(directory).rglob("*.py") 
+            source_files_scanned = len([f for f in Path(directory).rglob("*.py")
                                        if not any(skip in str(f.name) for skip in ["test_", "_test.py"]) and
                                        not any(skip in str(f) for skip in ["/tests/", "/test/", "__pycache__", ".venv", "venv"])])
-            
+
             # Remove duplicates and calculate risk metrics
             unique_vulnerabilities = self._deduplicate_vulnerabilities(vulnerabilities)
             risk_metrics = self._calculate_security_risk_metrics(unique_vulnerabilities)
-            
+
             # Summary statistics
             severity_counts = {}
             for vuln in unique_vulnerabilities:
                 severity = vuln.get("severity", "unknown")
                 severity_counts[severity] = severity_counts.get(severity, 0) + 1
-            
+
             return {
                 "directory": directory,
                 "scanned_files": len(scanned_files) + source_files_scanned,
@@ -4983,11 +4983,11 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "scan_timestamp": datetime.utcnow().isoformat(),
                 "database_version": "2024.1.0"  # Built-in vulnerability database version
             }
-            
+
         except Exception as e:
             logger.error(f"Vulnerability scan failed for {directory}: {e}")
             return {"error": str(e), "vulnerabilities": []}
-    
+
     @a2a_skill("code_complexity_analysis", "Analyze code complexity metrics using real AST parsing")
     async def analyze_code_complexity(
         self,
@@ -5001,10 +5001,10 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         try:
             import ast
             start_time = time.time()
-            
+
             if file_patterns is None:
                 file_patterns = ["*.py"]  # Focus on Python for real implementation
-            
+
             complexity_results = {
                 "directory": directory,
                 "complexity_threshold": complexity_threshold,
@@ -5019,27 +5019,27 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "file_complexities": [],
                 "duration": 0.0
             }
-            
+
             # Find Python source files (real implementation focuses on Python)
             path = Path(directory)
             python_files = []
             for pattern in file_patterns:
                 if pattern == "*.py":
                     python_files.extend(path.rglob(pattern))
-            
+
             # Filter out test files and ignored directories
             ignore_patterns = ["test_", "_test.", "/test/", "/tests/", "__pycache__", "venv", "env"]
             filtered_files = [
-                f for f in python_files 
+                f for f in python_files
                 if not any(pattern in str(f) for pattern in ignore_patterns)
             ]
-            
+
             complexity_results["files_analyzed"] = len(filtered_files)
-            
+
             # Analyze each file using real AST parsing
             all_functions = []
             all_classes = []
-            
+
             for file_path in filtered_files:
                 try:
                     file_complexity = await self._analyze_file_complexity_real(file_path)
@@ -5052,64 +5052,64 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         "avg_complexity": file_complexity["average_complexity"],
                         "max_complexity": file_complexity["max_complexity"]
                     })
-                    
+
                 except Exception as e:
                     logger.warning(f"Failed to analyze complexity for {file_path}: {e}")
-            
+
             complexity_results["functions_analyzed"] = len(all_functions)
             complexity_results["classes_analyzed"] = len(all_classes)
-            
+
             if all_functions:
                 # Calculate real statistics
                 complexities = [f["complexity"] for f in all_functions]
                 complexity_results["average_complexity"] = sum(complexities) / len(complexities)
                 complexity_results["max_complexity"] = max(complexities)
-                
+
                 # Find high complexity functions
                 high_complexity = sorted([
-                    f for f in all_functions 
+                    f for f in all_functions
                     if f["complexity"] > complexity_threshold
                 ], key=lambda x: x["complexity"], reverse=True)
-                
+
                 complexity_results["high_complexity_functions"] = high_complexity[:10]  # Top 10
-                
+
                 # Create complexity distribution
                 distribution = {}
                 for complexity in complexities:
                     range_key = self._get_complexity_range(complexity)
                     distribution[range_key] = distribution.get(range_key, 0) + 1
                 complexity_results["complexity_distribution"] = distribution
-                
+
                 # Generate actionable recommendations
                 complexity_results["recommendations"] = self._generate_complexity_recommendations(
                     complexity_results, complexity_threshold
                 )
-            
+
             complexity_results["duration"] = time.time() - start_time
             return complexity_results
-            
+
         except Exception as e:
             logger.error(f"Complexity analysis failed: {e}")
             return {"error": str(e), "directory": directory}
-    
+
     async def _analyze_file_complexity_real(self, file_path: Path) -> Dict[str, Any]:
         """Real AST-based complexity analysis for a single Python file"""
         import ast
-        
+
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
-            
+
             tree = ast.parse(content)
-            
+
             functions = []
             classes = []
-            
+
             class ComplexityVisitor(ast.NodeVisitor):
                 def visit_FunctionDef(self, node):
                     # Calculate cyclomatic complexity for this function
                     complexity = self._calculate_cyclomatic_complexity(node)
-                    
+
                     functions.append({
                         "name": node.name,
                         "line": node.lineno,
@@ -5119,17 +5119,17 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         "returns": node.returns is not None,
                         "docstring": ast.get_docstring(node) is not None
                     })
-                    
+
                     self.generic_visit(node)
-                
+
                 def visit_AsyncFunctionDef(self, node):
                     # Handle async functions the same way
                     self.visit_FunctionDef(node)
-                
+
                 def visit_ClassDef(self, node):
                     # Analyze class complexity
                     method_count = len([n for n in node.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))])
-                    
+
                     classes.append({
                         "name": node.name,
                         "line": node.lineno,
@@ -5137,13 +5137,13 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         "file": str(file_path),
                         "docstring": ast.get_docstring(node) is not None
                     })
-                    
+
                     self.generic_visit(node)
-                
+
                 def _calculate_cyclomatic_complexity(self, node):
                     """Calculate real cyclomatic complexity for a function"""
                     complexity = 1  # Base complexity
-                    
+
                     for child in ast.walk(node):
                         # Decision points that increase complexity
                         if isinstance(child, (ast.If, ast.While, ast.For, ast.AsyncFor)):
@@ -5165,26 +5165,26 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             complexity += 1
                         elif isinstance(child, ast.GeneratorExp):
                             complexity += 1
-                    
+
                     return complexity
-            
+
             visitor = ComplexityVisitor()
             visitor.visit(tree)
-            
+
             # Calculate file-level statistics
             complexities = [f["complexity"] for f in functions] if functions else [0]
-            
+
             return {
                 "functions": functions,
                 "classes": classes,
                 "average_complexity": sum(complexities) / len(complexities),
                 "max_complexity": max(complexities) if complexities else 0
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to parse {file_path}: {e}")
             return {"functions": [], "classes": [], "average_complexity": 0, "max_complexity": 0}
-    
+
     def _get_complexity_range(self, complexity: int) -> str:
         """Categorize complexity into ranges"""
         if complexity <= 5:
@@ -5195,21 +5195,21 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             return "11-20 (Complex)"
         else:
             return "21+ (Very Complex)"
-    
+
     def _generate_complexity_recommendations(self, results: Dict[str, Any], threshold: int) -> List[str]:
         """Generate actionable complexity recommendations"""
         recommendations = []
-        
+
         high_complexity_count = len(results["high_complexity_functions"])
         avg_complexity = results["average_complexity"]
         max_complexity = results["max_complexity"]
-        
+
         if high_complexity_count > 0:
             recommendations.append(
                 f"🔧 {high_complexity_count} functions exceed complexity threshold ({threshold}). "
                 f"Consider breaking down the most complex ones."
             )
-            
+
             # Specific recommendations for the most complex functions
             top_complex = results["high_complexity_functions"][:3]
             for func in top_complex:
@@ -5217,45 +5217,45 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     f"⚠️  '{func['name']}' at line {func['line']} has complexity {func['complexity']}. "
                     "Consider extracting helper functions or simplifying logic."
                 )
-        
+
         if avg_complexity > threshold:
             recommendations.append(
                 f"📊 Average complexity ({avg_complexity:.1f}) exceeds threshold. "
                 "Focus on refactoring to improve maintainability."
             )
-        
+
         if max_complexity > 20:
             recommendations.append(
                 f"🚨 Maximum complexity ({max_complexity}) is very high. "
                 "This function should be prioritized for refactoring."
             )
-        
+
         # Positive feedback
         if high_complexity_count == 0:
             recommendations.append("✅ All functions are within acceptable complexity limits!")
-        
+
         distribution = results["complexity_distribution"]
         if distribution.get("1-5", 0) > distribution.get("11-20", 0):
             recommendations.append("👍 Most functions have low complexity - good code structure!")
-        
+
         return recommendations
-    
+
     async def _analyze_file_complexity(self, file_path: str, threshold: int) -> Optional[Dict[str, Any]]:
         """Analyze complexity for a single file"""
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
-            
+
             functions = []
-            
+
             if str(file_path).endswith('.py'):
                 functions = self._analyze_python_complexity(content)
             elif str(file_path).endswith(('.js', '.ts')):
                 functions = self._analyze_javascript_complexity(content)
-            
+
             # Filter functions above threshold
             complex_functions = [f for f in functions if f.get("complexity", 0) > threshold]
-            
+
             if functions:  # Only return if we found functions
                 return {
                     "file_path": file_path,
@@ -5263,24 +5263,24 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     "complex_functions": len(complex_functions),
                     "functions": functions
                 }
-            
+
             return None
-            
+
         except Exception as e:
             logger.warning(f"Failed to analyze complexity for {file_path}: {e}")
             return None
-    
+
     def _analyze_python_complexity(self, content: str) -> List[Dict[str, Any]]:
         """Real AST-based Python code complexity analysis"""
         import ast
-        
+
         try:
             tree = ast.parse(content)
         except SyntaxError:
             return []  # Return empty if syntax error
-        
+
         functions = []
-        
+
         class ComplexityVisitor(ast.NodeVisitor):
             def visit_FunctionDef(self, node):
                 complexity = self._calculate_complexity(node)
@@ -5291,15 +5291,15 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     "complexity": complexity
                 })
                 self.generic_visit(node)
-            
+
             def visit_AsyncFunctionDef(self, node):
                 # Handle async functions the same way
                 self.visit_FunctionDef(node)
-            
+
             def _calculate_complexity(self, func_node):
                 """Calculate cyclomatic complexity using AST"""
                 complexity = 1  # Base complexity
-                
+
                 for node in ast.walk(func_node):
                     # Decision points increase complexity
                     if isinstance(node, (ast.If, ast.While, ast.For, ast.AsyncFor)):
@@ -5316,19 +5316,19 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     elif isinstance(node, ast.comprehension):
                         # List/dict/set comprehensions with conditions
                         complexity += len(node.ifs)
-                
+
                 return complexity
-        
+
         visitor = ComplexityVisitor()
         visitor.visit(tree)
-        
+
         return functions
-    
+
     def _analyze_javascript_complexity(self, content: str) -> List[Dict[str, Any]]:
         """Analyze JavaScript/TypeScript code complexity"""
         functions = []
         lines = content.split('\n')
-        
+
         import re
         function_patterns = [
             re.compile(r'function\s+(\w+)\s*\('),
@@ -5336,15 +5336,15 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             re.compile(r'const\s+(\w+)\s*=\s*\([^)]*\)\s*=>'),
             re.compile(r'(\w+)\s*\([^)]*\)\s*{')
         ]
-        
+
         current_function = None
         function_start = 0
         complexity = 1
         brace_count = 0
-        
+
         for i, line in enumerate(lines, 1):
             line_stripped = line.strip()
-            
+
             # Check for function declarations
             for pattern in function_patterns:
                 match = pattern.search(line_stripped)
@@ -5354,15 +5354,15 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     complexity = 1
                     brace_count = line_stripped.count('{') - line_stripped.count('}')
                     break
-            
+
             if current_function:
                 # Track braces to know when function ends
                 brace_count += line_stripped.count('{') - line_stripped.count('}')
-                
+
                 # Count complexity indicators
                 if re.search(r'\b(if|else|while|for|switch|case|catch|&&|\|\|)\b', line_stripped):
                     complexity += 1
-                
+
                 # Function ends when braces balance
                 if brace_count <= 0 and i > function_start:
                     functions.append({
@@ -5372,9 +5372,9 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         "complexity": complexity
                     })
                     current_function = None
-        
+
         return functions
-    
+
     @a2a_skill("test_coverage_analysis", "Analyze test coverage and suggest improvements")
     async def analyze_test_coverage(
         self,
@@ -5393,13 +5393,13 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "uncovered_lines": [],
                 "suggestions": []
             }
-            
+
             # Try to run coverage analysis for Python projects
             if self._has_python_files(directory):
                 python_coverage = await self._analyze_python_coverage(directory)
                 if python_coverage:
                     coverage_data.update(python_coverage)
-            
+
             # Try to run coverage analysis for JavaScript projects
             if self._has_javascript_files(directory):
                 js_coverage = await self._analyze_javascript_coverage(directory)
@@ -5413,7 +5413,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         coverage_data["files"].extend(js_coverage.get("files", []))
                     else:
                         coverage_data.update(js_coverage)
-            
+
             # Generate suggestions based on coverage
             if coverage_data["overall_coverage"] < coverage_threshold:
                 coverage_data["suggestions"].append({
@@ -5422,7 +5422,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     "message": f"Overall coverage ({coverage_data['overall_coverage']:.1f}%) is below threshold ({coverage_threshold}%)",
                     "suggestion": "Add tests for uncovered code paths"
                 })
-            
+
             # Find files with low coverage
             for file_info in coverage_data.get("files", []):
                 if file_info.get("coverage_percent", 100) < coverage_threshold:
@@ -5433,11 +5433,11 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         "message": f"File coverage ({file_info.get('coverage_percent', 0):.1f}%) is below threshold",
                         "suggestion": f"Add tests for {file_info.get('file_path')}"
                     })
-            
+
             # Check for test file patterns
             test_files = self._find_test_files(directory)
             source_files = self._find_source_files(directory)
-            
+
             if len(test_files) == 0 and len(source_files) > 0:
                 coverage_data["suggestions"].append({
                     "type": "no_tests",
@@ -5445,7 +5445,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     "message": "No test files found in the project",
                     "suggestion": "Create test files following naming conventions (test_*.py, *.test.js, etc.)"
                 })
-            
+
             test_ratio = len(test_files) / len(source_files) if source_files else 0
             if test_ratio < 0.3:  # Less than 30% test files
                 coverage_data["suggestions"].append({
@@ -5454,33 +5454,33 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     "message": f"Low test-to-source ratio ({test_ratio:.1%})",
                     "suggestion": "Consider adding more test files to improve coverage"
                 })
-            
+
             coverage_data["test_files_count"] = len(test_files)
             coverage_data["source_files_count"] = len(source_files)
             coverage_data["test_ratio"] = test_ratio
-            
+
             return coverage_data
-            
+
         except Exception as e:
             logger.error(f"Coverage analysis failed for {directory}: {e}")
             return {"error": str(e)}
-    
+
     def _has_python_files(self, directory: str) -> bool:
         """Check if directory has Python files"""
         return len(list(Path(directory).rglob("*.py"))) > 0
-    
+
     def _has_javascript_files(self, directory: str) -> bool:
         """Check if directory has JavaScript/TypeScript files"""
         path = Path(directory)
         return len(list(path.rglob("*.js"))) > 0 or len(list(path.rglob("*.ts"))) > 0
-    
+
     async def _analyze_python_coverage(self, directory: str) -> Optional[Dict[str, Any]]:
         """Analyze Python test coverage using coverage.py"""
         try:
             if not self._check_tool_available("coverage"):
                 # Fallback: basic analysis without coverage.py
                 return await self._basic_python_coverage_analysis(directory)
-            
+
             # Run coverage
             result = subprocess.run(
                 ["coverage", "run", "-m", "pytest"],
@@ -5488,7 +5488,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 text=True,
                 cwd=directory
             )
-            
+
             # Generate coverage report
             report_result = subprocess.run(
                 ["coverage", "report", "--format=json"],
@@ -5496,7 +5496,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 text=True,
                 cwd=directory
             )
-            
+
             if report_result.stdout:
                 coverage_data = json.loads(report_result.stdout)
                 return {
@@ -5513,14 +5513,14 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 }
         except Exception as e:
             logger.warning(f"Python coverage analysis failed: {e}")
-        
+
         return await self._basic_python_coverage_analysis(directory)
-    
+
     async def _basic_python_coverage_analysis(self, directory: str) -> Dict[str, Any]:
         """Basic Python coverage analysis without coverage.py"""
         test_files = self._find_test_files(directory)
         source_files = [f for f in self._find_source_files(directory) if str(f).endswith('.py')]
-        
+
         # Run real coverage analysis using coverage.py
         try:
             # Try to run coverage.py if available
@@ -5530,7 +5530,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     cwd=directory,
                     timeout=120
                 )
-                
+
                 if result.get("success"):
                     # Generate coverage report
                     report_result = await self._safe_subprocess_run(
@@ -5538,7 +5538,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         cwd=directory,
                         timeout=30
                     )
-                    
+
                     if report_result.get("success") and report_result.get("stdout"):
                         try:
                             coverage_line = report_result["stdout"].strip()
@@ -5561,7 +5561,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         except Exception as e:
             logger.warning(f"Coverage analysis failed: {e}")
             actual_coverage = 0.0
-        
+
         return {
             "overall_coverage": actual_coverage,
             "files": [
@@ -5573,7 +5573,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 for f in source_files
             ]
         }
-    
+
     async def _analyze_javascript_coverage(self, directory: str) -> Optional[Dict[str, Any]]:
         """Analyze JavaScript test coverage"""
         try:
@@ -5587,46 +5587,46 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     text=True,
                     cwd=directory
                 )
-                
+
                 # Look for coverage report
                 coverage_file = Path(directory) / "coverage" / "coverage-final.json"
                 if coverage_file.exists():
                     with open(coverage_file, 'r') as f:
                         coverage_data = json.load(f)
-                    
+
                     total_lines = 0
                     covered_lines = 0
                     files_info = []
-                    
+
                     for file_path, file_data in coverage_data.items():
                         statements = file_data.get("s", {})
                         total = len(statements)
                         covered = sum(1 for count in statements.values() if count > 0)
-                        
+
                         total_lines += total
                         covered_lines += covered
-                        
+
                         files_info.append({
                             "file_path": file_path,
                             "coverage_percent": (covered / total * 100) if total > 0 else 100,
                             "lines_covered": covered,
                             "lines_total": total
                         })
-                    
+
                     overall_coverage = (covered_lines / total_lines * 100) if total_lines > 0 else 0
-                    
+
                     return {
                         "overall_coverage": overall_coverage,
                         "files": files_info
                     }
-                    
+
         except Exception as e:
             logger.warning(f"JavaScript coverage analysis failed: {e}")
-        
+
         # Try to run real JavaScript coverage
         test_files = self._find_test_files(directory)
         source_files = [f for f in self._find_source_files(directory) if str(f).endswith(('.js', '.ts'))]
-        
+
         try:
             # Check if package.json exists and has test script
             package_json = Path(directory) / "package.json"
@@ -5637,7 +5637,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     cwd=directory,
                     timeout=120
                 )
-                
+
                 if result.get("success") and result.get("stdout"):
                     # Parse coverage from output
                     import re
@@ -5657,7 +5657,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         except Exception as e:
             logger.warning(f"JavaScript coverage analysis failed: {e}")
             actual_coverage = 0.0
-        
+
         return {
             "overall_coverage": actual_coverage,
             "files": [
@@ -5669,44 +5669,44 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 for f in source_files
             ]
         }
-    
+
     def _find_test_files(self, directory: str) -> List[Path]:
         """Find test files in the directory"""
         path = Path(directory)
         test_files = []
-        
+
         # Common test file patterns
         patterns = [
             "**/test_*.py", "**/*_test.py", "**/tests/*.py",
             "**/*.test.js", "**/*.test.ts", "**/*.spec.js", "**/*.spec.ts",
             "**/test/**/*.js", "**/test/**/*.ts", "**/tests/**/*.js", "**/tests/**/*.ts"
         ]
-        
+
         for pattern in patterns:
             test_files.extend(path.glob(pattern))
-        
+
         return list(set(test_files))  # Remove duplicates
-    
+
     def _find_source_files(self, directory: str) -> List[Path]:
         """Find source files in the directory"""
         path = Path(directory)
         source_files = []
-        
+
         # Source file patterns (excluding test files)
         for py_file in path.rglob("*.py"):
             if not any(test_pattern in str(py_file) for test_pattern in ["test_", "_test.", "/test/", "/tests/"]):
                 source_files.append(py_file)
-        
+
         for js_file in path.rglob("*.js"):
             if not any(test_pattern in str(js_file) for test_pattern in [".test.", ".spec.", "/test/", "/tests/"]):
                 source_files.append(js_file)
-        
+
         for ts_file in path.rglob("*.ts"):
             if not any(test_pattern in str(ts_file) for test_pattern in [".test.", ".spec.", "/test/", "/tests/"]):
                 source_files.append(ts_file)
-        
+
         return source_files
-    
+
     @mcp_tool(
         name="glean_analyze_dependencies",
         description="Analyze code dependencies using Glean"
@@ -5714,7 +5714,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
     async def mcp_analyze_dependencies(self, project_path: str, target_file: str) -> Dict[str, Any]:
         """MCP tool for dependency analysis"""
         return await self._perform_glean_analysis(directory=project_path)
-    
+
     @mcp_tool(
         name="glean_run_linters",
         description="Run comprehensive linting analysis"
@@ -5724,7 +5724,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         if file_patterns is None:
             file_patterns = ["*.py", "*.js", "*.ts"]
         return await self._perform_lint_analysis(directory, file_patterns)
-    
+
     @mcp_tool(
         name="glean_refactor_code",
         description="Generate refactoring suggestions for code improvements"
@@ -5732,7 +5732,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
     async def mcp_refactor_code(self, file_path: str) -> Dict[str, Any]:
         """MCP tool for code refactoring suggestions"""
         return await self.analyze_code_refactoring(file_path)
-    
+
     @mcp_tool(
         name="glean_security_scan",
         description="Comprehensive security vulnerability scan"
@@ -5740,7 +5740,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
     async def mcp_security_scan(self, directory: str, scan_dev_dependencies: bool = False) -> Dict[str, Any]:
         """MCP tool for security vulnerability scanning"""
         return await self.scan_dependency_vulnerabilities(directory, scan_dev_dependencies)
-    
+
     @mcp_tool(
         name="glean_test_coverage",
         description="Analyze test coverage and suggest improvements"
@@ -5748,7 +5748,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
     async def mcp_test_coverage(self, directory: str, coverage_threshold: float = 80.0) -> Dict[str, Any]:
         """MCP tool for test coverage analysis"""
         return await self.analyze_test_coverage(directory, coverage_threshold)
-    
+
     @mcp_resource(
         uri="glean://analysis/{analysis_id}",
         name="glean_analysis",
@@ -5773,7 +5773,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         except Exception as e:
             logger.error(f"Failed to retrieve analysis: {e}")
             return {"error": str(e)}
-    
+
     # Helper methods for mapping tool-specific issue types and severities
     def _map_pylint_type(self, msg_type: str) -> IssueType:
         """Map pylint message types to issue types"""
@@ -5785,7 +5785,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "fatal": IssueType.SYNTAX_ERROR
         }
         return mapping.get(msg_type.lower(), IssueType.STYLE_VIOLATION)
-    
+
     def _map_pylint_severity(self, msg_type: str) -> IssueSeverity:
         """Map pylint message types to severities"""
         mapping = {
@@ -5796,7 +5796,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "fatal": IssueSeverity.CRITICAL
         }
         return mapping.get(msg_type.lower(), IssueSeverity.INFO)
-    
+
     def _map_flake8_type(self, code: str) -> IssueType:
         """Map flake8 error codes to issue types"""
         # E1xx and E9xx are syntax errors, others are style
@@ -5817,7 +5817,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             return IssueType.STYLE_VIOLATION
         else:
             return IssueType.STYLE_VIOLATION
-    
+
     def _map_flake8_severity(self, code: str) -> IssueSeverity:
         """Map flake8 error codes to severities"""
         # Special cases for style-only issues
@@ -5838,14 +5838,14 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             return IssueSeverity.LOW  # Complexity issues
         else:
             return IssueSeverity.LOW
-    
+
     def _map_eslint_type(self, severity: int) -> IssueType:
         """Map ESLint severity to issue types"""
         if severity == 2:
             return IssueType.SYNTAX_ERROR
         else:
             return IssueType.STYLE_VIOLATION
-    
+
     def _map_eslint_severity(self, severity: int) -> IssueSeverity:
         """Map ESLint severity levels"""
         if severity == 2:
@@ -5854,7 +5854,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             return IssueSeverity.MEDIUM
         else:
             return IssueSeverity.INFO
-    
+
     def _map_jshint_type(self, message: str) -> IssueType:
         """Map JSHint message to issue types"""
         message_lower = message.lower()
@@ -5870,7 +5870,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             return IssueType.PERFORMANCE
         else:
             return IssueType.STYLE_VIOLATION
-    
+
     def _map_jshint_severity(self, message: str) -> IssueSeverity:
         """Map JSHint message to severity levels"""
         message_lower = message.lower()
@@ -5882,17 +5882,17 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             return IssueSeverity.LOW
         else:
             return IssueSeverity.MEDIUM
-    
+
     async def _ensure_eslint_config(self, directory: str):
         """Ensure ESLint configuration exists in the directory"""
         config_files = ['.eslintrc.json', '.eslintrc.js', 'eslint.config.js', '.eslintrc.yml', '.eslintrc.yaml']
         config_exists = False
-        
+
         for config_file in config_files:
             if (Path(directory) / config_file).exists():
                 config_exists = True
                 break
-        
+
         if not config_exists:
             # Create a default ESLint configuration
             default_config = {
@@ -5922,20 +5922,20 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     "curly": ["error", "all"]
                 }
             }
-            
+
             config_path = Path(directory) / '.eslintrc.json'
             with open(config_path, 'w') as f:
                 json.dump(default_config, f, indent=2)
             logger.info(f"Created default ESLint config at {config_path}")
-    
+
     async def _ensure_eslint_config_v9(self, directory: str):
         """Ensure ESLint configuration exists in the directory"""
         config_files = [".eslintrc.js", ".eslintrc.json", ".eslintrc.yml", "eslint.config.js", "eslint.config.mjs"]
         dir_path = Path(directory)
-        
+
         # Check if any ESLint config exists
         config_exists = any((dir_path / config_file).exists() for config_file in config_files)
-        
+
         if not config_exists:
             # Create ESLint v9+ compatible configuration
             eslint_config_content = '''export default [
@@ -5979,7 +5979,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         }
     }
 ];'''
-            
+
             # Write ESLint v9+ configuration file
             config_path = dir_path / "eslint.config.js"
             try:
@@ -5988,22 +5988,22 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 logger.info(f"Created ESLint v9+ configuration at {config_path}")
             except Exception as e:
                 logger.warning(f"Failed to create ESLint config: {e}")
-    
+
     async def _register_with_a2a_registry(self):
         """Register this agent with the A2A Registry"""
         try:
             # A2A Protocol: Use blockchain messaging instead of httpx
             registry_url = os.getenv("A2A_REGISTRY_URL")
-            
+
             # Prepare agent card
             agent_card = self.get_agent_card()
-            
+
             # Convert to dict if it's a dataclass
             if hasattr(agent_card, '__dict__'):
                 agent_card_dict = agent_card.__dict__
             else:
                 agent_card_dict = agent_card
-            
+
             registration_request = {
                 "agent_card": agent_card_dict,
                 "registered_by": "glean_agent_auto_registration",
@@ -6016,7 +6016,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     "mcp_enabled": "true"
                 }
             }
-            
+
             # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
             # async with httpx.AsyncClient() as client:
             #     response = await client.post(
@@ -6026,18 +6026,18 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             #     )
             logger.info("Agent registration skipped - A2A protocol compliance")
             return None
-                    
+
         except Exception as e:
             logger.error(f"Error registering with A2A Registry: {e}")
             return None
-    
+
     async def _analyze_ast_for_refactoring(self, tree: 'ast.AST', lines: List[str], file_path: str) -> List[Dict[str, Any]]:
         """Real AST-based refactoring analysis"""
         import ast
         from collections import defaultdict
-        
+
         suggestions = []
-        
+
         # Visitor class for AST analysis
         class RefactoringVisitor(ast.NodeVisitor):
             def __init__(self):
@@ -6047,18 +6047,18 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 self.long_parameter_lists = []
                 self.deep_nesting = []
                 self.similar_functions = []
-                
+
             def visit_FunctionDef(self, node):
                 # Analyze function characteristics
                 func_name = node.name
-                
+
                 # Count parameters (long parameter list smell)
                 param_count = len(node.args.args) + len(node.args.posonlyargs) + len(node.args.kwonlyargs)
                 if node.args.vararg:
                     param_count += 1
                 if node.args.kwarg:
                     param_count += 1
-                
+
                 if param_count > 5:
                     self.suggestions.append({
                         "type": "long_parameter_list",
@@ -6068,19 +6068,19 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         "suggestion": f"Extract parameters into a configuration object or dataclass",
                         "code_example": f"# Consider: def {func_name}(config: {func_name.title()}Config):"
                     })
-                
+
                 # Calculate function length
                 func_lines = (node.end_lineno or node.lineno) - node.lineno + 1
                 if func_lines > 30:
                     self.suggestions.append({
                         "type": "long_function",
-                        "severity": "high", 
+                        "severity": "high",
                         "line": node.lineno,
                         "message": f"Function '{func_name}' is {func_lines} lines long. Consider breaking it down.",
                         "suggestion": "Extract smaller, focused functions from this large function",
                         "code_example": f"# Split {func_name} into multiple single-responsibility functions"
                     })
-                
+
                 # Check for missing docstring
                 if not ast.get_docstring(node):
                     self.suggestions.append({
@@ -6090,7 +6090,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         "message": f"Function '{func_name}' is missing a docstring",
                         "suggestion": "Add a docstring explaining the function's purpose, parameters, and return value"
                     })
-                
+
                 # Analyze function complexity
                 complexity = self._calculate_cyclomatic_complexity(node)
                 if complexity > 10:
@@ -6102,12 +6102,12 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         "suggestion": "Break down complex conditional logic into smaller functions",
                         "code_example": "# Extract conditional blocks into separate, well-named functions"
                     })
-                
+
                 self.generic_visit(node)
-            
+
             def visit_ClassDef(self, node):
                 class_name = node.name
-                
+
                 # Check for God Object (too many methods)
                 methods = [n for n in node.body if isinstance(n, ast.FunctionDef)]
                 if len(methods) > 20:
@@ -6118,7 +6118,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         "message": f"Class '{class_name}' has {len(methods)} methods. Consider splitting responsibilities.",
                         "suggestion": "Break large class into smaller, focused classes following Single Responsibility Principle"
                     })
-                
+
                 # Check for missing docstring
                 if not ast.get_docstring(node):
                     self.suggestions.append({
@@ -6128,9 +6128,9 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         "message": f"Class '{class_name}' is missing a docstring",
                         "suggestion": "Add a class docstring explaining its purpose and responsibilities"
                     })
-                
+
                 self.generic_visit(node)
-            
+
             def visit_If(self, node):
                 # Check for deeply nested conditions
                 nesting_level = self._get_nesting_level(node)
@@ -6143,7 +6143,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         "suggestion": "Consider early returns, guard clauses, or extracting nested logic",
                         "code_example": "# Use early returns: if not condition: return"
                     })
-                
+
                 # Check for complex boolean expressions
                 if self._is_complex_condition(node.test):
                     self.suggestions.append({
@@ -6154,9 +6154,9 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         "suggestion": "Extract complex conditions into well-named boolean variables or methods",
                         "code_example": "# is_valid_user = user.active and user.verified and not user.banned"
                     })
-                
+
                 self.generic_visit(node)
-            
+
             def visit_For(self, node):
                 # Check for nested loops
                 for child in ast.walk(node):
@@ -6169,9 +6169,9 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             "suggestion": "Consider extracting inner loop logic or using more efficient algorithms"
                         })
                         break
-                
+
                 self.generic_visit(node)
-            
+
             def visit_Try(self, node):
                 # Check for empty except clauses
                 for handler in node.handlers:
@@ -6184,9 +6184,9 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             "suggestion": "Catch specific exceptions instead of using bare except",
                             "code_example": "# except ValueError: or except (ValueError, TypeError):"
                         })
-                
+
                 self.generic_visit(node)
-            
+
             def visit_Import(self, node):
                 # Check for star imports
                 for alias in node.names:
@@ -6198,13 +6198,13 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             "message": "Star import detected - may pollute namespace",
                             "suggestion": "Import specific names or use qualified imports"
                         })
-                
+
                 self.generic_visit(node)
-            
+
             def _calculate_cyclomatic_complexity(self, node: ast.FunctionDef) -> int:
                 """Calculate cyclomatic complexity for a function"""
                 complexity = 1  # Base complexity
-                
+
                 for child in ast.walk(node):
                     if isinstance(child, (ast.If, ast.While, ast.For)):
                         complexity += 1
@@ -6212,22 +6212,22 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                         complexity += 1
                     elif isinstance(child, ast.BoolOp):
                         complexity += len(child.values) - 1
-                
+
                 return complexity
-            
+
             def _get_nesting_level(self, node: ast.AST) -> int:
                 """Calculate nesting level of a node"""
                 level = 0
                 current = node
-                
+
                 # This is a simplified nesting calculation
                 # In a real implementation, you'd traverse up the AST
                 for child in ast.walk(node):
                     if isinstance(child, (ast.If, ast.For, ast.While, ast.With)):
                         level += 1
-                
+
                 return min(level, 6)  # Cap at reasonable level
-            
+
             def _is_complex_condition(self, node: ast.AST) -> bool:
                 """Check if a condition is complex"""
                 if isinstance(node, ast.BoolOp):
@@ -6235,21 +6235,21 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 elif isinstance(node, ast.Compare):
                     return len(node.comparators) > 2
                 return False
-        
+
         # Run the visitor
         visitor = RefactoringVisitor()
         visitor.visit(tree)
-        
+
         return visitor.suggestions
-    
+
     async def _analyze_patterns_for_refactoring(self, lines: List[str], file_path: str) -> List[Dict[str, Any]]:
         """Pattern-based analysis for things AST doesn't catch"""
         import re
         suggestions = []
-        
+
         for i, line in enumerate(lines, 1):
             line_stripped = line.strip()
-            
+
             # Long lines
             if len(line) > 120:
                 suggestions.append({
@@ -6259,7 +6259,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     "message": f"Line too long ({len(line)} chars)",
                     "suggestion": "Break long line into multiple lines for better readability"
                 })
-            
+
             # Magic numbers
             magic_numbers = re.findall(r'\b(?!0|1)\d{2,}\b', line_stripped)
             if magic_numbers and not line_stripped.startswith('#'):
@@ -6271,7 +6271,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     "suggestion": "Replace magic numbers with named constants",
                     "code_example": f"# TIMEOUT = {magic_numbers[0]}  # seconds"
                 })
-            
+
             # TODO/FIXME comments
             if re.search(r'\b(TODO|FIXME|HACK|XXX)\b', line_stripped, re.IGNORECASE):
                 suggestions.append({
@@ -6281,7 +6281,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     "message": "Technical debt marker found",
                     "suggestion": "Address TODO/FIXME comment or create a proper issue"
                 })
-            
+
             # Commented out code
             if re.match(r'^\s*#\s*[a-zA-Z_]', line) and not re.match(r'^\s*#\s*TODO|FIXME|NOTE|WARNING', line):
                 suggestions.append({
@@ -6291,26 +6291,26 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     "message": "Commented out code detected",
                     "suggestion": "Remove commented code or use version control instead"
                 })
-        
+
         return suggestions
-    
+
     def _deduplicate_suggestions(self, suggestions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Remove duplicate suggestions"""
         seen = set()
         unique = []
-        
+
         for suggestion in suggestions:
             key = (suggestion["type"], suggestion["line"], suggestion.get("message", ""))
             if key not in seen:
                 seen.add(key)
                 unique.append(suggestion)
-        
+
         return unique
-    
+
     def _calculate_refactoring_metrics(self, tree: 'ast.AST', suggestions: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Calculate refactoring metrics from AST and suggestions"""
         import ast
-        
+
         # Count different types of nodes
         node_counts = {
             'functions': 0,
@@ -6318,7 +6318,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             'imports': 0,
             'total_lines': 0
         }
-        
+
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
                 node_counts['functions'] += 1
@@ -6326,14 +6326,14 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 node_counts['classes'] += 1
             elif isinstance(node, (ast.Import, ast.ImportFrom)):
                 node_counts['imports'] += 1
-        
+
         # Calculate refactoring priority score
         severity_weights = {"critical": 10, "high": 7, "medium": 4, "low": 1}
         total_weight = sum(severity_weights.get(s["severity"], 0) for s in suggestions)
-        
+
         # Calculate maintainability index (simplified)
         maintainability_score = max(0, 100 - (total_weight * 2))
-        
+
         return {
             "refactoring_priority_score": total_weight,
             "maintainability_index": maintainability_score,
@@ -6347,12 +6347,12 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
     async def _scan_with_builtin_vulnerability_database(self, directory: str, scan_dev_dependencies: bool) -> List[Dict[str, Any]]:
         """Real vulnerability database scanning using built-in vulnerability data"""
         vulnerabilities = []
-        
+
         # Built-in vulnerability database with real CVE data
         vulnerability_db = {
             # Python packages
             "django": [
-                {"versions": "< 3.2.18", "cve": "CVE-2023-24580", "severity": "high", 
+                {"versions": "< 3.2.18", "cve": "CVE-2023-24580", "severity": "high",
                  "description": "Django allows potential SQL injection via queryset in admin"},
                 {"versions": "< 4.1.7", "cve": "CVE-2023-23969", "severity": "medium",
                  "description": "Django accepts malformed URLs causing potential DoS"}
@@ -6395,7 +6395,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                  "description": "Express DoS vulnerability via malformed URLs"}
             ]
         }
-        
+
         # Scan Python requirements
         for req_file in ["requirements.txt", "requirements-dev.txt", "pyproject.toml", "Pipfile"]:
             req_path = Path(directory) / req_file
@@ -6419,19 +6419,19 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                     })
                 except Exception as e:
                     logger.warning(f"Failed to parse {req_path}: {e}")
-        
+
         # Scan Node.js packages
         package_json = Path(directory) / "package.json"
         if package_json.exists():
             try:
                 with open(package_json, 'r') as f:
                     package_data = json.load(f)
-                    
+
                 dependencies = {}
                 dependencies.update(package_data.get("dependencies", {}))
                 if scan_dev_dependencies:
                     dependencies.update(package_data.get("devDependencies", {}))
-                
+
                 for dep_name, dep_version in dependencies.items():
                     if dep_name.lower() in vulnerability_db:
                         vulns = vulnerability_db[dep_name.lower()]
@@ -6449,13 +6449,13 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 })
             except Exception as e:
                 logger.warning(f"Failed to parse package.json: {e}")
-        
+
         return vulnerabilities
 
     async def _scan_code_for_security_patterns(self, directory: str) -> List[Dict[str, Any]]:
         """Scan source code for security anti-patterns and vulnerabilities"""
         vulnerabilities = []
-        
+
         # Security patterns to detect - enhanced with context awareness
         security_patterns = {
             # SQL injection patterns
@@ -6519,11 +6519,11 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "exclude_patterns": [r'#.*', r'safe_path', r'sanitize']
             }
         }
-        
+
         # Define files to skip for security scanning
         skip_file_names = ["test_", "_test.py", "example", "sample", "demo", "gleanAgentSdk.py"]
         skip_paths = ["/tests/", "/test/", "__pycache__", ".venv", "venv", "node_modules"]
-        
+
         # Scan Python files
         python_files = list(Path(directory).rglob("*.py"))
         for file_path in python_files:
@@ -6532,12 +6532,12 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 continue
             if any(skip in str(file_path) for skip in skip_paths):
                 continue
-                
+
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
                     lines = content.split('\n')
-                    
+
                 # Use AST to understand context better
                 try:
                     import ast
@@ -6550,32 +6550,32 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 function_lines.add(line)
                 except:
                     function_lines = set(range(1, len(lines) + 1))  # If AST fails, check all lines
-                    
+
                 for pattern_name, pattern_data in security_patterns.items():
                     for pattern in pattern_data["patterns"]:
                         for line_num, line in enumerate(lines, 1):
                             # Skip if not in a function (likely pattern definitions or comments)
                             if line_num not in function_lines and pattern_name != "hardcoded_secrets":
                                 continue
-                                
+
                             # Check exclude patterns first
                             if "exclude_patterns" in pattern_data:
                                 if any(re.search(exc, line, re.IGNORECASE) for exc in pattern_data["exclude_patterns"]):
                                     continue
-                            
+
                             # Skip lines that are comments
                             stripped_line = line.strip()
                             if stripped_line.startswith('#') or stripped_line.startswith('"""') or stripped_line.startswith("'''"):
                                 continue
-                            
+
                             # Skip lines that define regex patterns (avoid self-detection)
                             if re.search(r'["\'].*\\s\*.*["\']', line) and 'patterns' in line:
                                 continue
-                            
+
                             if re.search(pattern, line, re.IGNORECASE):
                                 # Additional context checks
                                 context_valid = True
-                                
+
                                 # For hardcoded secrets, check if it's actually a secret
                                 if pattern_name == "hardcoded_secrets":
                                     # Skip if the value looks like a placeholder
@@ -6584,11 +6584,11 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                     # Skip environment variable references
                                     if re.search(r'(?:os\.environ|getenv|env\[)', line):
                                         context_valid = False
-                                
+
                                 # For SQL injection, check if it's using parameterized queries
                                 if pattern_name == "sql_injection" and re.search(r'execute.*\?|\%s', line):
                                     context_valid = False
-                                
+
                                 if context_valid:
                                     vulnerabilities.append({
                                         "package": "source_code",
@@ -6605,7 +6605,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                     })
             except Exception as e:
                 logger.warning(f"Failed to scan {file_path}: {e}")
-        
+
         return vulnerabilities
 
     def _get_security_remediation(self, pattern_name: str) -> str:
@@ -6622,7 +6622,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
     async def _parse_dependencies_file(self, file_path: Path) -> Dict[str, str]:
         """Parse dependency files to extract package names and versions"""
         dependencies = {}
-        
+
         try:
             if file_path.name == "requirements.txt":
                 with open(file_path, 'r') as f:
@@ -6636,7 +6636,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                             else:
                                 # Simple package name without version
                                 dependencies[line] = "unknown"
-            
+
             elif file_path.name == "pyproject.toml":
                 with open(file_path, 'r') as f:
                     content = f.read()
@@ -6645,10 +6645,10 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                     for name, version in dep_matches:
                         if not name.startswith('python'):  # Skip python version
                             dependencies[name] = version.replace('^', '').replace('~', '')
-            
+
         except Exception as e:
             logger.warning(f"Failed to parse {file_path}: {e}")
-        
+
         return dependencies
 
     def _version_matches_criteria(self, version: str, criteria: str) -> bool:
@@ -6658,17 +6658,17 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         try:
             if version == "unknown":
                 return True  # Assume vulnerable if version unknown
-            
+
             if "< " in criteria:
                 threshold = criteria.replace("< ", "").strip()
                 return self._compare_versions(version, threshold) < 0
             elif "<= " in criteria:
                 threshold = criteria.replace("<= ", "").strip()
                 return self._compare_versions(version, threshold) <= 0
-            
+
         except Exception:
             return True  # Assume vulnerable if comparison fails
-        
+
         return False
 
     def _compare_versions(self, v1: str, v2: str) -> int:
@@ -6677,22 +6677,22 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             # Remove common version prefixes
             v1 = v1.replace('^', '').replace('~', '').replace('>=', '').replace('==', '')
             v2 = v2.replace('^', '').replace('~', '').replace('>=', '').replace('==', '')
-            
+
             # Split into parts and compare
             parts1 = [int(x) for x in v1.split('.') if x.isdigit()]
             parts2 = [int(x) for x in v2.split('.') if x.isdigit()]
-            
+
             # Pad shorter version with zeros
             max_len = max(len(parts1), len(parts2))
             parts1.extend([0] * (max_len - len(parts1)))
             parts2.extend([0] * (max_len - len(parts2)))
-            
+
             for p1, p2 in zip(parts1, parts2):
                 if p1 < p2:
                     return -1
                 elif p1 > p2:
                     return 1
-            
+
             return 0
         except Exception:
             return 0
@@ -6701,7 +6701,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
         """Remove duplicate vulnerabilities"""
         seen = set()
         unique = []
-        
+
         for vuln in vulnerabilities:
             key = (
                 vuln.get("package", ""),
@@ -6712,22 +6712,22 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             if key not in seen:
                 seen.add(key)
                 unique.append(vuln)
-        
+
         return unique
 
     def _calculate_security_risk_metrics(self, vulnerabilities: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Calculate security risk metrics"""
         if not vulnerabilities:
             return {"risk_score": 0, "risk_level": "low"}
-        
+
         # Calculate risk score based on severity and count
         severity_weights = {"critical": 10, "high": 7, "medium": 4, "low": 1}
         total_score = sum(severity_weights.get(v.get("severity", "low"), 1) for v in vulnerabilities)
-        
+
         # Normalize risk score (0-100)
         max_possible = len(vulnerabilities) * 10
         risk_score = min(100, (total_score / max_possible) * 100) if max_possible > 0 else 0
-        
+
         # Determine risk level
         if risk_score >= 70:
             risk_level = "critical"
@@ -6737,7 +6737,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             risk_level = "medium"
         else:
             risk_level = "low"
-        
+
         return {
             "risk_score": round(risk_score, 1),
             "risk_level": risk_level,
@@ -6751,38 +6751,38 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
     def _register_mcp_components(self):
         """Register MCP tools and resources"""
         logger.info("Registering MCP components for Glean Agent")
-        
+
         # The MCP tools and resources are already decorated with @mcp_tool and @mcp_resource
         # They will be automatically discovered by the MCP server in the base class
-        
+
         # Log registered components
         tools = self.list_mcp_tools()
         logger.info(f"Registered {len(tools)} MCP tools: {[t['name'] for t in tools]}")
-        
+
         resources = self.list_mcp_resources()
         logger.info(f"Registered {len(resources)} MCP resources")
-    
+
     async def fix_javascript_issues(self, directory: str, auto_fix: bool = True, dry_run: bool = False) -> Dict[str, Any]:
         """Fix JavaScript issues automatically using ESLint and custom fixes"""
         start_time = time.time()
         fixed_issues = 0
         total_issues = 0
         files_modified = []
-        
+
         # Ensure ESLint config exists
         await self._ensure_eslint_config(directory)
-        
+
         # Find all JavaScript files
         js_files = []
         for pattern in ['*.js', '*.jsx']:
             js_files.extend(Path(directory).rglob(pattern))
-        
+
         # Filter out node_modules and other ignore patterns
         ignore_patterns = ['node_modules', 'venv', 'backup', '.git']
         js_files = [f for f in js_files if not any(ignore in str(f) for ignore in ignore_patterns)]
-        
+
         logger.info(f"Found {len(js_files)} JavaScript files to process")
-        
+
         results = {
             "files_processed": len(js_files),
             "issues_fixed": 0,
@@ -6791,31 +6791,31 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             "fix_summary": {},
             "duration": 0
         }
-        
+
         if auto_fix and self._check_tool_available('eslint'):
             # Run ESLint with --fix option
             logger.info("Running ESLint auto-fix...")
-            
+
             # Process in batches for better performance
             batch_size = 50
             for i in range(0, len(js_files), batch_size):
                 batch = js_files[i:i+batch_size]
                 batch_paths = [str(f) for f in batch]
-                
+
                 cmd = ['eslint', '--fix'] + batch_paths
                 if dry_run:
                     cmd.insert(2, '--dry-run')
-                
+
                 result = await self._safe_subprocess_run(cmd, cwd=directory, timeout=120)
-                
+
                 if result.get('success', False) or result.get('returncode', 1) == 0:
                     # ESLint returns 0 when fixes are applied successfully
                     results['files_modified'].extend(batch_paths)
-                    
+
                     # Run ESLint again to count remaining issues
                     check_cmd = ['eslint', '--format=json'] + batch_paths
                     check_result = await self._safe_subprocess_run(check_cmd, cwd=directory, timeout=60)
-                    
+
                     if check_result.get('stdout'):
                         try:
                             eslint_data = json.loads(check_result['stdout'])
@@ -6823,23 +6823,23 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                                 results['issues_remaining'] += len(file_data.get('messages', []))
                         except json.JSONDecodeError:
                             pass
-        
+
         # Apply custom fixes for common issues
         custom_fixes = await self._apply_custom_javascript_fixes(js_files, dry_run)
         results['fix_summary'].update(custom_fixes)
         results['issues_fixed'] += custom_fixes.get('total_fixes', 0)
-        
+
         results['duration'] = time.time() - start_time
-        
+
         # Generate fix report
         if not dry_run:
             report_path = Path(directory) / 'javascript_fixes_report.json'
             with open(report_path, 'w') as f:
                 json.dump(results, f, indent=2)
             logger.info(f"Fix report saved to {report_path}")
-        
+
         return results
-    
+
     async def _apply_custom_javascript_fixes(self, files: List[Path], dry_run: bool = False) -> Dict[str, Any]:
         """Apply custom fixes for JavaScript issues that ESLint can't fix automatically"""
         fixes = {
@@ -6850,77 +6850,77 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
             'missing_braces_added': 0,
             'total_fixes': 0
         }
-        
+
         for file_path in files:
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
                     original_content = content
-                
+
                 # Fix 1: Replace var with let/const
                 import re
-                
+
                 # Pattern to match var declarations
                 var_pattern = re.compile(r'^(\s*)var\s+([^=;]+)(=?)([^;]*);', re.MULTILINE)
-                
+
                 def var_replacer(match):
                     indent = match.group(1)
                     variable = match.group(2).strip()
                     has_assignment = match.group(3)
                     value = match.group(4).strip()
-                    
+
                     # Use const if there's an immediate assignment, otherwise let
                     keyword = 'const' if has_assignment else 'let'
-                    
+
                     if has_assignment:
                         return f"{indent}{keyword} {variable} = {value};"
                     else:
                         return f"{indent}{keyword} {variable};"
-                
+
                 new_content, var_count = var_pattern.subn(var_replacer, content)
                 if var_count > 0:
                     content = new_content
                     fixes['var_to_let_const'] += var_count
-                
+
                 # Fix 2: Add 'use strict' if missing
                 if '"use strict"' not in content and "'use strict'" not in content:
                     # Add use strict at the beginning of the file or function
                     content = '"use strict";\n\n' + content
-                
+
                 # Fix 3: Add eslint-disable for legitimate console usage
                 console_pattern = re.compile(r'^(\s*)(console\.(log|warn|error|info)\(.*\);?)$', re.MULTILINE)
-                
+
                 def console_wrapper(match):
                     indent = match.group(1)
                     statement = match.group(2)
-                    
+
                     # Only wrap console.log, keep console.warn and console.error
                     if 'console.log' in statement:
                         return f"{indent}// eslint-disable-next-line no-console\n{indent}{statement}"
                     else:
                         return match.group(0)
-                
+
                 new_content, console_count = console_pattern.subn(console_wrapper, content)
                 if console_count > 0:
                     content = new_content
                     fixes['console_wrapped'] += console_count
-                
+
                 # Only write if changes were made
                 if content != original_content and not dry_run:
                     with open(file_path, 'w', encoding='utf-8') as f:
                         f.write(content)
                     fixes['total_fixes'] += var_count + console_count
-                
+
             except Exception as e:
                 logger.error(f"Error processing {file_path}: {e}")
                 continue
-        
+
         return fixes
-    
+
     async def generate_eslint_config_templates(self, output_dir: str) -> Dict[str, str]:
         """Generate various ESLint configuration templates for different project types"""
         templates = {}
-        
+
         # Template 1: Modern ES6+ with SAP UI5
         templates['sapui5'] = {
             "env": {
@@ -6953,7 +6953,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "no-unused-vars": ["error", {"argsIgnorePattern": "^_"}]
             }
         }
-        
+
         # Template 2: Node.js Backend
         templates['nodejs'] = {
             "env": {
@@ -6976,7 +6976,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 "no-return-await": "error"
             }
         }
-        
+
         # Template 3: React/JSX
         templates['react'] = {
             "env": {
@@ -7008,11 +7008,11 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 }
             }
         }
-        
+
         # Save templates
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
-        
+
         saved_files = {}
         for name, config in templates.items():
             file_path = output_path / f"eslintrc.{name}.json"
@@ -7020,7 +7020,7 @@ class GleanAgent(SecureA2AAgent, BlockchainIntegrationMixin):
                 json.dump(config, f, indent=2)
             saved_files[name] = str(file_path)
             logger.info(f"Created ESLint template: {file_path}")
-        
+
         # Also create a markdown guide
         guide_path = output_path / "eslint_setup_guide.md"
         with open(guide_path, 'w') as f:
@@ -7072,7 +7072,7 @@ Modify rules based on your team's preferences:
 - `"error"` or `2` - Error (exit code 1)
 """)
         saved_files['guide'] = str(guide_path)
-        
+
         return saved_files
 
 
@@ -7080,12 +7080,12 @@ Modify rules based on your team's preferences:
 if __name__ == "__main__":
     import uvicorn
     from fastapi import FastAPI
-    
+
     # Create agent instance
     agent = GleanAgent()
-    
+
     # Create FastAPI app
     app = agent.create_fastapi_app()
-    
+
     # Run the agent
     uvicorn.run(app, host="0.0.0.0", port=8007)

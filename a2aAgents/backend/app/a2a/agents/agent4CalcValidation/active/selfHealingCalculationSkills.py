@@ -25,7 +25,7 @@ except ImportError:
     class PerformanceMonitorMixin(SecureA2AAgent):
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
+        # - Rate limiting and request throttling
         # - Input validation and sanitization
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
@@ -34,7 +34,7 @@ except ImportError:
     class SecurityHardenedMixin(SecureA2AAgent):
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
+        # - Rate limiting and request throttling
         # - Input validation and sanitization
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
@@ -49,7 +49,7 @@ except ImportError:
     class TrustIdentity(SecureA2AAgent):
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
+        # - Rate limiting and request throttling
         # - Input validation and sanitization
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
@@ -63,7 +63,7 @@ except ImportError:
     class DataValidator(SecureA2AAgent):
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
+        # - Rate limiting and request throttling
         # - Input validation and sanitization
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
@@ -135,7 +135,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
         self.trust_identity = trust_identity
         self.logger = logging.getLogger(__name__)
         self.data_validator = DataValidator()
-        
+
         # Initialize GrokClient for intelligent analysis
         try:
             self.grok_client = get_grok_client()
@@ -143,10 +143,10 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
         except Exception as e:
             self.logger.warning(f"GrokClient initialization failed: {e}")
             self.grok_client = None
-        
+
         # Healing strategies repository
         self.healing_strategies = self._initialize_healing_strategies()
-        
+
         # Error pattern database for learning
         self.error_patterns = {
             'precision_patterns': [],
@@ -156,7 +156,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
             'convergence_patterns': [],
             'data_patterns': []
         }
-        
+
         # Performance tracking
         self.healing_metrics = {
             'total_errors_detected': 0,
@@ -207,40 +207,40 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
             input_data = request_data["input_data"]
             expected_properties = request_data.get("expected_properties", {})
             historical_results = request_data.get("historical_results", [])
-            
+
             detected_errors = []
             detection_confidence = 0.0
-            
+
             # 1. Range validation
             range_errors = self._detect_range_errors(calculation_result, expected_properties)
             detected_errors.extend(range_errors)
-            
+
             # 2. Type validation
             type_errors = self._detect_type_errors(calculation_result, expected_properties)
             detected_errors.extend(type_errors)
-            
+
             # 3. Mathematical property validation
             math_errors = self._detect_mathematical_property_errors(calculation_result, input_data)
             detected_errors.extend(math_errors)
-            
+
             # 4. Historical pattern analysis
             if historical_results:
                 pattern_errors = self._detect_pattern_anomalies(calculation_result, input_data, historical_results)
                 detected_errors.extend(pattern_errors)
-            
+
             # 5. Domain constraint validation
             domain_errors = self._detect_domain_constraint_violations(calculation_result, expected_properties)
             detected_errors.extend(domain_errors)
-            
+
             # 6. Statistical anomaly detection
             statistical_errors = self._detect_statistical_anomalies(calculation_result, historical_results)
             detected_errors.extend(statistical_errors)
-            
+
             # Calculate overall detection confidence
             if detected_errors:
                 detection_confidence = np.mean([error['confidence'] for error in detected_errors])
                 self.healing_metrics['total_errors_detected'] += len(detected_errors)
-            
+
             # Create formal error objects
             formal_errors = []
             for error_data in detected_errors:
@@ -253,7 +253,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
                     confidence_score=error_data['confidence']
                 )
                 formal_errors.append(error)
-            
+
             return {
                 'success': True,
                 'errors_detected': len(detected_errors),
@@ -277,7 +277,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
                     'statistical_checks': len([e for e in detected_errors if 'statistical' in e['description']])
                 }
             }
-            
+
         except Exception as e:
             self.logger.error(f"Error detection failed: {str(e)}")
             return {
@@ -324,7 +324,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
         try:
             error_details = request_data["error_details"]
             healing_prefs = request_data.get("healing_preferences", {})
-            
+
             # Reconstruct error object
             error = CalculationError(
                 error_id=error_details["error_id"],
@@ -334,7 +334,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
                 failed_output=error_details["failed_output"],
                 confidence_score=error_details.get("confidence_score", 0.8)
             )
-            
+
             # Get healing preferences
             max_iterations = healing_prefs.get("max_iterations", 3)
             accuracy_threshold = healing_prefs.get("accuracy_threshold", 0.95)
@@ -342,45 +342,45 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
             allowed_strategies = healing_prefs.get("allowed_strategies", [
                 "precision_adjustment", "algorithmic_refinement", "data_preprocessing", "numerical_stabilization"
             ])
-            
+
             # Get Grok insights if enabled
             grok_insights = None
             if use_grok:
                 grok_insights = self._get_grok_healing_insights(error)
                 self.healing_metrics['grok_consultations'] += 1
-            
+
             # Select healing strategy
             best_strategy = self._select_healing_strategy(error, allowed_strategies, grok_insights)
-            
+
             # Execute healing iterations
             healing_result = None
             for iteration in range(max_iterations):
                 self.logger.info(f"Healing iteration {iteration + 1} for error {error.error_id}")
-                
+
                 try:
                     healing_result = self._execute_healing_strategy(error, best_strategy, iteration)
-                    
+
                     # Validate healing result
                     validation_result = self._validate_healing_result(healing_result, accuracy_threshold)
-                    
+
                     if validation_result['is_valid']:
                         self.healing_metrics['successful_healings'] += 1
                         break
-                        
+
                 except Exception as healing_error:
                     self.logger.warning(f"Healing iteration {iteration + 1} failed: {healing_error}")
                     if iteration == max_iterations - 1:
                         raise healing_error
-            
+
             # Update success rate
             if self.healing_metrics['total_errors_detected'] > 0:
                 self.healing_metrics['healing_success_rate'] = (
                     self.healing_metrics['successful_healings'] / self.healing_metrics['total_errors_detected']
                 )
-            
+
             # Learn from this healing attempt
             self._learn_from_healing_attempt(error, best_strategy, healing_result)
-            
+
             return {
                 'success': True,
                 'healing_result': {
@@ -407,7 +407,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
                     'successful_healings': self.healing_metrics['successful_healings']
                 }
             }
-            
+
         except Exception as e:
             self.logger.error(f"Calculation healing failed: {str(e)}")
             return {
@@ -453,32 +453,32 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
         try:
             calculation_history = request_data["calculation_history"]
             learning_params = request_data.get("learning_parameters", {})
-            
+
             min_frequency = learning_params.get("min_pattern_frequency", 3)
             confidence_threshold = learning_params.get("confidence_threshold", 0.8)
             enable_grok = learning_params.get("enable_grok_analysis", True) and self.grok_client is not None
-            
+
             # Analyze patterns by error type
             error_patterns = {}
             strategy_effectiveness = {}
-            
+
             for record in calculation_history:
                 error_type = record.get("error_type")
                 strategy = record.get("healing_strategy")
                 success = record.get("success", False)
-                
+
                 if error_type:
                     if error_type not in error_patterns:
                         error_patterns[error_type] = []
                     error_patterns[error_type].append(record)
-                    
+
                 if strategy:
                     if strategy not in strategy_effectiveness:
                         strategy_effectiveness[strategy] = {'success': 0, 'total': 0}
                     strategy_effectiveness[strategy]['total'] += 1
                     if success:
                         strategy_effectiveness[strategy]['success'] += 1
-            
+
             # Identify recurring patterns
             learned_patterns = []
             for error_type, records in error_patterns.items():
@@ -487,26 +487,26 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
                     if pattern_analysis['confidence'] >= confidence_threshold:
                         learned_patterns.append(pattern_analysis)
                         self.healing_metrics['learned_patterns'] += 1
-            
+
             # Get Grok insights on patterns if enabled
             grok_pattern_insights = None
             if enable_grok and learned_patterns:
                 grok_pattern_insights = self._get_grok_pattern_insights(learned_patterns, strategy_effectiveness)
-            
+
             # Update healing strategies based on learning
             strategy_updates = self._update_healing_strategies(learned_patterns, strategy_effectiveness)
-            
+
             # Generate learning report
             learning_report = {
                 'patterns_discovered': len(learned_patterns),
                 'strategies_analyzed': len(strategy_effectiveness),
-                'most_effective_strategy': max(strategy_effectiveness.items(), 
+                'most_effective_strategy': max(strategy_effectiveness.items(),
                                              key=lambda x: x[1]['success']/max(x[1]['total'], 1))[0] if strategy_effectiveness else None,
                 'least_effective_strategy': min(strategy_effectiveness.items(),
                                               key=lambda x: x[1]['success']/max(x[1]['total'], 1))[0] if strategy_effectiveness else None,
                 'overall_success_rate': sum(s['success'] for s in strategy_effectiveness.values()) / max(sum(s['total'] for s in strategy_effectiveness.values()), 1)
             }
-            
+
             return {
                 'success': True,
                 'learning_results': {
@@ -534,7 +534,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
                 'learning_report': learning_report,
                 'updated_metrics': self.healing_metrics
             }
-            
+
         except Exception as e:
             self.logger.error(f"Pattern learning failed: {str(e)}")
             return {
@@ -546,7 +546,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
     def _initialize_healing_strategies(self) -> Dict[str, HealingStrategy]:
         """Initialize the repository of healing strategies"""
         strategies = {}
-        
+
         # Precision adjustment strategy
         strategies['precision_adjustment'] = HealingStrategy(
             strategy_id='precision_adjustment',
@@ -561,7 +561,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
             success_probability=0.8,
             computational_cost=0.3
         )
-        
+
         # Algorithmic refinement strategy
         strategies['algorithmic_refinement'] = HealingStrategy(
             strategy_id='algorithmic_refinement',
@@ -576,7 +576,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
             success_probability=0.7,
             computational_cost=0.6
         )
-        
+
         # Data preprocessing strategy
         strategies['data_preprocessing'] = HealingStrategy(
             strategy_id='data_preprocessing',
@@ -591,7 +591,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
             success_probability=0.75,
             computational_cost=0.4
         )
-        
+
         # Numerical stabilization strategy
         strategies['numerical_stabilization'] = HealingStrategy(
             strategy_id='numerical_stabilization',
@@ -606,38 +606,38 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
             success_probability=0.65,
             computational_cost=0.5
         )
-        
+
         return strategies
 
     def _detect_range_errors(self, result: Any, expected_properties: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Detect range validation errors"""
         errors = []
-        
+
         if isinstance(result, (int, float, np.number)):
             range_min = expected_properties.get('range_min')
             range_max = expected_properties.get('range_max')
-            
+
             if range_min is not None and result < range_min:
                 errors.append({
                     'type': 'domain_error',
                     'description': f'Result {result} below minimum range {range_min}',
                     'confidence': 0.9
                 })
-                
+
             if range_max is not None and result > range_max:
                 errors.append({
                     'type': 'domain_error',
                     'description': f'Result {result} above maximum range {range_max}',
                     'confidence': 0.9
                 })
-        
+
         return errors
 
     def _detect_type_errors(self, result: Any, expected_properties: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Detect type validation errors"""
         errors = []
         expected_type = expected_properties.get('data_type')
-        
+
         if expected_type:
             if expected_type == 'integer' and not isinstance(result, (int, np.integer)):
                 errors.append({
@@ -651,13 +651,13 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
                     'description': f'Expected float but got {type(result).__name__}',
                     'confidence': 0.95
                 })
-        
+
         return errors
 
     def _detect_mathematical_property_errors(self, result: Any, input_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Detect mathematical property violations"""
         errors = []
-        
+
         # Check for NaN/Infinity
         if isinstance(result, (float, np.floating)):
             if np.isnan(result):
@@ -672,7 +672,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
                     'description': 'Result is infinite',
                     'confidence': 1.0
                 })
-        
+
         # Check for complex results when real expected
         if isinstance(result, complex) and result.imag != 0:
             errors.append({
@@ -680,27 +680,27 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
                 'description': 'Complex result when real number expected',
                 'confidence': 0.9
             })
-        
+
         return errors
 
     def _detect_pattern_anomalies(self, result: Any, input_data: Dict[str, Any], historical_results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Detect anomalies based on historical patterns"""
         errors = []
-        
+
         if not historical_results or len(historical_results) < 3:
             return errors
-        
+
         # Extract historical outputs for similar inputs
         similar_outputs = []
         for hist in historical_results:
             if self._are_inputs_similar(input_data, hist.get('input', {})):
                 similar_outputs.append(hist.get('output'))
-        
+
         if len(similar_outputs) >= 2:
             if isinstance(result, (int, float, np.number)) and all(isinstance(o, (int, float, np.number)) for o in similar_outputs):
                 mean_output = np.mean(similar_outputs)
                 std_output = np.std(similar_outputs)
-                
+
                 # Z-score anomaly detection
                 if std_output > 0:
                     z_score = abs((result - mean_output) / std_output)
@@ -710,14 +710,14 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
                             'description': f'Result {result} is anomalous (z-score: {z_score:.2f})',
                             'confidence': min(z_score / 10.0, 0.95)
                         })
-        
+
         return errors
 
     def _detect_domain_constraint_violations(self, result: Any, expected_properties: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Detect domain constraint violations"""
         errors = []
         domain_constraints = expected_properties.get('domain_constraints', [])
-        
+
         for constraint in domain_constraints:
             if constraint == 'positive' and isinstance(result, (int, float, np.number)) and result <= 0:
                 errors.append({
@@ -737,43 +737,43 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
                     'description': 'Probability must be between 0 and 1',
                     'confidence': 0.95
                 })
-        
+
         return errors
 
     def _detect_statistical_anomalies(self, result: Any, historical_results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Detect statistical anomalies"""
         errors = []
-        
+
         if not historical_results or len(historical_results) < 5:
             return errors
-        
+
         # Extract all historical outputs
         all_outputs = [hist.get('output') for hist in historical_results]
         numeric_outputs = [o for o in all_outputs if isinstance(o, (int, float, np.number))]
-        
+
         if len(numeric_outputs) >= 5 and isinstance(result, (int, float, np.number)):
             # Interquartile range (IQR) method
             q1 = np.percentile(numeric_outputs, 25)
             q3 = np.percentile(numeric_outputs, 75)
             iqr = q3 - q1
-            
+
             lower_bound = q1 - 1.5 * iqr
             upper_bound = q3 + 1.5 * iqr
-            
+
             if result < lower_bound or result > upper_bound:
                 errors.append({
                     'type': 'data_inconsistency',
                     'description': f'Result {result} is statistical outlier (IQR bounds: [{lower_bound:.3f}, {upper_bound:.3f}])',
                     'confidence': 0.7
                 })
-        
+
         return errors
 
     def _are_inputs_similar(self, input1: Dict[str, Any], input2: Dict[str, Any], similarity_threshold: float = 0.8) -> bool:
         """Check if two inputs are similar"""
         if set(input1.keys()) != set(input2.keys()):
             return False
-        
+
         similar_keys = 0
         for key in input1.keys():
             val1, val2 = input1[key], input2[key]
@@ -784,14 +784,14 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
                     similar_keys += 1
             elif val1 == val2:
                 similar_keys += 1
-        
+
         return (similar_keys / len(input1)) >= similarity_threshold
 
     def _get_grok_healing_insights(self, error: CalculationError) -> Optional[str]:
         """Get AI insights from GrokClient for healing strategy"""
         if not self.grok_client:
             return None
-        
+
         try:
             messages = [
                 {
@@ -802,20 +802,20 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
                     "role": "user",
                     "content": f"""
                     Analyze this calculation error and suggest healing strategies:
-                    
+
                     Error Type: {error.error_type.value}
                     Description: {error.description}
                     Input Data: {json.dumps(error.original_input, indent=2)}
                     Failed Output: {error.failed_output}
-                    
+
                     Please provide specific, actionable healing strategies for this error.
                     """
                 }
             ]
-            
+
             response = self.grok_client.chat_completion(messages, temperature=0.3, max_tokens=500)
             return response.content
-            
+
         except Exception as e:
             self.logger.warning(f"GrokClient healing insights failed: {e}")
             return None
@@ -824,16 +824,16 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
         """Select the best healing strategy for the error"""
         # Filter available strategies
         available_strategies = {k: v for k, v in self.healing_strategies.items() if k in allowed_strategies}
-        
+
         if not available_strategies:
             # Return default strategy
             return list(self.healing_strategies.values())[0]
-        
+
         # Strategy selection logic based on error type
         strategy_scores = {}
         for strategy_id, strategy in available_strategies.items():
             base_score = strategy.success_probability
-            
+
             # Adjust score based on error type compatibility
             if error.error_type == CalculationErrorType.PRECISION_LOSS and strategy_id == 'precision_adjustment':
                 base_score *= 1.3
@@ -843,12 +843,12 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
                 base_score *= 1.2
             elif error.error_type == CalculationErrorType.LOGICAL_ERROR and strategy_id == 'algorithmic_refinement':
                 base_score *= 1.2
-            
+
             # Consider computational cost
             base_score *= (1.0 - strategy.computational_cost * 0.2)
-            
+
             strategy_scores[strategy_id] = base_score
-        
+
         # Select highest scoring strategy
         best_strategy_id = max(strategy_scores.items(), key=lambda x: x[1])[0]
         return available_strategies[best_strategy_id]
@@ -856,12 +856,12 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
     def _execute_healing_strategy(self, error: CalculationError, strategy: HealingStrategy, iteration: int) -> HealingResult:
         """Execute the selected healing strategy"""
         healing_id = hashlib.md5(f"{error.error_id}_{strategy.strategy_id}_{iteration}_{datetime.utcnow().isoformat()}".encode()).hexdigest()[:12]
-        
+
         # Strategy-specific healing implementation
         healed_output = None
         healing_confidence = 0.0
         validation_results = {}
-        
+
         if strategy.strategy_id == 'precision_adjustment':
             healed_output, healing_confidence, validation_results = self._apply_precision_adjustment(error)
         elif strategy.strategy_id == 'algorithmic_refinement':
@@ -872,7 +872,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
             healed_output, healing_confidence, validation_results = self._apply_numerical_stabilization(error)
         else:
             raise ValueError(f"Unknown healing strategy: {strategy.strategy_id}")
-        
+
         return HealingResult(
             healing_id=healing_id,
             original_error=error,
@@ -885,7 +885,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
     def _apply_precision_adjustment(self, error: CalculationError) -> Tuple[Any, float, Dict[str, Any]]:
         """Apply precision adjustment healing strategy"""
         original_input = error.original_input
-        
+
         # Convert inputs to higher precision if possible
         if isinstance(error.failed_output, (float, np.floating)):
             # Use higher precision arithmetic
@@ -895,49 +895,49 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
 # A2A Protocol Compliance: All imports must be available
 # No fallback implementations allowed - the agent must have all required dependencies
             getcontext().prec = 50  # Higher precision
-            
+
             try:
                 # Example: re-compute with higher precision (simplified)
                 healed_output = float(error.failed_output)  # Placeholder - actual computation depends on context
                 healing_confidence = 0.8
                 validation_results = {'precision_improved': True, 'method': 'decimal_precision'}
-                
+
                 return healed_output, healing_confidence, validation_results
             except Exception as e:
                 return error.failed_output, 0.1, {'error': str(e)}
-        
+
         return error.failed_output, 0.3, {'method': 'no_precision_adjustment_needed'}
 
     def _apply_algorithmic_refinement(self, error: CalculationError) -> Tuple[Any, float, Dict[str, Any]]:
         """Apply algorithmic refinement healing strategy"""
         # Placeholder for algorithm-specific refinement
         # In practice, this would involve algorithm-specific improvements
-        
+
         healed_output = error.failed_output
         healing_confidence = 0.6
         validation_results = {'refinement_applied': 'generic_stabilization'}
-        
+
         return healed_output, healing_confidence, validation_results
 
     def _apply_data_preprocessing(self, error: CalculationError) -> Tuple[Any, float, Dict[str, Any]]:
         """Apply data preprocessing healing strategy"""
         original_input = error.original_input.copy()
-        
+
         # Apply common preprocessing techniques
         preprocessing_applied = []
-        
+
         for key, value in original_input.items():
             if isinstance(value, (int, float, np.number)):
                 # Handle edge cases
                 if np.isnan(value) or np.isinf(value):
                     original_input[key] = 0.0  # Or median/mean from historical data
                     preprocessing_applied.append(f'replaced_invalid_{key}')
-                
+
                 # Normalize extreme values
                 if abs(value) > 1e10:
                     original_input[key] = np.sign(value) * 1e10
                     preprocessing_applied.append(f'clamped_{key}')
-        
+
         # Re-compute with preprocessed data (simplified example)
         healed_output = error.failed_output  # Placeholder
         healing_confidence = 0.7 if preprocessing_applied else 0.3
@@ -945,14 +945,14 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
             'preprocessing_applied': preprocessing_applied,
             'preprocessed_input': original_input
         }
-        
+
         return healed_output, healing_confidence, validation_results
 
     def _apply_numerical_stabilization(self, error: CalculationError) -> Tuple[Any, float, Dict[str, Any]]:
         """Apply numerical stabilization healing strategy"""
         # Apply stabilization techniques
         stabilization_methods = []
-        
+
         if isinstance(error.failed_output, (float, np.floating)):
             if abs(error.failed_output) < 1e-15:  # Very small number
                 healed_output = 0.0
@@ -961,28 +961,28 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
                 healed_output = error.failed_output
         else:
             healed_output = error.failed_output
-        
+
         healing_confidence = 0.6
         validation_results = {
             'stabilization_methods': stabilization_methods,
             'original_magnitude': abs(error.failed_output) if isinstance(error.failed_output, (int, float, np.number)) else 'non_numeric'
         }
-        
+
         return healed_output, healing_confidence, validation_results
 
     def _validate_healing_result(self, healing_result: HealingResult, accuracy_threshold: float) -> Dict[str, Any]:
         """Validate the healing result"""
         is_valid = healing_result.healing_confidence >= accuracy_threshold
-        
+
         validation_details = {
             'is_valid': is_valid,
             'confidence_check': healing_result.healing_confidence >= accuracy_threshold,
-            'output_type_check': not (isinstance(healing_result.healed_output, (float, np.floating)) and 
+            'output_type_check': not (isinstance(healing_result.healed_output, (float, np.floating)) and
                                     (np.isnan(healing_result.healed_output) or np.isinf(healing_result.healed_output))),
             'healing_confidence': healing_result.healing_confidence,
             'accuracy_threshold': accuracy_threshold
         }
-        
+
         return validation_details
 
     def _learn_from_healing_attempt(self, error: CalculationError, strategy: HealingStrategy, healing_result: Optional[HealingResult]):
@@ -997,7 +997,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
                 'confidence_achieved': healing_result.healing_confidence if healing_result else 0.0,
                 'timestamp': datetime.utcnow().isoformat()
             })
-            
+
             # Keep only recent patterns (last 100)
             if len(self.error_patterns[pattern_key]) > 100:
                 self.error_patterns[pattern_key] = self.error_patterns[pattern_key][-100:]
@@ -1006,28 +1006,28 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
         """Analyze a specific error pattern"""
         successful_strategies = {}
         total_attempts = len(records)
-        
+
         for record in records:
             strategy = record.get('healing_strategy', 'unknown')
             success = record.get('success', False)
-            
+
             if strategy not in successful_strategies:
                 successful_strategies[strategy] = {'success': 0, 'total': 0}
-            
+
             successful_strategies[strategy]['total'] += 1
             if success:
                 successful_strategies[strategy]['success'] += 1
-        
+
         # Find most effective strategy
         best_strategy = None
         best_success_rate = 0.0
-        
+
         for strategy, stats in successful_strategies.items():
             success_rate = stats['success'] / max(stats['total'], 1)
             if success_rate > best_success_rate:
                 best_success_rate = success_rate
                 best_strategy = strategy
-        
+
         return {
             'error_type': error_type,
             'frequency': total_attempts,
@@ -1041,18 +1041,18 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
         """Get Grok insights on learned patterns"""
         if not self.grok_client:
             return None
-        
+
         try:
             patterns_summary = "\n".join([
                 f"- {pattern['error_type']}: {pattern['frequency']} occurrences, {pattern['recommended_strategy']} recommended"
                 for pattern in learned_patterns
             ])
-            
+
             strategy_summary = "\n".join([
                 f"- {strategy}: {stats['success']}/{stats['total']} success rate"
                 for strategy, stats in strategy_effectiveness.items()
             ])
-            
+
             messages = [
                 {
                     "role": "system",
@@ -1062,13 +1062,13 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
                     "role": "user",
                     "content": f"""
                     Analyze these learned calculation error patterns and strategy effectiveness:
-                    
+
                     Learned Patterns:
                     {patterns_summary}
-                    
+
                     Strategy Effectiveness:
                     {strategy_summary}
-                    
+
                     Please provide insights on:
                     1. Most critical patterns to address
                     2. Strategy optimization recommendations
@@ -1076,10 +1076,10 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
                     """
                 }
             ]
-            
+
             response = self.grok_client.chat_completion(messages, temperature=0.4, max_tokens=400)
             return response.content
-            
+
         except Exception as e:
             self.logger.warning(f"GrokClient pattern insights failed: {e}")
             return None
@@ -1087,7 +1087,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
     def _update_healing_strategies(self, learned_patterns: List[Dict[str, Any]], strategy_effectiveness: Dict[str, Dict[str, Any]]) -> List[str]:
         """Update healing strategies based on learned patterns"""
         updates = []
-        
+
         for pattern in learned_patterns:
             recommended_strategy = pattern['recommended_strategy']
             if recommended_strategy in self.healing_strategies:
@@ -1096,7 +1096,7 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
                 new_prob = min(current_prob * 1.1, 0.95)  # Max 95%
                 self.healing_strategies[recommended_strategy].success_probability = new_prob
                 updates.append(f"Increased success probability for {recommended_strategy} to {new_prob:.2f}")
-        
+
         # Decrease probability for less effective strategies
         for strategy, stats in strategy_effectiveness.items():
             if strategy in self.healing_strategies and stats['total'] >= 5:
@@ -1106,5 +1106,5 @@ class SelfHealingCalculationSkills(PerformanceMonitorMixin, SecurityHardenedMixi
                     new_prob = max(current_prob * 0.9, 0.1)  # Min 10%
                     self.healing_strategies[strategy].success_probability = new_prob
                     updates.append(f"Decreased success probability for {strategy} to {new_prob:.2f}")
-        
+
         return updates

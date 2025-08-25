@@ -17,24 +17,24 @@ async def test_phase2_features():
     """Test Phase 2 features of GleanAgent"""
     print("Testing GleanAgent Phase 2 Features")
     print("=" * 50)
-    
+
     try:
         # Import the agent
         from app.a2a.agents.gleanAgent import GleanAgent
         print("✓ Successfully imported GleanAgent")
-        
+
         # Create agent instance
         agent = GleanAgent()
         print(f"✓ Created agent: {agent.agent_id}")
-        
+
         # Create a test directory with sample code
         test_dir = tempfile.mkdtemp(prefix="glean_phase2_test_")
         print(f"\n1. Created test directory: {test_dir}")
-        
+
         # Create Python project structure
         (Path(test_dir) / "requirements.txt").write_text("requests>=2.25.0\nflask>=2.0.0")
         (Path(test_dir) / "src").mkdir()
-        
+
         sample_py = Path(test_dir) / "src" / "main.py"
         sample_py.write_text("""
 # Sample Python application
@@ -59,13 +59,13 @@ def complex_logic(x, y, z):
     else:
         return 0
 """)
-        
+
         # Test 1: Project Configuration
         print("\n2. Testing project configuration:")
         config_result = await agent.configure_for_project(test_dir)
         print(f"   ✓ Project type detected: {config_result.get('project_type', 'unknown')}")
         print(f"   ✓ Recommendations: {len(config_result.get('recommendations', []))}")
-        
+
         # Test 2: Caching System
         print("\n3. Testing caching system:")
         # Run analysis twice to test caching
@@ -77,20 +77,20 @@ def complex_logic(x, y, z):
             file_patterns=["*.py"]
         )
         first_duration = asyncio.get_event_loop().time() - start_time
-        
+
         start_time = asyncio.get_event_loop().time()
         result2 = await agent._with_cache(
-            "test_analysis", 
+            "test_analysis",
             lambda directory, file_patterns: {"cached": False, "directory": directory},
             directory=test_dir,
             file_patterns=["*.py"]
         )
         second_duration = asyncio.get_event_loop().time() - start_time
-        
+
         print(f"   ✓ First call: {first_duration:.4f}s")
         print(f"   ✓ Second call (cached): {second_duration:.4f}s")
         print(f"   ✓ Cache working: {second_duration < first_duration}")
-        
+
         # Test 3: Error Handling
         print("\n4. Testing error handling:")
         error_result = agent._handle_analysis_error(
@@ -99,7 +99,7 @@ def complex_logic(x, y, z):
             {"test": "context"}
         )
         print(f"   ✓ Error handled: {error_result.get('error_type', 'unknown')}")
-        
+
         # Test 4: Parallel Analysis
         print("\n5. Testing parallel analysis:")
         try:
@@ -114,7 +114,7 @@ def complex_logic(x, y, z):
         except Exception as e:
             print(f"   ⚠️  Parallel analysis error: {e}")
             analysis_id = None
-        
+
         # Test 5: Analysis History
         print("\n6. Testing analysis history:")
         try:
@@ -122,7 +122,7 @@ def complex_logic(x, y, z):
             print(f"   ✓ History retrieved: {history_result.get('count', 0)} analyses")
         except Exception as e:
             print(f"   ⚠️  History retrieval error: {e}")
-        
+
         # Test 6: Quality Trends
         print("\n7. Testing quality trends:")
         try:
@@ -133,24 +133,24 @@ def complex_logic(x, y, z):
                 print(f"   ✓ Trends analyzed: {trends_result.get('analyses_count', 0)} analyses")
         except Exception as e:
             print(f"   ⚠️  Trends analysis error: {e}")
-        
+
         # Test 7: Cache Management
         print("\n8. Testing cache management:")
         cache_cleared = agent.clear_cache()
         print(f"   ✓ Cache cleared: {cache_cleared} entries")
-        
+
         print("\n✅ Phase 2 features testing completed!")
-        
+
         # Cleanup
         shutil.rmtree(test_dir)
         print(f"Cleaned up test directory")
-        
+
     except Exception as e:
         print(f"\n❌ Error: {type(e).__name__}: {e}")
         import traceback
         traceback.print_exc()
         return False
-    
+
     return True
 
 

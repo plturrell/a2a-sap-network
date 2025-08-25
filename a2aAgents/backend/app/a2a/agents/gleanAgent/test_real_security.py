@@ -18,20 +18,20 @@ async def test_real_security_scanning():
     """Test the real security vulnerability scanning implementation"""
     print("Testing Real Security Vulnerability Scanning")
     print("=" * 60)
-    
+
     try:
         # Import the agent
         from app.a2a.agents.gleanAgent import GleanAgent
         print("✓ Successfully imported GleanAgent")
-        
+
         # Create agent instance
         agent = GleanAgent()
         print(f"✓ Created agent: {agent.agent_id}")
-        
+
         # Create a test directory with vulnerable code and dependencies
         test_dir = tempfile.mkdtemp(prefix="glean_security_test_")
         print(f"\n1. Created test directory: {test_dir}")
-        
+
         # Create vulnerable Python requirements
         requirements_txt = Path(test_dir) / "requirements.txt"
         requirements_txt.write_text('''
@@ -43,7 +43,7 @@ requests==2.25.0
 numpy==1.20.0
 urllib3==1.26.0
 ''')
-        
+
         # Create vulnerable package.json
         package_json = Path(test_dir) / "package.json"
         package_json.write_text(json.dumps({
@@ -58,7 +58,7 @@ urllib3==1.26.0
                 "webpack": "4.44.0"
             }
         }, indent=2))
-        
+
         # Create vulnerable Python code
         vulnerable_py = Path(test_dir) / "vulnerable_app.py"
         vulnerable_py.write_text('''
@@ -76,33 +76,33 @@ def unsafe_sql_query(user_input):
     """Function with SQL injection vulnerability"""
     # SQL injection vulnerability - string concatenation
     query = "SELECT * FROM users WHERE name = '" + user_input + "'"
-    
+
     # Another SQL injection pattern
     cursor.execute("SELECT * FROM products WHERE id = %s" % user_input)
-    
+
     return query
 
 def command_injection_vulnerability(filename):
     """Function with command injection vulnerability"""
     # Command injection via os.system
     os.system("cat " + filename)
-    
+
     # Another command injection pattern
     subprocess.run(f"ls {filename}", shell=True)
-    
+
     # eval() usage is dangerous
     result = eval(filename)
-    
+
     return result
 
 def weak_random_for_security():
     """Using weak random for security purposes"""
     # Weak random for token generation
     token = str(random.random())
-    
+
     # Weak random choice for session ID
     session_id = random.choice("abcdefghijklmnopqrstuvwxyz")
-    
+
     return token + session_id
 
 def path_traversal_vulnerability(user_file):
@@ -110,14 +110,14 @@ def path_traversal_vulnerability(user_file):
     # Path traversal vulnerability
     with open("uploads/" + user_file + "../config.txt", "r") as f:
         content = f.read()
-    
+
     return content
 
 class DatabaseManager:
     def __init__(self):
         # More hardcoded credentials
         self.connection_string = "postgresql://admin:password123@localhost/db"
-    
+
     def execute_dynamic_query(self, table, condition):
         """Another SQL injection vulnerability"""
         query = f"DELETE FROM {table} WHERE {condition}"
@@ -136,7 +136,7 @@ def store_password(password):
     with open("passwords.txt", "a") as f:
         f.write(f"user:password = {password}\\n")
 ''')
-        
+
         # Create another vulnerable file
         web_py = Path(test_dir) / "web_server.py"
         web_py.write_text('''
@@ -167,23 +167,23 @@ def read_file(filename):
 if __name__ == '__main__':
     app.run(debug=True)  # Debug mode in production is bad
 ''')
-        
+
         print("\n2. Testing comprehensive security vulnerability scanning:")
-        
+
         # Test the enhanced security scanning
         security_result = await agent.scan_dependency_vulnerabilities(test_dir, scan_dev_dependencies=True)
-        
+
         print(f"   Directory scanned: {security_result.get('directory', 'unknown')}")
         print(f"   Total vulnerabilities: {security_result.get('total_vulnerabilities', 0)}")
         print(f"   Scanned files: {len(security_result.get('scanned_files', []))}")
-        
+
         # Show severity breakdown
         if 'severity_breakdown' in security_result:
             breakdown = security_result['severity_breakdown']
             print(f"\n   Severity Breakdown:")
             for severity, count in breakdown.items():
                 print(f"     - {severity.title()}: {count}")
-        
+
         # Show risk metrics
         if 'risk_metrics' in security_result:
             metrics = security_result['risk_metrics']
@@ -194,12 +194,12 @@ if __name__ == '__main__':
             print(f"     - High Count: {metrics.get('high_count', 0)}")
             print(f"     - Medium Count: {metrics.get('medium_count', 0)}")
             print(f"     - Low Count: {metrics.get('low_count', 0)}")
-        
+
         # Show vulnerability details by type
         vulnerabilities = security_result.get('vulnerabilities', [])
         if vulnerabilities:
             print(f"\n   Sample Vulnerabilities Found:")
-            
+
             # Group by source
             by_source = {}
             for vuln in vulnerabilities:
@@ -207,7 +207,7 @@ if __name__ == '__main__':
                 if source not in by_source:
                     by_source[source] = []
                 by_source[source].append(vuln)
-            
+
             for source, vulns in by_source.items():
                 print(f"\n     {source.replace('_', ' ').title()} ({len(vulns)} found):")
                 for vuln in vulns[:3]:  # Show first 3 of each type
@@ -221,9 +221,9 @@ if __name__ == '__main__':
                     if vuln.get('remediation'):
                         print(f"         Fix: {vuln['remediation']}")
                     print()
-        
+
         print(f"   Database Version: {security_result.get('database_version', 'unknown')}")
-        
+
         print("\n✅ Real security vulnerability scanning test completed!")
         print("\nKey Security Features Demonstrated:")
         print("  ✓ Built-in vulnerability database with real CVE data")
@@ -238,17 +238,17 @@ if __name__ == '__main__':
         print("  ✓ Risk scoring and metrics calculation")
         print("  ✓ Vulnerability deduplication")
         print("  ✓ Version comparison and matching")
-        
+
         # Cleanup
         shutil.rmtree(test_dir)
         print(f"\nCleaned up test directory")
-        
+
     except Exception as e:
         print(f"\n❌ Error: {type(e).__name__}: {e}")
         import traceback
         traceback.print_exc()
         return False
-    
+
     return True
 
 

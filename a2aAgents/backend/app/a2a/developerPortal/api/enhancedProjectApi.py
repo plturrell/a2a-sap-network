@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from ..models.project_models import (
-    ProjectDataManager, EnhancedProject, ProjectStatus, ProjectType, 
+    ProjectDataManager, EnhancedProject, ProjectStatus, ProjectType,
     DeploymentStatus, ProjectMetrics, ProjectDependency, DeploymentConfig
 )
 from ..sap_btp.auth_api import get_current_user, UserInfo
@@ -75,25 +75,25 @@ async def get_projects(
     """Get all projects with filtering and pagination"""
     try:
         all_projects = await manager.get_all_projects()
-        
+
         # Apply filters
         filtered_projects = all_projects
         if project_type:
             filtered_projects = [p for p in filtered_projects if p.project_type == project_type]
         if status:
             filtered_projects = [p for p in filtered_projects if p.status == status]
-        
+
         # Apply pagination
         total = len(filtered_projects)
         projects = filtered_projects[offset:offset + limit]
-        
+
         # Convert to dict format for UI5
         projects_data = []
         for project in projects:
             project_dict = project.dict()
             project_dict["metrics"] = await manager.get_project_metrics(project.id)
             projects_data.append(project_dict)
-        
+
         return {
             "projects": projects_data,
             "total": total,
@@ -101,7 +101,7 @@ async def get_projects(
             "offset": offset,
             "has_more": offset + limit < total
         }
-        
+
     except Exception as e:
         logger.error(f"Error fetching projects: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -117,23 +117,23 @@ async def create_project(
     """Create a new project"""
     try:
         project_data = request.dict()
-        
+
         # Add default configuration
         project_data["deployment_config"] = DeploymentConfig().dict()
         project_data["created_by"] = current_user.email  # Get from authenticated user
-        
+
         # Create project
         project = await manager.create_project(project_data)
-        
+
         # Initialize project structure in background
         background_tasks.add_task(initialize_project_structure, project.id, request.template_id)
-        
+
         return {
             "success": True,
             "project": project.dict(),
             "message": "Project created successfully"
         }
-        
+
     except Exception as e:
         logger.error(f"Error creating project: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -149,13 +149,13 @@ async def get_project(
         project = await manager.get_project(project_id)
         if not project:
             raise HTTPException(status_code=404, detail="Project not found")
-        
+
         # Get enhanced data
         project_dict = project.dict()
         project_dict["metrics"] = await manager.get_project_metrics(project_id)
-        
+
         return project_dict
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -172,17 +172,17 @@ async def update_project(
     """Update project"""
     try:
         updates = {k: v for k, v in request.dict().items() if v is not None}
-        
+
         project = await manager.update_project(project_id, updates)
         if not project:
             raise HTTPException(status_code=404, detail="Project not found")
-        
+
         return {
             "success": True,
             "project": project.dict(),
             "message": "Project updated successfully"
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -200,12 +200,12 @@ async def delete_project(
         success = await manager.delete_project(project_id)
         if not success:
             raise HTTPException(status_code=404, detail="Project not found")
-        
+
         return {
             "success": True,
             "message": "Project deleted successfully"
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -223,9 +223,9 @@ async def get_project_metrics(
         metrics = await manager.get_project_metrics(project_id)
         if not metrics:
             raise HTTPException(status_code=404, detail="Project not found")
-        
+
         return metrics.dict()
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -241,44 +241,44 @@ async def search_projects(
     """Search projects with advanced filtering"""
     try:
         all_projects = await manager.get_all_projects()
-        
+
         # Apply search filters
         filtered_projects = all_projects
-        
+
         if request.query:
             query_lower = request.query.lower()
             filtered_projects = [
-                p for p in filtered_projects 
+                p for p in filtered_projects
                 if query_lower in p.name.lower() or query_lower in p.description.lower()
             ]
-        
+
         if request.project_type:
             filtered_projects = [p for p in filtered_projects if p.project_type == request.project_type]
-        
+
         if request.status:
             filtered_projects = [p for p in filtered_projects if p.status == request.status]
-        
+
         if request.tags:
             filtered_projects = [
-                p for p in filtered_projects 
+                p for p in filtered_projects
                 if any(tag in p.tags for tag in request.tags)
             ]
-        
+
         if request.created_after:
             filtered_projects = [p for p in filtered_projects if p.created_at >= request.created_after]
-        
+
         if request.created_before:
             filtered_projects = [p for p in filtered_projects if p.created_at <= request.created_before]
-        
+
         # Convert to dict format
         projects_data = [project.dict() for project in filtered_projects]
-        
+
         return {
             "projects": projects_data,
             "total": len(projects_data),
             "query": request.dict()
         }
-        
+
     except Exception as e:
         logger.error(f"Error searching projects: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -294,12 +294,12 @@ async def get_project_agents(
         project = await manager.get_project(project_id)
         if not project:
             raise HTTPException(status_code=404, detail="Project not found")
-        
+
         return {
             "agents": project.agents,
             "total": len(project.agents)
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -317,12 +317,12 @@ async def get_project_workflows(
         project = await manager.get_project(project_id)
         if not project:
             raise HTTPException(status_code=404, detail="Project not found")
-        
+
         return {
             "workflows": project.workflows,
             "total": len(project.workflows)
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -337,7 +337,7 @@ async def get_project_templates():
         # Discover templates from filesystem
         templates_dir = Path(__file__).parent.parent / "templates" / "project_templates"
         discovered_templates = []
-        
+
         # Check if templates directory exists
         if templates_dir.exists() and templates_dir.is_dir():
             for template_dir in templates_dir.iterdir():
@@ -350,7 +350,7 @@ async def get_project_templates():
                             discovered_templates.append(template_meta)
                     except Exception as e:
                         logger.warning(f"Failed to load template {template_dir.name}: {e}")
-        
+
         # Add default templates if no templates found
         if not discovered_templates:
             discovered_templates = [
@@ -376,19 +376,19 @@ async def get_project_templates():
                     "tags": ["workflow", "orchestration"]
                 }
             ]
-        
+
         # Combine discovered and default templates
         all_templates = discovered_templates
-        
+
         # Sort templates by name
         all_templates.sort(key=lambda x: x.get('name', ''))
-        
+
         return {
             "templates": all_templates,
             "total": len(all_templates),
             "source": "filesystem" if templates_dir.exists() else "defaults"
         }
-        
+
     except Exception as e:
         logger.error(f"Error fetching templates: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -401,7 +401,7 @@ async def get_dashboard_stats(
     """Get dashboard statistics"""
     try:
         all_projects = await manager.get_all_projects()
-        
+
         # Calculate statistics
         stats = {
             "total_projects": len(all_projects),
@@ -419,9 +419,9 @@ async def get_dashboard_stats(
                 p.dict() for p in sorted(all_projects, key=lambda x: x.last_modified, reverse=True)[:5]
             ]
         }
-        
+
         return stats
-        
+
     except Exception as e:
         logger.error(f"Error fetching dashboard stats: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -431,17 +431,17 @@ async def initialize_project_structure(project_id: str, template_id: Optional[st
     """Background task to initialize project structure"""
     try:
         logger.info(f"Initializing project structure for {project_id}")
-        
+
         # Get workspace path from proper storage configuration
         from ...config.storageConfig import get_workspace_path
         workspace_base = get_workspace_path()
         project_path = workspace_base / project_id
-        
+
         # Create directory structure
         directories = [
             "src",
             "src/agents",
-            "src/workflows", 
+            "src/workflows",
             "src/skills",
             "src/handlers",
             "tests",
@@ -452,11 +452,11 @@ async def initialize_project_structure(project_id: str, template_id: Optional[st
             "scripts",
             ".github/workflows"
         ]
-        
+
         for dir_path in directories:
             (project_path / dir_path).mkdir(parents=True, exist_ok=True)
             logger.debug(f"Created directory: {project_path / dir_path}")
-        
+
         # Copy template files if template_id provided
         if template_id:
             templates_dir = Path(__file__).parent.parent / "templates" / "project_templates" / template_id
@@ -469,12 +469,12 @@ async def initialize_project_structure(project_id: str, template_id: Optional[st
                         elif item.is_dir():
                             shutil.copytree(item, project_path / item.name, dirs_exist_ok=True)
                 logger.info(f"Copied template files from {template_id}")
-        
+
         # Initialize git repository
         try:
             import subprocess
             subprocess.run(["git", "init"], cwd=project_path, check=True, capture_output=True)
-            
+
             # Create .gitignore
             gitignore_content = """# Python
 __pycache__/
@@ -505,15 +505,15 @@ htmlcov/
 .DS_Store
 """
             (project_path / ".gitignore").write_text(gitignore_content)
-            
+
             # Initial commit
             subprocess.run(["git", "add", "."], cwd=project_path, check=True, capture_output=True)
-            subprocess.run(["git", "commit", "-m", "Initial project structure"], 
+            subprocess.run(["git", "commit", "-m", "Initial project structure"],
                          cwd=project_path, check=True, capture_output=True)
             logger.info("Initialized git repository")
         except Exception as e:
             logger.warning(f"Git initialization failed: {e}")
-        
+
         # Create default configuration files
         config_files = {
             "config/project.yaml": f"""# A2A Project Configuration
@@ -521,12 +521,12 @@ project:
   id: {project_id}
   name: {project_id}
   version: "0.1.0"
-  
+
 agents:
   - name: default_agent
     type: basic
     skills: []
-    
+
 workflows:
   - name: default_workflow
     type: sequential
@@ -571,16 +571,16 @@ from pathlib import Path
 def test_project_structure():
     \"\"\"Test that project structure is created correctly\"\"\"
     project_root = Path(__file__).parent.parent
-    
+
     # Test core directories exist
     assert (project_root / "src").exists(), "Source directory should exist"
     assert (project_root / "tests").exists(), "Tests directory should exist"
     assert (project_root / "config").exists(), "Config directory should exist"
-    
+
     # Test core files exist
     assert (project_root / "package.json").exists(), "package.json should exist"
     assert (project_root / "README.md").exists(), "README.md should exist"
-    
+
     # Test config files have required content
     if (project_root / "package.json").exists():
         import json
@@ -588,7 +588,7 @@ def test_project_structure():
             pkg = json.load(f)
             assert "name" in pkg, "package.json should have name field"
             assert "version" in pkg, "package.json should have version field"
-    
+
     # Test source structure is valid
     src_dir = project_root / "src"
     if src_dir.exists():
@@ -600,7 +600,7 @@ def test_project_configuration():
     \"\"\"Test that project configuration is valid\"\"\"
     project_root = Path(__file__).parent.parent
     config_dir = project_root / "config"
-    
+
     if config_dir.exists():
         config_files = list(config_dir.glob("*.json"))
         for config_file in config_files:
@@ -612,15 +612,15 @@ def test_project_configuration():
                     pytest.fail(f"Invalid JSON in {config_file}")
 """
         }
-        
+
         for file_path, content in config_files.items():
             file_full_path = project_path / file_path
             file_full_path.parent.mkdir(parents=True, exist_ok=True)
             file_full_path.write_text(content)
             logger.debug(f"Created file: {file_full_path}")
-        
+
         logger.info(f"Project structure initialized successfully for {project_id}")
-        
+
     except Exception as e:
         logger.error(f"Error initializing project structure for {project_id}: {e}")
         raise

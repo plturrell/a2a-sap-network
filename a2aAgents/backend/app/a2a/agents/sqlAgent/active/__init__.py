@@ -6,6 +6,6 @@ from .sqlAgentSdk import SQLAgentSDK
 from .enhancedSQLSkills import EnhancedSQLSkills
 
 __all__ = [
-    "SQLAgentSDK", 
+    "SQLAgentSDK",
     "EnhancedSQLSkills"
 ]

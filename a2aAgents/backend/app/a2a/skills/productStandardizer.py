@@ -17,7 +17,7 @@ class ProductStandardizer:
         self.js_file_path = os.path.join(project_root, "scripts/build/product_standardization.js")
         # Initialize Grok client for enrichment
         self.grok_client = None
-        
+
     async def standardize(self, product_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Standardize product data using the JavaScript standardizer and enrich with Grok
@@ -38,13 +38,13 @@ class ProductStandardizer:
             else:
                 # Already structured data
                 input_data = product_data
-            
+
             # Call JavaScript standardizer
             result = await self._call_js_standardizer([input_data])
-            
+
             if result and len(result) > 0:
                 standardized = result[0]
-                
+
                 # Extract key fields from JS standardizer
                 initial_standardized = {
                     "hierarchy_path": standardized.get("hierarchy_path"),
@@ -60,24 +60,24 @@ class ProductStandardizer:
                         "L3": standardized.get("L3_clean_name")
                     }
                 }
-                
+
                 # Calculate initial completeness
                 completeness = self._calculate_completeness(initial_standardized)
-                
+
                 # If completeness is low, try to enrich with Grok (up to 3 passes)
                 enrichment_passes = 0
                 max_passes = 3
-                
+
                 while completeness < 0.8 and self._should_use_grok() and enrichment_passes < max_passes:
                     enrichment_passes += 1
                     logger.info(f"Product enrichment pass {enrichment_passes} - completeness: {completeness:.2f}")
-                    
+
                     # Get missing fields for targeted enrichment
                     missing_fields = self._get_missing_fields(initial_standardized)
-                    
+
                     if not missing_fields:
                         break
-                    
+
                     enriched = await self._enrich_with_grok(initial_standardized, product_data, missing_fields, enrichment_passes)
                     if enriched:
                         # Update only missing fields
@@ -86,20 +86,20 @@ class ProductStandardizer:
                             if value and (not initial_standardized.get(key) or initial_standardized.get(key) == "Unknown"):
                                 initial_standardized[key] = value
                                 fields_updated += 1
-                        
+
                         # Recalculate completeness
                         new_completeness = self._calculate_completeness(initial_standardized)
-                        
+
                         # If no improvement, stop trying
                         if new_completeness <= completeness or fields_updated == 0:
                             logger.info(f"No improvement in pass {enrichment_passes}, stopping enrichment")
                             break
-                            
+
                         completeness = new_completeness
                     else:
                         # If enrichment failed, don't try again
                         break
-                
+
                 return {
                     "original": product_data,
                     "standardized": initial_standardized,
@@ -115,7 +115,7 @@ class ProductStandardizer:
                 }
             else:
                 raise ValueError("No standardization result returned")
-                
+
         except Exception as e:
             logger.error(f"Error standardizing product: {str(e)}")
             return {
@@ -125,18 +125,18 @@ class ProductStandardizer:
                 "completeness": 0.0,
                 "error": str(e)
             }
-    
+
     async def _call_js_standardizer(self, data: List[Dict]) -> List[Dict]:
         """
         Call the JavaScript standardizer via Node.js subprocess
         """
         # Use absolute path to ensure it's found
         absolute_js_path = os.path.abspath(self.js_file_path)
-        
+
         # Create a temporary Node.js wrapper script
         wrapper_script = f"""
         const ProductStandardizer = require('{absolute_js_path}');
-        
+
         // Create standardizer with custom logger that writes to stderr
         const standardizer = new ProductStandardizer({{
             logger: {{
@@ -146,7 +146,7 @@ class ProductStandardizer:
                 debug: (msg) => console.error(`[DEBUG] ${{msg}}`)
             }}
         }});
-        
+
         async function run() {{
             try {{
                 const input = JSON.parse(process.argv[2]);
@@ -158,16 +158,16 @@ class ProductStandardizer:
                 process.exit(1);
             }}
         }}
-        
+
         run();
         """
-        
+
         # Write wrapper to temporary file
         import tempfile
         with tempfile.NamedTemporaryFile(mode='w', suffix='.js', delete=False) as f:
             f.write(wrapper_script)
             wrapper_path = f.name
-        
+
         try:
             # Run Node.js subprocess
             process = await asyncio.create_subprocess_exec(
@@ -175,46 +175,46 @@ class ProductStandardizer:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
             )
-            
+
             stdout, stderr = await process.communicate()
-            
+
             if process.returncode != 0:
                 raise RuntimeError(f"Node.js error: {stderr.decode()}")
-            
+
             # Debug: log the output
             output = stdout.decode()
             if not output.strip():
                 raise RuntimeError(f"No output from Node.js")
-            
+
             return json.loads(output)
-            
+
         finally:
             # Clean up temporary file
             os.unlink(wrapper_path)
-    
+
     def _calculate_confidence(self, standardized_data: Dict) -> float:
         """
         Calculate confidence score for standardized product
         """
         score = 0.0
         max_score = 5.0
-        
+
         # Check product classification
         if standardized_data.get("product_category") and standardized_data.get("product_category") != "Unknown":
             score += 1.0
-        
+
         # Check Basel classification
         if standardized_data.get("basel_category") and standardized_data.get("basel_category") != "Unknown":
             score += 1.0
-        
+
         # Check regulatory treatment
         if standardized_data.get("regulatory_treatment") and standardized_data.get("regulatory_treatment") != "Unknown":
             score += 1.0
-        
+
         # Check if hierarchy is valid
         if not standardized_data.get("validation_issues"):
             score += 1.0
-        
+
         # Check standardization quality
         quality = standardized_data.get("standardization_quality", "")
         if quality == "Excellent":
@@ -223,48 +223,48 @@ class ProductStandardizer:
             score += 0.6
         elif quality == "Fair":
             score += 0.3
-        
+
         return min(1.0, score / max_score)
-    
+
     def _calculate_completeness(self, standardized: Dict) -> float:
         """
         Calculate completeness score (0-1) for standardized data
         """
         fields = [
             "hierarchy_path",
-            "product_code", 
+            "product_code",
             "product_category",
             "product_family",
             "basel_category",
             "regulatory_treatment"
         ]
-        
+
         filled = sum(1 for field in fields if standardized.get(field) and standardized[field] != "Unknown")
-        
+
         # Check clean names
         if standardized.get("clean_names"):
-            names_filled = sum(1 for level in ["L0", "L1", "L2", "L3"] 
+            names_filled = sum(1 for level in ["L0", "L1", "L2", "L3"]
                              if standardized["clean_names"].get(level))
             filled += names_filled * 0.25  # Each name counts as 0.25
-        
+
         return min(1.0, filled / (len(fields) + 1))  # +1 for clean names
-    
+
     def _should_use_grok(self) -> bool:
         """
         Check if Grok API is available and should be used
         """
         return os.getenv('XAI_API_KEY') is not None
-    
+
     def _get_missing_fields(self, standardized: Dict) -> List[str]:
         """
         Get list of missing or unknown fields that need enrichment
         """
         missing = []
-        
+
         # Check each field
         fields_to_check = [
             "product_code",
-            "product_category", 
+            "product_category",
             "product_family",
             "basel_category",
             "regulatory_treatment",
@@ -272,14 +272,14 @@ class ProductStandardizer:
             "accounting_treatment",
             "trading_book_eligibility"
         ]
-        
+
         for field in fields_to_check:
             value = standardized.get(field)
             if not value or value == "Unknown":
                 missing.append(field)
-        
+
         return missing
-    
+
     async def _enrich_with_grok(self, standardized: Dict, original: Dict, missing_fields: List[str] = None, pass_number: int = 1) -> Optional[Dict]:
         """
         Use Grok API to enrich missing product data
@@ -287,11 +287,11 @@ class ProductStandardizer:
         try:
             if not self.grok_client:
                 self.grok_client = create_grok_client()
-            
+
             # Use missing fields if provided, otherwise check all fields
             if missing_fields is None:
                 missing_fields = self._get_missing_fields(standardized)
-            
+
             # Build field descriptions
             field_descriptions = {
                 "product_code": "A standardized product code",
@@ -300,26 +300,26 @@ class ProductStandardizer:
                 "basel_category": "The Basel regulatory category",
                 "regulatory_treatment": 'The regulatory treatment (e.g., "Trading Book", "Banking Book")',
                 "risk_classification": "The risk classification",
-                "accounting_treatment": "IFRS/GAAP accounting classification", 
+                "accounting_treatment": "IFRS/GAAP accounting classification",
                 "trading_book_eligibility": 'Whether eligible for trading book ("Yes", "No", "Conditional")',
                 "typical_maturity": "Typical maturity profile",
                 "target_market": "Target market segment"
             }
-            
+
             # Build targeted prompt
             missing_items = []
             for field in missing_fields:
                 if field in field_descriptions:
                     missing_items.append(f"{field}: {field_descriptions[field]}")
-            
+
             # Add context hints for later passes
             context_hint = ""
             if pass_number > 1:
                 context_hint = f"\n\nThis is enrichment pass {pass_number}. Focus on providing the most critical missing fields based on standard banking product classifications."
-            
+
             # Build prompt for Grok
             prompt = f"""Given this financial product information:
-            
+
 Product Hierarchy: {standardized.get('hierarchy_path', 'Unknown')}
 Current Category: {standardized.get('product_category', 'Unknown')}
 Current Family: {standardized.get('product_family', 'Unknown')}
@@ -335,24 +335,24 @@ Important: Only include the fields I've asked for above. Return ONLY valid JSON 
                 temperature=0.1,
                 max_tokens=500
             )
-            
+
             if response.content:
                 # Parse JSON response
                 import re
                 # Remove any markdown code blocks if present
                 json_str = re.sub(r'```json\s*|\s*```', '', response.content)
                 enriched_data = json.loads(json_str)
-                
+
                 return {
-                    k: v for k, v in enriched_data.items() 
+                    k: v for k, v in enriched_data.items()
                     if v and v != "Unknown" and k in [
                         "product_category", "product_family", "basel_category",
-                        "regulatory_treatment", "risk_classification", 
+                        "regulatory_treatment", "risk_classification",
                         "typical_maturity", "target_market"
                     ]
                 }
-                
+
         except Exception as e:
             logger.warning(f"Failed to enrich with Grok: {str(e)}")
-        
+
         return None

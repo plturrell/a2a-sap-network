@@ -157,9 +157,9 @@ class ChunkingStrategy:
 class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     Comprehensive AI Preparation Agent with Real AI Intelligence
-    
+
     Rating: 95/100 (Real AI Intelligence)
-    
+
     This agent provides:
     - Real ML-based data quality assessment and anomaly detection
     - Semantic data understanding and intelligent chunking
@@ -168,7 +168,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
     - Automated data cleaning and imputation strategies
     - Intelligent vectorization and embedding generation
     """
-    
+
     def __init__(self, base_url: str):
         # Initialize base agent
         super().__init__(
@@ -182,11 +182,11 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-        
-        
+
+
         # Initialize blockchain capabilities through mixin
         BlockchainIntegrationMixin.__init__(self)
-        
+
         # Machine Learning Models for Data Preparation
         self.quality_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
         self.anomaly_detector = IsolationForest(contamination=0.1, random_state=42)
@@ -194,26 +194,26 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
         self.feature_scaler = StandardScaler()
         self.imputer = KNNImputer(n_neighbors=5)
         self.dimensionality_reducer = PCA(n_components=0.95)
-        
+
         # Text processing and vectorization
         self.text_vectorizer = TfidfVectorizer(max_features=1000)
-        
+
         # Semantic understanding
         if SENTENCE_TRANSFORMERS_AVAILABLE:
             self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
         else:
             self.embedding_model = None
-            
+
         # Grok AI client for intelligent data understanding
         self.grok_client = None
         self.grok_available = False
-        
+
         # Data Manager integration
         self.data_manager_agent_url = os.getenv('DATA_MANAGER_URL')
         if not self.data_manager_agent_url:
             raise ValueError("DATA_MANAGER_URL environment variable is required")
         self.use_data_manager = True
-        
+
         # Preparation patterns
         self.preparation_patterns = {
             'structured': {
@@ -239,7 +239,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 'mqtt': self._prepare_mqtt_pattern
             }
         }
-        
+
         # Chunking strategies
         self.chunking_strategies = {
             'semantic': self._semantic_chunking,
@@ -248,7 +248,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             'hierarchical': self._hierarchical_chunking,
             'boundary_based': self._boundary_based_chunking
         }
-        
+
         # Quality rules
         self.quality_rules = {
             'completeness': self._calculate_completeness,
@@ -257,7 +257,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             'consistency': self._check_consistency,
             'accuracy': self._check_accuracy
         }
-        
+
         # Training data storage
         self.training_data = {
             'quality_assessments': [],
@@ -265,12 +265,12 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             'transformation_results': [],
             'chunking_performance': []
         }
-        
+
         # Learning configuration
         self.learning_enabled = True
         self.model_update_frequency = 50  # Update models every 50 preparations
         self.preparation_count = 0
-        
+
         # Performance metrics
         self.metrics = {
             'total_preparations': 0,
@@ -282,33 +282,33 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             'embeddings_created': 0,
             'validations_passed': 0
         }
-        
+
         # Method performance tracking
         self.method_performance = defaultdict(self._create_performance_dict)
-        
+
         # Preparation cache
         self.preparation_cache = {}
         self.cache_max_size = 100
-        
+
         logger.info(f"Initialized Comprehensive AI Preparation Agent v{self.version}")
-    
+
     async def initialize(self) -> None:
         """Initialize the AI preparation agent with all capabilities"""
         try:
             # Initialize blockchain if available
             if WEB3_AVAILABLE:
                 await self._initialize_blockchain()
-            
+
             # Initialize Grok AI
             if GROK_AVAILABLE:
                 await self._initialize_grok()
-            
+
             # Initialize ML models with sample data
             await self._initialize_ml_models()
-            
+
             # Load preparation history
             await self._load_preparation_history()
-            
+
             # Initialize NLTK resources if available
             if NLTK_AVAILABLE:
                 try:
@@ -316,13 +316,13 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     nltk.download('stopwords', quiet=True)
                 except:
                     pass
-            
+
             logger.info("AI Preparation Agent initialization complete")
-            
+
         except Exception as e:
             logger.error(f"Initialization error: {e}")
             raise
-    
+
     async def _initialize_blockchain(self) -> None:
         """Initialize blockchain connection for data provenance"""
         try:
@@ -331,13 +331,13 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             logger.info("Blockchain initialized for data provenance")
         except Exception as e:
             logger.error(f"Blockchain initialization error: {e}")
-    
+
     async def _initialize_grok(self) -> None:
         """Initialize Grok AI for intelligent data understanding"""
         try:
             # Get Grok API key from environment
             api_key = os.getenv('GROK_API_KEY')
-            
+
             if api_key:
                 self.grok_client = AsyncOpenAI(
                     api_key=api_key,
@@ -348,11 +348,11 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             else:
                 logger.info("No Grok API key found")
                 self.grok_available = False
-                
+
         except Exception as e:
             logger.error(f"Grok initialization error: {e}")
             self.grok_available = False
-    
+
     async def _initialize_ml_models(self) -> None:
         """Initialize ML models with training data"""
         try:
@@ -362,23 +362,23 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 {'completeness': 0.75, 'validity': 0.80, 'consistency': 0.70, 'quality': 'medium'},
                 {'completeness': 0.50, 'validity': 0.60, 'consistency': 0.45, 'quality': 'low'}
             ]
-            
+
             if sample_quality_data:
                 X = [[d['completeness'], d['validity'], d['consistency']] for d in sample_quality_data]
                 y = [0 if d['quality'] == 'low' else 1 if d['quality'] == 'medium' else 2 for d in sample_quality_data]
-                
+
                 if len(set(y)) > 1:  # Need at least 2 classes
                     self.quality_classifier.fit(X, y)
-                
+
                 # Train anomaly detector with normal data
                 normal_data = [[0.9, 0.95, 0.88], [0.92, 0.89, 0.91], [0.88, 0.90, 0.87]]
                 self.anomaly_detector.fit(normal_data)
-                
+
                 logger.info("ML models initialized with sample data")
-                
+
         except Exception as e:
             logger.error(f"ML model initialization error: {e}")
-    
+
     async def _load_preparation_history(self) -> None:
         """Load historical preparation data"""
         try:
@@ -390,7 +390,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     logger.info(f"Loaded preparation history")
         except Exception as e:
             logger.error(f"Error loading preparation history: {e}")
-    
+
     # MCP-decorated AI preparation skills
     @mcp_tool("profile_data", "Profile data with ML-based quality assessment")
     @a2a_skill("profile_data", "Comprehensive data profiling")
@@ -398,46 +398,46 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
         """Profile data with ML-based quality assessment"""
         start_time = time.time()
         method_name = "profile_data"
-        
+
         try:
             data_source = request_data.get('data_source')
             data_format = request_data.get('format', 'csv')
             sample_size = request_data.get('sample_size', 1000)
-            
+
             if not data_source:
                 return create_error_response("Missing data_source")
-            
+
             # Load data based on format
             data = await self._load_data(data_source, data_format, sample_size)
-            
+
             # Generate comprehensive profile
             profile = await self._generate_data_profile(data, data_source)
-            
+
             # Use ML to assess quality
             quality_assessment = await self._assess_data_quality_ml(data, profile)
             profile.quality_score = quality_assessment['overall_score']
             profile.issues_found = quality_assessment['issues']
             profile.recommendations = quality_assessment['recommendations']
-            
+
             # Detect anomalies
             anomalies = await self._detect_anomalies_ml(data)
             if anomalies['count'] > 0:
                 profile.issues_found.append(DataQualityIssue.OUTLIERS)
                 self.metrics['anomalies_detected'] += anomalies['count']
-            
+
             # Store in Data Manager if available
             if self.use_data_manager:
                 await self._store_profile_results(profile)
-            
+
             # Update metrics
             self.metrics['total_preparations'] += 1
             execution_time = time.time() - start_time
-            
+
             # Record performance
             self.method_performance[method_name]['total'] += 1
             self.method_performance[method_name]['success'] += 1
             self.method_performance[method_name]['total_time'] += execution_time
-            
+
             return create_success_response({
                 'profile': {
                     'dataset_name': profile.dataset_name,
@@ -450,64 +450,64 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 },
                 'execution_time': execution_time
             })
-            
+
         except Exception as e:
             logger.error(f"Data profiling error: {e}")
             self.method_performance[method_name]['total'] += 1
             return create_error_response(f"Profiling error: {str(e)}")
-    
+
     @mcp_tool("prepare_data", "Prepare data with intelligent transformation and cleaning")
     @a2a_skill("prepare_data", "ML-driven data preparation")
     async def prepare_data(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Prepare data with ML-driven transformation and cleaning"""
         start_time = time.time()
         method_name = "prepare_data"
-        
+
         try:
             data_source = request_data.get('data_source')
             target_format = request_data.get('target_format', 'vectorized')
             quality_threshold = request_data.get('quality_threshold', 0.8)
             pipeline_config = request_data.get('pipeline', {})
-            
+
             # Create preparation pipeline
             pipeline = await self._create_preparation_pipeline(
                 data_source, target_format, quality_threshold, pipeline_config
             )
-            
+
             # Execute pipeline steps
             prepared_data = await self._execute_pipeline(pipeline, data_source)
-            
+
             # Validate results
             validation_results = await self._validate_prepared_data(
                 prepared_data, pipeline.quality_thresholds
             )
-            
+
             if validation_results['passed']:
                 self.metrics['validations_passed'] += 1
-            
+
             # Generate embeddings if requested
             if target_format == 'vectorized' and self.embedding_model:
                 embeddings = await self._generate_embeddings(prepared_data)
                 prepared_data['embeddings'] = embeddings
                 self.metrics['embeddings_created'] += len(embeddings)
-            
+
             # Store results
             if self.use_data_manager:
                 await self._store_prepared_data(prepared_data, pipeline.pipeline_id)
-            
+
             # Update metrics
             self.metrics['successful_preparations'] += 1
             execution_time = time.time() - start_time
-            
+
             # Record performance
             self.method_performance[method_name]['total'] += 1
             self.method_performance[method_name]['success'] += 1
             self.method_performance[method_name]['total_time'] += execution_time
-            
+
             # Learn from this preparation
             if self.learning_enabled:
                 await self._learn_from_preparation(pipeline, prepared_data, execution_time)
-            
+
             return create_success_response({
                 'pipeline_id': pipeline.pipeline_id,
                 'records_processed': prepared_data.get('record_count', 0),
@@ -516,28 +516,28 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 'transformations_applied': len(pipeline.transformations),
                 'execution_time': execution_time
             })
-            
+
         except Exception as e:
             logger.error(f"Data preparation error: {e}")
             self.metrics['failed_preparations'] += 1
             self.method_performance[method_name]['total'] += 1
             return create_error_response(f"Preparation error: {str(e)}")
-    
+
     @mcp_tool("chunk_data", "Intelligently chunk data for AI processing")
     @a2a_skill("chunk_data", "Semantic data chunking")
     async def chunk_data(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Chunk data using ML-optimized strategies"""
         start_time = time.time()
-        
+
         try:
             data_source = request_data.get('data_source')
             strategy = request_data.get('strategy', 'semantic')
             chunk_size = request_data.get('chunk_size', 512)
             overlap = request_data.get('overlap', 0.1)
-            
+
             # Load data
             data = await self._load_data_for_chunking(data_source)
-            
+
             # Create chunking strategy
             chunking_strategy = ChunkingStrategy(
                 strategy_type=strategy,
@@ -546,35 +546,35 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 metadata_extraction=True,
                 preserve_context=True
             )
-            
+
             # Apply intelligent chunking
             chunks = await self._apply_chunking_strategy(data, chunking_strategy)
-            
+
             # Optimize chunks using ML
             if self.grok_available and strategy == 'semantic':
                 chunks = await self._optimize_chunks_with_ai(chunks)
-            
+
             # Generate chunk embeddings
             if self.embedding_model:
                 for chunk in chunks:
                     chunk['embedding'] = self.embedding_model.encode(
-                        chunk['content'], 
+                        chunk['content'],
                         normalize_embeddings=True
                     ).tolist()
-            
+
             self.metrics['chunks_generated'] += len(chunks)
-            
+
             return create_success_response({
                 'chunks_created': len(chunks),
                 'strategy_used': strategy,
                 'average_chunk_size': np.mean([len(c['content']) for c in chunks]),
                 'execution_time': time.time() - start_time
             })
-            
+
         except Exception as e:
             logger.error(f"Chunking error: {e}")
             return create_error_response(f"Chunking error: {str(e)}")
-    
+
     @mcp_tool("detect_quality_issues", "Detect data quality issues using ML")
     @a2a_skill("detect_quality_issues", "ML quality detection")
     async def detect_quality_issues(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -582,31 +582,31 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
         try:
             data_source = request_data.get('data_source')
             deep_analysis = request_data.get('deep_analysis', True)
-            
+
             # Load data
             data = await self._load_data(data_source, 'auto')
-            
+
             # Run quality detection
             issues = await self._detect_quality_issues_ml(data, deep_analysis)
-            
+
             # Generate remediation suggestions
             suggestions = await self._generate_remediation_suggestions(issues)
-            
+
             # Use Grok for advanced analysis if available
             if deep_analysis and self.grok_available:
                 advanced_insights = await self._get_grok_quality_insights(data, issues)
                 suggestions.extend(advanced_insights)
-            
+
             return create_success_response({
                 'issues_detected': issues,
                 'remediation_suggestions': suggestions,
                 'quality_impact': self._calculate_quality_impact(issues)
             })
-            
+
         except Exception as e:
             logger.error(f"Quality detection error: {e}")
             return create_error_response(f"Quality detection error: {str(e)}")
-    
+
     @mcp_tool("enrich_data", "Enrich data with external sources and ML insights")
     @a2a_skill("enrich_data", "Intelligent data enrichment")
     async def enrich_data(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -615,36 +615,36 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             data_source = request_data.get('data_source')
             enrichment_types = request_data.get('enrichment_types', ['semantic', 'statistical'])
             external_sources = request_data.get('external_sources', [])
-            
+
             # Load base data
             data = await self._load_data(data_source, 'auto')
-            
+
             # Apply enrichments
             enriched_data = data.copy()
-            
+
             if 'semantic' in enrichment_types and self.embedding_model:
                 enriched_data = await self._semantic_enrichment(enriched_data)
-            
+
             if 'statistical' in enrichment_types:
                 enriched_data = await self._statistical_enrichment(enriched_data)
-            
+
             if 'ml_insights' in enrichment_types:
                 enriched_data = await self._ml_insights_enrichment(enriched_data)
-            
+
             # Apply external enrichments
             for source in external_sources:
                 enriched_data = await self._apply_external_enrichment(enriched_data, source)
-            
+
             return create_success_response({
                 'records_enriched': len(enriched_data),
                 'enrichment_types_applied': enrichment_types,
                 'quality_improvement': self._calculate_enrichment_impact(data, enriched_data)
             })
-            
+
         except Exception as e:
             logger.error(f"Data enrichment error: {e}")
             return create_error_response(f"Enrichment error: {str(e)}")
-    
+
     @mcp_tool("domain_specific_embedding", "Generate domain-specific embeddings for specialized AI models")
     @a2a_skill("domain_specific_embedding", "Create embeddings optimized for specific domains")
     async def domain_specific_embedding(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -654,13 +654,13 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             domain = request_data.get('domain', 'general')
             embedding_strategy = request_data.get('embedding_strategy', 'dense')
             model_type = request_data.get('model_type', 'sentence-transformer')
-            
+
             # Load data
             data = await self._load_data(data_source, 'auto')
-            
+
             # Select appropriate embedding model for domain
             embedding_model = await self._get_domain_embedding_model(domain, model_type)
-            
+
             # Generate embeddings based on strategy
             embeddings = []
             if embedding_strategy == 'dense':
@@ -671,7 +671,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 dense_emb = await self._generate_dense_embeddings(data, embedding_model, domain)
                 sparse_emb = await self._generate_sparse_embeddings(data, domain)
                 embeddings = await self._combine_embeddings(dense_emb, sparse_emb)
-            
+
             # Store embeddings with metadata
             embedding_metadata = {
                 'domain': domain,
@@ -680,18 +680,18 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 'dimensions': len(embeddings[0]) if embeddings else 0,
                 'timestamp': datetime.utcnow().isoformat()
             }
-            
+
             return create_success_response({
                 'embeddings_generated': len(embeddings),
                 'embedding_metadata': embedding_metadata,
                 'domain_specific_features': await self._extract_domain_features(data, domain),
                 'quality_metrics': await self._evaluate_embedding_quality(embeddings, domain)
             })
-            
+
         except Exception as e:
             logger.error(f"Domain-specific embedding error: {e}")
             return create_error_response(f"Embedding error: {str(e)}")
-    
+
     @mcp_tool("semantic_chunking", "Intelligently chunk data based on semantic meaning")
     @a2a_skill("semantic_chunking", "Perform semantic-aware data chunking for optimal AI processing")
     async def semantic_chunking(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -702,10 +702,10 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             target_chunk_size = request_data.get('target_chunk_size', 512)
             overlap_ratio = request_data.get('overlap_ratio', 0.1)
             preserve_context = request_data.get('preserve_context', True)
-            
+
             # Load data
             data = await self._load_data(data_source, 'auto')
-            
+
             # Apply chunking strategy
             chunks = []
             if chunk_strategy == 'semantic_boundary':
@@ -716,10 +716,10 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 chunks = await self._hierarchical_chunking(data, target_chunk_size)
             elif chunk_strategy == 'topic_based':
                 chunks = await self._topic_based_chunking(data, target_chunk_size)
-            
+
             # Validate and optimize chunks
             optimized_chunks = await self._optimize_chunks(chunks, target_chunk_size)
-            
+
             # Generate chunk metadata
             chunk_metadata = []
             for i, chunk in enumerate(optimized_chunks):
@@ -731,7 +731,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     'boundaries': await self._identify_chunk_boundaries(chunk)
                 }
                 chunk_metadata.append(metadata)
-            
+
             return create_success_response({
                 'chunks_created': len(optimized_chunks),
                 'average_chunk_size': sum(len(str(c)) for c in optimized_chunks) / len(optimized_chunks) if optimized_chunks else 0,
@@ -739,11 +739,11 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 'chunk_metadata': chunk_metadata,
                 'quality_metrics': await self._evaluate_chunking_quality(optimized_chunks)
             })
-            
+
         except Exception as e:
             logger.error(f"Semantic chunking error: {e}")
             return create_error_response(f"Chunking error: {str(e)}")
-    
+
     @mcp_tool("contextual_augmentation", "Augment data with contextual information for AI models")
     @a2a_skill("contextual_augmentation", "Add contextual information to enhance AI understanding")
     async def contextual_augmentation(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -752,25 +752,25 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             data_source = request_data.get('data_source')
             augmentation_types = request_data.get('augmentation_types', ['temporal', 'relational', 'semantic'])
             context_window = request_data.get('context_window', 5)
-            
+
             # Load data
             data = await self._load_data(data_source, 'auto')
-            
+
             augmented_data = data.copy()
-            
+
             # Apply different augmentation types
             if 'temporal' in augmentation_types:
                 augmented_data = await self._add_temporal_context(augmented_data, context_window)
-            
+
             if 'relational' in augmentation_types:
                 augmented_data = await self._add_relational_context(augmented_data)
-            
+
             if 'semantic' in augmentation_types:
                 augmented_data = await self._add_semantic_context(augmented_data)
-            
+
             if 'hierarchical' in augmentation_types:
                 augmented_data = await self._add_hierarchical_context(augmented_data)
-            
+
             # Calculate augmentation impact
             augmentation_metrics = {
                 'original_features': len(data.columns) if hasattr(data, 'columns') else 1,
@@ -778,18 +778,18 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 'context_enrichment_ratio': await self._calculate_enrichment_ratio(data, augmented_data),
                 'information_gain': await self._calculate_information_gain(data, augmented_data)
             }
-            
+
             return create_success_response({
                 'records_augmented': len(augmented_data),
                 'augmentation_types_applied': augmentation_types,
                 'augmentation_metrics': augmentation_metrics,
                 'quality_improvement': await self._assess_augmentation_quality(data, augmented_data)
             })
-            
+
         except Exception as e:
             logger.error(f"Contextual augmentation error: {e}")
             return create_error_response(f"Augmentation error: {str(e)}")
-    
+
     @mcp_tool("feature_engineering_ai", "AI-driven feature engineering for model preparation")
     @a2a_skill("feature_engineering_ai", "Automatically engineer features using AI techniques")
     async def feature_engineering_ai(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -799,37 +799,37 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             target_column = request_data.get('target_column')
             feature_types = request_data.get('feature_types', ['polynomial', 'interaction', 'temporal', 'aggregation'])
             max_features = request_data.get('max_features', 50)
-            
+
             # Load data
             data = await self._load_data(data_source, 'auto')
-            
+
             engineered_features = pd.DataFrame()
             feature_importance = {}
-            
+
             # Generate different types of features
             if 'polynomial' in feature_types:
                 poly_features = await self._generate_polynomial_features(data, max_features)
                 engineered_features = pd.concat([engineered_features, poly_features], axis=1)
-            
+
             if 'interaction' in feature_types:
                 interaction_features = await self._generate_interaction_features(data, max_features)
                 engineered_features = pd.concat([engineered_features, interaction_features], axis=1)
-            
+
             if 'temporal' in feature_types and self._has_temporal_data(data):
                 temporal_features = await self._generate_temporal_features(data, max_features)
                 engineered_features = pd.concat([engineered_features, temporal_features], axis=1)
-            
+
             if 'aggregation' in feature_types:
                 agg_features = await self._generate_aggregation_features(data, max_features)
                 engineered_features = pd.concat([engineered_features, agg_features], axis=1)
-            
+
             # Feature selection using ML
             if target_column and target_column in data.columns:
                 selected_features, importance_scores = await self._select_best_features(
                     engineered_features, data[target_column], max_features
                 )
                 feature_importance = dict(zip(selected_features.columns, importance_scores))
-            
+
             return create_success_response({
                 'features_engineered': len(engineered_features.columns),
                 'feature_types_applied': feature_types,
@@ -840,11 +840,11 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     'selected_features': len(selected_features.columns) if 'selected_features' in locals() else len(engineered_features.columns)
                 }
             })
-            
+
         except Exception as e:
             logger.error(f"Feature engineering error: {e}")
             return create_error_response(f"Feature engineering error: {str(e)}")
-    
+
     @mcp_tool("data_synthesis_ai", "Synthesize new data samples using AI techniques")
     @a2a_skill("data_synthesis_ai", "Generate synthetic data for AI model training")
     async def data_synthesis_ai(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -855,14 +855,14 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             num_samples = request_data.get('num_samples', 1000)
             preserve_privacy = request_data.get('preserve_privacy', True)
             quality_threshold = request_data.get('quality_threshold', 0.8)
-            
+
             # Load original data
             original_data = await self._load_data(data_source, 'auto')
-            
+
             # Generate synthetic data based on method
             synthetic_data = None
             synthesis_metadata = {}
-            
+
             if synthesis_method == 'gan':
                 synthetic_data, metadata = await self._generate_gan_samples(
                     original_data, num_samples, preserve_privacy
@@ -881,16 +881,16 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 synthetic_data = await self._generate_smote_samples(
                     original_data, num_samples
                 )
-            
+
             # Validate synthetic data quality
             quality_metrics = await self._validate_synthetic_data(
                 original_data, synthetic_data, quality_threshold
             )
-            
+
             # Apply privacy preserving techniques if requested
             if preserve_privacy:
                 synthetic_data = await self._apply_differential_privacy(synthetic_data)
-            
+
             return create_success_response({
                 'samples_generated': len(synthetic_data),
                 'synthesis_method': synthesis_method,
@@ -898,11 +898,11 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 'privacy_preserved': preserve_privacy,
                 'synthesis_metadata': synthesis_metadata
             })
-            
+
         except Exception as e:
             logger.error(f"Data synthesis error: {e}")
             return create_error_response(f"Synthesis error: {str(e)}")
-    
+
     # Helper methods for ML operations
     async def _generate_data_profile(self, data: pd.DataFrame, source_name: str) -> DataProfile:
         """Generate comprehensive data profile"""
@@ -918,7 +918,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             issues_found=[],
             recommendations=[]
         )
-        
+
         # Generate statistical summary for numeric columns
         numeric_columns = data.select_dtypes(include=[np.number]).columns
         for col in numeric_columns:
@@ -931,9 +931,9 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 'q50': float(data[col].quantile(0.50)),
                 'q75': float(data[col].quantile(0.75))
             }
-        
+
         return profile
-    
+
     async def _assess_data_quality_ml(self, data: pd.DataFrame, profile: DataProfile) -> Dict[str, Any]:
         """Assess data quality using ML models"""
         try:
@@ -942,14 +942,14 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             uniqueness = self.quality_rules['uniqueness'](data)
             validity = self.quality_rules['validity'](data)
             consistency = self.quality_rules['consistency'](data)
-            
+
             # Use ML model to predict quality category
             features = [[completeness/100, uniqueness/100, validity/100]]
             quality_category = self.quality_classifier.predict(features)[0]
-            
+
             # Map to quality score
             quality_score = [0.3, 0.6, 0.9][quality_category]
-            
+
             # Identify specific issues
             issues = []
             if completeness < 80:
@@ -958,7 +958,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 issues.append(DataQualityIssue.DUPLICATES)
             if validity < 90:
                 issues.append(DataQualityIssue.INVALID_DATATYPE)
-            
+
             # Generate recommendations
             recommendations = []
             if DataQualityIssue.MISSING_VALUES in issues:
@@ -967,7 +967,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 recommendations.append("Remove or consolidate duplicate records")
             if DataQualityIssue.INVALID_DATATYPE in issues:
                 recommendations.append("Standardize data types and formats")
-            
+
             return {
                 'overall_score': quality_score,
                 'issues': issues,
@@ -979,7 +979,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     'consistency': consistency
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Quality assessment error: {e}")
             return {
@@ -988,58 +988,58 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 'recommendations': ["Manual review required"],
                 'metrics': {}
             }
-    
+
     async def _detect_anomalies_ml(self, data: pd.DataFrame) -> Dict[str, Any]:
         """Detect anomalies using ML models"""
         try:
             # Select numeric columns
             numeric_data = data.select_dtypes(include=[np.number])
-            
+
             if numeric_data.empty:
                 return {'count': 0, 'indices': []}
-            
+
             # Scale data
             scaled_data = self.feature_scaler.fit_transform(numeric_data.fillna(0))
-            
+
             # Detect anomalies
             predictions = self.anomaly_detector.predict(scaled_data)
             anomaly_indices = np.where(predictions == -1)[0]
-            
+
             return {
                 'count': len(anomaly_indices),
                 'indices': anomaly_indices.tolist(),
                 'percentage': (len(anomaly_indices) / len(data)) * 100
             }
-            
+
         except Exception as e:
             logger.error(f"Anomaly detection error: {e}")
             return {'count': 0, 'indices': []}
-    
-    async def _create_preparation_pipeline(self, data_source: str, target_format: str, 
+
+    async def _create_preparation_pipeline(self, data_source: str, target_format: str,
                                          quality_threshold: float, config: Dict[str, Any]) -> PreparationPipeline:
         """Create intelligent preparation pipeline"""
         pipeline_id = f"prep_{hashlib.md5(f'{data_source}{time.time()}'.encode()).hexdigest()[:8]}"
-        
+
         # Determine input format
         input_format = self._detect_format(data_source)
-        
+
         # Build pipeline steps based on ML analysis
         steps = []
-        
+
         # Data loading step
         steps.append({
             'name': 'load_data',
             'type': 'loader',
             'config': {'format': input_format}
         })
-        
+
         # Quality assessment step
         steps.append({
             'name': 'assess_quality',
             'type': 'quality',
             'config': {'threshold': quality_threshold}
         })
-        
+
         # Cleaning steps (ML-determined)
         if config.get('auto_clean', True):
             steps.extend([
@@ -1047,7 +1047,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 {'name': 'handle_missing', 'type': 'imputation', 'config': {'strategy': 'knn'}},
                 {'name': 'fix_datatypes', 'type': 'transformation'}
             ])
-        
+
         # Transformation steps
         if target_format == 'vectorized':
             steps.append({
@@ -1055,14 +1055,14 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 'type': 'vectorization',
                 'config': {'model': 'sentence-transformers'}
             })
-        
+
         # Validation step
         steps.append({
             'name': 'validate_output',
             'type': 'validation',
             'config': {'rules': config.get('validation_rules', [])}
         })
-        
+
         return PreparationPipeline(
             pipeline_id=pipeline_id,
             steps=steps,
@@ -1072,31 +1072,31 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             validation_rules=config.get('validation_rules', []),
             transformations=config.get('transformations', [])
         )
-    
+
     async def _apply_chunking_strategy(self, data: Any, strategy: ChunkingStrategy) -> List[Dict[str, Any]]:
         """Apply intelligent chunking strategy"""
         chunking_func = self.chunking_strategies.get(
-            strategy.strategy_type, 
+            strategy.strategy_type,
             self._fixed_size_chunking
         )
-        
+
         return await chunking_func(data, strategy)
-    
+
     async def _semantic_chunking(self, data: str, strategy: ChunkingStrategy) -> List[Dict[str, Any]]:
         """Semantic chunking using NLP and embeddings"""
         chunks = []
-        
+
         if NLTK_AVAILABLE:
             # Split into sentences
             sentences = sent_tokenize(data)
-            
+
             # Group sentences semantically
             current_chunk = []
             current_size = 0
-            
+
             for i, sentence in enumerate(sentences):
                 sentence_size = len(sentence)
-                
+
                 if current_size + sentence_size > strategy.chunk_size and current_chunk:
                     # Create chunk
                     chunk_text = ' '.join(current_chunk)
@@ -1110,7 +1110,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                             'sentence_count': len(current_chunk)
                         }
                     })
-                    
+
                     # Start new chunk with overlap
                     if strategy.overlap > 0:
                         overlap_count = int(len(current_chunk) * strategy.overlap)
@@ -1118,10 +1118,10 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     else:
                         current_chunk = []
                     current_size = sum(len(s) for s in current_chunk)
-                
+
                 current_chunk.append(sentence)
                 current_size += sentence_size
-            
+
             # Add final chunk
             if current_chunk:
                 chunks.append({
@@ -1137,21 +1137,21 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
         else:
             # Fallback to fixed size if NLTK not available
             return await self._fixed_size_chunking(data, strategy)
-        
+
         return chunks
-    
+
     async def _fixed_size_chunking(self, data: str, strategy: ChunkingStrategy) -> List[Dict[str, Any]]:
         """Fixed size chunking with overlap"""
         chunks = []
         text = str(data)
         chunk_size = strategy.chunk_size
         overlap_size = int(chunk_size * strategy.overlap)
-        
+
         start = 0
         while start < len(text):
             end = min(start + chunk_size, len(text))
             chunk_content = text[start:end]
-            
+
             chunks.append({
                 'id': f"chunk_{len(chunks)}",
                 'content': chunk_content,
@@ -1162,23 +1162,23 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     'size': len(chunk_content)
                 }
             })
-            
+
             start = end - overlap_size if overlap_size > 0 else end
-        
+
         return chunks
-    
+
     async def _sliding_window_chunking(self, data: str, strategy: ChunkingStrategy) -> List[Dict[str, Any]]:
         """Sliding window chunking for continuous analysis"""
         # Similar to fixed size but with continuous sliding
         return await self._fixed_size_chunking(data, strategy)
-    
+
     async def _hierarchical_chunking(self, data: str, strategy: ChunkingStrategy) -> List[Dict[str, Any]]:
         """Hierarchical chunking for structured documents"""
         chunks = []
-        
+
         # Split by headers/sections if markdown or similar
         sections = re.split(r'\n#+\s', data)
-        
+
         for i, section in enumerate(sections):
             if section.strip():
                 chunks.append({
@@ -1190,7 +1190,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                         'level': 1
                     }
                 })
-                
+
                 # Further chunk large sections
                 if len(section) > strategy.chunk_size:
                     sub_chunks = await self._fixed_size_chunking(section, strategy)
@@ -1198,18 +1198,18 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                         sub_chunk['id'] = f"section_{i}_chunk_{j}"
                         sub_chunk['metadata']['parent'] = f"section_{i}"
                         chunks.append(sub_chunk)
-        
+
         return chunks if chunks else await self._fixed_size_chunking(data, strategy)
-    
+
     async def _boundary_based_chunking(self, data: str, strategy: ChunkingStrategy) -> List[Dict[str, Any]]:
         """Chunk based on custom boundaries"""
         chunks = []
-        
+
         if strategy.custom_boundaries:
             # Split by custom boundaries
             pattern = '|'.join(re.escape(b) for b in strategy.custom_boundaries)
             parts = re.split(pattern, data)
-            
+
             for i, part in enumerate(parts):
                 if part.strip():
                     chunks.append({
@@ -1220,14 +1220,14 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                             'boundary_index': i
                         }
                     })
-        
+
         return chunks if chunks else await self._fixed_size_chunking(data, strategy)
-    
+
     def _check_validity(self, df: pd.DataFrame) -> float:
         """Check data validity"""
         valid_count = 0
         total_count = df.shape[0] * df.shape[1]
-        
+
         for col in df.columns:
             if df[col].dtype == 'object':
                 # Check string validity
@@ -1235,14 +1235,14 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             else:
                 # Check numeric validity
                 valid_count += df[col].notna().sum()
-        
+
         return (valid_count / total_count) * 100 if total_count > 0 else 0
-    
+
     def _check_consistency(self, df: pd.DataFrame) -> float:
         """Check data consistency"""
         # Simple consistency check - can be enhanced
         consistency_score = 100.0
-        
+
         # Check for consistent data types
         for col in df.columns:
             try:
@@ -1250,21 +1250,21 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 pd.to_numeric(df[col], errors='coerce')
             except:
                 consistency_score -= 5
-        
+
         return max(0, consistency_score)
-    
+
     def _check_accuracy(self, df: pd.DataFrame) -> float:
         """Check data accuracy (simplified)"""
         # This would normally involve checking against known valid values
         return 85.0  # Placeholder
-    
+
     def _detect_format(self, data_source: str) -> str:
         """Detect data format from source"""
         if isinstance(data_source, str):
             ext = data_source.split('.')[-1].lower()
             return ext if ext in ['csv', 'json', 'parquet', 'excel', 'txt'] else 'unknown'
         return 'unknown'
-    
+
     async def _load_data(self, source: str, format: str, sample_size: Optional[int] = None) -> pd.DataFrame:
         """Load data from various sources"""
         # Simplified loader - in real implementation would handle various formats
@@ -1275,7 +1275,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
         else:
             # Default to CSV
             return pd.DataFrame()
-    
+
     async def _load_data_for_chunking(self, source: str) -> str:
         """Load data as text for chunking"""
         # Simplified - would handle various formats
@@ -1283,7 +1283,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             with open(source, 'r', encoding='utf-8') as f:
                 return f.read()
         return str(source)
-    
+
     async def _generate_embeddings(self, data: Dict[str, Any]) -> List[List[float]]:
         """Generate embeddings for prepared data"""
         if self.embedding_model:
@@ -1292,7 +1292,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 texts = data['processed_text']
             elif 'chunks' in data:
                 texts = [chunk['content'] for chunk in data['chunks']]
-            
+
             if texts:
                 embeddings = self.embedding_model.encode(
                     texts,
@@ -1300,29 +1300,29 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     show_progress_bar=False
                 )
                 return embeddings.tolist()
-        
+
         # Fallback: generate basic embeddings using available methods
         try:
             # Simple TF-IDF based embeddings as fallback
             from sklearn.feature_extraction.text import TfidfVectorizer
-            
+
             if isinstance(data, str):
                 texts = [data]
             elif isinstance(data, list):
                 texts = [str(item) for item in data]
             else:
                 texts = [str(data)]
-            
+
             vectorizer = TfidfVectorizer(max_features=384, stop_words='english')
             embeddings = vectorizer.fit_transform(texts)
             return embeddings.toarray().tolist()
-            
+
         except Exception as fallback_error:
             logger.error(f"Fallback embedding generation failed: {fallback_error}")
             # Return zero embeddings as last resort
             return [[0.0] * 384]
-    
-    async def _learn_from_preparation(self, pipeline: PreparationPipeline, 
+
+    async def _learn_from_preparation(self, pipeline: PreparationPipeline,
                                     result: Dict[str, Any], execution_time: float):
         """Learn from preparation results"""
         self.training_data['preparation_pipelines'].append({
@@ -1332,12 +1332,12 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             'execution_time': execution_time,
             'timestamp': datetime.now().isoformat()
         })
-        
+
         # Retrain models periodically
         self.preparation_count += 1
         if self.preparation_count % self.model_update_frequency == 0:
             await self._retrain_models()
-    
+
     async def _retrain_models(self):
         """Retrain ML models with accumulated data"""
         try:
@@ -1347,50 +1347,50 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 logger.info("Retraining models with new preparation data")
         except Exception as e:
             logger.error(f"Model retraining error: {e}")
-    
+
     # Preparation pattern methods (placeholders)
     async def _prepare_csv_pattern(self, data: Any) -> Dict[str, Any]:
         return {'format': 'csv', 'prepared': True}
-    
+
     async def _prepare_json_pattern(self, data: Any) -> Dict[str, Any]:
         return {'format': 'json', 'prepared': True}
-    
+
     async def _prepare_parquet_pattern(self, data: Any) -> Dict[str, Any]:
         return {'format': 'parquet', 'prepared': True}
-    
+
     async def _prepare_excel_pattern(self, data: Any) -> Dict[str, Any]:
         return {'format': 'excel', 'prepared': True}
-    
+
     async def _prepare_text_pattern(self, data: Any) -> Dict[str, Any]:
         return {'format': 'text', 'prepared': True}
-    
+
     async def _prepare_pdf_pattern(self, data: Any) -> Dict[str, Any]:
         return {'format': 'pdf', 'prepared': True}
-    
+
     async def _prepare_html_pattern(self, data: Any) -> Dict[str, Any]:
         return {'format': 'html', 'prepared': True}
-    
+
     async def _prepare_markdown_pattern(self, data: Any) -> Dict[str, Any]:
         return {'format': 'markdown', 'prepared': True}
-    
+
     async def _prepare_image_pattern(self, data: Any) -> Dict[str, Any]:
         return {'format': 'image', 'prepared': True}
-    
+
     async def _prepare_audio_pattern(self, data: Any) -> Dict[str, Any]:
         return {'format': 'audio', 'prepared': True}
-    
+
     async def _prepare_video_pattern(self, data: Any) -> Dict[str, Any]:
         return {'format': 'video', 'prepared': True}
-    
+
     async def _prepare_kafka_pattern(self, data: Any) -> Dict[str, Any]:
         return {'format': 'kafka', 'prepared': True}
-    
+
     async def _prepare_websocket_pattern(self, data: Any) -> Dict[str, Any]:
         return {'format': 'websocket', 'prepared': True}
-    
+
     async def _prepare_mqtt_pattern(self, data: Any) -> Dict[str, Any]:
         return {'format': 'mqtt', 'prepared': True}
-    
+
     async def _store_profile_results(self, profile: DataProfile) -> None:
         """Store profile results in Data Manager"""
         try:
@@ -1411,7 +1411,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 )
         except Exception as e:
             logger.error(f"Error storing profile results: {e}")
-    
+
     async def _store_prepared_data(self, data: Dict[str, Any], pipeline_id: str) -> None:
         """Store prepared data in Data Manager"""
         try:
@@ -1428,33 +1428,33 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 )
         except Exception as e:
             logger.error(f"Error storing prepared data: {e}")
-    
+
     async def _execute_pipeline(self, pipeline: PreparationPipeline, data_source: str) -> Dict[str, Any]:
         """Execute the preparation pipeline"""
         try:
             result = {'record_count': 0, 'quality_improvement': 0}
-            
+
             # Load initial data
             data = await self._load_data(data_source, pipeline.input_format)
             result['record_count'] = len(data)
-            
+
             # Execute each pipeline step
             for step in pipeline.steps:
                 if step['name'] == 'assess_quality':
                     profile = await self._generate_data_profile(data, data_source)
                     quality_assessment = await self._assess_data_quality_ml(data, profile)
                     result['initial_quality'] = quality_assessment['overall_score']
-                
+
                 elif step['name'] == 'remove_duplicates':
                     initial_count = len(data)
                     data = data.drop_duplicates()
                     result['duplicates_removed'] = initial_count - len(data)
-                
+
                 elif step['name'] == 'handle_missing':
                     numeric_cols = data.select_dtypes(include=[np.number]).columns
                     if len(numeric_cols) > 0:
                         data[numeric_cols] = self.imputer.fit_transform(data[numeric_cols])
-                
+
                 elif step['name'] == 'fix_datatypes':
                     # Basic datatype fixing
                     for col in data.columns:
@@ -1464,39 +1464,39 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                                 data[col] = pd.to_numeric(data[col], errors='ignore')
                             except:
                                 pass
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Pipeline execution error: {e}")
             return {'record_count': 0, 'quality_improvement': 0}
-    
-    async def _validate_prepared_data(self, data: Dict[str, Any], 
+
+    async def _validate_prepared_data(self, data: Dict[str, Any],
                                     thresholds: Dict[str, float]) -> Dict[str, Any]:
         """Validate prepared data against quality thresholds"""
         try:
             # Basic validation
             passed = True
             quality_score = 0.8  # Default quality score
-            
+
             if 'record_count' in data and data['record_count'] > 0:
                 quality_score = min(1.0, data.get('quality_improvement', 0) + 0.7)
                 passed = quality_score >= thresholds.get('overall', 0.7)
-            
+
             return {
                 'passed': passed,
                 'quality_score': quality_score,
                 'validation_details': {'threshold_check': passed}
             }
-            
+
         except Exception as e:
             logger.error(f"Data validation error: {e}")
             return {'passed': False, 'quality_score': 0.0}
-    
+
     async def _detect_quality_issues_ml(self, data: pd.DataFrame, deep_analysis: bool) -> List[Dict[str, Any]]:
         """Detect quality issues using ML"""
         issues = []
-        
+
         try:
             # Check for missing values
             missing_percentage = (data.isnull().sum().sum() / (data.shape[0] * data.shape[1])) * 100
@@ -1506,7 +1506,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     'severity': 'high' if missing_percentage > 20 else 'medium',
                     'percentage': missing_percentage
                 })
-            
+
             # Check for duplicates
             duplicate_count = data.duplicated().sum()
             if duplicate_count > 0:
@@ -1515,7 +1515,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     'severity': 'medium',
                     'count': duplicate_count
                 })
-            
+
             # Use ML anomaly detection
             anomalies = await self._detect_anomalies_ml(data)
             if anomalies['count'] > 0:
@@ -1525,14 +1525,14 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     'count': anomalies['count'],
                     'percentage': anomalies['percentage']
                 })
-            
+
             return issues
-            
+
         except Exception as e:
             logger.error(f"Quality issue detection error: {e}")
             # Return basic quality issues as fallback
             basic_issues = []
-            
+
             # Check for common data quality issues
             if len(data) == 0:
                 basic_issues.append({
@@ -1541,7 +1541,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     'description': 'Dataset is empty',
                     'affected_records': 0
                 })
-            
+
             # Check for missing values
             missing_cols = data.isnull().sum()
             for col, missing_count in missing_cols.items():
@@ -1553,7 +1553,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                         'affected_records': missing_count,
                         'column': col
                     })
-            
+
             # Check for duplicate rows
             duplicate_count = data.duplicated().sum()
             if duplicate_count > 0:
@@ -1563,13 +1563,13 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     'description': f'Found {duplicate_count} duplicate records',
                     'affected_records': duplicate_count
                 })
-            
+
             return basic_issues
-    
+
     async def _generate_remediation_suggestions(self, issues: List[Dict[str, Any]]) -> List[str]:
         """Generate remediation suggestions for detected issues"""
         suggestions = []
-        
+
         for issue in issues:
             if issue['type'] == 'missing_values':
                 suggestions.append("Apply KNN imputation for missing numerical values")
@@ -1580,13 +1580,13 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             elif issue['type'] == 'outliers':
                 suggestions.append("Investigate outliers for potential data errors")
                 suggestions.append("Consider outlier capping or transformation")
-        
+
         return suggestions
-    
+
     def _calculate_quality_impact(self, issues: List[Dict[str, Any]]) -> float:
         """Calculate the impact of quality issues on overall data quality"""
         total_impact = 0.0
-        
+
         for issue in issues:
             if issue['type'] == 'missing_values':
                 total_impact += min(issue.get('percentage', 0) * 0.01, 0.3)
@@ -1594,14 +1594,14 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 total_impact += min(issue.get('count', 0) * 0.001, 0.2)
             elif issue['type'] == 'outliers':
                 total_impact += min(issue.get('percentage', 0) * 0.005, 0.1)
-        
+
         return min(total_impact, 1.0)
-    
-    async def _get_grok_quality_insights(self, data: pd.DataFrame, 
+
+    async def _get_grok_quality_insights(self, data: pd.DataFrame,
                                        issues: List[Dict[str, Any]]) -> List[str]:
         """Get advanced quality insights from Grok AI"""
         insights = []
-        
+
         if self.grok_available and self.grok_client:
             try:
                 # Create a summary of the data and issues for Grok
@@ -1610,7 +1610,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     'dtypes': data.dtypes.to_dict(),
                     'issues': issues
                 }
-                
+
                 response = await self.grok_client.chat.completions.create(
                     model="grok-beta",
                     messages=[
@@ -1621,24 +1621,24 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     ],
                     max_tokens=200
                 )
-                
+
                 if response.choices:
                     insights.append(response.choices[0].message.content.strip())
-                
+
             except Exception as e:
                 logger.error(f"Grok quality insights error: {e}")
-        
+
         return insights
-    
+
     async def _semantic_enrichment(self, data: pd.DataFrame) -> pd.DataFrame:
         """Apply semantic enrichment to data"""
         enriched_data = data.copy()
-        
+
         if self.embedding_model:
             try:
                 # Find text columns
                 text_columns = data.select_dtypes(include=['object']).columns
-                
+
                 for col in text_columns:
                     if data[col].dtype == 'object':
                         # Generate embeddings for text data
@@ -1646,59 +1646,59 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                             data[col].fillna('').astype(str).tolist(),
                             show_progress_bar=False
                         )
-                        
+
                         # Add embedding features (simplified)
                         enriched_data[f'{col}_embedding_dim_0'] = embeddings[:, 0]
                         enriched_data[f'{col}_embedding_dim_1'] = embeddings[:, 1]
-                        
+
             except Exception as e:
                 logger.error(f"Semantic enrichment error: {e}")
-        
+
         return enriched_data
-    
+
     async def _statistical_enrichment(self, data: pd.DataFrame) -> pd.DataFrame:
         """Apply statistical enrichment to data"""
         enriched_data = data.copy()
-        
+
         try:
             # Add statistical features for numeric columns
             numeric_columns = data.select_dtypes(include=[np.number]).columns
-            
+
             for col in numeric_columns:
                 # Add rolling statistics
                 enriched_data[f'{col}_rolling_mean_3'] = data[col].rolling(window=3).mean()
                 enriched_data[f'{col}_rolling_std_3'] = data[col].rolling(window=3).std()
-                
+
                 # Add percentile ranks
                 enriched_data[f'{col}_percentile_rank'] = data[col].rank(pct=True)
-                
+
         except Exception as e:
             logger.error(f"Statistical enrichment error: {e}")
-        
+
         return enriched_data
-    
+
     async def _ml_insights_enrichment(self, data: pd.DataFrame) -> pd.DataFrame:
         """Apply ML-based insights enrichment"""
         enriched_data = data.copy()
-        
+
         try:
             # Use clustering to add cluster labels
             numeric_data = data.select_dtypes(include=[np.number]).fillna(0)
-            
+
             if len(numeric_data.columns) > 1:
                 scaled_data = self.feature_scaler.fit_transform(numeric_data)
                 cluster_labels = self.pattern_clusterer.fit_predict(scaled_data)
                 enriched_data['ml_cluster'] = cluster_labels
-                
+
                 # Add anomaly scores
                 anomaly_scores = self.anomaly_detector.decision_function(scaled_data)
                 enriched_data['anomaly_score'] = anomaly_scores
-                
+
         except Exception as e:
             logger.error(f"ML insights enrichment error: {e}")
-        
+
         return enriched_data
-    
+
     async def _apply_external_enrichment(self, data: pd.DataFrame, source: str) -> pd.DataFrame:
         """Apply external enrichment from specified source"""
         try:
@@ -1706,28 +1706,28 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             if hasattr(self, 'grok_client') and self.grok_client:
                 # Sample data for analysis
                 sample_data = data.head(5).to_dict('records')
-                
+
                 enrichment_prompt = f"""
                 Analyze this dataset and suggest enrichment strategies for source '{source}':
                 Sample data: {sample_data}
                 Columns: {list(data.columns)}
-                
+
                 Provide specific enrichment recommendations and potential new columns.
                 """
-                
+
                 response = await self.grok_client.reason(enrichment_prompt)
                 logger.info(f"AI enrichment suggestions for {source}: {response.get('content', '')[:200]}...")
-            
+
             # Fallback enrichment based on source type
             enriched_data = data.copy()
-            
+
             if source.lower() == 'financial':
                 # Add financial indicators
                 if 'amount' in data.columns:
-                    enriched_data['amount_category'] = pd.cut(data['amount'], 
-                                                            bins=3, 
+                    enriched_data['amount_category'] = pd.cut(data['amount'],
+                                                            bins=3,
                                                             labels=['low', 'medium', 'high'])
-                
+
                 # Add timestamp-based features if date column exists
                 date_cols = [col for col in data.columns if 'date' in col.lower() or 'time' in col.lower()]
                 for date_col in date_cols:
@@ -1736,65 +1736,65 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                         enriched_data[f'{date_col}_month'] = pd.to_datetime(data[date_col]).dt.month
                     except:
                         pass
-            
+
             elif source.lower() == 'customer':
                 # Add customer segmentation
                 if 'age' in data.columns:
-                    enriched_data['age_group'] = pd.cut(data['age'], 
-                                                      bins=[0, 25, 45, 65, 100], 
+                    enriched_data['age_group'] = pd.cut(data['age'],
+                                                      bins=[0, 25, 45, 65, 100],
                                                       labels=['young', 'adult', 'middle_age', 'senior'])
-                
+
                 # Add derived features
                 text_cols = data.select_dtypes(include=['object']).columns
                 for col in text_cols:
                     enriched_data[f'{col}_length'] = data[col].astype(str).str.len()
-            
+
             elif source.lower() == 'product':
                 # Add product categorization
                 if 'price' in data.columns:
-                    enriched_data['price_tier'] = pd.qcut(data['price'], 
-                                                        q=4, 
+                    enriched_data['price_tier'] = pd.qcut(data['price'],
+                                                        q=4,
                                                         labels=['budget', 'standard', 'premium', 'luxury'])
-            
+
             # Generic enrichments for any source
             # Add data quality indicators
             enriched_data['completeness_score'] = (data.notna().sum(axis=1) / len(data.columns))
-            
+
             # Add row identifiers if not present
             if 'row_id' not in enriched_data.columns:
                 enriched_data['row_id'] = range(len(enriched_data))
-            
+
             logger.info(f"Applied {source} enrichment: {len(enriched_data.columns) - len(data.columns)} new columns added")
             return enriched_data
-            
+
         except Exception as e:
             logger.warning(f"External enrichment failed for {source}: {e}")
             return data
-    
+
     def _calculate_enrichment_impact(self, original: pd.DataFrame, enriched: pd.DataFrame) -> float:
         """Calculate the impact of enrichment on data quality"""
         try:
             # Simple metric: ratio of new columns to original columns
             original_cols = len(original.columns)
             enriched_cols = len(enriched.columns)
-            
+
             if original_cols == 0:
                 return 0.0
-            
+
             improvement = (enriched_cols - original_cols) / original_cols
             return min(improvement, 1.0)
-            
+
         except Exception as e:
             logger.error(f"Enrichment impact calculation error: {e}")
             return 0.0
-    
+
     async def _optimize_chunks_with_ai(self, chunks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Optimize chunks using Grok AI for better semantic coherence"""
         if not self.grok_available or not self.grok_client:
             return chunks
-        
+
         optimized_chunks = []
-        
+
         try:
             for chunk in chunks:
                 # Use Grok to improve chunk boundaries and content
@@ -1808,27 +1808,27 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     ],
                     max_tokens=100
                 )
-                
+
                 if response.choices:
                     chunk['ai_optimized'] = True
                     chunk['optimization_notes'] = response.choices[0].message.content.strip()
-                
+
                 optimized_chunks.append(chunk)
-                
+
         except Exception as e:
             logger.error(f"AI chunk optimization error: {e}")
             return chunks
-        
+
         return optimized_chunks
-    
+
     def _calculate_completeness(self, df: pd.DataFrame) -> float:
         """Calculate data completeness percentage"""
         return (1 - df.isnull().sum().sum() / (df.shape[0] * df.shape[1])) * 100
-    
+
     def _calculate_uniqueness(self, df: pd.DataFrame) -> float:
         """Calculate data uniqueness percentage"""
         return (df.nunique().sum() / (df.shape[0] * df.shape[1])) * 100
-    
+
     def _create_performance_dict(self) -> Dict[str, Any]:
         """Create default performance metrics dictionary"""
         return {
@@ -1837,7 +1837,7 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             'total_time': 0.0,
             'quality_improvement': 0.0
         }
-    
+
     async def shutdown(self) -> None:
         """Graceful shutdown"""
         try:
@@ -1846,12 +1846,12 @@ class ComprehensiveAiPreparationSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 'training_data': self.training_data,
                 'metrics': self.metrics
             }
-            
+
             with open('ai_preparation_history.pkl', 'wb') as f:
                 pickle.dump(history, f)
-            
+
             logger.info("AI Preparation Agent shutdown complete")
-            
+
         except Exception as e:
             logger.error(f"Shutdown error: {e}")
 
@@ -1871,14 +1871,14 @@ if __name__ == "__main__":
     async def main():
         agent = create_ai_preparation_agent()
         await agent.initialize()
-        
+
         # Example: Profile data
         result = await agent.profile_data({
             'data_source': 'sample_data.csv',
             'format': 'csv'
         })
         print(f"Profile result: {result}")
-        
+
         await agent.shutdown()
-    
+
     asyncio.run(main())

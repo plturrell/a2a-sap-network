@@ -31,7 +31,7 @@ try:
 except ImportError:
     # Logger is defined later, so we'll use print for early import warnings
     print("Warning: Some vector processing dependencies not available")
-    
+
 from pydantic import BaseModel, Field
 
 from .dynamicKnowledgeGraphSkills import DynamicKnowledgeGraphSkills
@@ -57,13 +57,13 @@ except ImportError:
     # Fallback if trust system not available
     def initialize_agent_trust(*args, **kwargs):
         return {"status": "trust_system_unavailable"}
-    
+
     def get_trust_contract():
         return None
-    
+
     def verify_a2a_message(*args, **kwargs):
         return True, {"status": "trust_system_unavailable"}
-    
+
     def sign_a2a_message(*args, **kwargs):
         return {"message": args[1] if len(args) > 1 else {}, "signature": {"status": "trust_system_unavailable"}}
 
@@ -108,11 +108,11 @@ logger = logging.getLogger(__name__)
 class EnhancedVectorProcessingAgent(SecureA2AAgent, BlockchainIntegrationMixin, PerformanceOptimizationMixin, PerformanceMonitoringMixin):
     """
     Enhanced Vector Processing Agent with AI Intelligence Framework Integration
-    
+
     This agent provides advanced vector processing capabilities with enhanced intelligence,
     achieving 78+ AI intelligence rating through sophisticated vector reasoning,
     adaptive learning from processing outcomes, and autonomous optimization.
-    
+
     Enhanced Capabilities:
     - Multi-strategy vector reasoning (cosine, euclidean, manhattan, hybrid)
     - Adaptive learning from vector processing results and performance patterns
@@ -121,7 +121,7 @@ class EnhancedVectorProcessingAgent(SecureA2AAgent, BlockchainIntegrationMixin, 
     - Full explainability of vector processing decisions and similarity scores
     - Autonomous vector processing optimization and performance tuning
     """
-    
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
 
         # Initialize security features
@@ -139,7 +139,7 @@ class EnhancedVectorProcessingAgent(SecureA2AAgent, BlockchainIntegrationMixin, 
             "sparse_vector_processing",
             "hybrid_search"
         ]
-        
+
         # Initialize parent classes
         A2AAgentBase.__init__(
             self,
@@ -153,14 +153,14 @@ class EnhancedVectorProcessingAgent(SecureA2AAgent, BlockchainIntegrationMixin, 
         )
         BlockchainIntegrationMixin.__init__(self)
         PerformanceOptimizationMixin.__init__(self)
-        
+
         # Configuration
         self.config = config or {}
-        
+
         # AI Intelligence Framework - Core enhancement
         self.ai_framework = None
         self.intelligence_config = create_enhanced_agent_config()
-        
+
         # Enhanced metrics
         self.enhanced_metrics = {
             "vectors_processed": 0,
@@ -173,26 +173,26 @@ class EnhancedVectorProcessingAgent(SecureA2AAgent, BlockchainIntegrationMixin, 
             "current_accuracy_score": 0.88,
             "current_intelligence_score": 78.0
         }
-        
+
         logger.info("Enhanced Vector Processing Agent with AI Intelligence Framework initialized")
-    
+
     async def initialize(self) -> None:
         """Initialize enhanced vector processing agent with AI Intelligence Framework"""
         logger.info("Initializing Enhanced Vector Processing Agent with AI Intelligence Framework...")
-        
+
         try:
             # Establish standard trust relationships FIRST
             await self.establish_standard_trust_relationships()
-            
+
             # Initialize blockchain integration
             try:
                 await self.initialize_blockchain()
                 logger.info("✅ Blockchain integration initialized for Agent 3")
             except Exception as e:
                 logger.warning(f"⚠️ Blockchain initialization failed: {e}")
-            
+
             # Continue with existing initialization
-            
+
             # Initialize AI Intelligence Framework - Primary Enhancement
             logger.info("🧠 Initializing AI Intelligence Framework...")
             self.ai_framework = await create_ai_intelligence_framework(
@@ -200,13 +200,13 @@ class EnhancedVectorProcessingAgent(SecureA2AAgent, BlockchainIntegrationMixin, 
                 config=self.intelligence_config
             )
             logger.info("✅ AI Intelligence Framework initialized successfully")
-            
+
             logger.info("🎉 Enhanced Vector Processing Agent fully initialized with 78+ AI intelligence capabilities!")
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize Enhanced Vector Processing Agent: {e}")
             raise
-    
+
     @a2a_handler("intelligent_vector_processing")
     async def handle_intelligent_vector_processing(self, message: A2AMessage) -> Dict[str, Any]:
         """Enhanced vector processing handler with AI Intelligence Framework integration"""
@@ -215,7 +215,7 @@ class EnhancedVectorProcessingAgent(SecureA2AAgent, BlockchainIntegrationMixin, 
             processing_data = self._extract_processing_data(message)
             if not processing_data:
                 return self._create_error_response("No valid vector processing data found")
-            
+
             # Perform integrated intelligence operation
             intelligence_result = await self.ai_framework.integrated_intelligence_operation(
                 task_description=f"Process vectors for {processing_data.get('operation_type', 'similarity')} operation",
@@ -227,11 +227,11 @@ class EnhancedVectorProcessingAgent(SecureA2AAgent, BlockchainIntegrationMixin, 
                     "timestamp": datetime.utcnow().isoformat()
                 }
             )
-            
+
             # Update metrics
             self.enhanced_metrics["vectors_processed"] += len(processing_data.get("vectors", []))
             self._update_intelligence_score(intelligence_result)
-            
+
             # Store vector processing results via data_manager
             await self.store_agent_data(
                 data_type="vector_processing_result",
@@ -243,13 +243,13 @@ class EnhancedVectorProcessingAgent(SecureA2AAgent, BlockchainIntegrationMixin, 
                     "intelligence_score": self._calculate_current_intelligence_score()
                 }
             )
-            
+
             # Update agent status with agent_manager
             await self.update_agent_status("processing_completed", {
                 "vectors_processed": self.enhanced_metrics["vectors_processed"],
                 "intelligence_score": self._calculate_current_intelligence_score()
             })
-            
+
             return {
                 "success": True,
                 "ai_intelligence_result": intelligence_result,
@@ -257,11 +257,11 @@ class EnhancedVectorProcessingAgent(SecureA2AAgent, BlockchainIntegrationMixin, 
                 "agent_id": self.agent_id,
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
         except Exception as e:
             logger.error(f"Intelligent vector processing failed: {e}")
             return self._create_error_response(f"Vector processing failed: {str(e)}")
-    
+
     def _extract_processing_data(self, message: A2AMessage) -> Optional[Dict[str, Any]]:
         """Extract vector processing data from A2A message"""
         try:
@@ -271,11 +271,11 @@ class EnhancedVectorProcessingAgent(SecureA2AAgent, BlockchainIntegrationMixin, 
         except Exception as e:
             logger.error(f"Failed to extract processing data: {e}")
             return None
-    
+
     def _calculate_current_intelligence_score(self) -> float:
         """Calculate current AI intelligence score"""
         base_score = 78.0
-        
+
         if self.ai_framework:
             framework_status = self.ai_framework.get_intelligence_status()
             active_components = sum(framework_status["components"].values())
@@ -283,10 +283,10 @@ class EnhancedVectorProcessingAgent(SecureA2AAgent, BlockchainIntegrationMixin, 
             total_score = min(base_score + component_bonus, 100.0)
         else:
             total_score = base_score
-        
+
         self.enhanced_metrics["current_intelligence_score"] = total_score
         return total_score
-    
+
     def _update_intelligence_score(self, intelligence_result: Dict[str, Any]):
         """Update intelligence score based on operation results"""
         if intelligence_result.get("success"):
@@ -294,7 +294,7 @@ class EnhancedVectorProcessingAgent(SecureA2AAgent, BlockchainIntegrationMixin, 
             bonus = min(components_used * 0.1, 1.0)
             current_score = self.enhanced_metrics["current_intelligence_score"]
             self.enhanced_metrics["current_intelligence_score"] = min(current_score + bonus, 100.0)
-    
+
     def _create_error_response(self, message: str) -> Dict[str, Any]:
         """Create error response"""
         return {
@@ -303,7 +303,7 @@ class EnhancedVectorProcessingAgent(SecureA2AAgent, BlockchainIntegrationMixin, 
             "timestamp": datetime.utcnow().isoformat(),
             "agent_id": self.agent_id
         }
-    
+
     @a2a_handler("HEALTH_CHECK")
     async def handle_health_check(self, message: A2AMessage, context_id: str) -> Dict[str, Any]:
         """Handle A2A protocol health check messages"""
@@ -331,10 +331,10 @@ class EnhancedVectorProcessingAgent(SecureA2AAgent, BlockchainIntegrationMixin, 
     async def shutdown(self):
         """Shutdown enhanced vector processing agent"""
         logger.info("Shutting down Enhanced Vector Processing Agent...")
-        
+
         if self.ai_framework:
             await self.ai_framework.shutdown()
-        
+
         logger.info("Enhanced Vector Processing Agent shutdown complete")
 
 

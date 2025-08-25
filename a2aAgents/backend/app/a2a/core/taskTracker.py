@@ -161,7 +161,7 @@ class AgentTaskTracker:
                 ),
             )
             checklist.append(checklist_item)
-        
+
         task.checklist = checklist
 
         self.tasks[task.task_id] = task

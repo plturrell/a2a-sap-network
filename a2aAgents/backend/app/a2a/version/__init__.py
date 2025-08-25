@@ -14,7 +14,7 @@ __network_compatibility__ = ["1.0.0", "1.0.1", "1.1.0"]
 __all__ = [
     "VersionManager",
     "get_version_manager",
-    "CompatibilityChecker", 
+    "CompatibilityChecker",
     "DependencyResolver",
     "__version__",
     "__a2a_protocol_version__",

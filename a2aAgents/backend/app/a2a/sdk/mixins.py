@@ -13,7 +13,7 @@ class PerformanceMonitorMixin:
     """
     Mixin for performance monitoring capabilities
     """
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._performance_metrics = {
@@ -22,26 +22,26 @@ class PerformanceMonitorMixin:
             "error_count": 0,
             "success_rate": 100.0
         }
-    
+
     def update_performance_metrics(self, response_time: float, success: bool = True):
         """Update performance metrics"""
         self._performance_metrics["requests_processed"] += 1
-        
+
         # Update average response time
         current_avg = self._performance_metrics["average_response_time"]
         count = self._performance_metrics["requests_processed"]
         self._performance_metrics["average_response_time"] = (
             (current_avg * (count - 1) + response_time) / count
         )
-        
+
         # Update success rate
         if not success:
             self._performance_metrics["error_count"] += 1
-        
+
         self._performance_metrics["success_rate"] = (
             (count - self._performance_metrics["error_count"]) / count * 100
         )
-    
+
     def get_performance_metrics(self) -> Dict[str, Any]:
         """Get current performance metrics"""
         return self._performance_metrics.copy()
@@ -51,7 +51,7 @@ class SecurityHardenedMixin:
     """
     Mixin for security hardening capabilities
     """
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._security_config = {
@@ -61,32 +61,32 @@ class SecurityHardenedMixin:
             "max_requests_per_minute": 100
         }
         self._request_counts = {}
-    
+
     def validate_request(self, request_data: Dict[str, Any]) -> bool:
         """Validate incoming request for security"""
         if not self._security_config["input_validation_enabled"]:
             return True
-        
+
         # Basic validation
         if not isinstance(request_data, dict):
             logger.warning("Request validation failed: not a dictionary")
             return False
-        
+
         # Check for required fields
         if "method" not in request_data:
             logger.warning("Request validation failed: missing method")
             return False
-        
+
         return True
-    
+
     def check_rate_limit(self, client_id: str) -> bool:
         """Check if client is within rate limits"""
         if not self._security_config["rate_limiting_enabled"]:
             return True
-        
+
         import time
         current_time = time.time()
-        
+
         # Clean old entries (older than 1 minute)
         cutoff_time = current_time - 60
         for cid in list(self._request_counts.keys()):
@@ -95,20 +95,20 @@ class SecurityHardenedMixin:
             ]
             if not self._request_counts[cid]:
                 del self._request_counts[cid]
-        
+
         # Check current client rate
         if client_id not in self._request_counts:
             self._request_counts[client_id] = []
-        
+
         client_requests = self._request_counts[client_id]
         if len(client_requests) >= self._security_config["max_requests_per_minute"]:
             logger.warning(f"Rate limit exceeded for client: {client_id}")
             return False
-        
+
         # Add current request
         client_requests.append(current_time)
         return True
-    
+
     def audit_log(self, event: str, details: Dict[str, Any]):
         """Log security-relevant events"""
         if self._security_config["audit_logging_enabled"]:
@@ -119,7 +119,7 @@ class CachingMixin:
     """
     Mixin for caching capabilities
     """
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._cache = {}
@@ -128,7 +128,7 @@ class CachingMixin:
             "misses": 0,
             "hit_rate": 0.0
         }
-    
+
     def cache_get(self, key: str) -> Optional[Any]:
         """Get value from cache"""
         if key in self._cache:
@@ -139,7 +139,7 @@ class CachingMixin:
             self._cache_stats["misses"] += 1
             self._update_cache_stats()
             return None
-    
+
     def cache_set(self, key: str, value: Any, ttl: Optional[int] = None):
         """Set value in cache"""
         import time
@@ -149,18 +149,18 @@ class CachingMixin:
             "ttl": ttl
         }
         self._cache[key] = cache_entry
-    
+
     def cache_clear(self):
         """Clear the cache"""
         self._cache.clear()
         self._cache_stats = {"hits": 0, "misses": 0, "hit_rate": 0.0}
-    
+
     def _update_cache_stats(self):
         """Update cache hit rate statistics"""
         total = self._cache_stats["hits"] + self._cache_stats["misses"]
         if total > 0:
             self._cache_stats["hit_rate"] = self._cache_stats["hits"] / total * 100
-    
+
     def get_cache_stats(self) -> Dict[str, Any]:
         """Get cache statistics"""
         return self._cache_stats.copy()
@@ -170,7 +170,7 @@ class TelemetryMixin:
     """
     Mixin for telemetry and monitoring
     """
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._telemetry_data = {
@@ -178,7 +178,7 @@ class TelemetryMixin:
             "metrics": {},
             "traces": []
         }
-    
+
     def emit_metric(self, name: str, value: float, tags: Optional[Dict[str, str]] = None):
         """Emit a metric"""
         import time
@@ -188,12 +188,12 @@ class TelemetryMixin:
             "timestamp": time.time(),
             "tags": tags or {}
         }
-        
+
         if name not in self._telemetry_data["metrics"]:
             self._telemetry_data["metrics"][name] = []
-        
+
         self._telemetry_data["metrics"][name].append(metric_entry)
-    
+
     def emit_event(self, event_type: str, data: Dict[str, Any]):
         """Emit an event"""
         import time
@@ -203,13 +203,13 @@ class TelemetryMixin:
             "timestamp": time.time()
         }
         self._telemetry_data["events"].append(event_entry)
-    
+
     def start_trace(self, trace_name: str) -> str:
         """Start a trace"""
         import uuid
         import time
         trace_id = str(uuid.uuid4())
-        
+
         trace_entry = {
             "id": trace_id,
             "name": trace_name,
@@ -219,7 +219,7 @@ class TelemetryMixin:
         }
         self._telemetry_data["traces"].append(trace_entry)
         return trace_id
-    
+
     def end_trace(self, trace_id: str):
         """End a trace"""
         import time
@@ -227,7 +227,7 @@ class TelemetryMixin:
             if trace["id"] == trace_id:
                 trace["end_time"] = time.time()
                 break
-    
+
     def get_telemetry_data(self) -> Dict[str, Any]:
         """Get all telemetry data"""
         return self._telemetry_data.copy()

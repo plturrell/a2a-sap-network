@@ -154,7 +154,7 @@ class MathematicalPattern:
 
 class BlockchainQueueMixin:
     """Mixin for blockchain queue message processing"""
-    
+
     def __init__(self):
         # Initialize security features
         self._init_security_features()
@@ -164,7 +164,7 @@ class BlockchainQueueMixin:
         self.web3_client = None
         self.account = None
         self._initialize_blockchain()
-    
+
     def _initialize_blockchain(self):
         """Initialize blockchain connection"""
         try:
@@ -172,11 +172,11 @@ class BlockchainQueueMixin:
                 # Try to connect to blockchain
                 rpc_url = os.getenv('BLOCKCHAIN_RPC_URL', os.getenv("A2A_RPC_URL"))
                 private_key = os.getenv('A2A_PRIVATE_KEY')
-                
+
                 if private_key:
                     self.web3_client = Web3(Web3.HTTPProvider(rpc_url))
                     self.account = Account.from_key(private_key)
-                    
+
                     if self.web3_client.is_connected():
                         self.blockchain_queue_enabled = True
                         logger.info("Blockchain connection established")
@@ -188,17 +188,17 @@ class BlockchainQueueMixin:
                 logger.warning("Web3 not available - blockchain features disabled")
         except Exception as e:
             logger.error(f"Blockchain initialization failed: {e}")
-    
+
     async def process_blockchain_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
         """Process message from blockchain queue"""
         try:
             if not self.blockchain_queue_enabled:
                 return {"success": False, "error": "Blockchain not enabled"}
-            
+
             # Extract message data
             operation = message.get('operation', 'unknown')
             data = message.get('data', {})
-            
+
             # Process based on operation type
             if operation == 'calculation_validation':
                 return await self._validate_calculation_blockchain(data)
@@ -208,11 +208,11 @@ class BlockchainQueueMixin:
                 return await self._verify_calculation_method(data)
             else:
                 return {"success": False, "error": f"Unknown operation: {operation}"}
-                
+
         except Exception as e:
             logger.error(f"Blockchain message processing failed: {e}")
             return {"success": False, "error": str(e)}
-    
+
     async def _validate_calculation_blockchain(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Validate calculation via blockchain consensus"""
         try:
@@ -225,11 +225,11 @@ class BlockchainQueueMixin:
                 "calculation_hash": hashlib.sha256(str(data).encode()).hexdigest(),
                 "validation_time": time.time()
             }
-            
+
             return {"success": True, "validation": validation_result}
         except Exception as e:
             return {"success": False, "error": str(e)}
-    
+
     async def _process_result_consensus(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Process calculation result consensus from multiple agents"""
         try:
@@ -241,11 +241,11 @@ class BlockchainQueueMixin:
                 "agreement_score": 0.94,
                 "precision_verified": True
             }
-            
+
             return {"success": True, "consensus": consensus_result}
         except Exception as e:
             return {"success": False, "error": str(e)}
-    
+
     async def _verify_calculation_method(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Verify calculation method via blockchain"""
         try:
@@ -257,7 +257,7 @@ class BlockchainQueueMixin:
                 "verification_confidence": 0.91,
                 "verified_by": "blockchain_consensus"
             }
-            
+
             return {"success": True, "method_verification": method_result}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -265,7 +265,7 @@ class BlockchainQueueMixin:
 class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     Comprehensive Calculation Agent with Real AI Intelligence
-    
+
     Provides enterprise-grade calculation capabilities with:
     - Real machine learning for formula optimization and pattern recognition
     - Advanced transformer models (Grok AI integration) for intelligent problem solving
@@ -273,10 +273,10 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
     - Data Manager persistence for calculation patterns and optimization
     - Cross-agent collaboration for complex mathematical computations
     - Real-time performance optimization and method selection
-    
+
     Rating: 95/100 (Real AI Intelligence)
     """
-    
+
     def __init__(self, base_url: str):
 
         # Initialize security features
@@ -294,7 +294,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             "performance_optimization",
             "cross_validation"
         ]
-        
+
         # Initialize A2AAgentBase with blockchain capabilities
         A2AAgentBase.__init__(
             self,
@@ -306,16 +306,16 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             blockchain_capabilities=blockchain_capabilities,
             a2a_protocol_only=True  # Force A2A protocol compliance
         )
-        
+
         # Initialize blockchain integration
         BlockchainIntegrationMixin.__init__(self)
-        
+
         # Data Manager configuration - Use A2A protocol instead of direct URLs
         self.data_manager_agent_id = "data_manager_agent"
         self.use_data_manager = True
         self.calculation_training_table = "calculation_training_data"
         self.formula_patterns_table = "mathematical_formula_patterns"
-        
+
         # Real Machine Learning Models
         self.learning_enabled = True
         self.performance_predictor = GradientBoostingClassifier(n_estimators=100, random_state=42)
@@ -324,7 +324,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
         self.pattern_clusterer = KMeans(n_clusters=12, random_state=42)
         self.optimization_model = MLPRegressor(hidden_layer_sizes=(100, 50), random_state=42)
         self.feature_scaler = StandardScaler()
-        
+
         # Mathematical pattern recognition model
         self.embedding_model = None
         if SENTENCE_TRANSFORMERS_AVAILABLE:
@@ -333,7 +333,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 logger.info("Mathematical pattern recognition model loaded successfully")
             except Exception as e:
                 logger.warning(f"Failed to load pattern recognition model: {e}")
-        
+
         # Grok AI Integration for advanced problem solving
         self.grok_client = None
         self.grok_available = False
@@ -341,7 +341,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             try:
                 # Use real Grok API key from environment or codebase
                 api_key = os.getenv('GROK_API_KEY') or "xai-GjOhyMGlKR6lA3xqhc8sBjhfJNXLGGI7NvY0xbQ9ZElNkgNrIGAqjEfGUYoLhONHfzQ3bI5Rj2TjhXzO8wWTg"
-                
+
                 if api_key:
                     self.grok_client = AsyncOpenAI(
                         api_key=api_key,
@@ -351,7 +351,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     logger.info("Grok AI client initialized successfully")
             except Exception as e:
                 logger.warning(f"Grok AI initialization failed: {e}")
-        
+
         # Mathematical operation patterns and optimization rules
         self.calculation_patterns = {
             'arithmetic': {
@@ -385,7 +385,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 'complexity': 'Varies widely'
             }
         }
-        
+
         self.numerical_methods = {
             'root_finding': ['bisection', 'newton', 'secant', 'brentq'],
             'integration': ['quad', 'simpsons', 'romberg', 'monte_carlo'],
@@ -393,7 +393,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             'interpolation': ['linear', 'polynomial', 'spline', 'rbf'],
             'optimization': ['gradient_descent', 'newton_cg', 'bfgs', 'genetic']
         }
-        
+
         # Performance and learning metrics
         self.metrics = {
             "total_calculations": 0,
@@ -403,7 +403,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             "pattern_matches": 0,
             "optimizations_applied": 0
         }
-        
+
         self.method_performance = {
             "arithmetic": {"total": 0, "success": 0, "avg_time": 0.0},
             "algebraic": {"total": 0, "success": 0, "avg_time": 0.0},
@@ -412,7 +412,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             "statistics": {"total": 0, "success": 0, "avg_time": 0.0},
             "optimization": {"total": 0, "success": 0, "avg_time": 0.0}
         }
-        
+
         # In-memory training data (with Data Manager persistence)
         self.training_data = {
             'calculation_patterns': [],
@@ -420,63 +420,63 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             'optimization_results': [],
             'error_patterns': []
         }
-        
+
         # Formula cache for optimization
         self.formula_cache = {}
         self.max_cache_size = 1000
-        
+
         logger.info("Comprehensive Calculation Agent initialized with real AI capabilities")
-    
+
     async def initialize(self) -> None:
         """Initialize the agent with all AI components"""
         logger.info("Initializing Comprehensive Calculation Agent...")
-        
+
         # Establish standard trust relationships FIRST
         await self.establish_standard_trust_relationships()
-        
+
         # Initialize blockchain integration
         try:
             await self.initialize_blockchain()
             logger.info("✅ Blockchain integration initialized for Calculation Agent")
         except Exception as e:
             logger.warning(f"⚠️ Blockchain initialization failed: {e}")
-        
+
         # Load training data from Data Manager
         await self._load_training_data()
-        
+
         # Train ML models if we have data
         await self._train_ml_models()
-        
+
         # Initialize mathematical patterns
         self._initialize_mathematical_patterns()
-        
+
         # Test connections
         await self._test_connections()
-        
+
         # Discover validation agents for calculation verification
         available_agents = await self.discover_agents(
             capabilities=["calculation_validation", "mathematical_verification", "qa_validation"],
             agent_types=["validation", "verification", "mathematical"]
         )
-        
+
         # Store discovered agents for collaboration
         self.validation_agents = {
             "calc_validators": [agent for agent in available_agents if "calculation_validation" in agent.get("capabilities", [])],
             "math_verifiers": [agent for agent in available_agents if "mathematical" in agent.get("agent_type", "")],
             "qa_agents": [agent for agent in available_agents if "qa_validation" in agent.get("capabilities", [])]
         }
-        
+
         logger.info(f"Comprehensive Calculation Agent initialization complete with {len(available_agents)} validation agents")
-    
+
     async def shutdown(self) -> None:
         """Shutdown the agent gracefully"""
         logger.info("Shutting down Comprehensive Calculation Agent...")
-        
+
         # Save training data to Data Manager
         await self._save_training_data()
-        
+
         logger.info("Comprehensive Calculation Agent shutdown complete")
-    
+
     @mcp_tool("perform_calculation", "Perform comprehensive calculations with AI optimization")
     @a2a_skill(
         name="performCalculation",
@@ -514,11 +514,11 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
         """Perform comprehensive calculations with AI optimization"""
         try:
             start_time = time.time()
-            
+
             calc_request = request_data["calculation_request"]
             enable_steps = request_data.get("enable_step_by_step", True)
             enable_blockchain = request_data.get("enable_blockchain_validation", True)
-            
+
             # Create calculation request object
             request_id = f"calc_{int(time.time())}_{hashlib.md5(calc_request['expression'].encode()).hexdigest()[:8]}"
             calculation = CalculationRequest(
@@ -530,24 +530,24 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 method_preference=calc_request.get("method_preference", "auto"),
                 timeout=calc_request.get("timeout", 30.0)
             )
-            
+
             # AI-enhanced calculation type detection
             if calculation.calculation_type == "auto":
                 calculation.calculation_type = await self._detect_calculation_type_ai(calculation.expression)
-            
+
             # Perform pattern matching for optimization
             matched_patterns = await self._match_calculation_patterns(calculation)
-            
+
             # Select optimal calculation method using AI
             optimal_method = await self._select_optimal_method_ai(calculation, matched_patterns)
-            
+
             # Execute calculation with selected method
             result = await self._execute_calculation_ai(calculation, optimal_method, enable_steps)
-            
+
             # Optimize result if possible
             if calculation.calculation_type in ["algebraic", "calculus"]:
                 result = await self._optimize_result_ai(result, calculation)
-            
+
             # Blockchain validation if enabled
             blockchain_validation = None
             if enable_blockchain and self.blockchain_queue_enabled:
@@ -557,7 +557,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     "result": result.result,
                     "method": result.method_used
                 })
-            
+
             # Store training data for ML improvement
             training_entry = {
                 "request_id": request_id,
@@ -570,14 +570,14 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 "timestamp": datetime.utcnow().isoformat()
             }
             await self.store_training_data("calculation_patterns", training_entry)
-            
+
             # Update metrics
             self.metrics["total_calculations"] += 1
             if result.error is None:
                 self.metrics["successful_calculations"] += 1
             else:
                 self.metrics["failed_calculations"] += 1
-            
+
             # Update method performance
             if calculation.calculation_type in self.method_performance:
                 perf = self.method_performance[calculation.calculation_type]
@@ -585,7 +585,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 if result.error is None:
                     perf["success"] += 1
                 perf["avg_time"] = (perf["avg_time"] * (perf["total"] - 1) + result.execution_time) / perf["total"]
-            
+
             # Store comprehensive calculation data in data_manager
             await self.store_agent_data(
                 data_type="calculation_result",
@@ -609,7 +609,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     "ai_optimization_applied": True
                 }
             )
-            
+
             # Update agent status with agent_manager
             await self.update_agent_status(
                 status="active",
@@ -621,7 +621,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     "active_capabilities": ["ai_calculation", "pattern_recognition", "blockchain_validation", "optimization"]
                 }
             )
-            
+
             return create_success_response({
                 "calculation_result": result.__dict__,
                 "matched_patterns": [p.__dict__ for p in matched_patterns],
@@ -629,12 +629,12 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 "ai_confidence": result.confidence_score,
                 "optimization_applied": len(matched_patterns) > 0
             })
-            
+
         except Exception as e:
             self.metrics["failed_calculations"] += 1
             logger.error(f"Calculation failed: {e}")
             return create_error_response(f"Calculation failed: {str(e)}", "calculation_error")
-    
+
     @mcp_tool("solve_equation", "Solve mathematical equations using AI-powered methods")
     @a2a_skill(
         name="solveEquation",
@@ -664,29 +664,29 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
         """Solve mathematical equations using AI-powered methods"""
         try:
             start_time = time.time()
-            
+
             equation = request_data["equation"]
             variable = request_data.get("variable", "x")
             domain = request_data.get("domain", "real")
             method = request_data.get("method", "auto")
             initial_guess = request_data.get("initial_guess")
             constraints = request_data.get("constraints", [])
-            
+
             # AI-enhanced equation analysis
             equation_analysis = await self._analyze_equation_ai(equation, variable, domain)
-            
+
             # Select solving method if auto
             if method == "auto":
                 method = await self._select_solving_method_ai(equation_analysis, constraints)
-            
+
             # Solve equation using selected method
             solution = await self._solve_equation_comprehensive(
                 equation, variable, domain, method, initial_guess, constraints, equation_analysis
             )
-            
+
             # Verify solution using AI
             verification = await self._verify_solution_ai(equation, variable, solution)
-            
+
             # Store pattern for learning
             pattern_entry = {
                 "equation_type": equation_analysis.get("type", "unknown"),
@@ -697,7 +697,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 "timestamp": datetime.utcnow().isoformat()
             }
             await self.store_training_data("calculation_patterns", pattern_entry)
-            
+
             return create_success_response({
                 "equation": equation,
                 "variable": variable,
@@ -707,11 +707,11 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 "verification": verification,
                 "solving_time": time.time() - start_time
             })
-            
+
         except Exception as e:
             logger.error(f"Equation solving failed: {e}")
             return create_error_response(f"Equation solving failed: {str(e)}", "equation_solving_error")
-    
+
     @mcp_tool("optimize_function", "Optimize mathematical functions using AI-powered methods")
     @a2a_skill(
         name="optimizeFunction",
@@ -742,7 +742,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
         """Optimize mathematical functions using AI-powered methods"""
         try:
             start_time = time.time()
-            
+
             objective = request_data["objective_function"]
             variables = request_data["variables"]
             opt_type = request_data.get("optimization_type", "minimize")
@@ -750,29 +750,29 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             bounds = request_data.get("bounds", {})
             method = request_data.get("method", "auto")
             max_iterations = request_data.get("max_iterations", 1000)
-            
+
             # AI-enhanced optimization setup
             optimization_config = await self._configure_optimization_ai(
                 objective, variables, opt_type, constraints, bounds
             )
-            
+
             # Select optimization method if auto
             if method == "auto":
                 method = await self._select_optimization_method_ai(optimization_config)
-            
+
             # Perform optimization
             optimization_result = await self._perform_optimization_comprehensive(
                 optimization_config, method, max_iterations
             )
-            
+
             # Generate optimization insights using AI
             insights = await self._generate_optimization_insights_ai(
                 optimization_result, optimization_config
             )
-            
+
             # Update metrics
             self.metrics["optimizations_applied"] += 1
-            
+
             return create_success_response({
                 "objective_function": objective,
                 "optimization_type": opt_type,
@@ -784,11 +784,11 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 "insights": insights,
                 "optimization_time": time.time() - start_time
             })
-            
+
         except Exception as e:
             logger.error(f"Function optimization failed: {e}")
             return create_error_response(f"Optimization failed: {str(e)}", "optimization_error")
-    
+
     @mcp_tool("analyze_data", "Perform statistical analysis with AI-enhanced insights")
     @a2a_skill(
         name="analyzeData",
@@ -815,35 +815,35 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
         """Perform statistical analysis with AI-enhanced insights"""
         try:
             start_time = time.time()
-            
+
             data = request_data["data"]
             analysis_types = request_data.get("analysis_type", ["descriptive"])
             confidence_level = request_data.get("confidence_level", 0.95)
             enable_ai = request_data.get("enable_ai_insights", True)
-            
+
             # Perform requested analyses
             analysis_results = {}
-            
+
             if "descriptive" in analysis_types:
                 analysis_results["descriptive"] = await self._perform_descriptive_statistics(data)
-            
+
             if "correlation" in analysis_types:
                 analysis_results["correlation"] = await self._perform_correlation_analysis(data)
-            
+
             if "regression" in analysis_types:
                 analysis_results["regression"] = await self._perform_regression_analysis(data)
-            
+
             if "distribution" in analysis_types:
                 analysis_results["distribution"] = await self._analyze_distribution(data)
-            
+
             if "hypothesis_test" in analysis_types:
                 analysis_results["hypothesis_test"] = await self._perform_hypothesis_test(data, confidence_level)
-            
+
             # Generate AI insights if enabled
             ai_insights = {}
             if enable_ai:
                 ai_insights = await self._generate_statistical_insights_ai(data, analysis_results)
-            
+
             return create_success_response({
                 "data_size": len(data),
                 "analysis_results": analysis_results,
@@ -851,11 +851,11 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 "confidence_level": confidence_level,
                 "analysis_time": time.time() - start_time
             })
-            
+
         except Exception as e:
             logger.error(f"Data analysis failed: {e}")
             return create_error_response(f"Analysis failed: {str(e)}", "analysis_error")
-    
+
     @mcp_tool("evaluate_expression", "Evaluate mathematical expressions with variable substitution")
     @a2a_skill(
         name="evaluateExpression",
@@ -880,12 +880,12 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             evaluate_at = request_data.get("evaluate_at", [variables]) if variables else [{}]
             simplify_first = request_data.get("simplify_first", True)
             precision = request_data.get("numerical_precision", 10)
-            
+
             # Simplify expression if requested
             simplified_expression = expression
             if simplify_first and SYMPY_AVAILABLE:
                 simplified_expression = await self._simplify_expression_ai(expression)
-            
+
             # Evaluate at specified points
             evaluations = []
             for point in evaluate_at:
@@ -896,63 +896,63 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     "exact": isinstance(result, str),
                     "numerical": float(result) if not isinstance(result, str) else None
                 })
-            
+
             return create_success_response({
                 "original_expression": expression,
                 "simplified_expression": simplified_expression,
                 "evaluations": evaluations,
                 "simplification_applied": simplify_first and simplified_expression != expression
             })
-            
+
         except Exception as e:
             logger.error(f"Expression evaluation failed: {e}")
             return create_error_response(f"Evaluation failed: {str(e)}", "evaluation_error")
-    
+
     # Helper methods for AI functionality
-    
+
     async def _detect_calculation_type_ai(self, expression: str) -> str:
         """Detect calculation type using AI analysis"""
         try:
             # Check for specific patterns
             expression_lower = expression.lower()
-            
+
             # Statistics patterns
             if any(term in expression_lower for term in ['mean', 'median', 'std', 'variance', 'correlation']):
                 return "statistics"
-            
+
             # Calculus patterns
             if any(term in expression_lower for term in ['derivative', 'integral', 'limit', 'd/dx', '∫', 'lim']):
                 return "calculus"
-            
+
             # Linear algebra patterns
             if any(term in expression_lower for term in ['matrix', 'determinant', 'eigenvalue', 'dot', 'cross']):
                 return "linear_algebra"
-            
+
             # Optimization patterns
             if any(term in expression_lower for term in ['minimize', 'maximize', 'optimize', 'min', 'max']):
                 return "optimization"
-            
+
             # Algebraic patterns (equations, solving)
             if '=' in expression or any(term in expression_lower for term in ['solve', 'factor', 'expand']):
                 return "algebraic"
-            
+
             # Default to arithmetic
             return "arithmetic"
-            
+
         except Exception as e:
             logger.error(f"Calculation type detection failed: {e}")
             return "arithmetic"
-    
+
     async def _match_calculation_patterns(self, calculation: CalculationRequest) -> List[MathematicalPattern]:
         """Match calculation against known patterns"""
         try:
             matched_patterns = []
-            
+
             # Use semantic matching if available
             if self.embedding_model and SENTENCE_TRANSFORMERS_AVAILABLE:
                 # Get embeddings for expression
                 expr_embedding = self.embedding_model.encode([calculation.expression])
-                
+
                 # Compare against known patterns (would be loaded from training data)
                 # For now, create some example patterns
                 example_patterns = [
@@ -965,18 +965,18 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                         average_time=0.1
                     )
                 ]
-                
+
                 # Check if expression matches quadratic pattern
                 if re.search(r'[+-]?\s*\w*\*?\w*\^?2\s*[+-]?\s*\w*\*?\w*\s*[+-]?\s*\w*\s*=\s*0', calculation.expression):
                     matched_patterns.append(example_patterns[0])
                     self.metrics["pattern_matches"] += 1
-            
+
             return matched_patterns
-            
+
         except Exception as e:
             logger.error(f"Pattern matching failed: {e}")
             return []
-    
+
     async def _select_optimal_method_ai(self, calculation: CalculationRequest, patterns: List[MathematicalPattern]) -> str:
         """Select optimal calculation method using AI"""
         try:
@@ -985,11 +985,11 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 # Select pattern with highest success rate
                 best_pattern = max(patterns, key=lambda p: p.success_rate)
                 return best_pattern.solution_method
-            
+
             # Otherwise, select based on calculation type and preferences
             calc_type = calculation.calculation_type
             preference = calculation.method_preference
-            
+
             if calc_type == "arithmetic":
                 return "direct_evaluation"
             elif calc_type == "algebraic":
@@ -1010,11 +1010,11 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 return "optimization_solver"
             else:
                 return "general_numerical"
-                
+
         except Exception as e:
             logger.error(f"Method selection failed: {e}")
             return "direct_evaluation"
-    
+
     async def _execute_calculation_ai(self, calculation: CalculationRequest, method: str, enable_steps: bool) -> CalculationResult:
         """Execute calculation using selected method with AI enhancement"""
         try:
@@ -1022,7 +1022,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             result = None
             step_by_step = []
             error = None
-            
+
             # Add initial step
             if enable_steps:
                 step_by_step.append({
@@ -1030,7 +1030,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     "description": f"Parsing expression: {calculation.expression}",
                     "method": method
                 })
-            
+
             # Execute based on method
             if method == "direct_evaluation":
                 try:
@@ -1041,10 +1041,10 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                         'pi': math.pi, 'e': math.e
                     }
                     safe_dict.update(calculation.variables)
-                    
+
                     # Replace ^ with ** for exponentiation
                     expr = calculation.expression.replace('^', '**')
-                    
+
                     # SECURITY FIX: Use safe expression evaluation instead of eval()
                     try:
                         # First try ast.literal_eval for simple expressions
@@ -1055,7 +1055,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                         from ...core.safe_math_parser import SafeMathParser
                         parser = SafeMathParser(allowed_names=safe_dict)
                         result = parser.evaluate(expr)
-                    
+
                     if enable_steps:
                         step_by_step.append({
                             "step": 2,
@@ -1064,21 +1064,21 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                         })
                 except Exception as e:
                     error = f"Evaluation error: {str(e)}"
-            
+
             elif method == "symbolic_solver" and SYMPY_AVAILABLE:
                 try:
                     import sympy as sp
-                    
+
                     # Parse expression
                     expr = sp.sympify(calculation.expression)
-                    
+
                     # Substitute variables
                     for var, val in calculation.variables.items():
                         expr = expr.subs(var, val)
-                    
+
                     # Evaluate
                     result = float(expr.evalf())
-                    
+
                     if enable_steps:
                         step_by_step.append({
                             "step": 2,
@@ -1088,21 +1088,21 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                         })
                 except Exception as e:
                     error = f"Symbolic evaluation error: {str(e)}"
-            
+
             elif method == "numerical_solver":
                 # Implement numerical solving
                 result = await self._numerical_solve(calculation, step_by_step, enable_steps)
-            
+
             elif method == "statistical_methods":
                 # Implement statistical calculations
                 result = await self._statistical_calculate(calculation, step_by_step, enable_steps)
-            
+
             else:
                 error = f"Method {method} not implemented"
-            
+
             # Calculate execution time
             execution_time = time.time() - start_time
-            
+
             # Create result object
             return CalculationResult(
                 request_id=calculation.id,
@@ -1120,7 +1120,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 recommendations=self._generate_calculation_recommendations(calculation, result, execution_time),
                 error=error
             )
-            
+
         except Exception as e:
             logger.error(f"Calculation execution failed: {e}")
             return CalculationResult(
@@ -1132,7 +1132,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 execution_time=time.time() - start_time,
                 error=str(e)
             )
-    
+
     def _get_alternative_methods(self, calc_type: str) -> List[str]:
         """Get alternative methods for calculation type"""
         alternatives = {
@@ -1144,24 +1144,24 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             "optimization": ["gradient_methods", "evolutionary_algorithms", "constraint_programming"]
         }
         return alternatives.get(calc_type, ["numerical_approximation"])
-    
+
     def _generate_calculation_recommendations(self, calculation: CalculationRequest, result: Any, execution_time: float) -> List[str]:
         """Generate recommendations for calculation improvement"""
         recommendations = []
-        
+
         if execution_time > 1.0:
             recommendations.append("Consider caching results for repeated calculations")
-        
+
         if calculation.calculation_type == "optimization" and execution_time > 5.0:
             recommendations.append("Try providing better initial guesses or bounds")
-        
+
         if calculation.precision > 10:
             recommendations.append("High precision may slow calculations, consider if necessary")
-        
+
         return recommendations
-    
+
     # Data Manager integration methods
-    
+
     async def store_training_data(self, data_type: str, data: Dict[str, Any]) -> bool:
         """Store training data via Data Manager agent"""
         try:
@@ -1169,14 +1169,14 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 # Store in memory as fallback
                 self.training_data.setdefault(data_type, []).append(data)
                 return True
-            
+
             # Prepare request for Data Manager
             request_data = {
                 "table_name": self.calculation_training_table,
                 "data": data,
                 "data_type": data_type
             }
-            
+
             # Send to Data Manager (will fail gracefully if not running)
             if AIOHTTP_AVAILABLE:
                 # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
@@ -1197,19 +1197,19 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
 # A2A REMOVED:                 # Fallback to memory storage
                 self.training_data.setdefault(data_type, []).append(data)
                 return True
-                        
+
         except Exception as e:
             logger.warning(f"Data Manager storage failed, using memory: {e}")
 # A2A REMOVED:             # Always fallback to memory storage
             self.training_data.setdefault(data_type, []).append(data)
             return True
-    
+
     async def get_training_data(self, data_type: str) -> List[Dict[str, Any]]:
         """Retrieve training data via Data Manager agent"""
         try:
             if not self.use_data_manager:
                 return self.training_data.get(data_type, [])
-            
+
             # Try to fetch from Data Manager first
             if AIOHTTP_AVAILABLE:
                 # WARNING: aiohttp ClientSession usage violates A2A protocol - must use blockchain messaging
@@ -1223,19 +1223,19 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                         if response.status == 200:
                             data = await response.json()
                             return data.get("data", [])
-                    
+
         except Exception as e:
             logger.warning(f"Data Manager retrieval failed, using memory: {e}")
-        
+
 # A2A REMOVED:         # Fallback to memory
         return self.training_data.get(data_type, [])
-    
+
     # Additional helper methods
-    
+
     def _initialize_mathematical_patterns(self):
         """Initialize mathematical patterns"""
         logger.info("Mathematical patterns initialized")
-    
+
     async def _load_training_data(self):
         """Load training data from Data Manager"""
         try:
@@ -1245,7 +1245,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 logger.info(f"Loaded {len(data)} {data_type} training samples")
         except Exception as e:
             logger.warning(f"Training data loading failed: {e}")
-    
+
     async def _save_training_data(self):
         """Save training data to Data Manager"""
         try:
@@ -1255,7 +1255,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             logger.info("Training data saved successfully")
         except Exception as e:
             logger.warning(f"Training data saving failed: {e}")
-    
+
     async def _train_ml_models(self):
         """Train ML models with available data"""
         try:
@@ -1264,11 +1264,11 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             if len(calc_data) > 10:
                 logger.info(f"Training performance predictor with {len(calc_data)} samples")
                 # Training implementation would go here
-            
+
             logger.info("ML models training complete")
         except Exception as e:
             logger.warning(f"ML model training failed: {e}")
-    
+
     async def _test_connections(self):
         """Test connections to external services"""
         try:
@@ -1285,17 +1285,17 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                                 logger.warning("⚠️ Data Manager connection failed")
                 except:
                     logger.warning("⚠️ Data Manager not responding (training data will be memory-only)")
-            
+
             logger.info("Connection tests complete")
         except Exception as e:
             logger.warning(f"Connection testing failed: {e}")
-    
+
     # Additional mathematical methods (placeholder implementations)
-    
+
     async def _optimize_result_ai(self, result: CalculationResult, calculation: CalculationRequest) -> CalculationResult:
         """Optimize calculation result using AI"""
         return result
-    
+
     async def _analyze_equation_ai(self, equation: str, variable: str, domain: str) -> Dict[str, Any]:
         """Analyze equation using AI"""
         return {
@@ -1304,15 +1304,15 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             "complexity": "medium",
             "solvable_symbolically": True
         }
-    
+
     async def _select_solving_method_ai(self, equation_analysis: Dict[str, Any], constraints: List[str]) -> str:
         """Select equation solving method using AI"""
         if equation_analysis.get("solvable_symbolically") and SYMPY_AVAILABLE:
             return "symbolic"
         return "numerical"
-    
-    async def _solve_equation_comprehensive(self, equation: str, variable: str, domain: str, method: str, 
-                                          initial_guess: Optional[float], constraints: List[str], 
+
+    async def _solve_equation_comprehensive(self, equation: str, variable: str, domain: str, method: str,
+                                          initial_guess: Optional[float], constraints: List[str],
                                           equation_analysis: Dict[str, Any]) -> Optional[Union[float, List[float]]]:
         """Comprehensive equation solving"""
         if method == "symbolic" and SYMPY_AVAILABLE:
@@ -1324,13 +1324,13 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 return [float(sol.evalf()) for sol in solutions if sol.is_real]
             except:
                 pass
-        
+
         # Fallback to numerical solving using scipy
         if SCIPY_AVAILABLE and initial_guess is not None:
             try:
                 from scipy.optimize import fsolve
                 import numpy as np
-                
+
                 # Define function for numerical solving
                 def equation_func(x):
                     # Replace variable with value in equation string and evaluate
@@ -1339,20 +1339,20 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                         return eval(eq_str)
                     except:
                         return float('inf')
-                
+
                 solution = fsolve(equation_func, initial_guess)
                 return float(solution[0]) if len(solution) > 0 else None
             except Exception as e:
                 logger.warning(f"Numerical solving failed: {e}")
                 return None
-        
+
         return None  # Unable to solve
-    
+
     async def _verify_solution_ai(self, equation: str, variable: str, solution: Any) -> Dict[str, Any]:
         """Verify equation solution using AI"""
         return {"valid": True, "error": 0.0, "confidence": 0.95}
-    
-    async def _configure_optimization_ai(self, objective: str, variables: List[str], 
+
+    async def _configure_optimization_ai(self, objective: str, variables: List[str],
                                        opt_type: str, constraints: List[str], bounds: Dict[str, Any]) -> Dict[str, Any]:
         """Configure optimization using AI"""
         return {
@@ -1363,7 +1363,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             "bounds": bounds,
             "problem_type": "nonlinear"
         }
-    
+
     async def _select_optimization_method_ai(self, optimization_config: Dict[str, Any]) -> str:
         """Select optimization method using AI"""
         if optimization_config.get("problem_type") == "linear":
@@ -1372,7 +1372,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             return "constrained_optimization"
         else:
             return "gradient_descent"
-    
+
     async def _perform_optimization_comprehensive(self, config: Dict[str, Any], method: str, max_iterations: int) -> Dict[str, Any]:
         """Perform comprehensive optimization"""
         return {
@@ -1381,7 +1381,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             "iterations": 100,
             "convergence": True
         }
-    
+
     async def _generate_optimization_insights_ai(self, result: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any]:
         """Generate optimization insights using AI"""
         return {
@@ -1389,7 +1389,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             "convergence_rate": "fast",
             "recommendations": ["Consider tighter bounds for faster convergence"]
         }
-    
+
     async def _perform_descriptive_statistics(self, data: List[float]) -> Dict[str, Any]:
         """Perform descriptive statistics"""
         return {
@@ -1400,23 +1400,23 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             "max": max(data),
             "count": len(data)
         }
-    
+
     async def _perform_correlation_analysis(self, data: List[float]) -> Dict[str, Any]:
         """Perform correlation analysis"""
         return {"autocorrelation": 0.0}  # Placeholder
-    
+
     async def _perform_regression_analysis(self, data: List[float]) -> Dict[str, Any]:
         """Perform regression analysis"""
         return {"slope": 0.0, "intercept": 0.0, "r_squared": 0.0}  # Placeholder
-    
+
     async def _analyze_distribution(self, data: List[float]) -> Dict[str, Any]:
         """Analyze data distribution"""
         return {"distribution_type": "normal", "parameters": {}}  # Placeholder
-    
+
     async def _perform_hypothesis_test(self, data: List[float], confidence_level: float) -> Dict[str, Any]:
         """Perform hypothesis testing"""
         return {"test_statistic": 0.0, "p_value": 0.05, "reject_null": False}  # Placeholder
-    
+
     async def _generate_statistical_insights_ai(self, data: List[float], analysis_results: Dict[str, Any]) -> Dict[str, Any]:
         """Generate statistical insights using AI"""
         insights = {
@@ -1424,15 +1424,15 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             "patterns_detected": [],
             "recommendations": []
         }
-        
+
         if "descriptive" in analysis_results:
             desc = analysis_results["descriptive"]
             if desc["std"] / desc["mean"] > 0.5:
                 insights["patterns_detected"].append("High variability in data")
                 insights["recommendations"].append("Consider data normalization")
-        
+
         return insights
-    
+
     async def _simplify_expression_ai(self, expression: str) -> str:
         """Simplify expression using AI"""
         if SYMPY_AVAILABLE:
@@ -1444,7 +1444,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             except:
                 pass
         return expression
-    
+
     async def _evaluate_at_point(self, expression: str, variables: Dict[str, float], precision: int) -> Union[float, str]:
         """Evaluate expression at given point"""
         try:
@@ -1455,14 +1455,14 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 'pi': math.pi, 'e': math.e
             }
             safe_dict.update(variables)
-            
+
             expr = expression.replace('^', '**')
             result = eval(expr, {"__builtins__": {}}, safe_dict)
-            
+
             return round(result, precision)
         except Exception as e:
             return f"Error: {str(e)}"
-    
+
     async def _numerical_solve(self, calculation: CalculationRequest, steps: List[Dict[str, Any]], enable_steps: bool) -> float:
         """Numerical solving implementation"""
         try:
@@ -1472,7 +1472,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     "description": "Starting numerical solving",
                     "method": "numerical"
                 })
-            
+
             # Simple numerical evaluation
             expr = calculation.expression.replace('^', '**')
             safe_dict = {
@@ -1481,18 +1481,18 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 'pi': math.pi, 'e': math.e
             }
             safe_dict.update(calculation.variables)
-            
+
             result = eval(expr, {"__builtins__": {}}, safe_dict)
-            
+
             if enable_steps:
                 steps.append({
                     "step": len(steps) + 1,
                     "description": f"Numerical evaluation: {expr} = {result}",
                     "result": result
                 })
-            
+
             return float(result)
-            
+
         except Exception as e:
             if enable_steps:
                 steps.append({
@@ -1501,7 +1501,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     "error": str(e)
                 })
             return 0.0
-    
+
     async def _statistical_calculate(self, calculation: CalculationRequest, steps: List[Dict[str, Any]], enable_steps: bool) -> Union[float, Dict[str, float]]:
         """Statistical calculation implementation"""
         try:
@@ -1511,22 +1511,22 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     "description": "Starting statistical calculation",
                     "method": "statistical"
                 })
-            
+
             expr_lower = calculation.expression.lower()
-            
+
             # Check for data in variables
             data = None
             for var_name, var_value in calculation.variables.items():
                 if isinstance(var_value, (list, tuple)) and len(var_value) > 0:
                     data = [float(x) for x in var_value]
                     break
-            
+
             if data is None:
                 # Generate sample data if none provided
                 data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-            
+
             result = None
-            
+
             # Basic statistical functions
             if 'mean' in expr_lower:
                 result = statistics.mean(data)
@@ -1557,7 +1557,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     "count": len(data)
                 }
                 operation = "descriptive statistics"
-            
+
             if enable_steps:
                 steps.append({
                     "step": len(steps) + 1,
@@ -1566,9 +1566,9 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     "data_size": len(data),
                     "result": result
                 })
-            
+
             return result
-            
+
         except Exception as e:
             if enable_steps:
                 steps.append({
@@ -1583,7 +1583,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
     async def perform_mathematical_calculations(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Perform advanced mathematical calculations with AI-powered optimization
-        
+
         Supports:
         - Basic arithmetic operations with high precision
         - Advanced calculus (derivatives, integrals, limits)
@@ -1597,7 +1597,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             expression = data.get("expression", "")
             variables = data.get("variables", {})
             precision = data.get("precision", "standard")
-            
+
             if calculation_type == "expression":
                 # Standard expression evaluation
                 calc_request = CalculationRequest(
@@ -1607,7 +1607,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     precision=precision
                 )
                 result = await self._execute_calculation(calc_request, True)
-                
+
                 return {
                     "status": "success",
                     "calculation_type": "expression_evaluation",
@@ -1616,17 +1616,17 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     "execution_time": result.execution_time,
                     "steps": result.step_by_step
                 }
-                
+
             elif calculation_type == "calculus":
                 # Calculus operations (derivatives, integrals)
                 operation = data.get("operation", "derivative")
                 variable = data.get("variable", "x")
-                
+
                 if SYMPY_AVAILABLE:
                     import sympy as sp
                     x = sp.Symbol(variable)
                     expr = sp.sympify(expression)
-                    
+
                     if operation == "derivative":
                         result = sp.diff(expr, x)
                         numerical_result = float(result.subs(variables).evalf()) if variables else None
@@ -1635,7 +1635,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                         numerical_result = float(result.subs(variables).evalf()) if variables else None
                     else:
                         raise ValueError(f"Unsupported calculus operation: {operation}")
-                    
+
                     return {
                         "status": "success",
                         "calculation_type": "calculus",
@@ -1650,45 +1650,45 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                         "status": "error",
                         "message": "SymPy not available for symbolic calculus operations"
                     }
-                    
+
             elif calculation_type == "linear_algebra":
                 # Matrix operations
                 matrices = data.get("matrices", {})
                 operation = data.get("operation", "multiply")
-                
+
                 import numpy as np
-                
+
                 if operation == "multiply" and len(matrices) >= 2:
                     matrix_keys = list(matrices.keys())[:2]
                     A = np.array(matrices[matrix_keys[0]])
                     B = np.array(matrices[matrix_keys[1]])
                     result_matrix = np.dot(A, B)
-                    
+
                     return {
                         "status": "success",
                         "calculation_type": "matrix_multiplication",
                         "result_matrix": result_matrix.tolist(),
                         "dimensions": result_matrix.shape
                     }
-                    
+
                 elif operation == "eigenvalues" and len(matrices) >= 1:
                     matrix_key = list(matrices.keys())[0]
                     A = np.array(matrices[matrix_key])
                     eigenvals, eigenvecs = np.linalg.eig(A)
-                    
+
                     return {
                         "status": "success",
                         "calculation_type": "eigenvalue_decomposition",
                         "eigenvalues": eigenvals.tolist(),
                         "eigenvectors": eigenvecs.tolist()
                     }
-                    
+
             else:
                 return {
                     "status": "error",
                     "message": f"Unsupported calculation type: {calculation_type}"
                 }
-                
+
         except Exception as e:
             logger.error(f"Mathematical calculation failed: {e}")
             return {
@@ -1701,7 +1701,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
     async def perform_statistical_analysis(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Perform comprehensive statistical analysis with ML-powered insights
-        
+
         Supports:
         - Descriptive statistics (mean, median, mode, std deviation)
         - Inferential statistics (t-tests, chi-square, ANOVA)
@@ -1714,19 +1714,19 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             analysis_type = data.get("analysis_type", "descriptive")
             dataset = data.get("dataset", [])
             parameters = data.get("parameters", {})
-            
+
             if not dataset:
                 return {
                     "status": "error",
                     "message": "No dataset provided for statistical analysis"
                 }
-            
+
             import numpy as np
             import pandas as pd
-            
+
             # Convert to numpy array for analysis
             data_array = np.array(dataset)
-            
+
             if analysis_type == "descriptive":
                 # Comprehensive descriptive statistics
                 stats = {
@@ -1747,24 +1747,24 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     "skewness": float(pd.Series(data_array).skew()),
                     "kurtosis": float(pd.Series(data_array).kurtosis())
                 }
-                
+
                 return {
                     "status": "success",
                     "analysis_type": "descriptive_statistics",
                     "statistics": stats,
                     "sample_size": len(dataset)
                 }
-                
+
             elif analysis_type == "correlation" and len(data.get("datasets", [])) >= 2:
                 # Correlation analysis between multiple datasets
                 datasets = data.get("datasets", [])
                 correlations = {}
-                
+
                 for i, dataset1 in enumerate(datasets):
                     for j, dataset2 in enumerate(datasets[i+1:], i+1):
                         correlation = np.corrcoef(dataset1, dataset2)[0, 1]
                         correlations[f"dataset_{i}_vs_dataset_{j}"] = float(correlation)
-                
+
                 return {
                     "status": "success",
                     "analysis_type": "correlation_analysis",
@@ -1778,21 +1778,21 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                         "strong_negative": [k for k, v in correlations.items() if v < -0.7]
                     }
                 }
-                
+
             elif analysis_type == "distribution":
                 # Distribution fitting and analysis
                 from scipy import stats as scipy_stats
-                
+
                 # Test for common distributions
                 distributions = ['norm', 'lognorm', 'exponential', 'gamma']
                 best_fit = None
                 best_p_value = 0
-                
+
                 for dist_name in distributions:
                     dist = getattr(scipy_stats, dist_name)
                     params = dist.fit(data_array)
                     _, p_value = scipy_stats.kstest(data_array, lambda x: dist.cdf(x, *params))
-                    
+
                     if p_value > best_p_value:
                         best_p_value = p_value
                         best_fit = {
@@ -1800,7 +1800,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                             "parameters": params,
                             "p_value": p_value
                         }
-                
+
                 return {
                     "status": "success",
                     "analysis_type": "distribution_fitting",
@@ -1811,13 +1811,13 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                         "std_dev": float(np.std(data_array))
                     }
                 }
-                
+
             else:
                 return {
                     "status": "error",
                     "message": f"Unsupported statistical analysis type: {analysis_type}"
                 }
-                
+
         except Exception as e:
             logger.error(f"Statistical analysis failed: {e}")
             return {
@@ -1830,7 +1830,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
     async def execute_formula(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Execute complex mathematical formulas with AI-powered optimization
-        
+
         Features:
         - Safe formula parsing and execution
         - Support for custom functions and variables
@@ -1844,13 +1844,13 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             variables = data.get("variables", {})
             functions = data.get("custom_functions", {})
             execution_mode = data.get("execution_mode", "standard")
-            
+
             if not formula:
                 return {
                     "status": "error",
                     "message": "No formula provided for execution"
                 }
-            
+
             # Create calculation request
             calc_request = CalculationRequest(
                 expression=formula,
@@ -1858,11 +1858,11 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 operation_type="evaluate",
                 precision="high" if execution_mode == "precise" else "standard"
             )
-            
+
             # Execute with AI optimization
-            result = await self._execute_calculation(calc_request, 
+            result = await self._execute_calculation(calc_request,
                                                    enable_steps=(execution_mode == "detailed"))
-            
+
             # Add custom function support if needed
             if functions:
                 # Register custom functions in safe namespace
@@ -1871,11 +1871,11 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     if func_name.isidentifier() and func_name not in ['eval', 'exec', '__import__']:
                         # Create safe function wrapper
                         safe_functions[func_name] = lambda x: eval(func_code.replace('x', str(x)))
-                
+
                 # Re-execute with custom functions
                 calc_request.variables.update(safe_functions)
                 result = await self._execute_calculation(calc_request, enable_steps=True)
-            
+
             return {
                 "status": "success",
                 "formula": formula,
@@ -1886,7 +1886,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 "steps": result.step_by_step if execution_mode == "detailed" else None,
                 "optimization_applied": result.method != "direct_evaluation"
             }
-            
+
         except Exception as e:
             logger.error(f"Formula execution failed: {e}")
             return {
@@ -1899,7 +1899,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
     async def process_numerical_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Process and analyze numerical data with advanced algorithms
-        
+
         Capabilities:
         - Large dataset processing with memory optimization
         - Numerical integration and differentiation
@@ -1912,27 +1912,27 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             processing_type = data.get("processing_type", "analysis")
             numerical_data = data.get("data", [])
             parameters = data.get("parameters", {})
-            
+
             if not numerical_data:
                 return {
                     "status": "error",
                     "message": "No numerical data provided for processing"
                 }
-            
+
             import numpy as np
             from scipy import interpolate, optimize
-            
+
             data_array = np.array(numerical_data)
-            
+
             if processing_type == "interpolation":
                 # Data interpolation
                 x_original = parameters.get("x_values", list(range(len(data_array))))
                 x_new = parameters.get("x_new", np.linspace(min(x_original), max(x_original), len(data_array) * 2))
                 kind = parameters.get("kind", "linear")
-                
+
                 interpolation_func = interpolate.interp1d(x_original, data_array, kind=kind)
                 y_new = interpolation_func(x_new)
-                
+
                 return {
                     "status": "success",
                     "processing_type": "interpolation",
@@ -1942,19 +1942,19 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     "original_points": len(data_array),
                     "interpolated_points": len(y_new)
                 }
-                
+
             elif processing_type == "optimization":
                 # Numerical optimization
                 objective_function = parameters.get("objective", "minimize_sum_squares")
                 initial_guess = parameters.get("initial_guess", [1.0] * len(data_array))
-                
+
                 if objective_function == "minimize_sum_squares":
                     # Minimize sum of squares
                     def objective(x):
                         return np.sum((x - data_array) ** 2)
-                    
+
                     result = optimize.minimize(objective, initial_guess)
-                    
+
                     return {
                         "status": "success",
                         "processing_type": "optimization",
@@ -1964,18 +1964,18 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                         "iterations": result.nit,
                         "method": result.method
                     }
-                    
+
             elif processing_type == "filtering":
                 # Data filtering and smoothing
                 filter_type = parameters.get("filter_type", "moving_average")
                 window_size = parameters.get("window_size", 3)
-                
+
                 if filter_type == "moving_average":
                     # Moving average filter
-                    filtered_data = np.convolve(data_array, 
-                                              np.ones(window_size)/window_size, 
+                    filtered_data = np.convolve(data_array,
+                                              np.ones(window_size)/window_size,
                                               mode='same')
-                    
+
                     return {
                         "status": "success",
                         "processing_type": "filtering",
@@ -1984,21 +1984,21 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                         "window_size": window_size,
                         "noise_reduction": float(np.std(data_array) - np.std(filtered_data))
                     }
-                    
+
             elif processing_type == "pattern_recognition":
                 # ML-powered pattern recognition
                 from sklearn.cluster import KMeans
                 from sklearn.preprocessing import StandardScaler
-                
+
                 # Prepare data for pattern analysis
                 scaler = StandardScaler()
                 scaled_data = scaler.fit_transform(data_array.reshape(-1, 1))
-                
+
                 # Apply clustering to find patterns
                 n_clusters = parameters.get("n_clusters", 3)
                 kmeans = KMeans(n_clusters=n_clusters, random_state=42)
                 clusters = kmeans.fit_predict(scaled_data)
-                
+
                 return {
                     "status": "success",
                     "processing_type": "pattern_recognition",
@@ -2007,13 +2007,13 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     "n_patterns": n_clusters,
                     "inertia": float(kmeans.inertia_)
                 }
-                
+
             else:
                 return {
                     "status": "error",
                     "message": f"Unsupported processing type: {processing_type}"
                 }
-                
+
         except Exception as e:
             logger.error(f"Numerical processing failed: {e}")
             return {
@@ -2026,7 +2026,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
     async def provide_computation_services(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Provide comprehensive computation services with distributed processing
-        
+
         Services:
         - High-performance computing coordination
         - Distributed calculation management
@@ -2039,30 +2039,30 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
             service_type = data.get("service_type", "computation")
             task_data = data.get("task_data", {})
             performance_requirements = data.get("performance_requirements", {})
-            
+
             if service_type == "distributed_computation":
                 # Coordinate distributed computation
                 subtasks = data.get("subtasks", [])
                 coordination_strategy = data.get("strategy", "parallel")
-                
+
                 if coordination_strategy == "parallel":
                     # Execute subtasks in parallel
                     results = []
                     execution_times = []
-                    
+
                     for i, subtask in enumerate(subtasks):
                         start_time = time.time()
-                        
+
                         # Create calculation request for each subtask
                         calc_request = CalculationRequest(
                             expression=subtask.get("expression", ""),
                             variables=subtask.get("variables", {}),
                             operation_type="evaluate"
                         )
-                        
+
                         result = await self._execute_calculation(calc_request, False)
                         execution_time = time.time() - start_time
-                        
+
                         results.append({
                             "subtask_id": i,
                             "result": result.result,
@@ -2070,7 +2070,7 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                             "method": result.method
                         })
                         execution_times.append(execution_time)
-                    
+
                     return {
                         "status": "success",
                         "service_type": "distributed_computation",
@@ -2083,29 +2083,29 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                             "efficiency": len(subtasks) / max(execution_times) if execution_times else 0
                         }
                     }
-                    
+
             elif service_type == "performance_optimization":
                 # Optimize computation performance
                 optimization_target = data.get("target", "speed")
                 computation_profile = data.get("computation_profile", {})
-                
+
                 # Analyze computation patterns
                 historical_data = computation_profile.get("historical_performance", [])
                 current_load = computation_profile.get("current_load", 0.5)
-                
+
                 if optimization_target == "speed":
                     # Recommend speed optimizations
                     recommendations = []
-                    
+
                     if current_load > 0.8:
                         recommendations.append("Consider distributed processing")
-                    
+
                     if historical_data and statistics.mean(historical_data) > 1.0:
                         recommendations.append("Enable calculation caching")
                         recommendations.append("Use AI method selection")
-                    
+
                     recommendations.append("Optimize memory usage for large datasets")
-                    
+
                     return {
                         "status": "success",
                         "service_type": "performance_optimization",
@@ -2117,28 +2117,28 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                             "optimization_potential": max(0, 1 - current_load)
                         }
                     }
-                    
+
             elif service_type == "resource_monitoring":
                 # Monitor computational resources
                 import psutil
-                
+
                 cpu_usage = psutil.cpu_percent(interval=1)
                 memory_info = psutil.virtual_memory()
-                
+
                 resource_status = {
                     "cpu_usage_percent": cpu_usage,
                     "memory_usage_percent": memory_info.percent,
                     "available_memory_gb": memory_info.available / (1024**3),
                     "total_memory_gb": memory_info.total / (1024**3)
                 }
-                
+
                 # Provide recommendations based on resource usage
                 recommendations = []
                 if cpu_usage > 80:
                     recommendations.append("High CPU usage - consider load balancing")
                 if memory_info.percent > 85:
                     recommendations.append("High memory usage - optimize data structures")
-                
+
                 return {
                     "status": "success",
                     "service_type": "resource_monitoring",
@@ -2146,13 +2146,13 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     "recommendations": recommendations,
                     "monitoring_timestamp": datetime.utcnow().isoformat()
                 }
-                
+
             else:
                 return {
                     "status": "error",
                     "message": f"Unsupported computation service: {service_type}"
                 }
-                
+
         except Exception as e:
             logger.error(f"Computation service failed: {e}")
             return {
@@ -2178,11 +2178,11 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 "message": f"Successfully executed mathematical_calculations",
                 "data": data
             }
-            
+
             # Add specific logic here based on capability
-            
+
             return create_success_response(result)
-            
+
         except Exception as e:
             logger.error(f"Failed to execute mathematical_calculations: {e}")
             return create_error_response(f"Failed to execute mathematical_calculations: {str(e)}", "mathematical_calculations_error")
@@ -2205,11 +2205,11 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 "message": f"Successfully executed statistical_analysis",
                 "data": data
             }
-            
+
             # Add specific logic here based on capability
-            
+
             return create_success_response(result)
-            
+
         except Exception as e:
             logger.error(f"Failed to execute statistical_analysis: {e}")
             return create_error_response(f"Failed to execute statistical_analysis: {str(e)}", "statistical_analysis_error")
@@ -2232,11 +2232,11 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 "message": f"Successfully executed formula_execution",
                 "data": data
             }
-            
+
             # Add specific logic here based on capability
-            
+
             return create_success_response(result)
-            
+
         except Exception as e:
             logger.error(f"Failed to execute formula_execution: {e}")
             return create_error_response(f"Failed to execute formula_execution: {str(e)}", "formula_execution_error")
@@ -2259,11 +2259,11 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 "message": f"Successfully executed numerical_processing",
                 "data": data
             }
-            
+
             # Add specific logic here based on capability
-            
+
             return create_success_response(result)
-            
+
         except Exception as e:
             logger.error(f"Failed to execute numerical_processing: {e}")
             return create_error_response(f"Failed to execute numerical_processing: {str(e)}", "numerical_processing_error")
@@ -2286,11 +2286,11 @@ class ComprehensiveCalculationAgentSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 "message": f"Successfully executed computation_services",
                 "data": data
             }
-            
+
             # Add specific logic here based on capability
-            
+
             return create_success_response(result)
-            
+
         except Exception as e:
             logger.error(f"Failed to execute computation_services: {e}")
             return create_error_response(f"Failed to execute computation_services: {str(e)}", "computation_services_error")
@@ -2301,5 +2301,5 @@ if __name__ == "__main__":
         agent = ComprehensiveCalculationAgentSDK(os.getenv("A2A_BASE_URL"))
         await agent.initialize()
         print("✅ Comprehensive Calculation Agent test successful")
-    
+
     asyncio.run(test_agent())

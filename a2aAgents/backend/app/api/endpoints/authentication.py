@@ -16,14 +16,14 @@ import base64
 from PIL import Image
 
 from ...core.rbac import (
-    get_auth_service, UserModel, UserRole, Permission, 
+    get_auth_service, UserModel, UserRole, Permission,
     AuthenticationError, AuthorizationError, ValidationError
 )
 from ...core.errorHandling import SecurityError
 from ...core.sessionManagement import get_session_manager
 from ...core.auditTrail import audit_log, AuditEventType
 from ..middleware.auth import (
-    get_current_user, require_admin, require_super_admin, 
+    get_current_user, require_admin, require_super_admin,
     require_permission, get_optional_user
 )
 
@@ -140,27 +140,27 @@ class BulkOperationResponse(BaseModel):
 async def login(login_data: LoginRequest, request: Request):
     """
     Authenticate user and create secure session
-    
+
     Returns:
         Access token, refresh token, and session information
     """
     try:
         auth_service = get_auth_service()
         session_manager = get_session_manager()
-        
+
         # Authenticate user
         user = auth_service.authenticate_user(
             username=login_data.username,
             password=login_data.password
         )
-        
+
         # Get client information
         client_ip = request.client.host if request.client else "unknown"
         user_agent = request.headers.get("user-agent", "unknown")
-        
+
         # Extract device fingerprint if provided
         device_fingerprint = request.headers.get("x-device-fingerprint")
-        
+
         # Create session with tokens
         access_token, refresh_token, session_info = await session_manager.create_session(
             user_id=user.user_id,
@@ -168,13 +168,13 @@ async def login(login_data: LoginRequest, request: Request):
             user_agent=user_agent,
             device_fingerprint=device_fingerprint
         )
-        
+
         # Update last login
         user.last_login = datetime.utcnow()
-        
+
         # Log security event
         logger.info(f"User login successful: {user.username} from {client_ip}")
-        
+
         # Audit log successful login
         await audit_log(
             event_type=AuditEventType.USER_LOGIN,
@@ -188,7 +188,7 @@ async def login(login_data: LoginRequest, request: Request):
                 "login_method": "password"
             }
         )
-        
+
         return LoginResponse(
             access_token=access_token,
             refresh_token=refresh_token,
@@ -203,12 +203,12 @@ async def login(login_data: LoginRequest, request: Request):
                 "last_login": user.last_login.isoformat() if user.last_login else None
             }
         )
-        
+
     except AuthenticationError as e:
         # Log failed login attempt
         client_ip = request.client.host if request.client else "unknown"
         logger.warning(f"Failed login attempt for {login_data.username} from {client_ip}: {e}")
-        
+
         raise HTTPException(
             status_code=401,
             detail=str(e),
@@ -230,13 +230,13 @@ async def logout(current_user: Dict[str, Any] = Depends(get_current_user)):
     try:
         auth_service = get_auth_service()
         session_id = current_user.get("session_id")
-        
+
         if session_id:
             auth_service.revoke_token(session_id)
             logger.info(f"User logged out: {current_user.get('username')}")
-        
+
         return {"message": "Successfully logged out"}
-        
+
     except Exception as e:
         logger.error(f"Logout error: {e}")
         raise HTTPException(status_code=500, detail="Logout failed")
@@ -250,10 +250,10 @@ async def get_current_user_info(current_user: Dict[str, Any] = Depends(get_curre
     try:
         auth_service = get_auth_service()
         user = auth_service.users.get(current_user["user_id"])
-        
+
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         return UserResponse(
             user_id=user.user_id,
             username=user.username,
@@ -265,7 +265,7 @@ async def get_current_user_info(current_user: Dict[str, Any] = Depends(get_curre
             last_login=user.last_login,
             mfa_enabled=user.mfa_enabled
         )
-        
+
     except Exception as e:
         logger.error(f"Get user info error: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve user information")
@@ -286,10 +286,10 @@ async def change_password(
             old_password=password_data.current_password,
             new_password=password_data.new_password
         )
-        
+
         logger.info(f"Password changed for user: {current_user.get('username')}")
         return {"message": "Password changed successfully"}
-        
+
     except (AuthenticationError, ValidationError) as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -305,36 +305,36 @@ async def request_password_reset(reset_request: PasswordResetRequest, request: R
     try:
         auth_service = get_auth_service()
         session_manager = get_session_manager()
-        
+
         # Find user by email
         user = None
         for u in auth_service.users.values():
             if u.email == reset_request.email:
                 user = u
                 break
-        
+
         # Always return success to prevent email enumeration
         if not user:
             logger.warning(f"Password reset requested for unknown email: {reset_request.email}")
             return {"message": "If this email exists, a password reset link has been sent"}
-        
+
         # Check if user is active
         if not user.is_active:
             logger.warning(f"Password reset requested for inactive user: {user.username}")
             return {"message": "If this email exists, a password reset link has been sent"}
-        
+
         # Generate secure reset token (valid for 1 hour)
         reset_token = await session_manager.create_password_reset_token(
             user_id=user.user_id,
             email=user.email
         )
-        
+
         # Get client information for security logging
         client_ip = request.client.host if request.client else "unknown"
-        
+
         # Log security event
         logger.info(f"Password reset requested for user: {user.username} from {client_ip}")
-        
+
         # Audit log password reset request
         await audit_log(
             event_type=AuditEventType.PASSWORD_RESET_REQUESTED,
@@ -347,12 +347,12 @@ async def request_password_reset(reset_request: PasswordResetRequest, request: R
                 "reset_token_expires": (datetime.utcnow() + timedelta(hours=1)).isoformat()
             }
         )
-        
+
         # In a real implementation, send email with reset link
         logger.info(f"Password reset token for {user.email}: {reset_token}")
-        
+
         return {"message": "If this email exists, a password reset link has been sent"}
-        
+
     except Exception as e:
         logger.error(f"Password reset request error: {e}")
         return {"message": "If this email exists, a password reset link has been sent"}
@@ -366,38 +366,38 @@ async def confirm_password_reset(reset_data: PasswordResetConfirmRequest, reques
     try:
         auth_service = get_auth_service()
         session_manager = get_session_manager()
-        
+
         # Validate reset token
         token_data = await session_manager.validate_password_reset_token(reset_data.reset_token)
-        
+
         user_id = token_data["user_id"]
         user = auth_service.users.get(user_id)
-        
+
         if not user:
             raise HTTPException(status_code=400, detail="Invalid reset token")
-        
+
         # Validate new password
         if len(reset_data.new_password) < auth_service.password_min_length:
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail=f"Password must be at least {auth_service.password_min_length} characters long"
             )
-        
+
         # Reset user password
         auth_service.reset_user_password(user_id, reset_data.new_password)
-        
+
         # Invalidate the reset token
         await session_manager.invalidate_password_reset_token(reset_data.reset_token)
-        
+
         # Revoke all existing sessions for security
         auth_service.revoke_all_user_sessions(user_id)
-        
+
         # Get client information
         client_ip = request.client.host if request.client else "unknown"
-        
+
         # Log security event
         logger.info(f"Password reset completed for user: {user.username} from {client_ip}")
-        
+
         # Audit log successful password reset
         await audit_log(
             event_type=AuditEventType.PASSWORD_RESET_COMPLETED,
@@ -409,9 +409,9 @@ async def confirm_password_reset(reset_data: PasswordResetConfirmRequest, reques
                 "sessions_revoked": "all"
             }
         )
-        
+
         return {"message": "Password has been reset successfully. Please login with your new password."}
-        
+
     except ValidationError as e:
         client_ip = request.client.host if request.client else "unknown"
         logger.warning(f"Invalid password reset token from {client_ip}: {e}")
@@ -433,10 +433,10 @@ async def setup_mfa(
         auth_service = get_auth_service()
         user_id = current_user["user_id"]
         user = auth_service.users.get(user_id)
-        
+
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         # Verify current password
         try:
             stored_hash = auth_service.secrets_manager.get_secret(f"user_password_{user_id}")
@@ -447,34 +447,34 @@ async def setup_mfa(
                 raise HTTPException(status_code=400, detail="Current password is incorrect")
         except Exception:
             raise HTTPException(status_code=400, detail="Current password is incorrect")
-        
+
         # Generate TOTP secret
         totp_secret = pyotp.random_base32()
-        
+
         # Store TOTP secret
         auth_service.secrets_manager.set_secret(f"user_totp_{user_id}", totp_secret)
-        
+
         # Generate QR code
         totp = pyotp.TOTP(totp_secret)
         provisioning_uri = totp.provisioning_uri(
             name=user.email,
             issuer_name="A2A Platform"
         )
-        
+
         # Create QR code image
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
         qr.add_data(provisioning_uri)
         qr.make(fit=True)
-        
+
         img = qr.make_image(fill_color="black", back_color="white")
-        
+
         # Convert to base64
         buffer = io.BytesIO()
         img.save(buffer, format='PNG')
         qr_code_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-        
+
         logger.info(f"MFA setup initiated for user: {user.username}")
-        
+
         # Audit log MFA setup
         await audit_log(
             event_type=AuditEventType.USER_UPDATED,
@@ -485,14 +485,14 @@ async def setup_mfa(
                 "username": user.username
             }
         )
-        
+
         return {
             "qr_code": f"data:image/png;base64,{qr_code_base64}",
             "secret": totp_secret,
             "provisioning_uri": provisioning_uri,
             "message": "Scan the QR code with your authenticator app and verify with a TOTP code"
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -512,26 +512,26 @@ async def verify_mfa_setup(
         auth_service = get_auth_service()
         user_id = current_user["user_id"]
         user = auth_service.users.get(user_id)
-        
+
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         # Get TOTP secret
         try:
             totp_secret = auth_service.secrets_manager.get_secret(f"user_totp_{user_id}")
         except Exception:
             raise HTTPException(status_code=400, detail="MFA setup not initiated. Please setup MFA first.")
-        
+
         # Verify TOTP code
         totp = pyotp.TOTP(totp_secret)
         if not totp.verify(verify_request.totp_code, valid_window=1):
             raise HTTPException(status_code=400, detail="Invalid TOTP code")
-        
+
         # Enable MFA for user
         user.mfa_enabled = True
-        
+
         logger.info(f"MFA enabled for user: {user.username}")
-        
+
         # Audit log MFA enabled
         await audit_log(
             event_type=AuditEventType.USER_UPDATED,
@@ -542,12 +542,12 @@ async def verify_mfa_setup(
                 "username": user.username
             }
         )
-        
+
         return {
             "message": "MFA has been successfully enabled for your account",
             "mfa_enabled": True
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -567,13 +567,13 @@ async def disable_mfa(
         auth_service = get_auth_service()
         user_id = current_user["user_id"]
         user = auth_service.users.get(user_id)
-        
+
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         if not user.mfa_enabled:
             raise HTTPException(status_code=400, detail="MFA is not enabled for this account")
-        
+
         # Verify current password
         try:
             stored_hash = auth_service.secrets_manager.get_secret(f"user_password_{user_id}")
@@ -584,7 +584,7 @@ async def disable_mfa(
                 raise HTTPException(status_code=400, detail="Current password is incorrect")
         except Exception:
             raise HTTPException(status_code=400, detail="Current password is incorrect")
-        
+
         # Disable MFA and remove TOTP secret
         user.mfa_enabled = False
         try:
@@ -592,9 +592,9 @@ async def disable_mfa(
             auth_service.secrets_manager.set_secret(f"user_totp_{user_id}", "")
         except Exception:
             pass  # Secret removal is best effort
-        
+
         logger.info(f"MFA disabled for user: {user.username}")
-        
+
         # Audit log MFA disabled
         await audit_log(
             event_type=AuditEventType.USER_UPDATED,
@@ -605,12 +605,12 @@ async def disable_mfa(
                 "username": user.username
             }
         )
-        
+
         return {
             "message": "MFA has been disabled for your account",
             "mfa_enabled": False
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -626,13 +626,13 @@ async def login_with_mfa(login_data: MFALoginRequest, request: Request):
     try:
         auth_service = get_auth_service()
         session_manager = get_session_manager()
-        
+
         # Authenticate user with username/password
         user = auth_service.authenticate_user(
             username=login_data.username,
             password=login_data.password
         )
-        
+
         # Check if MFA is enabled for user
         if user.mfa_enabled:
             if not login_data.totp_code:
@@ -644,7 +644,7 @@ async def login_with_mfa(login_data: MFALoginRequest, request: Request):
                         "message": "Multi-factor authentication code is required"
                     }
                 )
-            
+
             # Verify TOTP code
             try:
                 totp_secret = auth_service.secrets_manager.get_secret(f"user_totp_{user.user_id}")
@@ -654,12 +654,12 @@ async def login_with_mfa(login_data: MFALoginRequest, request: Request):
             except Exception as e:
                 logger.warning(f"MFA verification failed for user {user.username}: {e}")
                 raise HTTPException(status_code=400, detail="Invalid MFA code")
-        
+
         # Get client information
         client_ip = request.client.host if request.client else "unknown"
         user_agent = request.headers.get("user-agent", "unknown")
         device_fingerprint = request.headers.get("x-device-fingerprint")
-        
+
         # Create session with tokens
         access_token, refresh_token, session_info = await session_manager.create_session(
             user_id=user.user_id,
@@ -667,17 +667,17 @@ async def login_with_mfa(login_data: MFALoginRequest, request: Request):
             user_agent=user_agent,
             device_fingerprint=device_fingerprint
         )
-        
+
         # Mark MFA as verified in session if MFA was used
         if user.mfa_enabled:
             session_info.security_flags["mfa_verified"] = True
-        
+
         # Update last login
         user.last_login = datetime.utcnow()
-        
+
         # Log security event
         logger.info(f"User login successful: {user.username} from {client_ip} (MFA: {user.mfa_enabled})")
-        
+
         # Audit log successful login
         await audit_log(
             event_type=AuditEventType.USER_LOGIN,
@@ -692,7 +692,7 @@ async def login_with_mfa(login_data: MFALoginRequest, request: Request):
                 "mfa_verified": user.mfa_enabled
             }
         )
-        
+
         return LoginResponse(
             access_token=access_token,
             refresh_token=refresh_token,
@@ -708,12 +708,12 @@ async def login_with_mfa(login_data: MFALoginRequest, request: Request):
                 "mfa_enabled": user.mfa_enabled
             }
         )
-        
+
     except AuthenticationError as e:
         # Log failed login attempt
         client_ip = request.client.host if request.client else "unknown"
         logger.warning(f"Failed login attempt for {login_data.username} from {client_ip}: {e}")
-        
+
         raise HTTPException(
             status_code=401,
             detail=str(e),
@@ -737,15 +737,15 @@ async def create_api_key(current_user: Dict[str, Any] = Depends(get_current_user
     try:
         auth_service = get_auth_service()
         api_key = auth_service.create_api_key(current_user["user_id"])
-        
+
         logger.info(f"API key created for user: {current_user.get('username')}")
-        
+
         return {
             "api_key": api_key,
             "message": "API key created successfully",
             "warning": "Store this key securely - it will not be shown again"
         }
-        
+
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -764,7 +764,7 @@ async def register_user(
     """
     try:
         auth_service = get_auth_service()
-        
+
         # Create user
         user = auth_service.create_user(
             username=user_data.username,
@@ -773,9 +773,9 @@ async def register_user(
             role=user_data.role,
             full_name=user_data.full_name
         )
-        
+
         logger.info(f"User registered by admin {admin_user.get('username')}: {user.username}")
-        
+
         return UserResponse(
             user_id=user.user_id,
             username=user.username,
@@ -787,7 +787,7 @@ async def register_user(
             last_login=user.last_login,
             mfa_enabled=user.mfa_enabled
         )
-        
+
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -805,7 +805,7 @@ async def list_users(
     """
     try:
         auth_service = get_auth_service()
-        
+
         users = []
         for user in auth_service.users.values():
             if not active_only or user.is_active:
@@ -820,9 +820,9 @@ async def list_users(
                     last_login=user.last_login,
                     mfa_enabled=user.mfa_enabled
                 ))
-        
+
         return users
-        
+
     except Exception as e:
         logger.error(f"List users error: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve users")
@@ -839,10 +839,10 @@ async def get_user(
     try:
         auth_service = get_auth_service()
         user = auth_service.users.get(user_id)
-        
+
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         return UserResponse(
             user_id=user.user_id,
             username=user.username,
@@ -854,7 +854,7 @@ async def get_user(
             last_login=user.last_login,
             mfa_enabled=user.mfa_enabled
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -874,65 +874,65 @@ async def update_user(
     try:
         auth_service = get_auth_service()
         user = auth_service.users.get(user_id)
-        
+
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         # Track changes for audit
         changes = {}
-        
+
         # Update user fields with validation
         if update_data.full_name is not None:
             old_name = user.full_name
             user.full_name = update_data.full_name
             changes["full_name"] = {"old": old_name, "new": update_data.full_name}
-        
+
         if update_data.email is not None:
             # Check if email already exists for another user
-            if any(u.email == update_data.email and u.user_id != user_id 
+            if any(u.email == update_data.email and u.user_id != user_id
                    for u in auth_service.users.values()):
                 raise HTTPException(status_code=400, detail="Email already in use by another user")
-            
+
             old_email = user.email
             user.email = update_data.email
             changes["email"] = {"old": old_email, "new": update_data.email}
-        
+
         if update_data.role is not None:
             # Only super admin can change roles
             if admin_user.get("role") != UserRole.SUPER_ADMIN.value:
                 raise HTTPException(status_code=403, detail="Only super admin can change user roles")
-            
+
             # Prevent changing own role
             if user_id == admin_user["user_id"]:
                 raise HTTPException(status_code=400, detail="Cannot change your own role")
-            
+
             old_role = user.role
             user.role = update_data.role
             changes["role"] = {"old": old_role.value, "new": update_data.role.value}
-        
+
         if update_data.is_active is not None:
             # Prevent admin from deactivating themselves
             if user_id == admin_user["user_id"] and update_data.is_active == False:
                 raise HTTPException(status_code=400, detail="Cannot deactivate your own account")
-            
+
             old_active = user.is_active
             user.is_active = update_data.is_active
             changes["is_active"] = {"old": old_active, "new": update_data.is_active}
-            
+
             # If deactivating user, revoke all their sessions
             if not update_data.is_active:
                 sessions_to_revoke = []
                 for session_id, session in auth_service.sessions.items():
                     if session["user_id"] == user_id:
                         sessions_to_revoke.append(session_id)
-                
+
                 for session_id in sessions_to_revoke:
                     auth_service.revoke_token(session_id)
-                
+
                 changes["sessions_revoked"] = len(sessions_to_revoke)
-        
+
         logger.info(f"User updated by admin {admin_user.get('username')}: {user.username}")
-        
+
         # Audit log user update
         await audit_log(
             event_type=AuditEventType.USER_UPDATED,
@@ -945,7 +945,7 @@ async def update_user(
                 "changes": changes
             }
         )
-        
+
         return UserResponse(
             user_id=user.user_id,
             username=user.username,
@@ -957,7 +957,7 @@ async def update_user(
             last_login=user.last_login,
             mfa_enabled=user.mfa_enabled
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -978,29 +978,29 @@ async def delete_user_permanently(
     try:
         auth_service = get_auth_service()
         user = auth_service.users.get(user_id)
-        
+
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         # Prevent super admin from deleting themselves
         if user_id == super_admin["user_id"]:
             raise HTTPException(status_code=400, detail="Cannot delete your own account")
-        
+
         # Confirmation check - username must match
         if deletion_data.confirmation_username != user.username:
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail="Username confirmation does not match. Deletion aborted for safety."
             )
-        
+
         # Perform cascading deletion
         deletion_report = auth_service.delete_user(
             user_id=user_id,
             cascade_data=deletion_data.cascade_data
         )
-        
+
         logger.critical(f"User permanently deleted by super admin {super_admin.get('username')}: {user.username} (ID: {user_id})")
-        
+
         # Audit log user deletion
         await audit_log(
             event_type=AuditEventType.USER_DELETED,
@@ -1015,13 +1015,13 @@ async def delete_user_permanently(
                 "cleanup_results": deletion_report["cleanup_results"]
             }
         )
-        
+
         return {
             "message": f"User {user.username} has been permanently deleted",
             "warning": "This action is irreversible",
             "deletion_report": deletion_report
         }
-        
+
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except HTTPException:
@@ -1043,32 +1043,32 @@ async def deactivate_user(
     try:
         auth_service = get_auth_service()
         user = auth_service.users.get(user_id)
-        
+
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         # Prevent super admin from deactivating themselves
         if user_id == super_admin["user_id"]:
             raise HTTPException(status_code=400, detail="Cannot deactivate your own account")
-        
+
         if not user.is_active:
             raise HTTPException(status_code=400, detail="User is already deactivated")
-        
+
         user.is_active = False
-        
+
         # Revoke all user sessions
         sessions_revoked = 0
         sessions_to_revoke = []
         for session_id, session in auth_service.sessions.items():
             if session["user_id"] == user_id:
                 sessions_to_revoke.append(session_id)
-        
+
         for session_id in sessions_to_revoke:
             auth_service.revoke_token(session_id)
             sessions_revoked += 1
-        
+
         logger.warning(f"User deactivated by super admin {super_admin.get('username')}: {user.username}")
-        
+
         # Audit log user deactivation
         await audit_log(
             event_type=AuditEventType.USER_UPDATED,
@@ -1081,13 +1081,13 @@ async def deactivate_user(
                 "sessions_revoked": sessions_revoked
             }
         )
-        
+
         return {
             "message": f"User {user.username} has been deactivated",
             "sessions_revoked": sessions_revoked,
             "note": "User account can be reactivated by updating is_active to true"
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -1103,13 +1103,13 @@ async def get_user_stats(admin_user: Dict[str, Any] = Depends(require_admin)):
     try:
         auth_service = get_auth_service()
         stats = auth_service.get_user_stats()
-        
+
         return {
             "success": True,
             "data": stats,
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Get user stats error: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve user statistics")
@@ -1122,7 +1122,7 @@ async def list_active_sessions(admin_user: Dict[str, Any] = Depends(require_admi
     """
     try:
         auth_service = get_auth_service()
-        
+
         sessions = []
         for session_id, session_data in auth_service.sessions.items():
             sessions.append({
@@ -1135,14 +1135,14 @@ async def list_active_sessions(admin_user: Dict[str, Any] = Depends(require_admi
                 "ip_address": session_data.get("ip_address"),
                 "user_agent": session_data.get("user_agent")
             })
-        
+
         return {
             "success": True,
             "data": sessions,
             "total_sessions": len(sessions),
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"List sessions error: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve active sessions")
@@ -1158,17 +1158,17 @@ async def revoke_session(
     """
     try:
         auth_service = get_auth_service()
-        
+
         if session_id not in auth_service.sessions:
             raise HTTPException(status_code=404, detail="Session not found")
-        
+
         session_data = auth_service.sessions[session_id]
         auth_service.revoke_token(session_id)
-        
+
         logger.info(f"Session revoked by admin {admin_user.get('username')}: {session_data['username']}")
-        
+
         return {"message": f"Session for user {session_data['username']} has been revoked"}
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -1183,38 +1183,38 @@ async def bulk_user_operations(
 ):
     """
     Perform bulk operations on multiple users (super admin only)
-    
+
     Supports operations: activate, deactivate, delete, update_role
     All operations are performed atomically - if any critical operation fails,
     the entire batch can be rolled back.
     """
     import time
     import secrets
-    
+
     start_time = time.time()
-    
+
     try:
         auth_service = get_auth_service()
-        
+
         # Safety confirmation check
         if not bulk_request.confirm_bulk_operation:
             raise HTTPException(status_code=400, detail="Bulk operation confirmation required")
-        
+
         # Validate operations
         valid_operations = {"activate", "deactivate", "delete", "update_role"}
         for operation in bulk_request.operations:
             if operation.operation not in valid_operations:
                 raise HTTPException(status_code=400, detail=f"Invalid operation: {operation.operation}")
-        
+
         results = []
         successful_count = 0
         failed_count = 0
         skipped_count = 0
-        
+
         # Process each bulk operation
         for operation in bulk_request.operations:
             operation_id = secrets.token_hex(8)
-            
+
             # Process each user in this operation
             for user_id in operation.user_ids:
                 try:
@@ -1230,7 +1230,7 @@ async def bulk_user_operations(
                         ))
                         failed_count += 1
                         continue
-                    
+
                     # Prevent super admin from operating on themselves for dangerous operations
                     if user_id == super_admin["user_id"] and operation.operation in ["deactivate", "delete"]:
                         results.append(BulkOperationResult(
@@ -1243,7 +1243,7 @@ async def bulk_user_operations(
                         ))
                         skipped_count += 1
                         continue
-                    
+
                     # Perform the operation
                     if operation.operation == "activate":
                         if user.is_active:
@@ -1267,7 +1267,7 @@ async def bulk_user_operations(
                                 message="User activated successfully"
                             ))
                             successful_count += 1
-                    
+
                     elif operation.operation == "deactivate":
                         if not user.is_active:
                             results.append(BulkOperationResult(
@@ -1287,11 +1287,11 @@ async def bulk_user_operations(
                             for session_id, session in auth_service.sessions.items():
                                 if session["user_id"] == user_id:
                                     sessions_to_revoke.append(session_id)
-                            
+
                             for session_id in sessions_to_revoke:
                                 auth_service.revoke_token(session_id)
                                 sessions_revoked += 1
-                            
+
                             results.append(BulkOperationResult(
                                 operation_id=operation_id,
                                 user_id=user_id,
@@ -1302,11 +1302,11 @@ async def bulk_user_operations(
                                 details={"sessions_revoked": sessions_revoked}
                             ))
                             successful_count += 1
-                    
+
                     elif operation.operation == "delete":
                         # Perform user deletion with cascading
                         deletion_report = auth_service.delete_user(user_id, cascade_data=True)
-                        
+
                         results.append(BulkOperationResult(
                             operation_id=operation_id,
                             user_id=user_id,
@@ -1317,7 +1317,7 @@ async def bulk_user_operations(
                             details=deletion_report["cleanup_results"]
                         ))
                         successful_count += 1
-                    
+
                     elif operation.operation == "update_role":
                         if not operation.parameters or "role" not in operation.parameters:
                             results.append(BulkOperationResult(
@@ -1330,11 +1330,11 @@ async def bulk_user_operations(
                             ))
                             failed_count += 1
                             continue
-                        
+
                         new_role = UserRole(operation.parameters["role"])
                         old_role = user.role
                         user.role = new_role
-                        
+
                         results.append(BulkOperationResult(
                             operation_id=operation_id,
                             user_id=user_id,
@@ -1345,7 +1345,7 @@ async def bulk_user_operations(
                             details={"old_role": old_role.value, "new_role": new_role.value}
                         ))
                         successful_count += 1
-                
+
                 except Exception as e:
                     results.append(BulkOperationResult(
                         operation_id=operation_id,
@@ -1356,15 +1356,15 @@ async def bulk_user_operations(
                         message=f"Operation failed: {str(e)}"
                     ))
                     failed_count += 1
-        
+
         execution_time = time.time() - start_time
-        
+
         # Log bulk operation
         logger.warning(
             f"Bulk user operation completed by super admin {super_admin.get('username')}: "
             f"{successful_count} successful, {failed_count} failed, {skipped_count} skipped"
         )
-        
+
         # Audit log bulk operation
         await audit_log(
             event_type=AuditEventType.USER_UPDATED,
@@ -1387,7 +1387,7 @@ async def bulk_user_operations(
                 ]
             }
         )
-        
+
         return BulkOperationResponse(
             total_operations=len(results),
             successful=successful_count,
@@ -1396,7 +1396,7 @@ async def bulk_user_operations(
             results=results,
             execution_time_seconds=execution_time
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:

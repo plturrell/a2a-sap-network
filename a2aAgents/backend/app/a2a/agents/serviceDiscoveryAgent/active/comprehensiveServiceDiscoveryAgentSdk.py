@@ -132,7 +132,7 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
     """
     Comprehensive Service Discovery Agent for dynamic service registry and agent discovery
     """
-    
+
     def __init__(self):
         # Create agent config
         from app.a2a.sdk.types import AgentConfig
@@ -142,42 +142,42 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
             description="Dynamic service registry and agent discovery system",
             version="1.0.0"
         )
-        
+
         super().__init__(config)
-        
+
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-        
+
         # Initialize AI Intelligence Framework
         self.ai_framework = create_ai_intelligence_framework(
             create_enhanced_agent_config("service_discovery")
         )
-        
+
         # Service registry
         self.service_registry: Dict[str, ServiceRegistration] = {}
         self.service_index: Dict[str, Set[str]] = defaultdict(set)  # For fast lookups
-        
+
         # Health monitoring
         self.health_check_tasks: Dict[str, asyncio.Task] = {}
         self.health_history: Dict[str, List[HealthCheckResult]] = defaultdict(list)
-        
+
         # Load balancing
         self.load_balancer_state: Dict[str, Dict[str, Any]] = defaultdict(dict)
-        
+
         # Discovery protocols
         self.discovery_protocols: Set[DiscoveryProtocol] = {DiscoveryProtocol.REGISTRY}
-        
+
         # Circuit breakers for service health checks
         self.health_check_breakers: Dict[str, EnhancedCircuitBreaker] = {}
-        
+
         # Database for persistence
         self.db_path = "service_discovery.db"
-        
+
         # Initialize database
         asyncio.create_task(self._initialize_database())
-        
+
         logger.info("ServiceDiscoveryAgent initialized")
 
     async def _initialize_database(self):
@@ -203,7 +203,7 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
                     endpoints TEXT NOT NULL
                 )
             """)
-            
+
             await db.execute("""
                 CREATE TABLE IF NOT EXISTS health_history (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -216,14 +216,14 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
                     error_message TEXT
                 )
             """)
-            
+
             await db.execute("""
                 CREATE INDEX IF NOT EXISTS idx_service_name ON service_registrations(service_name);
                 CREATE INDEX IF NOT EXISTS idx_service_type ON service_registrations(service_type);
                 CREATE INDEX IF NOT EXISTS idx_status ON service_registrations(status);
                 CREATE INDEX IF NOT EXISTS idx_health_service ON health_history(service_id);
             """)
-            
+
             await db.commit()
 
     @a2a_skill(
@@ -255,7 +255,7 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
         """
         try:
             service_id = str(uuid.uuid4())
-            
+
             # Convert endpoint dictionaries to ServiceEndpoint objects
             service_endpoints = []
             for ep_data in endpoints:
@@ -269,7 +269,7 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
                     metadata=ep_data.get("metadata", {})
                 )
                 service_endpoints.append(endpoint)
-            
+
             # Create service registration
             registration = ServiceRegistration(
                 service_id=service_id,
@@ -286,29 +286,29 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
                 ttl_seconds=ttl_seconds,
                 metadata=metadata or {}
             )
-            
+
             # Store in registry
             self.service_registry[service_id] = registration
-            
+
             # Update indexes
             self._update_service_index(registration)
-            
+
             # Persist to database
             await self._persist_service_registration(registration)
-            
+
             # Start health monitoring if health check URL provided
             if health_check_url:
                 await self._start_health_monitoring(service_id)
-            
+
             logger.info(f"Registered service: {service_name} ({service_id}) for agent {agent_id}")
-            
+
             return {
                 "service_id": service_id,
                 "status": "registered",
                 "endpoints_count": len(service_endpoints),
                 "health_monitoring": health_check_url is not None
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to register service: {e}")
             raise
@@ -343,14 +343,14 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
                 tags=tags or [],
                 status=ServiceStatus(status) if status else None
             )
-            
+
             # Find matching services
             matching_services = await self._query_services(query, include_unhealthy)
-            
+
             # Limit results
             if len(matching_services) > max_results:
                 matching_services = matching_services[:max_results]
-            
+
             # Convert to response format
             results = []
             for registration in matching_services:
@@ -378,9 +378,9 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
                     "metadata": registration.metadata
                 }
                 results.append(service_info)
-            
+
             logger.info(f"Discovered {len(results)} services matching query")
-            
+
             return {
                 "services": results,
                 "total_found": len(results),
@@ -392,7 +392,7 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
                     "status": status
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to discover services: {e}")
             raise
@@ -422,29 +422,29 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
                 ServiceQuery(service_name=service_name),
                 include_unhealthy=not exclude_unhealthy
             )
-            
+
             if not matching_services:
                 raise ValueError(f"No services found with name: {service_name}")
-            
+
             # Collect all endpoints from matching services
             all_endpoints = []
             for service in matching_services:
                 for endpoint in service.endpoints:
                     all_endpoints.append((service, endpoint))
-            
+
             if not all_endpoints:
                 raise ValueError(f"No endpoints available for service: {service_name}")
-            
+
             # Apply load balancing strategy
             selected_service, selected_endpoint = await self._apply_load_balancing(
                 all_endpoints, LoadBalancingStrategy(strategy), client_location
             )
-            
+
             # Update connection count
             selected_endpoint.current_connections += 1
-            
+
             logger.info(f"Selected endpoint {selected_endpoint.id} for service {service_name}")
-            
+
             return {
                 "service_id": selected_service.service_id,
                 "endpoint": {
@@ -458,7 +458,7 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
                 "strategy_used": strategy,
                 "total_available": len(all_endpoints)
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to get service endpoint: {e}")
             raise
@@ -493,7 +493,7 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
                 ]
             else:
                 services = list(self.service_registry.values())
-            
+
             results = []
             for service in services:
                 health_info = {
@@ -504,7 +504,7 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
                     "last_heartbeat": service.last_heartbeat.isoformat(),
                     "endpoints": []
                 }
-                
+
                 # Add endpoint health information
                 for endpoint in service.endpoints:
                     endpoint_health = {
@@ -517,7 +517,7 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
                         "last_health_check": endpoint.last_health_check.isoformat() if endpoint.last_health_check else None
                     }
                     health_info["endpoints"].append(endpoint_health)
-                
+
                 # Add history if requested
                 if include_history:
                     since = datetime.now() - timedelta(hours=history_hours)
@@ -533,15 +533,15 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
                         if h.timestamp >= since
                     ]
                     health_info["history"] = history
-                
+
                 results.append(health_info)
-            
+
             return {
                 "services": results,
                 "total_services": len(results),
                 "timestamp": datetime.now().isoformat()
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to get service health: {e}")
             raise
@@ -566,33 +566,33 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
         try:
             if service_id not in self.service_registry:
                 raise ValueError(f"Service {service_id} not found")
-            
+
             registration = self.service_registry[service_id]
-            
+
             # Verify ownership
             if registration.agent_id != agent_id:
                 raise ValueError(f"Agent {agent_id} not authorized to deregister service {service_id}")
-            
+
             # Stop health monitoring
             if service_id in self.health_check_tasks:
                 self.health_check_tasks[service_id].cancel()
                 del self.health_check_tasks[service_id]
-            
+
             # Remove from registry and indexes
             del self.service_registry[service_id]
             self._remove_from_service_index(registration)
-            
+
             # Remove from database
             await self._remove_service_from_database(service_id)
-            
+
             logger.info(f"Deregistered service: {registration.service_name} ({service_id})")
-            
+
             return {
                 "service_id": service_id,
                 "status": "deregistered",
                 "service_name": registration.service_name
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to deregister service: {e}")
             raise
@@ -619,35 +619,35 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
         try:
             if service_id not in self.service_registry:
                 raise ValueError(f"Service {service_id} not found")
-            
+
             registration = self.service_registry[service_id]
-            
+
             # Verify ownership
             if registration.agent_id != agent_id:
                 raise ValueError(f"Agent {agent_id} not authorized to send heartbeat for service {service_id}")
-            
+
             # Update heartbeat
             registration.last_heartbeat = datetime.now()
-            
+
             # Update status if provided
             if status:
                 registration.status = ServiceStatus(status)
-            
+
             # Update metadata if provided
             if metadata:
                 registration.metadata.update(metadata)
-            
+
             # Persist update
             await self._persist_service_registration(registration)
-            
+
             logger.debug(f"Heartbeat received for service: {registration.service_name} ({service_id})")
-            
+
             return {
                 "service_id": service_id,
                 "status": "heartbeat_received",
                 "next_heartbeat_due": (datetime.now() + timedelta(seconds=registration.ttl_seconds)).isoformat()
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to process heartbeat: {e}")
             raise
@@ -661,34 +661,34 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
         Query services based on criteria
         """
         matching_services = []
-        
+
         for registration in self.service_registry.values():
             # Skip unhealthy services if requested
             if not include_unhealthy and registration.status != ServiceStatus.HEALTHY:
                 continue
-            
+
             # Apply filters
             if query.service_name and registration.service_name != query.service_name:
                 continue
-            
+
             if query.service_type and registration.service_type != query.service_type:
                 continue
-            
+
             if query.status and registration.status != query.status:
                 continue
-            
+
             # Check capabilities
             if query.capabilities:
                 if not all(cap in registration.capabilities for cap in query.capabilities):
                     continue
-            
+
             # Check tags
             if query.tags:
                 if not all(tag in registration.tags for tag in query.tags):
                     continue
-            
+
             matching_services.append(registration)
-        
+
         return matching_services
 
     async def _apply_load_balancing(
@@ -702,7 +702,7 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
         """
         if not endpoints:
             raise ValueError("No endpoints available")
-        
+
         if strategy == LoadBalancingStrategy.ROUND_ROBIN:
             # Simple round-robin selection
             service_name = endpoints[0][0].service_name
@@ -710,11 +710,11 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
             selected = endpoints[current_index % len(endpoints)]
             self.load_balancer_state[service_name]["round_robin_index"] = (current_index + 1) % len(endpoints)
             return selected
-        
+
         elif strategy == LoadBalancingStrategy.LEAST_CONNECTIONS:
             # Select endpoint with least current connections
             return min(endpoints, key=lambda x: x[1].current_connections)
-        
+
         elif strategy == LoadBalancingStrategy.WEIGHTED:
             # Weighted selection based on endpoint weight
             total_weight = sum(ep[1].weight for ep in endpoints)
@@ -726,15 +726,15 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
                 if r <= cumulative:
                     return service, endpoint
             return endpoints[-1]  # Fallback
-        
+
         elif strategy == LoadBalancingStrategy.HEALTH_BASED:
             # Select based on health metrics (response time and success rate)
             def health_score(ep):
                 # Lower response time and higher success rate = better score
                 return ep[1].success_rate / (ep[1].response_time_ms + 1)
-            
+
             return max(endpoints, key=health_score)
-        
+
         else:
             # Default to first available
             return endpoints[0]
@@ -745,11 +745,11 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
         """
         if service_id in self.health_check_tasks:
             return  # Already monitoring
-        
+
         registration = self.service_registry.get(service_id)
         if not registration or not registration.health_check_url:
             return
-        
+
         # Create health check task
         task = asyncio.create_task(
             self._health_check_loop(service_id)
@@ -763,44 +763,44 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
         while service_id in self.service_registry:
             try:
                 registration = self.service_registry[service_id]
-                
+
                 # Perform health checks on all endpoints
                 for endpoint in registration.endpoints:
                     health_result = await self._perform_health_check(registration, endpoint)
-                    
+
                     # Update endpoint metrics
                     endpoint.response_time_ms = health_result.response_time_ms
                     endpoint.last_health_check = health_result.timestamp
-                    
+
                     # Update success rate (rolling average)
                     if health_result.status == ServiceStatus.HEALTHY:
                         endpoint.success_rate = min(1.0, endpoint.success_rate * 0.9 + 0.1)
                     else:
                         endpoint.success_rate = max(0.0, endpoint.success_rate * 0.9)
-                    
+
                     # Store health history
                     self.health_history[service_id].append(health_result)
-                    
+
                     # Limit history size
                     if len(self.health_history[service_id]) > 1000:
                         self.health_history[service_id] = self.health_history[service_id][-500:]
-                
+
                 # Update overall service status
                 healthy_endpoints = sum(
                     1 for ep in registration.endpoints
                     if ep.success_rate > 0.5
                 )
-                
+
                 if healthy_endpoints == 0:
                     registration.status = ServiceStatus.UNHEALTHY
                 elif healthy_endpoints == len(registration.endpoints):
                     registration.status = ServiceStatus.HEALTHY
                 else:
                     registration.status = ServiceStatus.DEGRADED
-                
+
                 # Wait for next check
                 await asyncio.sleep(registration.health_check_interval)
-                
+
             except Exception as e:
                 logger.error(f"Health check error for service {service_id}: {e}")
                 await asyncio.sleep(10)  # Shorter retry interval on error
@@ -814,7 +814,7 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
         Perform health check on a specific endpoint
         """
         start_time = time.time()
-        
+
         try:
             # Get or create circuit breaker for this endpoint
             breaker_key = f"{registration.service_id}_{endpoint.id}"
@@ -824,9 +824,9 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
                     failure_threshold=3,
                     recovery_timeout=30
                 )
-            
+
             circuit_breaker = self.health_check_breakers[breaker_key]
-            
+
             # Perform health check through circuit breaker
             async def health_check_call():
                 # A2A Protocol: Use blockchain messaging instead of aiohttp
@@ -837,10 +837,10 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
                             return await response.json()
                         else:
                             raise Exception(f"Health check failed with status {response.status}")
-            
+
             result = await circuit_breaker.call(health_check_call)
             response_time = (time.time() - start_time) * 1000
-            
+
             return HealthCheckResult(
                 service_id=registration.service_id,
                 endpoint_id=endpoint.id,
@@ -849,10 +849,10 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
                 timestamp=datetime.now(),
                 details=result if isinstance(result, dict) else {}
             )
-            
+
         except Exception as e:
             response_time = (time.time() - start_time) * 1000
-            
+
             return HealthCheckResult(
                 service_id=registration.service_id,
                 endpoint_id=endpoint.id,
@@ -867,17 +867,17 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
         Update service indexes for fast lookups
         """
         service_id = registration.service_id
-        
+
         # Index by service name
         self.service_index[f"name:{registration.service_name}"].add(service_id)
-        
+
         # Index by service type
         self.service_index[f"type:{registration.service_type}"].add(service_id)
-        
+
         # Index by capabilities
         for capability in registration.capabilities:
             self.service_index[f"capability:{capability}"].add(service_id)
-        
+
         # Index by tags
         for tag in registration.tags:
             self.service_index[f"tag:{tag}"].add(service_id)
@@ -887,7 +887,7 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
         Remove service from indexes
         """
         service_id = registration.service_id
-        
+
         # Remove from all indexes
         for index_set in self.service_index.values():
             index_set.discard(service_id)
@@ -898,7 +898,7 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
         """
         async with aiosqlite.connect(self.db_path) as db:
             await db.execute("""
-                INSERT OR REPLACE INTO service_registrations 
+                INSERT OR REPLACE INTO service_registrations
                 (service_id, agent_id, service_name, service_type, version, capabilities,
                  dependencies, status, health_check_url, health_check_interval, tags,
                  registered_at, last_heartbeat, ttl_seconds, metadata, endpoints)
@@ -946,25 +946,25 @@ class ServiceDiscoveryAgentSdk(SecureA2AAgent,
         """
         current_time = datetime.now()
         expired_services = []
-        
+
         for service_id, registration in self.service_registry.items():
             time_since_heartbeat = (current_time - registration.last_heartbeat).total_seconds()
             if time_since_heartbeat > registration.ttl_seconds:
                 expired_services.append(service_id)
-        
+
         for service_id in expired_services:
             registration = self.service_registry[service_id]
             logger.info(f"Cleaning up expired service: {registration.service_name} ({service_id})")
-            
+
             # Stop health monitoring
             if service_id in self.health_check_tasks:
                 self.health_check_tasks[service_id].cancel()
                 del self.health_check_tasks[service_id]
-            
+
             # Remove from registry
             del self.service_registry[service_id]
             self._remove_from_service_index(registration)
-            
+
             # Remove from database
             await self._remove_service_from_database(service_id)
 

@@ -202,7 +202,7 @@ class TestSuite:
 
 class DynamicTemplateEngine:
     """Advanced dynamic template engine with context awareness"""
-    
+
     def __init__(self):
         # Initialize security features
         self._init_security_features()
@@ -212,7 +212,7 @@ class DynamicTemplateEngine:
         self.context_analyzers: Dict[str, Callable] = {}
         self.template_validators: List[Callable] = []
         self.performance_monitor = PerformanceMonitor()
-        
+
         if JINJA2_AVAILABLE:
             self.jinja_env = Environment(
                 loader=FileSystemLoader(searchpath=[]),
@@ -222,36 +222,36 @@ class DynamicTemplateEngine:
             )
             self._setup_custom_filters()
             self._setup_custom_tests()
-    
+
     def _setup_custom_filters(self):
         """Setup custom Jinja2 filters for advanced templating"""
         if not JINJA2_AVAILABLE:
             return
-        
+
         # Code formatting filters
         self.jinja_env.filters['format_code'] = self._format_code_filter
         self.jinja_env.filters['validate_syntax'] = self._validate_syntax_filter
         self.jinja_env.filters['optimize_imports'] = self._optimize_imports_filter
-        
+
         # SDK-specific filters
         self.jinja_env.filters['generate_handler'] = self._generate_handler_filter
         self.jinja_env.filters['generate_skill'] = self._generate_skill_filter
         self.jinja_env.filters['generate_task'] = self._generate_task_filter
-        
+
         # Advanced filters
         self.jinja_env.filters['inject_monitoring'] = self._inject_monitoring_filter
         self.jinja_env.filters['add_error_handling'] = self._add_error_handling_filter
         self.jinja_env.filters['add_caching'] = self._add_caching_filter
-    
+
     def _setup_custom_tests(self):
         """Setup custom Jinja2 tests"""
         if not JINJA2_AVAILABLE:
             return
-        
+
         self.jinja_env.tests['valid_python'] = self._is_valid_python
         self.jinja_env.tests['secure_code'] = self._is_secure_code
         self.jinja_env.tests['performant'] = self._is_performant_code
-    
+
     async def render_dynamic_template(
         self,
         template_name: str,
@@ -260,48 +260,48 @@ class DynamicTemplateEngine:
         validation_level: CodeValidationLevel = CodeValidationLevel.COMPREHENSIVE
     ) -> Tuple[str, CodeValidationResult]:
         """Render template with advanced features and validation"""
-        
+
         start_time = time.time()
-        
+
         try:
             # Analyze and enhance context
             enhanced_context = await self._analyze_and_enhance_context(context, template_type)
-            
+
             # Load or create template
             if template_name in self.template_cache:
                 template = self.template_cache[template_name]
             else:
                 template = await self._load_dynamic_template(template_name, template_type)
                 self.template_cache[template_name] = template
-            
+
             # Render template
             if JINJA2_AVAILABLE:
                 rendered_code = await template.render_async(**enhanced_context)
             else:
                 rendered_code = self._basic_template_render(template_name, enhanced_context)
-            
+
             # Format code
             if BLACK_AVAILABLE:
                 try:
                     rendered_code = black.format_str(rendered_code, mode=black.Mode())
                 except Exception as e:
                     logger.warning(f"Black formatting failed: {e}")
-            
+
             # Validate generated code
             validation_result = await self._validate_generated_code(
                 rendered_code, validation_level
             )
-            
+
             # Apply post-processing
             if validation_result.valid:
                 rendered_code = await self._apply_post_processing(
                     rendered_code, enhanced_context, template_type
                 )
-            
+
             validation_result.validation_time_ms = (time.time() - start_time) * 1000
-            
+
             return rendered_code, validation_result
-            
+
         except Exception as e:
             logger.error(f"Template rendering failed: {e}")
             validation_result = CodeValidationResult(
@@ -316,14 +316,14 @@ class DynamicTemplateEngine:
                 validation_time_ms=(time.time() - start_time) * 1000
             )
             return "", validation_result
-    
+
     async def _analyze_and_enhance_context(
         self, context: Dict[str, Any], template_type: TemplateType
     ) -> Dict[str, Any]:
         """Analyze context and add intelligent enhancements"""
-        
+
         enhanced_context = context.copy()
-        
+
         # Add SDK version and features
         enhanced_context['sdk_version'] = '3.0.0'
         enhanced_context['sdk_features'] = {
@@ -332,11 +332,11 @@ class DynamicTemplateEngine:
             'circuit_breaker': True,
             'performance_optimization': True
         }
-        
+
         # Add timestamp and metadata
         enhanced_context['generated_at'] = datetime.now().isoformat()
         enhanced_context['generator_version'] = '2.0.0'
-        
+
         # Template-type specific enhancements
         if template_type == TemplateType.ML_ENHANCED:
             enhanced_context['ml_features'] = {
@@ -350,26 +350,26 @@ class DynamicTemplateEngine:
                 'resource_awareness': True,
                 'dynamic_scaling': True
             }
-        
+
         # Analyze dependencies and suggest optimizations
         if 'dependencies' in context:
             enhanced_context['optimized_dependencies'] = self._optimize_dependencies(
                 context['dependencies']
             )
-        
+
         return enhanced_context
-    
+
     def _optimize_dependencies(self, dependencies: List[str]) -> List[str]:
         """Optimize dependency list"""
         # Remove duplicates and sort
         unique_deps = list(set(dependencies))
-        
+
         # Group by package
         grouped_deps = defaultdict(list)
         for dep in unique_deps:
             package = dep.split('.')[0] if '.' in dep else dep
             grouped_deps[package].append(dep)
-        
+
         # Optimize imports
         optimized = []
         for package, imports in grouped_deps.items():
@@ -378,21 +378,21 @@ class DynamicTemplateEngine:
                 optimized.append(package)
             else:
                 optimized.extend(imports)
-        
+
         return sorted(optimized)
-    
+
     async def _validate_generated_code(
         self, code: str, validation_level: CodeValidationLevel
     ) -> CodeValidationResult:
         """Comprehensive code validation"""
-        
+
         errors = []
         warnings = []
         suggestions = []
         security_issues = []
         performance_issues = []
         code_metrics = {}
-        
+
         # Syntax validation
         syntax_valid = True
         try:
@@ -404,7 +404,7 @@ class DynamicTemplateEngine:
                 "line": e.lineno,
                 "message": str(e)
             })
-        
+
         if not syntax_valid and validation_level == CodeValidationLevel.SYNTAX:
             return CodeValidationResult(
                 valid=False,
@@ -417,41 +417,41 @@ class DynamicTemplateEngine:
                 code_metrics=code_metrics,
                 validation_time_ms=0
             )
-        
+
         # Style validation
         if validation_level in [CodeValidationLevel.STYLE, CodeValidationLevel.COMPREHENSIVE]:
             style_issues = self._validate_code_style(code)
             warnings.extend(style_issues)
-        
+
         # Semantic validation
         if validation_level in [CodeValidationLevel.SEMANTIC, CodeValidationLevel.COMPREHENSIVE]:
             semantic_issues = self._validate_code_semantics(code)
             warnings.extend(semantic_issues)
-        
+
         # Security validation
         if validation_level in [CodeValidationLevel.SECURITY, CodeValidationLevel.COMPREHENSIVE]:
             security_issues = self._validate_code_security(code)
-        
+
         # Performance validation
         if validation_level in [CodeValidationLevel.PERFORMANCE, CodeValidationLevel.COMPREHENSIVE]:
             performance_issues = self._validate_code_performance(code)
-        
+
         # Calculate code metrics
         code_metrics = self._calculate_code_metrics(code)
-        
+
         # Calculate overall score
         total_issues = len(errors) + len(warnings) + len(security_issues) + len(performance_issues)
         max_score = 100.0
         deduction_per_issue = 5.0
         score = max(0, max_score - (total_issues * deduction_per_issue))
-        
+
         # Add suggestions based on issues
         if score < 80:
             suggestions.append({
                 "type": "quality_improvement",
                 "message": "Consider refactoring to improve code quality"
             })
-        
+
         return CodeValidationResult(
             valid=syntax_valid and len(errors) == 0,
             score=score / 100.0,
@@ -463,11 +463,11 @@ class DynamicTemplateEngine:
             code_metrics=code_metrics,
             validation_time_ms=0
         )
-    
+
     def _validate_code_style(self, code: str) -> List[Dict[str, Any]]:
         """Validate code style"""
         issues = []
-        
+
         lines = code.split('\n')
         for i, line in enumerate(lines):
             # Check line length
@@ -477,7 +477,7 @@ class DynamicTemplateEngine:
                     "line": i + 1,
                     "message": f"Line too long ({len(line)} > 100 characters)"
                 })
-            
+
             # Check trailing whitespace
             if line.endswith(' ') or line.endswith('\t'):
                 issues.append({
@@ -485,20 +485,20 @@ class DynamicTemplateEngine:
                     "line": i + 1,
                     "message": "Trailing whitespace"
                 })
-        
+
         return issues
-    
+
     def _validate_code_semantics(self, code: str) -> List[Dict[str, Any]]:
         """Validate code semantics"""
         issues = []
-        
+
         try:
             tree = ast.parse(code)
-            
+
             # Check for unused imports
             imports = set()
             used_names = set()
-            
+
             for node in ast.walk(tree):
                 if isinstance(node, ast.Import):
                     for alias in node.names:
@@ -508,7 +508,7 @@ class DynamicTemplateEngine:
                         imports.add(f"{node.module}.{alias.name}")
                 elif isinstance(node, ast.Name):
                     used_names.add(node.id)
-            
+
             # Basic unused import detection
             for imp in imports:
                 base_name = imp.split('.')[-1]
@@ -517,16 +517,16 @@ class DynamicTemplateEngine:
                         "type": "semantic",
                         "message": f"Potentially unused import: {imp}"
                     })
-        
+
         except Exception as e:
             logger.warning(f"Semantic validation failed: {e}")
-        
+
         return issues
-    
+
     def _validate_code_security(self, code: str) -> List[Dict[str, Any]]:
         """Validate code security"""
         issues = []
-        
+
         # Check for dangerous patterns
         dangerous_patterns = [
             (r'eval\(', "Use of eval() is potentially dangerous"),
@@ -536,7 +536,7 @@ class DynamicTemplateEngine:
             (r'subprocess\..*shell=True', "Shell injection vulnerability risk"),
             (r'os\.system\(', "Command injection vulnerability risk")
         ]
-        
+
         for pattern, message in dangerous_patterns:
             if re.search(pattern, code):
                 issues.append({
@@ -544,33 +544,33 @@ class DynamicTemplateEngine:
                     "severity": "high",
                     "message": message
                 })
-        
+
         return issues
-    
+
     def _validate_code_performance(self, code: str) -> List[Dict[str, Any]]:
         """Validate code performance"""
         issues = []
-        
+
         # Check for performance anti-patterns
         performance_patterns = [
             (r'for .+ in .+:\s*for .+ in .+:', "Nested loops may impact performance"),
             (r'\.append\(.+\) for .+ in', "Consider list comprehension for better performance"),
             (r'time\.sleep\(', "Blocking sleep in async code impacts performance")
         ]
-        
+
         for pattern, message in performance_patterns:
             if re.search(pattern, code, re.MULTILINE):
                 issues.append({
                     "type": "performance",
                     "message": message
                 })
-        
+
         return issues
-    
+
     def _calculate_code_metrics(self, code: str) -> Dict[str, Any]:
         """Calculate code metrics"""
         lines = code.split('\n')
-        
+
         return {
             "lines_of_code": len(lines),
             "blank_lines": sum(1 for line in lines if not line.strip()),
@@ -580,7 +580,7 @@ class DynamicTemplateEngine:
             "classes": code.count('class '),
             "imports": code.count('import ') + code.count('from ')
         }
-    
+
     # Filter implementations
     def _format_code_filter(self, code: str) -> str:
         """Format code using Black"""
@@ -590,7 +590,7 @@ class DynamicTemplateEngine:
             except:
                 pass
         return code
-    
+
     def _validate_syntax_filter(self, code: str) -> bool:
         """Validate Python syntax"""
         try:
@@ -598,11 +598,11 @@ class DynamicTemplateEngine:
             return True
         except:
             return False
-    
+
     def _optimize_imports_filter(self, imports: List[str]) -> str:
         """Optimize and format imports"""
         return '\n'.join(sorted(set(imports)))
-    
+
     def _generate_handler_filter(self, handler_name: str) -> str:
         """Generate A2A handler decorator and method"""
         return f'''@a2a_handler("{handler_name}")
@@ -616,19 +616,19 @@ async def handle_{handler_name}(self, message: A2AMessage) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"{handler_name} failed: {{e}}")
         return create_error_response(str(e))'''
-    
+
     def _generate_skill_filter(self, skill_name: str) -> str:
         """Generate A2A skill decorator and method"""
         return f'''@a2a_skill("{skill_name}")
 async def {skill_name}_skill(self, *args, **kwargs) -> Dict[str, Any]:
     """Implementation of {skill_name} skill"""
     start_time = time.time()
-    
+
     try:
         # Extract input parameters
         input_data = kwargs.get('data', args[0] if args else {{}})
         context = kwargs.get('context', {{}})
-        
+
         # Process skill logic based on skill type
         if "{skill_name}".startswith('process_'):
             result = await self._process_data_skill(input_data, context)
@@ -638,12 +638,12 @@ async def {skill_name}_skill(self, *args, **kwargs) -> Dict[str, Any]:
             result = await self._transform_skill(input_data, context)
         else:
             result = await self._default_skill(input_data, context)
-        
+
         # Record metrics
         execution_time = time.time() - start_time
         self.processing_stats["{skill_name}_count"] += 1
         self.processing_stats["{skill_name}_total_time"] += execution_time
-        
+
         return {{
             "result": result,
             "skill": "{skill_name}",
@@ -651,11 +651,11 @@ async def {skill_name}_skill(self, *args, **kwargs) -> Dict[str, Any]:
             "timestamp": datetime.now().isoformat(),
             "success": True
         }}
-        
+
     except Exception as e:
         execution_time = time.time() - start_time
         logger.error(f"{skill_name} skill failed: {{e}}")
-        
+
         return {{
             "result": None,
             "skill": "{skill_name}",
@@ -690,7 +690,7 @@ async def _transform_skill(self, data: Any, context: Dict[str, Any]) -> Any:
 async def _default_skill(self, data: Any, context: Dict[str, Any]) -> Any:
     """Default skill implementation"""
     return {{"processed": True, "data": data}}'''
-    
+
     def _generate_task_filter(self, task_name: str) -> str:
         """Generate A2A task decorator and method"""
         return f'''@a2a_task(
@@ -703,7 +703,7 @@ async def {task_name}_task(self, *args, **kwargs) -> Dict[str, Any]:
     """Implementation of {task_name} task"""
     start_time = time.time()
     task_id = str(uuid.uuid4())[:8]
-    
+
     try:
         # Initialize task context
         task_context = {{
@@ -713,7 +713,7 @@ async def {task_name}_task(self, *args, **kwargs) -> Dict[str, Any]:
             "parameters": kwargs,
             "retry_count": kwargs.get('retry_count', 0)
         }}
-        
+
         # Execute task based on task type
         if "{task_name}".startswith('data_'):
             result = await self._execute_data_task(task_context, *args, **kwargs)
@@ -725,15 +725,15 @@ async def {task_name}_task(self, *args, **kwargs) -> Dict[str, Any]:
             result = await self._execute_validation_task(task_context, *args, **kwargs)
         else:
             result = await self._execute_default_task(task_context, *args, **kwargs)
-        
+
         # Calculate execution time
         execution_time = time.time() - start_time
-        
+
         # Update processing stats
         self.processing_stats["total_processed"] += 1
         self.processing_stats[f"{task_name}_executions"] += 1
         self.processing_stats[f"{task_name}_total_time"] += execution_time
-        
+
         return {{
             "task": "{task_name}",
             "task_id": task_id,
@@ -743,14 +743,14 @@ async def {task_name}_task(self, *args, **kwargs) -> Dict[str, Any]:
             "timestamp": datetime.now().isoformat(),
             "success": True
         }}
-        
+
     except Exception as e:
         execution_time = time.time() - start_time
         logger.error(f"{task_name} task {{task_id}} failed: {{e}}")
-        
+
         # Update failure stats
         self.processing_stats["total_failed"] += 1
-        
+
         return {{
             "task": "{task_name}",
             "task_id": task_id,
@@ -766,7 +766,7 @@ async def {task_name}_task(self, *args, **kwargs) -> Dict[str, Any]:
 async def _execute_data_task(self, context: Dict[str, Any], *args, **kwargs) -> Dict[str, Any]:
     """Execute data processing task"""
     data = kwargs.get('data', args[0] if args else [])
-    
+
     if isinstance(data, list):
         processed_count = len([item for item in data if item is not None])
         return {{
@@ -785,7 +785,7 @@ async def _execute_workflow_task(self, context: Dict[str, Any], *args, **kwargs)
     """Execute workflow task"""
     workflow_id = kwargs.get('workflow_id', 'default')
     step = kwargs.get('step', 'execute')
-    
+
     return {{
         "action": "workflow_executed",
         "workflow_id": workflow_id,
@@ -797,7 +797,7 @@ async def _execute_notification_task(self, context: Dict[str, Any], *args, **kwa
     """Execute notification task"""
     recipients = kwargs.get('recipients', [])
     message = kwargs.get('message', 'Task notification')
-    
+
     return {{
         "action": "notification_sent",
         "recipients_count": len(recipients),
@@ -808,9 +808,9 @@ async def _execute_validation_task(self, context: Dict[str, Any], *args, **kwarg
     """Execute validation task"""
     data = kwargs.get('data', args[0] if args else {{}})
     rules = kwargs.get('rules', [])
-    
+
     is_valid = isinstance(data, dict) and len(data) > 0
-    
+
     return {{
         "action": "validation_completed",
         "valid": is_valid,
@@ -825,14 +825,14 @@ async def _execute_default_task(self, context: Dict[str, Any], *args, **kwargs) 
         "context_id": context.get('task_id'),
         "parameters_count": len(kwargs)
     }}'''
-    
+
     def _inject_monitoring_filter(self, method_code: str) -> str:
         """Inject monitoring code into methods"""
         # Add performance monitoring
         return f'''start_time = time.time()
 {method_code}
 self.processing_time.labels(agent_id=self.agent_id, operation=operation).observe(time.time() - start_time)'''
-    
+
     def _add_error_handling_filter(self, code: str) -> str:
         """Add comprehensive error handling"""
         return f'''try:
@@ -840,11 +840,11 @@ self.processing_time.labels(agent_id=self.agent_id, operation=operation).observe
 except Exception as e:
     logger.error(f"Operation failed: {{e}}")
     raise'''
-    
+
     def _add_caching_filter(self, method_name: str) -> str:
         """Add caching decorator"""
         return f'@lru_cache(maxsize=128)\n{method_name}'
-    
+
     # Test implementations
     def _is_valid_python(self, code: str) -> bool:
         """Test if code is valid Python"""
@@ -853,12 +853,12 @@ except Exception as e:
             return True
         except:
             return False
-    
+
     def _is_secure_code(self, code: str) -> bool:
         """Test if code follows security best practices"""
         dangerous = ['eval(', 'exec(', '__import__(', 'pickle.load']
         return not any(d in code for d in dangerous)
-    
+
     def _is_performant_code(self, code: str) -> bool:
         """Test if code follows performance best practices"""
         anti_patterns = ['time.sleep(', 'for i in range(len(']
@@ -867,7 +867,7 @@ except Exception as e:
 
 class AdvancedBPMNProcessor:
     """Advanced BPMN processor with complex workflow support"""
-    
+
     def __init__(self):
         # Initialize security features
         self._init_security_features()
@@ -877,7 +877,7 @@ class AdvancedBPMNProcessor:
         self.flow_analyzers: List[Callable] = []
         self.optimization_strategies: Dict[str, Callable] = {}
         self._register_element_handlers()
-    
+
     def _register_element_handlers(self):
         """Register handlers for different BPMN elements"""
         self.element_handlers = {
@@ -895,7 +895,7 @@ class AdvancedBPMNProcessor:
             BPMNElementType.SUB_PROCESS: self._handle_sub_process,
             BPMNElementType.CALL_ACTIVITY: self._handle_call_activity
         }
-    
+
     async def process_bpmn_workflow(
         self,
         bpmn_definition: BPMNWorkflowDefinition,
@@ -903,25 +903,25 @@ class AdvancedBPMNProcessor:
         optimization_level: int = 2
     ) -> Dict[str, Any]:
         """Process BPMN workflow and generate optimized code"""
-        
+
         try:
             # Validate BPMN definition
             validation_result = await self._validate_bpmn_definition(bpmn_definition)
             if not validation_result['valid']:
                 raise ValueError(f"Invalid BPMN: {validation_result['errors']}")
-            
+
             # Analyze workflow complexity
             complexity_analysis = await self._analyze_workflow_complexity(bpmn_definition)
-            
+
             # Build execution graph
             execution_graph = await self._build_execution_graph(bpmn_definition)
-            
+
             # Optimize execution paths
             if optimization_level > 0:
                 execution_graph = await self._optimize_execution_paths(
                     execution_graph, optimization_level
                 )
-            
+
             # Generate code for each element
             generated_code = {}
             for element_id, element in bpmn_definition.elements.items():
@@ -930,22 +930,22 @@ class AdvancedBPMNProcessor:
                     handler = self.element_handlers[element_type]
                     code = await handler(element, execution_graph, target_language)
                     generated_code[element_id] = code
-            
+
             # Generate workflow orchestration code
             orchestration_code = await self._generate_orchestration_code(
                 bpmn_definition, execution_graph, generated_code, target_language
             )
-            
+
             # Generate error handling code
             error_handling_code = await self._generate_error_handling_code(
                 bpmn_definition, target_language
             )
-            
+
             # Generate compensation logic
             compensation_code = await self._generate_compensation_code(
                 bpmn_definition, target_language
             )
-            
+
             return {
                 "workflow_code": orchestration_code,
                 "element_implementations": generated_code,
@@ -955,30 +955,30 @@ class AdvancedBPMNProcessor:
                 "complexity_metrics": complexity_analysis,
                 "optimization_applied": optimization_level > 0
             }
-            
+
         except Exception as e:
             logger.error(f"BPMN processing failed: {e}")
             raise
-    
+
     async def _validate_bpmn_definition(self, bpmn_def: BPMNWorkflowDefinition) -> Dict[str, Any]:
         """Validate BPMN definition for correctness"""
         errors = []
         warnings = []
-        
+
         # Check for start events
-        start_events = [e for e in bpmn_def.elements.values() 
+        start_events = [e for e in bpmn_def.elements.values()
                        if e.get('type') == BPMNElementType.START_EVENT]
         if not start_events:
             errors.append("No start event found")
         elif len(start_events) > 1:
             warnings.append("Multiple start events found")
-        
+
         # Check for end events
-        end_events = [e for e in bpmn_def.elements.values() 
+        end_events = [e for e in bpmn_def.elements.values()
                      if e.get('type') == BPMNElementType.END_EVENT]
         if not end_events:
             errors.append("No end event found")
-        
+
         # Validate flows
         element_ids = set(bpmn_def.elements.keys())
         for flow in bpmn_def.flows:
@@ -986,41 +986,41 @@ class AdvancedBPMNProcessor:
                 errors.append(f"Flow source '{flow.get('source')}' not found")
             if flow.get('target') not in element_ids:
                 errors.append(f"Flow target '{flow.get('target')}' not found")
-        
+
         # Check for unreachable elements
         reachable = await self._find_reachable_elements(bpmn_def)
         unreachable = element_ids - reachable
         if unreachable:
             warnings.append(f"Unreachable elements: {unreachable}")
-        
+
         return {
             "valid": len(errors) == 0,
             "errors": errors,
             "warnings": warnings
         }
-    
+
     async def _analyze_workflow_complexity(self, bpmn_def: BPMNWorkflowDefinition) -> Dict[str, Any]:
         """Analyze workflow complexity metrics"""
-        
+
         # Count different element types
         element_counts = defaultdict(int)
         for element in bpmn_def.elements.values():
             element_counts[element.get('type')] += 1
-        
+
         # Calculate cyclomatic complexity
         nodes = len(bpmn_def.elements)
         edges = len(bpmn_def.flows)
         components = 1  # Assume connected graph
         cyclomatic_complexity = edges - nodes + 2 * components
-        
+
         # Analyze gateway complexity
         gateway_types = [BPMNElementType.PARALLEL_GATEWAY, BPMNElementType.EXCLUSIVE_GATEWAY,
                         BPMNElementType.INCLUSIVE_GATEWAY, BPMNElementType.COMPLEX_GATEWAY]
         gateway_count = sum(element_counts[gt] for gt in gateway_types)
-        
+
         # Analyze nesting depth
         nesting_depth = await self._calculate_nesting_depth(bpmn_def)
-        
+
         return {
             "element_counts": dict(element_counts),
             "total_elements": nodes,
@@ -1033,23 +1033,23 @@ class AdvancedBPMNProcessor:
                 cyclomatic_complexity, gateway_count, nesting_depth
             )
         }
-    
+
     def _calculate_complexity_score(self, cyclomatic: int, gateways: int, nesting: int) -> float:
         """Calculate overall complexity score (0-1)"""
         # Weighted formula
         score = (cyclomatic * 0.4 + gateways * 0.3 + nesting * 0.3) / 100
         return min(1.0, score)
-    
+
     async def _build_execution_graph(self, bpmn_def: BPMNWorkflowDefinition) -> Dict[str, Any]:
         """Build execution graph from BPMN definition"""
-        
+
         graph = {
             "nodes": {},
             "edges": defaultdict(list),
             "paths": [],
             "critical_path": []
         }
-        
+
         # Build nodes
         for element_id, element in bpmn_def.elements.items():
             graph["nodes"][element_id] = {
@@ -1059,7 +1059,7 @@ class AdvancedBPMNProcessor:
                 "incoming": [],
                 "outgoing": []
             }
-        
+
         # Build edges
         for flow in bpmn_def.flows:
             source = flow.get("source")
@@ -1068,41 +1068,41 @@ class AdvancedBPMNProcessor:
                 graph["edges"][source].append(target)
                 graph["nodes"][source]["outgoing"].append(target)
                 graph["nodes"][target]["incoming"].append(source)
-        
+
         # Find all paths
-        start_nodes = [n for n, data in graph["nodes"].items() 
+        start_nodes = [n for n, data in graph["nodes"].items()
                       if data["type"] == BPMNElementType.START_EVENT]
         for start in start_nodes:
             paths = await self._find_all_paths(graph, start)
             graph["paths"].extend(paths)
-        
+
         # Find critical path
         if graph["paths"]:
             graph["critical_path"] = max(graph["paths"], key=len)
-        
+
         return graph
-    
+
     async def _optimize_execution_paths(
         self, execution_graph: Dict[str, Any], optimization_level: int
     ) -> Dict[str, Any]:
         """Optimize execution paths based on level"""
-        
+
         optimized_graph = execution_graph.copy()
-        
+
         if optimization_level >= 1:
             # Level 1: Remove redundant paths
             optimized_graph = await self._remove_redundant_paths(optimized_graph)
-        
+
         if optimization_level >= 2:
             # Level 2: Parallelize independent tasks
             optimized_graph = await self._parallelize_independent_tasks(optimized_graph)
-        
+
         if optimization_level >= 3:
             # Level 3: Apply advanced optimizations
             optimized_graph = await self._apply_advanced_optimizations(optimized_graph)
-        
+
         return optimized_graph
-    
+
     async def _generate_orchestration_code(
         self,
         bpmn_def: BPMNWorkflowDefinition,
@@ -1111,14 +1111,14 @@ class AdvancedBPMNProcessor:
         target_language: str
     ) -> str:
         """Generate main workflow orchestration code"""
-        
+
         if target_language == "python":
             return await self._generate_python_orchestration(
                 bpmn_def, execution_graph, element_code
             )
         else:
             raise ValueError(f"Unsupported target language: {target_language}")
-    
+
     async def _generate_python_orchestration(
         self,
         bpmn_def: BPMNWorkflowDefinition,
@@ -1126,14 +1126,14 @@ class AdvancedBPMNProcessor:
         element_code: Dict[str, str]
     ) -> str:
         """Generate Python orchestration code"""
-        
+
         code = f'''
 class {bpmn_def.name.replace(' ', '')}Workflow:
     """
     Generated workflow: {bpmn_def.name}
     Version: {bpmn_def.version}
     """
-    
+
     def __init__(self):
 
         # Initialize security features
@@ -1146,10 +1146,10 @@ class {bpmn_def.name.replace(' ', '')}Workflow:
         self.execution_history = []
         self.error_handlers = {{}}
         self.compensation_handlers = {{}}
-    
+
     async def execute(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """Execute the workflow with given input"""
-        
+
         self.execution_context = {{
             "workflow_id": self.workflow_id,
             "started_at": datetime.now(),
@@ -1157,54 +1157,54 @@ class {bpmn_def.name.replace(' ', '')}Workflow:
             "variables": {{}},
             "results": {{}}
         }}
-        
+
         try:
             # Start from start event
-            start_elements = [e_id for e_id, e in self.element_states.items() 
+            start_elements = [e_id for e_id, e in self.element_states.items()
                             if e["type"] == "startEvent"]
-            
+
             for start_id in start_elements:
                 await self._execute_element(start_id)
-            
+
             # Wait for all paths to complete
             await self._wait_for_completion()
-            
+
             return {{
                 "success": True,
                 "workflow_id": self.workflow_id,
                 "results": self.execution_context["results"],
                 "execution_time": (datetime.now() - self.execution_context["started_at"]).total_seconds()
             }}
-            
+
         except Exception as e:
             logger.error(f"Workflow execution failed: {{e}}")
             await self._handle_workflow_error(e)
             raise
-    
+
     async def _execute_element(self, element_id: str):
         """Execute a workflow element"""
-        
+
         element = self.element_states.get(element_id)
         if not element:
             raise ValueError(f"Element {{element_id}} not found")
-        
+
         # Record execution
         self.execution_history.append({{
             "element_id": element_id,
             "timestamp": datetime.now(),
             "status": "started"
         }})
-        
+
         try:
             # Execute element-specific code
             if element_id in element_implementations:
                 result = await element_implementations[element_id](self.execution_context)
                 self.execution_context["results"][element_id] = result
-            
+
             # Execute outgoing flows
             for target_id in element.get("outgoing", []):
                 await self._evaluate_and_execute_flow(element_id, target_id)
-            
+
         except Exception as e:
             self.execution_history.append({{
                 "element_id": element_id,
@@ -1214,29 +1214,29 @@ class {bpmn_def.name.replace(' ', '')}Workflow:
             }})
             raise
 '''
-        
+
         # Add element implementations
         code += "\n# Element implementations\n"
         code += "element_implementations = {\n"
         for element_id, impl_code in element_code.items():
             code += f'    "{element_id}": {impl_code},\n'
         code += "}\n"
-        
+
         return code
-    
+
     # Element handlers
     async def _handle_start_event(self, element: Dict[str, Any], graph: Dict[str, Any], lang: str) -> str:
         """Generate code for start event"""
         return '''async def execute(context):
     context["variables"]["started"] = True
     return {"status": "started"}'''
-    
+
     async def _handle_end_event(self, element: Dict[str, Any], graph: Dict[str, Any], lang: str) -> str:
         """Generate code for end event"""
         return '''async def execute(context):
     context["variables"]["completed"] = True
     return {"status": "completed"}'''
-    
+
     async def _handle_service_task(self, element: Dict[str, Any], graph: Dict[str, Any], lang: str) -> str:
         """Generate code for service task"""
         service_name = element.get("implementation", "unknown_service")
@@ -1244,7 +1244,7 @@ class {bpmn_def.name.replace(' ', '')}Workflow:
     # Call service: {service_name}
     service_result = await call_service("{service_name}", context["variables"])
     return {{"service": "{service_name}", "result": service_result}}'''
-    
+
     async def _handle_parallel_gateway(self, element: Dict[str, Any], graph: Dict[str, Any], lang: str) -> str:
         """Generate code for parallel gateway"""
         return '''async def execute(context):
@@ -1255,7 +1255,7 @@ class {bpmn_def.name.replace(' ', '')}Workflow:
         tasks.append(execute_flow(flow))
     await asyncio.gather(*tasks)
     return {"gateway": "parallel", "status": "forked"}'''
-    
+
     async def _handle_exclusive_gateway(self, element: Dict[str, Any], graph: Dict[str, Any], lang: str) -> str:
         """Generate code for exclusive gateway"""
         return '''async def execute(context):
@@ -1266,82 +1266,82 @@ class {bpmn_def.name.replace(' ', '')}Workflow:
             await execute_flow(flow)
             return {"gateway": "exclusive", "selected_flow": flow["id"]}
     raise ValueError("No valid flow condition met")'''
-    
+
     # Helper methods
     async def _find_reachable_elements(self, bpmn_def: BPMNWorkflowDefinition) -> Set[str]:
         """Find all reachable elements from start events"""
         reachable = set()
         to_visit = deque()
-        
+
         # Start from all start events
         for element_id, element in bpmn_def.elements.items():
             if element.get('type') == BPMNElementType.START_EVENT:
                 to_visit.append(element_id)
-        
+
         # BFS to find reachable elements
         while to_visit:
             current = to_visit.popleft()
             if current in reachable:
                 continue
-            
+
             reachable.add(current)
-            
+
             # Find outgoing flows
             for flow in bpmn_def.flows:
                 if flow.get('source') == current:
                     target = flow.get('target')
                     if target and target not in reachable:
                         to_visit.append(target)
-        
+
         return reachable
-    
+
     async def _calculate_nesting_depth(self, bpmn_def: BPMNWorkflowDefinition) -> int:
         """Calculate maximum nesting depth of sub-processes"""
         max_depth = 0
-        
+
         def calculate_depth(element_id: str, current_depth: int = 0):
             nonlocal max_depth
             element = bpmn_def.elements.get(element_id, {})
-            
+
             if element.get('type') == BPMNElementType.SUB_PROCESS:
                 current_depth += 1
                 max_depth = max(max_depth, current_depth)
-                
+
                 # Check nested elements
                 nested_elements = element.get('elements', [])
                 for nested_id in nested_elements:
                     calculate_depth(nested_id, current_depth)
-        
+
         for element_id in bpmn_def.elements:
             calculate_depth(element_id)
-        
+
         return max_depth
-    
+
     async def _find_all_paths(self, graph: Dict[str, Any], start: str) -> List[List[str]]:
         """Find all paths from start node to end nodes"""
         paths = []
-        
+
         def dfs(node: str, path: List[str], visited: Set[str]):
             if node in visited:
                 return  # Avoid cycles
-            
+
             path.append(node)
             visited.add(node)
-            
+
             node_data = graph["nodes"].get(node, {})
             if node_data.get("type") == BPMNElementType.END_EVENT:
                 paths.append(path.copy())
             else:
                 for next_node in graph["edges"].get(node, []):
                     dfs(next_node, path.copy(), visited.copy())
-        
+
         dfs(start, [], set())
         return paths
 
 
 class AdvancedTestGenerator:
     """Advanced test generator with multiple strategies"""
-    
+
     def __init__(self):
         # Initialize security features
         self._init_security_features()
@@ -1357,7 +1357,7 @@ class AdvancedTestGenerator:
             TestGenerationStrategy.ML_GENERATED: self._generate_ml_tests
         }
         self.test_templates = self._load_test_templates()
-    
+
     def _load_test_templates(self) -> Dict[str, str]:
         """Load advanced test templates"""
         return {
@@ -1372,12 +1372,12 @@ import hypothesis.strategies as strategies
 
 class Test{class_name}:
     """Advanced test suite for {class_name}"""
-    
+
     @pytest.fixture
     def setup(self):
         """Test setup fixture"""
         {setup_code}
-    
+
     {test_methods}
 ''',
             "property_based_test": '''
@@ -1409,15 +1409,15 @@ class Test{class_name}:
         """Security test for {method_name}"""
         # Test injection attacks
         {injection_tests}
-        
+
         # Test authentication/authorization
         {auth_tests}
-        
+
         # Test data validation
         {validation_tests}
 '''
         }
-    
+
     async def generate_advanced_tests(
         self,
         agent_code: str,
@@ -1425,10 +1425,10 @@ class Test{class_name}:
         strategies: List[TestGenerationStrategy]
     ) -> TestSuite:
         """Generate comprehensive test suite using multiple strategies"""
-        
+
         # Parse agent code to understand structure
         code_analysis = await self._analyze_agent_code(agent_code)
-        
+
         # Generate tests for each strategy
         all_test_cases = []
         for strategy in strategies:
@@ -1436,27 +1436,27 @@ class Test{class_name}:
                 generator = self.test_strategies[strategy]
                 test_cases = await generator(code_analysis, test_config)
                 all_test_cases.extend(test_cases)
-        
+
         # Generate fixtures and mocks
         fixtures = await self._generate_fixtures(code_analysis)
         mocks = await self._generate_mocks(code_analysis)
-        
+
         # Generate performance tests
         performance_tests = await self._generate_performance_tests(code_analysis)
-        
+
         # Generate integration tests
         integration_tests = await self._generate_integration_tests(code_analysis)
-        
+
         # Generate security tests
         security_tests = await self._generate_security_tests(code_analysis)
-        
+
         # Calculate coverage requirements
         coverage_requirements = {
             "line": 0.9,
             "branch": 0.85,
             "function": 0.95
         }
-        
+
         return TestSuite(
             name=f"{code_analysis['class_name']}TestSuite",
             strategy=TestGenerationStrategy.ML_GENERATED,
@@ -1468,7 +1468,7 @@ class Test{class_name}:
             security_tests=security_tests,
             coverage_requirements=coverage_requirements
         )
-    
+
     async def _analyze_agent_code(self, code: str) -> Dict[str, Any]:
         """Analyze agent code structure"""
         analysis = {
@@ -1480,10 +1480,10 @@ class Test{class_name}:
             "dependencies": [],
             "async_methods": []
         }
-        
+
         try:
             tree = ast.parse(code)
-            
+
             for node in ast.walk(tree):
                 if isinstance(node, ast.ClassDef):
                     analysis["class_name"] = node.name
@@ -1492,14 +1492,14 @@ class Test{class_name}:
                         "name": node.name,
                         "args": [arg.arg for arg in node.args.args],
                         "is_async": isinstance(node, ast.AsyncFunctionDef),
-                        "decorators": [d.id if isinstance(d, ast.Name) else str(d) 
+                        "decorators": [d.id if isinstance(d, ast.Name) else str(d)
                                      for d in node.decorator_list]
                     }
                     analysis["methods"].append(method_info)
-                    
+
                     if method_info["is_async"]:
                         analysis["async_methods"].append(node.name)
-                    
+
                     # Categorize by decorator
                     for decorator in method_info["decorators"]:
                         if "a2a_handler" in str(decorator):
@@ -1508,18 +1508,18 @@ class Test{class_name}:
                             analysis["skills"].append(node.name)
                         elif "a2a_task" in str(decorator):
                             analysis["tasks"].append(node.name)
-        
+
         except Exception as e:
             logger.error(f"Code analysis failed: {e}")
-        
+
         return analysis
-    
+
     async def _generate_basic_tests(
         self, code_analysis: Dict[str, Any], config: Dict[str, Any]
     ) -> List[Dict[str, Any]]:
         """Generate basic unit tests"""
         test_cases = []
-        
+
         # Test initialization
         test_cases.append({
             "name": "test_initialization",
@@ -1533,12 +1533,12 @@ class Test{class_name}:
         assert agent.name == setup["agent_name"]
 '''
         })
-        
+
         # Test each method
         for method in code_analysis["methods"]:
             if method["name"].startswith("_"):
                 continue  # Skip private methods
-            
+
             test_code = f'''
     {"async " if method["is_async"] else ""}def test_{method["name"]}(self, setup):
         """Test {method["name"]} method"""
@@ -1551,19 +1551,19 @@ class Test{class_name}:
                 "type": "unit",
                 "code": test_code
             })
-        
+
         return test_cases
-    
+
     async def _generate_property_based_tests(
         self, code_analysis: Dict[str, Any], config: Dict[str, Any]
     ) -> List[Dict[str, Any]]:
         """Generate property-based tests using Hypothesis"""
         test_cases = []
-        
+
         for method in code_analysis["methods"]:
             if not method["args"] or method["name"].startswith("_"):
                 continue
-            
+
             # Generate strategies for arguments
             strategies = []
             for arg in method["args"]:
@@ -1578,7 +1578,7 @@ class Test{class_name}:
                     strategies.append(f"{arg}=st.integers(min_value=0)")
                 else:
                     strategies.append(f"{arg}=st.text()")
-            
+
             if strategies:
                 test_code = self.test_templates["property_based_test"].format(
                     property_strategies=", ".join(strategies),
@@ -1586,22 +1586,22 @@ class Test{class_name}:
                     parameters=", ".join(arg for arg in method["args"] if arg != "self"),
                     property_assertions="# TODO: Add property assertions"
                 )
-                
+
                 test_cases.append({
                     "name": f"test_{method['name']}_properties",
                     "type": "property_based",
                     "code": test_code
                 })
-        
+
         return test_cases
-    
+
     async def _generate_performance_tests(self, code_analysis: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate performance tests"""
         perf_tests = []
-        
+
         # Test critical methods
         critical_methods = code_analysis["handlers"] + code_analysis["tasks"]
-        
+
         for method in critical_methods:
             test_code = self.test_templates["performance_test"].format(
                 method_name=method,
@@ -1612,19 +1612,19 @@ class Test{class_name}:
         assert benchmark.stats["max"] < 0.5   # 500ms max
 """
             )
-            
+
             perf_tests.append({
                 "name": f"test_{method}_performance",
                 "type": "performance",
                 "code": test_code
             })
-        
+
         return perf_tests
-    
+
     async def _generate_security_tests(self, code_analysis: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate security tests"""
         security_tests = []
-        
+
         # Test input validation
         for handler in code_analysis["handlers"]:
             test_code = self.test_templates["security_test"].format(
@@ -1634,7 +1634,7 @@ class Test{class_name}:
         malicious_input = "'; DROP TABLE users; --"
         result = await self.agent.{handler}(malicious_input)
         assert "error" in result
-        
+
         # Script injection attempt
         script_input = "<script>alert('XSS')</script>"
         result = await self.agent.{handler}(script_input)
@@ -1653,13 +1653,13 @@ class Test{class_name}:
             assert result.get("success") is False
 """.format(handler=handler)
             )
-            
+
             security_tests.append({
                 "name": f"test_{handler}_security",
                 "type": "security",
                 "code": test_code
             })
-        
+
         return security_tests
 
 
@@ -1668,7 +1668,7 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
     Enhanced Agent Builder with MCP Integration
     Generates production-ready A2A agents with advanced features
     """
-    
+
     def __init__(
         self,
         base_url: str,
@@ -1688,22 +1688,22 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-        
-        
+
+
         self.templates_path = Path(templates_path)
         self.enable_monitoring = enable_monitoring
         self.enable_advanced_validation = enable_advanced_validation
         self.enable_ml_features = enable_ml_features
-        
+
         # Initialize components
         self.template_engine = DynamicTemplateEngine()
         self.bpmn_processor = AdvancedBPMNProcessor()
         self.test_generator = AdvancedTestGenerator()
-        
+
         # Agent registry
         self.generated_agents: Dict[str, Dict[str, Any]] = {}
         self.template_registry: Dict[str, TemplateMetadata] = {}
-        
+
         # Performance tracking
         self.generation_metrics = {
             "total_agents_generated": 0,
@@ -1712,28 +1712,28 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
             "average_generation_time": 0.0,
             "validation_success_rate": 0.0
         }
-        
+
         # Initialize trust system
         initialize_agent_trust(self.agent_id)
-        
+
         logger.info(f"Initialized {self.name} v{self.version}")
-    
+
     async def initialize(self) -> None:
         """Initialize agent resources"""
         await super().initialize()
-        
+
         # Create necessary directories
         self.templates_path.mkdir(parents=True, exist_ok=True)
-        
+
         # Load existing templates
         await self._load_template_registry()
-        
+
         # Initialize monitoring if enabled
         if self.enable_monitoring and PROMETHEUS_AVAILABLE:
             self._initialize_prometheus_metrics()
-        
+
         logger.info("Enhanced Agent Builder initialization complete")
-    
+
     def _initialize_prometheus_metrics(self):
         """Initialize Prometheus metrics"""
         self.agent_generation_counter = Counter(
@@ -1751,9 +1751,9 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
             'Agent generation duration',
             ['template_type']
         )
-    
+
     # MCP Tools
-    
+
     @mcp_tool(
         name="generate_dynamic_agent",
         description="Generate a production-ready A2A agent with dynamic templates and advanced features"
@@ -1766,18 +1766,18 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
         enable_optimization: bool = True
     ) -> Dict[str, Any]:
         """Generate a dynamic A2A agent with advanced features"""
-        
+
         start_time = time.time()
-        
+
         try:
             # Validate input
             if not agent_config.get("name") or not agent_config.get("id"):
                 return create_error_response("Agent name and ID are required")
-            
+
             # Convert string enums
             template_type_enum = TemplateType(template_type)
             validation_level_enum = CodeValidationLevel(validation_level)
-            
+
             # Prepare generation context
             generation_context = {
                 "agent_name": agent_config["name"],
@@ -1792,7 +1792,7 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
                 "enable_trust": agent_config.get("enable_trust", True),
                 "enable_optimization": enable_optimization
             }
-            
+
             # Generate agent code using dynamic template engine
             agent_code, validation_result = await self.template_engine.render_dynamic_template(
                 template_name="agent_template",
@@ -1800,26 +1800,26 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
                 template_type=template_type_enum,
                 validation_level=validation_level_enum
             )
-            
+
             if not validation_result.valid:
                 return create_error_response(
                     f"Code generation failed validation: {validation_result.errors}"
                 )
-            
+
             # Generate supporting files
             output_dir = Path(agent_config.get("output_directory", f"/tmp/agents/{agent_config['id']}"))
             output_dir.mkdir(parents=True, exist_ok=True)
-            
+
             # Write agent code
             agent_file = output_dir / f"{agent_config['id']}.py"
             with open(agent_file, 'w') as f:
                 f.write(agent_code)
-            
+
             # Generate configuration files
             config_files = await self._generate_configuration_files(
                 agent_config, generation_context, output_dir
             )
-            
+
             # Generate tests if requested
             test_files = []
             if agent_config.get("generate_tests", True):
@@ -1829,7 +1829,7 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
                     [TestGenerationStrategy.BASIC, TestGenerationStrategy.PROPERTY_BASED]
                 )
                 test_files = await self._write_test_files(test_suite, output_dir)
-            
+
             # Register generated agent
             agent_metadata = {
                 "id": agent_config["id"],
@@ -1844,12 +1844,12 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
                 }
             }
             self.generated_agents[agent_config["id"]] = agent_metadata
-            
+
             # Update metrics
             self.generation_metrics["total_agents_generated"] += 1
             generation_time = time.time() - start_time
             self._update_average_generation_time(generation_time)
-            
+
             if self.enable_monitoring and PROMETHEUS_AVAILABLE:
                 self.agent_generation_counter.labels(
                     template_type=template_type, status="success"
@@ -1857,7 +1857,7 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
                 self.generation_time_histogram.labels(
                     template_type=template_type
                 ).observe(generation_time)
-            
+
             return {
                 "success": True,
                 "agent_id": agent_config["id"],
@@ -1867,7 +1867,7 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
                 "generation_time_ms": generation_time * 1000,
                 "metadata": agent_metadata
             }
-            
+
         except Exception as e:
             logger.error(f"Agent generation failed: {e}")
             if self.enable_monitoring and PROMETHEUS_AVAILABLE:
@@ -1875,7 +1875,7 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
                     template_type=template_type, status="failed"
                 ).inc()
             return create_error_response(f"Agent generation failed: {str(e)}")
-    
+
     @mcp_tool(
         name="validate_generated_code",
         description="Perform comprehensive validation of generated agent code"
@@ -1887,45 +1887,45 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
         include_suggestions: bool = True
     ) -> Dict[str, Any]:
         """Validate generated agent code comprehensively"""
-        
+
         start_time = time.time()
-        
+
         try:
             validation_level_enum = CodeValidationLevel(validation_level)
-            
+
             # Perform validation
             validation_result = await self.template_engine._validate_generated_code(
                 code_content, validation_level_enum
             )
-            
+
             # Add advanced validations if enabled
             if self.enable_advanced_validation:
                 # Check A2A SDK compliance
                 sdk_compliance = await self._validate_sdk_compliance(code_content)
                 validation_result.warnings.extend(sdk_compliance.get("warnings", []))
-                
+
                 # Check security best practices
                 security_audit = await self._audit_security_practices(code_content)
                 validation_result.security_issues.extend(security_audit)
-                
+
                 # Performance analysis
                 perf_analysis = await self._analyze_performance_characteristics(code_content)
                 validation_result.performance_issues.extend(perf_analysis)
-            
+
             # Generate suggestions if requested
             suggestions = []
             if include_suggestions:
                 suggestions = await self._generate_improvement_suggestions(
                     validation_result, code_content
                 )
-            
+
             validation_time = time.time() - start_time
-            
+
             if self.enable_monitoring and PROMETHEUS_AVAILABLE:
                 self.validation_histogram.labels(
                     validation_level=validation_level
                 ).observe(validation_time)
-            
+
             return {
                 "success": True,
                 "valid": validation_result.valid,
@@ -1938,11 +1938,11 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
                 "suggestions": suggestions,
                 "validation_time_ms": validation_time * 1000
             }
-            
+
         except Exception as e:
             logger.error(f"Code validation failed: {e}")
             return create_error_response(f"Code validation failed: {str(e)}")
-    
+
     @mcp_tool(
         name="process_bpmn_workflow",
         description="Process complex BPMN workflows and generate optimized workflow code"
@@ -1955,28 +1955,28 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
         target_language: str = "python"
     ) -> Dict[str, Any]:
         """Process BPMN workflow with advanced features"""
-        
+
         try:
             # Parse BPMN XML
             bpmn_definition = await self._parse_bpmn_xml(bpmn_xml)
-            
+
             # Process workflow
             workflow_result = await self.bpmn_processor.process_bpmn_workflow(
                 bpmn_definition,
                 target_language,
                 optimization_level
             )
-            
+
             # Generate integration code if requested
             if workflow_config.get("generate_integration", True):
                 integration_code = await self._generate_workflow_integration(
                     bpmn_definition, workflow_result, workflow_config
                 )
                 workflow_result["integration_code"] = integration_code
-            
+
             # Update metrics
             self.generation_metrics["total_workflows_processed"] += 1
-            
+
             return {
                 "success": True,
                 "workflow_id": bpmn_definition.id,
@@ -1987,11 +1987,11 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
                 "elements_processed": len(workflow_result["element_implementations"]),
                 "workflow_result": workflow_result
             }
-            
+
         except Exception as e:
             logger.error(f"BPMN processing failed: {e}")
             return create_error_response(f"BPMN processing failed: {str(e)}")
-    
+
     @mcp_tool(
         name="generate_advanced_tests",
         description="Generate comprehensive test suites with multiple testing strategies"
@@ -2004,20 +2004,20 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
         coverage_targets: Optional[Dict[str, float]] = None
     ) -> Dict[str, Any]:
         """Generate advanced test suites"""
-        
+
         try:
             # Convert string strategies to enums
             strategy_enums = [TestGenerationStrategy(s) for s in strategies]
-            
+
             # Set coverage targets
             if coverage_targets:
                 test_config["coverage_targets"] = coverage_targets
-            
+
             # Generate test suite
             test_suite = await self.test_generator.generate_advanced_tests(
                 agent_code, test_config, strategy_enums
             )
-            
+
             # Generate test report
             test_report = {
                 "total_test_cases": len(test_suite.test_cases),
@@ -2032,7 +2032,7 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
                 "mocks_count": len(test_suite.mocks),
                 "coverage_requirements": test_suite.coverage_requirements
             }
-            
+
             return {
                 "success": True,
                 "test_suite_name": test_suite.name,
@@ -2042,20 +2042,20 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
                 "security_tests": test_suite.security_tests,
                 "coverage_requirements": test_suite.coverage_requirements
             }
-            
+
         except Exception as e:
             logger.error(f"Test generation failed: {e}")
             return create_error_response(f"Test generation failed: {str(e)}")
-    
+
     # MCP Resources
-    
+
     @mcp_resource(
         uri="agentbuilder://template-registry",
         description="Registry of available agent templates and their capabilities"
     )
     async def get_template_registry(self) -> Dict[str, Any]:
         """Get template registry information"""
-        
+
         templates_info = []
         for name, metadata in self.template_registry.items():
             templates_info.append({
@@ -2067,7 +2067,7 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
                 "validation_rules_count": len(metadata.validation_rules),
                 "dependencies_count": len(metadata.dependencies)
             })
-        
+
         return {
             "template_registry": {
                 "total_templates": len(self.template_registry),
@@ -2076,14 +2076,14 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
                 "last_updated": datetime.now().isoformat()
             }
         }
-    
+
     @mcp_resource(
         uri="agentbuilder://generation-metrics",
         description="Metrics and statistics about agent generation"
     )
     async def get_generation_metrics(self) -> Dict[str, Any]:
         """Get agent generation metrics"""
-        
+
         return {
             "generation_metrics": self.generation_metrics,
             "validation_levels": [l.value for l in CodeValidationLevel],
@@ -2094,14 +2094,14 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
                 "validation_success_rate": self.generation_metrics["validation_success_rate"]
             }
         }
-    
+
     @mcp_resource(
         uri="agentbuilder://validation-capabilities",
         description="Code validation capabilities and rules"
     )
     async def get_validation_capabilities(self) -> Dict[str, Any]:
         """Get validation capabilities"""
-        
+
         return {
             "validation_capabilities": {
                 "levels": {
@@ -2119,14 +2119,14 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
                 }
             }
         }
-    
+
     @mcp_resource(
         uri="agentbuilder://workflow-processing-status",
         description="BPMN workflow processing capabilities and status"
     )
     async def get_workflow_processing_status(self) -> Dict[str, Any]:
         """Get workflow processing status"""
-        
+
         return {
             "workflow_processing_status": {
                 "total_processed": self.generation_metrics["total_workflows_processed"],
@@ -2147,9 +2147,9 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
                 }
             }
         }
-    
+
     # Helper methods
-    
+
     async def _load_template_registry(self):
         """Load template registry from disk"""
         registry_file = self.templates_path / "template_registry.json"
@@ -2157,7 +2157,7 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
             try:
                 with open(registry_file, 'r') as f:
                     registry_data = json.load(f)
-                
+
                 for name, data in registry_data.items():
                     self.template_registry[name] = TemplateMetadata(
                         name=data["name"],
@@ -2174,7 +2174,7 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
                     )
             except Exception as e:
                 logger.warning(f"Failed to load template registry: {e}")
-    
+
     async def _generate_configuration_files(
         self,
         agent_config: Dict[str, Any],
@@ -2182,9 +2182,9 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
         output_dir: Path
     ) -> List[str]:
         """Generate configuration files for the agent"""
-        
+
         config_files = []
-        
+
         # Generate requirements.txt
         requirements = set(generation_context.get("dependencies", []))
         requirements.update([
@@ -2194,12 +2194,12 @@ class EnhancedAgentBuilderMCP(SecureA2AAgent, PerformanceOptimizationMixin):
             "httpx",
             "uvicorn"
         ])
-        
+
         requirements_file = output_dir / "requirements.txt"
         with open(requirements_file, 'w') as f:
             f.write('\n'.join(sorted(requirements)))
         config_files.append(str(requirements_file))
-        
+
         # Generate Dockerfile
         dockerfile_content = f'''FROM python:3.11-slim
 
@@ -2219,7 +2219,7 @@ CMD ["python", "{agent_config["id"]}.py"]
         with open(dockerfile, 'w') as f:
             f.write(dockerfile_content)
         config_files.append(str(dockerfile))
-        
+
         # Generate docker-compose.yml
         compose_content = f'''version: '3.8'
 
@@ -2239,7 +2239,7 @@ services:
         with open(compose_file, 'w') as f:
             f.write(compose_content)
         config_files.append(str(compose_file))
-        
+
         # Generate agent configuration
         agent_config_data = {
             "agent_id": agent_config["id"],
@@ -2249,21 +2249,21 @@ services:
             "handlers": generation_context.get("handlers", []),
             "configuration": generation_context.get("configuration", {})
         }
-        
+
         config_file = output_dir / "agent_config.json"
         with open(config_file, 'w') as f:
             json.dump(agent_config_data, f, indent=2)
         config_files.append(str(config_file))
-        
+
         return config_files
-    
+
     async def _write_test_files(self, test_suite: TestSuite, output_dir: Path) -> List[str]:
         """Write test files to disk"""
-        
+
         test_files = []
         test_dir = output_dir / "tests"
         test_dir.mkdir(exist_ok=True)
-        
+
         # Write main test file
         main_test_content = f'''"""
 Test suite for generated agent
@@ -2276,15 +2276,15 @@ from unittest.mock import Mock, patch, AsyncMock
 
 # Test cases
 '''
-        
+
         for test_case in test_suite.test_cases:
             main_test_content += f"\n{test_case['code']}\n"
-        
+
         main_test_file = test_dir / "test_agent.py"
         with open(main_test_file, 'w') as f:
             f.write(main_test_content)
         test_files.append(str(main_test_file))
-        
+
         # Write performance tests
         if test_suite.performance_tests:
             perf_test_file = test_dir / "test_performance.py"
@@ -2294,7 +2294,7 @@ from unittest.mock import Mock, patch, AsyncMock
             with open(perf_test_file, 'w') as f:
                 f.write(perf_content)
             test_files.append(str(perf_test_file))
-        
+
         # Write security tests
         if test_suite.security_tests:
             sec_test_file = test_dir / "test_security.py"
@@ -2304,7 +2304,7 @@ from unittest.mock import Mock, patch, AsyncMock
             with open(sec_test_file, 'w') as f:
                 f.write(sec_content)
             test_files.append(str(sec_test_file))
-        
+
         # Write pytest configuration
         pytest_ini = test_dir / "pytest.ini"
         with open(pytest_ini, 'w') as f:
@@ -2316,39 +2316,39 @@ python_functions = test_*
 asyncio_mode = auto
 ''')
         test_files.append(str(pytest_ini))
-        
+
         return test_files
-    
+
     async def _validate_sdk_compliance(self, code: str) -> Dict[str, Any]:
         """Validate A2A SDK compliance"""
         warnings = []
-        
+
         # Check for required imports
         required_imports = [
             "from app.a2a.sdk import A2AAgentBase",
             "a2a_handler", "a2a_skill", "a2a_task"
         ]
-        
+
         for required in required_imports:
             if required not in code:
                 warnings.append({
                     "type": "sdk_compliance",
                     "message": f"Missing required import: {required}"
                 })
-        
+
         # Check for proper inheritance
         if "class" in code and "A2AAgentBase" not in code:
             warnings.append({
                 "type": "sdk_compliance",
                 "message": "Agent class should inherit from A2AAgentBase"
             })
-        
+
         return {"warnings": warnings}
-    
+
     async def _audit_security_practices(self, code: str) -> List[Dict[str, Any]]:
         """Audit security best practices"""
         issues = []
-        
+
         # Check for secure random
         if "random." in code and "secrets." not in code:
             issues.append({
@@ -2356,7 +2356,7 @@ asyncio_mode = auto
                 "severity": "medium",
                 "message": "Consider using secrets module for cryptographic randomness"
             })
-        
+
         # Check for proper input validation
         if "request_data" in code and "validate" not in code:
             issues.append({
@@ -2364,20 +2364,20 @@ asyncio_mode = auto
                 "severity": "high",
                 "message": "Ensure input validation for request data"
             })
-        
+
         return issues
-    
+
     async def _analyze_performance_characteristics(self, code: str) -> List[Dict[str, Any]]:
         """Analyze performance characteristics"""
         issues = []
-        
+
         # Check for blocking I/O in async functions
         if "async def" in code and "open(" in code:
             issues.append({
                 "type": "performance",
                 "message": "Use aiofiles for async file operations"
             })
-        
+
         # Check for inefficient patterns
         if ".append(" in code and "for" in code:
             lines = code.split('\n')
@@ -2388,16 +2388,16 @@ asyncio_mode = auto
                         "line": i + 1,
                         "message": "Consider list comprehension instead of append in loop"
                     })
-        
+
         return issues
-    
+
     async def _generate_improvement_suggestions(
         self, validation_result: CodeValidationResult, code: str
     ) -> List[Dict[str, Any]]:
         """Generate improvement suggestions based on validation results"""
-        
+
         suggestions = []
-        
+
         # Suggest improvements based on score
         if validation_result.score < 0.8:
             suggestions.append({
@@ -2406,7 +2406,7 @@ asyncio_mode = auto
                 "suggestion": "Consider refactoring to improve code quality",
                 "details": "Focus on reducing complexity and improving error handling"
             })
-        
+
         # Suggest security improvements
         if validation_result.security_issues:
             suggestions.append({
@@ -2415,7 +2415,7 @@ asyncio_mode = auto
                 "suggestion": "Address security vulnerabilities",
                 "details": f"Found {len(validation_result.security_issues)} security issues"
             })
-        
+
         # Suggest performance improvements
         if validation_result.performance_issues:
             suggestions.append({
@@ -2424,34 +2424,34 @@ asyncio_mode = auto
                 "suggestion": "Optimize performance bottlenecks",
                 "details": f"Found {len(validation_result.performance_issues)} performance issues"
             })
-        
+
         return suggestions
-    
+
     async def _parse_bpmn_xml(self, bpmn_xml: str) -> BPMNWorkflowDefinition:
         """Parse BPMN XML to workflow definition"""
-        
+
         if LXML_AVAILABLE:
             root = etree.fromstring(bpmn_xml.encode())
         else:
             root = ET.fromstring(bpmn_xml)
-        
+
         # Extract workflow information
         process = root.find(".//{https://www.omg.org/spec/BPMN/20100524/MODEL}process")
         if process is None:
             raise ValueError("No process found in BPMN XML")
-        
+
         workflow_id = process.get("id", str(uuid.uuid4()))
         workflow_name = process.get("name", "Unnamed Workflow")
-        
+
         # Extract elements
         elements = {}
         flows = []
-        
+
         # Parse all BPMN elements
         for element in process:
             element_type = element.tag.split("}")[-1] if "}" in element.tag else element.tag
             element_id = element.get("id")
-            
+
             if element_id:
                 elements[element_id] = {
                     "id": element_id,
@@ -2459,7 +2459,7 @@ asyncio_mode = auto
                     "name": element.get("name", element_id),
                     "properties": dict(element.attrib)
                 }
-            
+
             # Handle sequence flows
             if element_type == "sequenceFlow":
                 flows.append({
@@ -2468,7 +2468,7 @@ asyncio_mode = auto
                     "target": element.get("targetRef"),
                     "condition": element.get("conditionExpression")
                 })
-        
+
         return BPMNWorkflowDefinition(
             id=workflow_id,
             name=workflow_name,
@@ -2482,7 +2482,7 @@ asyncio_mode = auto
             compensation_handlers={},
             execution_hints={}
         )
-    
+
     async def _generate_workflow_integration(
         self,
         bpmn_def: BPMNWorkflowDefinition,
@@ -2490,7 +2490,7 @@ asyncio_mode = auto
         config: Dict[str, Any]
     ) -> str:
         """Generate workflow integration code"""
-        
+
         return f'''
 # Workflow Integration for {bpmn_def.name}
 
@@ -2503,7 +2503,7 @@ from app.a2a.core.security_base import SecureA2AAgent
 
 class {bpmn_def.name.replace(' ', '')}Integration:
     """Integration class for {bpmn_def.name} workflow"""
-    
+
     def __init__(self, agent: A2AAgentBase):
 
         # Initialize security features
@@ -2512,7 +2512,7 @@ class {bpmn_def.name.replace(' ', '')}Integration:
         self._init_input_validation()
                 self.agent = agent
         self.workflow = {bpmn_def.name.replace(' ', '')}Workflow()
-    
+
     @a2a_task(
         task_type="execute_workflow",
         description="Execute {bpmn_def.name} workflow",
@@ -2520,70 +2520,70 @@ class {bpmn_def.name.replace(' ', '')}Integration:
     )
     async def execute_workflow(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """Execute the integrated workflow"""
-        
+
         # Pre-process input
         processed_input = await self._preprocess_input(input_data)
-        
+
         # Execute workflow
         result = await self.workflow.execute(processed_input)
-        
+
         # Post-process result
         final_result = await self._postprocess_result(result)
-        
+
         return final_result
-    
+
     async def _preprocess_input(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """Preprocess workflow input"""
         preprocessed = input_data.copy()
-        
+
         # Add metadata
         preprocessed["_preprocessing"] = {{
             "timestamp": datetime.now().isoformat(),
             "processor": "enhanced_agent_builder",
             "version": "2.0.0"
         }}
-        
+
         # Validate input structure
         if "workflow_id" not in preprocessed:
             preprocessed["workflow_id"] = str(uuid.uuid4())
-        
+
         # Sanitize input data
         if "parameters" in preprocessed:
             params = preprocessed["parameters"]
             # Remove None values
             preprocessed["parameters"] = {{k: v for k, v in params.items() if v is not None}}
-        
+
         # Add execution context
         preprocessed["execution_context"] = {{
             "preprocessed_at": datetime.now().isoformat(),
             "agent_id": self.agent_id,
             "session_id": getattr(self, 'current_session_id', 'default')
         }}
-        
+
         return preprocessed
-    
+
     async def _postprocess_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Postprocess workflow result"""
         postprocessed = result.copy()
-        
+
         # Add postprocessing metadata
         postprocessed["_postprocessing"] = {{
             "timestamp": datetime.now().isoformat(),
             "processor": "enhanced_agent_builder",
             "version": "2.0.0"
         }}
-        
+
         # Calculate execution metrics
         if "_preprocessing" in postprocessed:
             preprocess_time = datetime.fromisoformat(postprocessed["_preprocessing"]["timestamp"])
             total_duration = (datetime.now() - preprocess_time).total_seconds()
-            
+
             postprocessed["_metrics"] = {{
                 "total_execution_time": total_duration,
                 "postprocessed_at": datetime.now().isoformat(),
                 "processing_pipeline": ["preprocessing", "execution", "postprocessing"]
             }}
-        
+
         # Format output for consistency
         if "result" in postprocessed and isinstance(postprocessed["result"], dict):
             # Ensure all timestamps are ISO format
@@ -2594,20 +2594,20 @@ class {bpmn_def.name.replace(' ', '')}Integration:
                         datetime.fromisoformat(value.replace('Z', '+00:00'))
                     except ValueError:
                         postprocessed["result"][key] = datetime.now().isoformat()
-        
+
         # Add completion status
         postprocessed["_completion"] = {{
             "completed_at": datetime.now().isoformat(),
             "status": "success" if postprocessed.get("success", True) else "failed",
             "agent_signature": f"enhanced_agent_builder_{self.agent_id}"
         }}
-        
+
         return postprocessed
 '''
-    
+
     def _get_validation_checks(self, level: CodeValidationLevel) -> List[str]:
         """Get validation checks for a given level"""
-        
+
         checks = {
             CodeValidationLevel.SYNTAX: ["Syntax validation", "Import verification"],
             CodeValidationLevel.STYLE: ["PEP 8 compliance", "Naming conventions"],
@@ -2616,26 +2616,26 @@ class {bpmn_def.name.replace(' ', '')}Integration:
             CodeValidationLevel.PERFORMANCE: ["Algorithm efficiency", "Resource usage"],
             CodeValidationLevel.COMPREHENSIVE: ["All checks", "Best practices"]
         }
-        
+
         return checks.get(level, [])
-    
+
     def _update_average_generation_time(self, new_time: float):
         """Update average generation time"""
         total = self.generation_metrics["total_agents_generated"]
         current_avg = self.generation_metrics["average_generation_time"]
-        
+
         if total > 0:
             new_avg = ((current_avg * (total - 1)) + new_time) / total
             self.generation_metrics["average_generation_time"] = new_avg
         else:
             self.generation_metrics["average_generation_time"] = new_time
-    
+
     async def shutdown(self) -> None:
         """Shutdown agent"""
         # Save template registry
         registry_file = self.templates_path / "template_registry.json"
         registry_data = {}
-        
+
         for name, metadata in self.template_registry.items():
             registry_data[name] = {
                 "name": metadata.name,
@@ -2650,33 +2650,33 @@ class {bpmn_def.name.replace(' ', '')}Integration:
                 "dependencies": metadata.dependencies,
                 "compatibility": metadata.compatibility
             }
-        
+
         with open(registry_file, 'w') as f:
             json.dump(registry_data, f, indent=2)
-        
+
         await super().shutdown()
 
 
 class PerformanceMonitor:
     """Performance monitoring helper"""
-    
+
     def __init__(self):
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
         self.metrics = defaultdict(list)
-    
+
     def record_metric(self, metric_name: str, value: float):
         """Record a performance metric"""
         self.metrics[metric_name].append(value)
-    
+
     def get_statistics(self, metric_name: str) -> Dict[str, float]:
         """Get statistics for a metric"""
         values = self.metrics.get(metric_name, [])
         if not values:
             return {}
-        
+
         return {
             "mean": statistics.mean(values),
             "median": statistics.median(values),

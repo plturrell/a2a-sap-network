@@ -44,48 +44,48 @@ Examples:
   a2a-agent test --agent-type standardization
         """
     )
-    
+
     parser.add_argument(
         "--verbose", "-v",
         action="store_true",
         help="Enable verbose output"
     )
-    
+
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
-    
+
     # Start command
     start_parser = subparsers.add_parser("start", help="Start an A2A agent")
-    start_parser.add_argument("--agent", required=True, 
-                            choices=["agent0", "agent1", "agent2", "agent3", 
-                                   "agent4", "agent5", "data-manager", 
+    start_parser.add_argument("--agent", required=True,
+                            choices=["agent0", "agent1", "agent2", "agent3",
+                                   "agent4", "agent5", "data-manager",
                                    "catalog-manager", "agent-manager"],
                             help="Agent to start")
     start_parser.add_argument("--port", type=int, help="Port to run agent on")
     start_parser.add_argument("--config", help="Configuration file path")
-    
+
     # Deploy command
     deploy_parser = subparsers.add_parser("deploy", help="Deploy A2A network")
-    deploy_parser.add_argument("--environment", 
+    deploy_parser.add_argument("--environment",
                              choices=["development", "testing", "staging", "production"],
                              default="development",
                              help="Deployment environment")
     deploy_parser.add_argument("--config-file", help="Configuration file")
-    
+
     # Status command
     status_parser = subparsers.add_parser("status", help="Check agent status")
-    status_parser.add_argument("--all", action="store_true", 
+    status_parser.add_argument("--all", action="store_true",
                              help="Check status of all agents")
     status_parser.add_argument("--agent", help="Specific agent to check")
-    
+
     # Test command
     test_parser = subparsers.add_parser("test", help="Run agent tests")
-    test_parser.add_argument("--agent-type", 
-                           choices=["data-product", "standardization", 
+    test_parser.add_argument("--agent-type",
+                           choices=["data-product", "standardization",
                                   "ai-preparation", "vector-processing"],
                            help="Type of agent to test")
     test_parser.add_argument("--integration", action="store_true",
                            help="Run integration tests")
-    
+
     return parser
 
 
@@ -94,11 +94,11 @@ async def start_agent(agent_name: str, port: Optional[int] = None, config_path: 
     logging.info("Starting %s agent...", agent_name)
     if config_path:
         logging.info("Configuration file path is not yet implemented: %s", config_path)
-    
+
     # Agent port mapping
     default_ports = {
         "agent0": 8001,
-        "agent1": 8002, 
+        "agent1": 8002,
         "agent2": 8003,
         "agent3": 8004,
         "agent4": 8009,
@@ -107,9 +107,9 @@ async def start_agent(agent_name: str, port: Optional[int] = None, config_path: 
         "catalog-manager": 8006,
         "agent-manager": 8007,
     }
-    
+
     port = port or default_ports.get(agent_name, 8000)
-    
+
     logging.info("DEBUG: Attempting to dynamically import agent SDK for '%s'", agent_name)
     # Dynamic import and start based on agent name
     if agent_name == "agent0":
@@ -133,7 +133,7 @@ async def start_agent(agent_name: str, port: Optional[int] = None, config_path: 
     else:
         logging.error("Unknown agent: %s", agent_name)
         return False
-    
+
     logging.info("DEBUG: Agent SDK imported successfully.")
 
     # Initialize the agent if it has initialize method
@@ -141,28 +141,28 @@ async def start_agent(agent_name: str, port: Optional[int] = None, config_path: 
         logging.info("DEBUG: Initializing agent...")
         await agent.initialize()
         logging.info("DEBUG: Agent initialized successfully.")
-    
+
     # Create FastAPI app
     logging.info("DEBUG: Creating FastAPI app...")
     app = agent.create_fastapi_app()
     logging.info("DEBUG: FastAPI app created successfully.")
-    
+
     logging.info("🚀 Starting %s v%s", agent.name, agent.version)
     logging.info("📡 Listening on http://localhost:%s", port)
     logging.info("🎯 Agent ID: %s", agent.agent_id)
-    
+
     # Start server with uvicorn
     logging.info("DEBUG: Starting uvicorn server...")
     import uvicorn
     config = uvicorn.Config(app, host="0.0.0.0", port=port, log_level="info")
     server = uvicorn.Server(config)
-    
+
     try:
         await server.serve()
     finally:
         if hasattr(agent, 'shutdown'):
             await agent.shutdown()
-    
+
     logging.info("Agent %s stopped", agent_name)
     return True
 
@@ -170,25 +170,25 @@ async def start_agent(agent_name: str, port: Optional[int] = None, config_path: 
 async def deploy_network(environment: str, config_file: Optional[str] = None):
     """Deploy the entire A2A network."""
     logging.info("Deploying A2A network to %s", environment)
-    
+
     env = Environment(environment)
     config = ProductionConfig(env)
-    
+
     if config_file:
         config.load_from_file(config_file)
-    
+
     # Setup telemetry
     setup_telemetry(environment)
-    
+
     # Deploy agents in sequence
     agents = ["agent0", "agent1", "agent2", "agent3", "data-manager", "catalog-manager"]
-    
+
     for agent_name in agents:
         success = await start_agent(agent_name)
         if not success:
             logging.error("Failed to deploy %s", agent_name)
             return False
-    
+
     logging.info("A2A network deployed successfully")
     return True
 
@@ -209,15 +209,15 @@ async def check_status(agent_name: Optional[str] = None, check_all: bool = False
 async def run_tests(agent_type: Optional[str] = None, integration: bool = False):
     """Run agent tests."""
     logging.info("Running tests...")
-    
+
     if integration:
         logging.info("Running integration tests...")
         # Would run pytest with integration markers
-    
+
     if agent_type:
         logging.info("Running tests for %s agents...", agent_type)
         # Would run specific test suites
-    
+
     logging.info("Tests completed")
 
 
@@ -225,13 +225,13 @@ async def main():
     """Main CLI entry point."""
     parser = create_parser()
     args = parser.parse_args()
-    
+
     if not args.command:
         parser.print_help()
         return 1
-    
+
     setup_logging(args.verbose)
-    
+
     try:
         if args.command == "start":
             success = await start_agent(args.agent, args.port, args.config)
@@ -246,13 +246,13 @@ async def main():
         else:
             logging.error("Unknown command: %s", args.command)
             return 1
-            
+
     except Exception as e:
         logging.error("Command failed: %s", e)
         if args.verbose:
             logging.exception("Full traceback:")
         return 1
-    
+
     return 0
 
 

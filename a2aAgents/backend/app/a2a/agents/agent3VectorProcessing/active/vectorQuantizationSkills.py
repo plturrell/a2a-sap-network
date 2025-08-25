@@ -24,7 +24,7 @@ except ImportError:
     class TrustIdentity(SecureA2AAgent):
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
+        # - Rate limiting and request throttling
         # - Input validation and sanitization
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
@@ -38,7 +38,7 @@ except ImportError:
     class DataValidator(SecureA2AAgent):
         # Security features provided by SecureA2AAgent:
         # - JWT authentication and authorization
-        # - Rate limiting and request throttling  
+        # - Rate limiting and request throttling
         # - Input validation and sanitization
         # - Audit logging and compliance tracking
         # - Encrypted communication channels
@@ -69,13 +69,13 @@ class VectorQuantizationSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
         self.trust_identity = trust_identity
         self.logger = logging.getLogger(__name__)
         self.data_validator = DataValidator()
-        
+
         # Initialize quantization models
         self.pq_models: Dict[str, faiss.ProductQuantizer] = {}
         self.pca_models: Dict[str, PCA] = {}
         self.quantization_configs: Dict[str, QuantizationConfig] = {}
         self.index_metadata: Dict[str, Dict] = {}
-        
+
         # Performance tracking
         self.compression_metrics = {
             'total_vectors_quantized': 0,
@@ -118,7 +118,7 @@ class VectorQuantizationSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
             index_name = request_data["index_name"]
             vector_dimension = request_data["vector_dimension"]
             training_vectors = np.array(request_data["training_vectors"], dtype=np.float32)
-            
+
             # Create quantization config
             config_data = request_data.get("config", {})
             config = QuantizationConfig(
@@ -127,13 +127,13 @@ class VectorQuantizationSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
                 enable_pca=config_data.get("enable_pca", True),
                 pca_dimensions=config_data.get("pca_dimensions", 256)
             )
-            
+
             self.quantization_configs[index_name] = config
-            
+
             # Validate inputs
             if training_vectors.shape[0] < config.num_subquantizers:
                 raise ValueError("Need more training vectors than subquantizers")
-            
+
             # Apply PCA if enabled
             processed_vectors = training_vectors
             if config.enable_pca and vector_dimension > config.pca_dimensions:
@@ -142,26 +142,26 @@ class VectorQuantizationSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
                 processed_vectors = pca.fit_transform(training_vectors)
                 self.pca_models[index_name] = pca
                 vector_dimension = config.pca_dimensions
-            
+
             # Create Product Quantizer
             pq = faiss.ProductQuantizer(
                 vector_dimension,
                 config.num_subquantizers,
                 config.subquantizer_bits
             )
-            
+
             # Train the quantizer
             self.logger.info(f"Training PQ with {len(processed_vectors)} vectors")
             pq.train(processed_vectors)
-            
+
             # Store the trained model
             self.pq_models[index_name] = pq
-            
+
             # Calculate compression ratio
             original_size = vector_dimension * 4  # float32 = 4 bytes
             compressed_size = config.num_subquantizers * (config.subquantizer_bits / 8)
             actual_compression_ratio = original_size / compressed_size
-            
+
             # Store metadata
             self.index_metadata[index_name] = {
                 'vector_dimension': vector_dimension,
@@ -171,9 +171,9 @@ class VectorQuantizationSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
                 'pca_enabled': config.enable_pca,
                 'created_timestamp': np.datetime64('now').astype(str)
             }
-            
+
             self.logger.info(f"PQ index '{index_name}' created with {actual_compression_ratio:.1f}x compression")
-            
+
             return {
                 'success': True,
                 'index_name': index_name,
@@ -184,7 +184,7 @@ class VectorQuantizationSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
                 'pca_applied': config.enable_pca,
                 'metadata': self.index_metadata[index_name]
             }
-            
+
         except Exception as e:
             self.logger.error(f"Failed to create PQ index: {str(e)}")
             return {
@@ -221,29 +221,29 @@ class VectorQuantizationSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
             index_name = request_data["index_name"]
             vectors = np.array(request_data["vectors"], dtype=np.float32)
             vector_ids = request_data.get("vector_ids", [f"vec_{i}" for i in range(len(vectors))])
-            
+
             if index_name not in self.pq_models:
                 raise ValueError(f"PQ model '{index_name}' not found. Train model first.")
-            
+
             pq = self.pq_models[index_name]
-            
+
             # Apply PCA if model uses it
             processed_vectors = vectors
             if index_name in self.pca_models:
                 processed_vectors = self.pca_models[index_name].transform(vectors)
-            
+
             # Quantize vectors
             quantized_codes = pq.compute_codes(processed_vectors)
-            
+
             # Calculate storage savings
             original_size = vectors.nbytes
             compressed_size = quantized_codes.nbytes
             storage_saved = original_size - compressed_size
-            
+
             # Update metrics
             self.compression_metrics['total_vectors_quantized'] += len(vectors)
             self.compression_metrics['storage_saved_bytes'] += storage_saved
-            
+
             # Store quantized vectors with metadata
             quantized_data = []
             for i, (vector_id, codes) in enumerate(zip(vector_ids, quantized_codes)):
@@ -255,9 +255,9 @@ class VectorQuantizationSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
                         vectors[i], pq.decode(codes.reshape(1, -1))[0]
                     )
                 })
-            
+
             self.logger.info(f"Quantized {len(vectors)} vectors, saved {storage_saved} bytes")
-            
+
             return {
                 'success': True,
                 'quantized_vectors': quantized_data,
@@ -269,7 +269,7 @@ class VectorQuantizationSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
                 },
                 'index_metadata': self.index_metadata[index_name]
             }
-            
+
         except Exception as e:
             self.logger.error(f"Vector quantization failed: {str(e)}")
             self.compression_metrics['quantization_errors'].append(str(e))
@@ -315,39 +315,39 @@ class VectorQuantizationSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
             query_vector = np.array(request_data["query_vector"], dtype=np.float32)
             k = request_data.get("k", 10)
             quantized_database = request_data["quantized_database"]
-            
+
             if index_name not in self.pq_models:
                 raise ValueError(f"PQ model '{index_name}' not found")
-            
+
             pq = self.pq_models[index_name]
-            
+
             # Apply PCA to query if model uses it
             processed_query = query_vector
             if index_name in self.pca_models:
                 processed_query = self.pca_models[index_name].transform(query_vector.reshape(1, -1))[0]
-            
+
             # Extract quantized codes from database
             db_codes = []
             db_ids = []
             for item in quantized_database:
                 db_codes.append(item["quantized_codes"])
                 db_ids.append(item["vector_id"])
-            
+
             db_codes = np.array(db_codes, dtype=np.uint8)
-            
+
             # Compute asymmetric distances (query vs quantized database)
             distances = pq.compute_distance_table(processed_query.reshape(1, -1))
-            
+
             # Calculate distances to all database vectors
             vector_distances = []
             for i, codes in enumerate(db_codes):
                 distance = np.sum(distances[0, np.arange(len(codes)), codes])
                 vector_distances.append((distance, db_ids[i], i))
-            
+
             # Sort by distance and return top k
             vector_distances.sort(key=lambda x: x[0])
             results = vector_distances[:k]
-            
+
             search_results = []
             for distance, vector_id, idx in results:
                 search_results.append({
@@ -356,7 +356,7 @@ class VectorQuantizationSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
                     'similarity_score': float(1.0 / (1.0 + distance)),  # Convert distance to similarity
                     'rank': len(search_results) + 1
                 })
-            
+
             return {
                 'success': True,
                 'search_results': search_results,
@@ -367,7 +367,7 @@ class VectorQuantizationSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
                 },
                 'index_name': index_name
             }
-            
+
         except Exception as e:
             self.logger.error(f"Quantized vector search failed: {str(e)}")
             return {
@@ -393,7 +393,7 @@ class VectorQuantizationSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
         """Retrieve comprehensive compression metrics and statistics"""
         try:
             index_names = request_data.get("index_names", list(self.index_metadata.keys()))
-            
+
             metrics_report = {
                 'global_metrics': self.compression_metrics.copy(),
                 'index_specific_metrics': {},
@@ -403,12 +403,12 @@ class VectorQuantizationSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
                     'total_storage_saved_mb': self.compression_metrics['storage_saved_bytes'] / (1024 * 1024)
                 }
             }
-            
+
             for index_name in index_names:
                 if index_name in self.index_metadata:
                     metadata = self.index_metadata[index_name]
                     config = self.quantization_configs.get(index_name)
-                    
+
                     metrics_report['index_specific_metrics'][index_name] = {
                         'metadata': metadata,
                         'configuration': {
@@ -423,13 +423,13 @@ class VectorQuantizationSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
                             'ready_for_quantization': index_name in self.pq_models
                         }
                     }
-            
+
             return {
                 'success': True,
                 'compression_metrics': metrics_report,
                 'timestamp': np.datetime64('now').astype(str)
             }
-            
+
         except Exception as e:
             self.logger.error(f"Failed to get compression metrics: {str(e)}")
             return {
@@ -442,7 +442,7 @@ class VectorQuantizationSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
         """Calculate L2 reconstruction error between original and reconstructed vector"""
         if original.shape != reconstructed.shape:
             return float('inf')
-        
+
         error = np.linalg.norm(original - reconstructed) / np.linalg.norm(original)
         return float(error)
 
@@ -455,21 +455,21 @@ class VectorQuantizationSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
         try:
             vector_dim = training_data.shape[1]
             num_vectors = training_data.shape[0]
-            
+
             # Analyze vector characteristics
             variance_per_dim = np.var(training_data, axis=0)
             mean_variance = np.mean(variance_per_dim)
-            
+
             # Optimize number of subquantizers
             optimal_m = min(vector_dim // 4, max(4, int(np.log2(target_compression))))
-            
+
             # Optimize bits per subquantizer
             optimal_nbits = max(4, min(8, int(np.log2(num_vectors / optimal_m))))
-            
+
             # Decide on PCA based on dimensionality and variance distribution
             enable_pca = vector_dim > 128 and np.std(variance_per_dim) / mean_variance > 0.5
             pca_dim = min(vector_dim // 2, 256) if enable_pca else vector_dim
-            
+
             optimized_config = QuantizationConfig(
                 num_subquantizers=optimal_m,
                 subquantizer_bits=optimal_nbits,
@@ -477,11 +477,11 @@ class VectorQuantizationSkills(PerformanceMonitorMixin, SecurityHardenedMixin):
                 pca_dimensions=pca_dim,
                 training_vectors_count=min(num_vectors, 50000)
             )
-            
+
             self.logger.info(f"Optimized PQ config: m={optimal_m}, nbits={optimal_nbits}, PCA={enable_pca}")
-            
+
             return optimized_config
-            
+
         except Exception as e:
             self.logger.error(f"Parameter optimization failed: {str(e)}")
             return QuantizationConfig()  # Return default config

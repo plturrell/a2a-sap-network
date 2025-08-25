@@ -17,7 +17,7 @@ class BookStandardizer:
         self.js_file_path = os.path.join(project_root, "scripts/build/book_standardization.js")
         # Initialize Grok client for enrichment
         self.grok_client = None
-        
+
     async def standardize(self, book_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Standardize book data using the JavaScript standardizer
@@ -36,13 +36,13 @@ class BookStandardizer:
                     "Books": book_data.get("Book (L3)", "") or book_data.get("Book (L2)", "") or book_data.get("Books", ""),
                     "_row_number": book_data.get("_row_number", 1)
                 }
-            
+
             # Call JavaScript standardizer via Node.js
             result = await self._call_js_standardizer([input_data])
-            
+
             if result and len(result) > 0:
                 standardized = result[0]
-                
+
                 # Extract initial standardized data
                 initial_standardized = {
                     "name": standardized.get("clean_book_name", ""),
@@ -57,10 +57,10 @@ class BookStandardizer:
                     "is_main_entity": standardized.get("is_main_entity", False),
                     "generated_book_code": standardized.get("generated_book_code")
                 }
-                
+
                 # Calculate initial completeness
                 completeness = self._calculate_completeness(initial_standardized)
-                
+
                 # If completeness is low, try to enrich with Grok
                 if completeness < 0.8 and self._should_use_grok():
                     enriched = await self._enrich_with_grok(initial_standardized, book_data)
@@ -70,7 +70,7 @@ class BookStandardizer:
                             if value and (not initial_standardized.get(key) or initial_standardized.get(key) == "Unknown"):
                                 initial_standardized[key] = value
                         completeness = self._calculate_completeness(initial_standardized)
-                
+
                 return {
                     "original": book_data,
                     "standardized": initial_standardized,
@@ -85,7 +85,7 @@ class BookStandardizer:
                 }
             else:
                 raise ValueError("No standardization result returned")
-                
+
         except Exception as e:
             logger.error(f"Error standardizing book: {str(e)}")
             return {
@@ -95,23 +95,23 @@ class BookStandardizer:
                 "completeness": 0.0,
                 "error": str(e)
             }
-    
+
     async def _call_js_standardizer(self, data: List[Dict]) -> List[Dict]:
         """
         Call the JavaScript standardizer via Node.js subprocess
         """
         # Use absolute path to ensure it's found
         absolute_js_path = os.path.abspath(self.js_file_path)
-        
+
         # Create a temporary Node.js wrapper script
         wrapper_script = f"""
         const BookStandardizer = require('{absolute_js_path}');
-        
+
         // Override console.log for the standardizer to redirect logs to stderr
         const originalLog = console.log;
         const originalInfo = console.info;
         const originalWarn = console.warn;
-        
+
         // Create standardizer with custom logger that writes to stderr
         const standardizer = new BookStandardizer({{
             logger: {{
@@ -121,7 +121,7 @@ class BookStandardizer:
                 debug: (msg) => console.error(`[DEBUG] ${{msg}}`)
             }}
         }});
-        
+
         async function run() {{
             try {{
                 const input = JSON.parse(process.argv[2]);
@@ -133,16 +133,16 @@ class BookStandardizer:
                 process.exit(1);
             }}
         }}
-        
+
         run();
         """
-        
+
         # Write wrapper to temporary file
         import tempfile
         with tempfile.NamedTemporaryFile(mode='w', suffix='.js', delete=False) as f:
             f.write(wrapper_script)
             wrapper_path = f.name
-        
+
         try:
             # Run Node.js subprocess
             process = await asyncio.create_subprocess_exec(
@@ -150,16 +150,16 @@ class BookStandardizer:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
-            
+
             stdout, stderr = await process.communicate()
-            
+
             if process.returncode != 0:
                 raise RuntimeError(f"Node.js error: {stderr.decode()}")
-            
+
             # Debug: log the output
             output = stdout.decode()
             stderr_output = stderr.decode()
-            
+
             # Filter out INFO/WARN logs from stderr
             if stderr_output and not output.strip():
                 # Check if stderr contains the actual output (sometimes Node.js logs go there)
@@ -168,40 +168,40 @@ class BookStandardizer:
                     if line.strip() and not line.startswith('['):
                         output = line
                         break
-            
+
             if not output.strip():
                 logger.error(f"No output from Node.js. Stdout: '{output}', Stderr: '{stderr_output}'")
                 raise RuntimeError(f"No output from Node.js")
-            
+
             return json.loads(output)
-            
+
         finally:
             # Clean up temporary file
             os.unlink(wrapper_path)
-    
+
     def _calculate_confidence(self, standardized_data: Dict) -> float:
         """
         Calculate confidence score for standardized book
         """
         score = 0.0
         max_score = 5.0
-        
+
         # Check if valid book was found
         if standardized_data.get("book_type") != "Unknown":
             score += 1.0
-        
+
         # Check if entity was identified
         if standardized_data.get("base_entity"):
             score += 1.0
-        
+
         # Check if entity type was classified
         if standardized_data.get("entity_type") != "Unknown":
             score += 1.0
-        
+
         # Check if consolidation method was identified
         if standardized_data.get("consolidation_method") != "Unknown":
             score += 1.0
-        
+
         # Check standardization quality
         quality = standardized_data.get("standardization_quality", "")
         if quality == "Excellent":
@@ -210,9 +210,9 @@ class BookStandardizer:
             score += 0.7
         elif quality == "Fair":
             score += 0.4
-        
+
         return min(1.0, score / max_score)
-    
+
     def _calculate_completeness(self, standardized: Dict) -> float:
         """
         Calculate completeness score (0-1) for standardized book data
@@ -228,23 +228,23 @@ class BookStandardizer:
             ("consolidation_method", 1.0),
             ("generated_book_code", 0.5)
         ]
-        
+
         total_weight = sum(weight for _, weight in fields)
         score = 0.0
-        
+
         for field, weight in fields:
             value = standardized.get(field)
             if value and value != "Unknown":
                 score += weight
-        
+
         return min(1.0, score / total_weight)
-    
+
     def _should_use_grok(self) -> bool:
         """
         Check if Grok API is available and should be used
         """
         return os.getenv('XAI_API_KEY') is not None
-    
+
     async def _enrich_with_grok(self, standardized: Dict, original: Dict) -> Optional[Dict]:
         """
         Use Grok API to enrich missing book data
@@ -252,14 +252,14 @@ class BookStandardizer:
         try:
             if not self.grok_client:
                 self.grok_client = create_grok_client()
-            
+
             # Build prompt for Grok
             book_name = standardized.get('name', '')
             current_entity_type = standardized.get('entity_type', 'Unknown')
             current_book_type = standardized.get('book_type', 'Unknown')
-            
+
             prompt = f"""Given this financial book information:
-            
+
 Book Name: {book_name}
 Current Entity Type: {current_entity_type}
 Current Book Type: {current_book_type}
@@ -283,17 +283,17 @@ Return ONLY valid JSON without any markdown formatting."""
                 temperature=0.1,
                 max_tokens=600
             )
-            
+
             if response.content:
                 # Parse JSON response
                 import re
                 # Remove any markdown code blocks if present
                 json_str = re.sub(r'```json\s*|\s*```', '', response.content)
                 enriched_data = json.loads(json_str)
-                
+
                 # Validate and return only the fields we need
                 result = {}
-                
+
                 # Map enriched fields
                 field_mappings = [
                     ("base_entity", str),
@@ -307,31 +307,31 @@ Return ONLY valid JSON without any markdown formatting."""
                     ("jurisdiction", str),
                     ("reporting_currency", str)
                 ]
-                
+
                 for field, field_type in field_mappings:
                     if field in enriched_data and enriched_data[field]:
                         try:
                             result[field] = field_type(enriched_data[field])
                         except (ValueError, TypeError):
                             pass
-                    
+
                 return result if result else None
-                
+
         except Exception as e:
             logger.warning(f"Failed to enrich book with Grok: {str(e)}")
-        
+
         return None
 
 
 # For compatibility with async/await pattern in Python < 3.7
 if not hasattr(asyncio, 'create_subprocess_exec'):
     import subprocess
-    
+
     async def create_subprocess_exec(*args, **kwargs):
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
             None,
             lambda: subprocess.Popen(args, **kwargs)
         )
-    
+
     asyncio.create_subprocess_exec = create_subprocess_exec

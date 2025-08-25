@@ -47,14 +47,14 @@ class SAPCloudSDK:
     SAP Cloud SDK wrapper for enterprise integration
     Implements SAP best practices for cloud services
     """
-    
+
     def __init__(self):
         self.services: Dict[str, SAPServiceConfig] = {}
         self.tokens: Dict[str, Tuple[str, float]] = {}  # (token, expiry_time)
         self.http_client = None  # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
         # httpx\.AsyncClient(timeout=30.0)
         self._initialize_services()
-    
+
     def _initialize_services(self):
         """Initialize SAP service configurations"""
         # Alert Notification Service
@@ -62,7 +62,7 @@ class SAPCloudSDK:
         if ans_client_id:
             ans_client_secret = os.getenv("SAP_ANS_CLIENT_SECRET")
             ans_token_url = os.getenv("SAP_ANS_TOKEN_URL")
-            
+
             # Validate required fields
             if not ans_client_secret:
                 logger.warning("SAP_ANS_CLIENT_SECRET not set - Alert Notification Service will not be available")
@@ -70,7 +70,7 @@ class SAPCloudSDK:
             if not ans_token_url:
                 logger.warning("SAP_ANS_TOKEN_URL not set - Alert Notification Service will not be available")
                 return
-                
+
             self.services["alert_notification"] = SAPServiceConfig(
                 service_name="Alert Notification",
                 service_url=os.getenv("SAP_ANS_URL", "https://ans.cfapps.eu10.hana.ondemand.com"),
@@ -79,14 +79,14 @@ class SAPCloudSDK:
                 token_url=ans_token_url,
                 scopes=["ans!b1.write", "ans!b1.read"]
             )
-        
+
         # Application Logging Service
         als_client_id = os.getenv("SAP_ALS_CLIENT_ID")
         if als_client_id:
             als_client_secret = os.getenv("SAP_ALS_CLIENT_SECRET")
             als_token_url = os.getenv("SAP_ALS_TOKEN_URL")
             als_url = os.getenv("SAP_ALS_URL")
-            
+
             # Validate required fields
             if not all([als_client_secret, als_token_url, als_url]):
                 missing = []
@@ -106,7 +106,7 @@ class SAPCloudSDK:
                     token_url=als_token_url,
                     scopes=["logs.write", "logs.read"]
                 )
-        
+
         # Destination Service
         if os.getenv("SAP_DEST_CLIENT_ID"):
             self.services["destination"] = SAPServiceConfig(
@@ -117,7 +117,7 @@ class SAPCloudSDK:
                 token_url=os.getenv("SAP_DEST_TOKEN_URL"),
                 scopes=["destination.read"]
             )
-        
+
         # Connectivity Service
         if os.getenv("SAP_CONN_CLIENT_ID"):
             self.services["connectivity"] = SAPServiceConfig(
@@ -128,15 +128,15 @@ class SAPCloudSDK:
                 token_url=os.getenv("SAP_CONN_TOKEN_URL"),
                 scopes=["connectivity!b1.read"]
             )
-    
+
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
     async def _get_access_token(self, service_name: str) -> str:
         """Get OAuth2 access token for SAP service"""
         if service_name not in self.services:
             raise ValueError(f"Service {service_name} not configured")
-        
+
         config = self.services[service_name]
-        
+
         # Check if we have a valid cached token
         if service_name in self.tokens:
             token, expiry_time = self.tokens[service_name]
@@ -146,7 +146,7 @@ class SAPCloudSDK:
             else:
                 logger.info(f"Token for {service_name} has expired, requesting new token")
                 del self.tokens[service_name]
-        
+
         # Request new token
         token_data = {
             "grant_type": "client_credentials",
@@ -154,21 +154,21 @@ class SAPCloudSDK:
             "client_secret": config.client_secret,
             "scope": " ".join(config.scopes)
         }
-        
+
         response = await self.http_client.post(
             config.token_url,
             data=token_data,
             headers={"Content-Type": "application/x-www-form-urlencoded"}
         )
-        
+
         if response.status_code == 200:
             token_response = response.json()
             access_token = token_response["access_token"]
-            
+
             # Calculate token expiry time
             expires_in = token_response.get("expires_in", 3600)  # Default to 1 hour
             expiry_time = time.time() + expires_in
-            
+
             # Store token with expiry time
             self.tokens[service_name] = (access_token, expiry_time)
             logger.info(f"Successfully obtained token for {service_name}, expires in {expires_in} seconds")
@@ -176,7 +176,7 @@ class SAPCloudSDK:
         else:
             logger.error(f"Failed to get token for {service_name}: {response.status_code}")
             raise Exception(f"Token request failed: {response.text}")
-    
+
     async def send_alert(
         self,
         subject: str,
@@ -188,7 +188,7 @@ class SAPCloudSDK:
     ) -> bool:
         """
         Send alert using SAP Alert Notification Service
-        
+
         Args:
             subject: Alert subject
             body: Alert body/description
@@ -196,18 +196,18 @@ class SAPCloudSDK:
             category: ALERT, NOTIFICATION
             resource_name: Resource identifier
             tags: Additional metadata tags
-        
+
         Returns:
             Success status
         """
         if "alert_notification" not in self.services:
             logger.warning("Alert Notification Service not configured")
             return False
-        
+
         try:
             token = await self._get_access_token("alert_notification")
             config = self.services["alert_notification"]
-            
+
             alert_data = {
                 "eventType": f"{resource_name}.{category}",
                 "severity": severity,
@@ -220,7 +220,7 @@ class SAPCloudSDK:
                 },
                 "tags": tags or {}
             }
-            
+
             response = await self.http_client.post(
                 f"{config.service_url}/cf/producer/v1/resource-events",
                 json=alert_data,
@@ -229,18 +229,18 @@ class SAPCloudSDK:
                     "Content-Type": "application/json"
                 }
             )
-            
+
             if response.status_code in [200, 201, 202]:
                 logger.info(f"Alert sent successfully: {subject}")
                 return True
             else:
                 logger.error(f"Failed to send alert: {response.status_code} - {response.text}")
                 return False
-                
+
         except Exception as e:
             logger.error(f"Error sending alert: {e}")
             return False
-    
+
     async def log_to_sap(
         self,
         level: str,
@@ -250,13 +250,13 @@ class SAPCloudSDK:
     ) -> bool:
         """
         Send logs to SAP Application Logging Service
-        
+
         Args:
             level: Log level (DEBUG, INFO, WARNING, ERROR)
             message: Log message
             component: Component name
             custom_fields: Additional fields
-        
+
         Returns:
             Success status
         """
@@ -264,11 +264,11 @@ class SAPCloudSDK:
             # Fallback to standard logging
             getattr(logger, level.lower(), logger.info)(message)
             return True
-        
+
         try:
             token = await self._get_access_token("application_logging")
             config = self.services["application_logging"]
-            
+
             log_entry = {
                 "level": level,
                 "msg": message,
@@ -276,7 +276,7 @@ class SAPCloudSDK:
                 "timestamp": os.popen('date -u +"%Y-%m-%dT%H:%M:%S.%3NZ"').read().strip(),
                 "custom_fields": custom_fields or {}
             }
-            
+
             response = await self.http_client.post(
                 f"{config.service_url}/log/entries",
                 json=log_entry,
@@ -285,68 +285,68 @@ class SAPCloudSDK:
                     "Content-Type": "application/json"
                 }
             )
-            
+
             return response.status_code in [200, 201, 202]
-            
+
         except Exception as e:
             logger.error(f"Error sending log to SAP: {e}")
             # Fallback to standard logging
             getattr(logger, level.lower(), logger.info)(message)
             return False
-    
+
     async def get_destination(self, destination_name: str) -> Optional[Dict[str, Any]]:
         """
         Get destination configuration from SAP Destination Service
-        
+
         Args:
             destination_name: Name of the destination
-        
+
         Returns:
             Destination configuration or None
         """
         if "destination" not in self.services:
             logger.warning("Destination Service not configured")
             return None
-        
+
         try:
             token = await self._get_access_token("destination")
             config = self.services["destination"]
-            
+
             response = await self.http_client.get(
                 f"{config.service_url}/destination-configuration/v1/destinations/{destination_name}",
                 headers={
                     "Authorization": f"Bearer {token}"
                 }
             )
-            
+
             if response.status_code == 200:
                 return response.json()
             else:
                 logger.error(f"Failed to get destination: {response.status_code}")
                 return None
-                
+
         except Exception as e:
             logger.error(f"Error getting destination: {e}")
             return None
-    
+
     async def check_connectivity(self, virtual_host: str) -> bool:
         """
         Check connectivity via SAP Cloud Connector
-        
+
         Args:
             virtual_host: Virtual host to check
-        
+
         Returns:
             Connectivity status
         """
         if "connectivity" not in self.services:
             logger.warning("Connectivity Service not configured")
             return False
-        
+
         try:
             token = await self._get_access_token("connectivity")
             config = self.services["connectivity"]
-            
+
             response = await self.http_client.get(
                 f"{config.service_url}/connectivity/v1/subaccountTunnels",
                 headers={
@@ -354,13 +354,13 @@ class SAPCloudSDK:
                 },
                 params={"virtualHost": virtual_host}
             )
-            
+
             return response.status_code == 200
-            
+
         except Exception as e:
             logger.error(f"Error checking connectivity: {e}")
             return False
-    
+
     async def close(self):
         """Clean up resources"""
         if self.http_client:
@@ -382,16 +382,16 @@ def get_sap_cloud_sdk() -> SAPCloudSDK:
 # Integration with existing logging
 class SAPLogHandler(logging.Handler):
     """Custom log handler that sends logs to SAP Application Logging Service"""
-    
+
     def __init__(self, component: str = "a2a-agents"):
         super().__init__()
         self.component = component
         self.sdk = get_sap_cloud_sdk()
-    
+
     def emit(self, record):
         """Send log record to SAP"""
         import asyncio
-        
+
         # Skip if we're already in an event loop
         try:
             loop = asyncio.get_running_loop()
@@ -400,7 +400,7 @@ class SAPLogHandler(logging.Handler):
         except RuntimeError:
             # No event loop, safe to create one
             pass
-        
+
         level_map = {
             logging.DEBUG: "DEBUG",
             logging.INFO: "INFO",
@@ -408,17 +408,17 @@ class SAPLogHandler(logging.Handler):
             logging.ERROR: "ERROR",
             logging.CRITICAL: "ERROR"
         }
-        
+
         custom_fields = {
             "logger_name": record.name,
             "line_number": record.lineno,
             "function_name": record.funcName,
             "thread_name": record.threadName
         }
-        
+
         if hasattr(record, 'exc_info') and record.exc_info:
             custom_fields["exception"] = self.format(record)
-        
+
         # Run async operation in new event loop
         asyncio.run(
             self.sdk.log_to_sap(

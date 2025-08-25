@@ -6,7 +6,7 @@ from .email_service import EmailService, create_email_service, EmailMessage, Ema
 
 __all__ = [
     'EmailService',
-    'create_email_service', 
+    'create_email_service',
     'EmailMessage',
     'EmailProvider'
 ]

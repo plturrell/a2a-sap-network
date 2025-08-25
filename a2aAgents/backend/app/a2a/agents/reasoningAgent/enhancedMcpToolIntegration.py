@@ -26,7 +26,7 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
     High-priority reasoning agent with comprehensive MCP tool usage
     Demonstrates best practices for MCP tool integration
     """
-    
+
     def __init__(self, base_url: str):
         super().__init__(
             agent_id="enhanced_mcp_reasoning_agent",
@@ -39,20 +39,20 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-        
-        
+
+
         # Initialize MCP tool providers
         self.performance_tools = MCPPerformanceTools()
         self.validation_tools = MCPValidationTools()
         self.quality_tools = MCPQualityAssessmentTools()
-        
-        
+
+
         # Reasoning state
         self.reasoning_sessions = {}
         self.performance_metrics = {}
-        
+
         logger.info(f"Initialized {self.name} with comprehensive MCP tool integration")
-    
+
     @mcp_tool(
         name="enhanced_reasoning_analysis",
         description="Comprehensive reasoning analysis using multiple MCP tools",
@@ -62,8 +62,8 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
                 "question": {"type": "string", "description": "Question to analyze"},
                 "context": {"type": "object", "description": "Additional context"},
                 "analysis_depth": {
-                    "type": "string", 
-                    "enum": ["basic", "standard", "comprehensive"], 
+                    "type": "string",
+                    "enum": ["basic", "standard", "comprehensive"],
                     "default": "standard"
                 },
                 "use_cross_agent_tools": {"type": "boolean", "default": True},
@@ -85,7 +85,7 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
         """
         session_id = f"reasoning_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         start_time = datetime.now().timestamp()
-        
+
         try:
             # Step 1: Validate input using MCP validation tools
             validation_result = await self.validation_tools.validate_reasoning_input(
@@ -93,14 +93,14 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
                 context=context or {},
                 validation_level="standard"
             )
-            
+
             if not validation_result["is_valid"]:
                 return {
                     "status": "error",
                     "error": "Input validation failed",
                     "validation_details": validation_result
                 }
-            
+
             # Step 2: Initialize reasoning session
             self.reasoning_sessions[session_id] = {
                 "question": question,
@@ -108,31 +108,31 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
                 "start_time": start_time,
                 "steps": []
             }
-            
+
             # Step 3: Decompose question using MCP tools
             decomposition_result = await self._decompose_question_with_mcp(
                 question, analysis_depth
             )
-            
+
             # Step 4: Analyze patterns using cross-agent MCP tools
             pattern_analysis = {}
             if use_cross_agent_tools:
                 pattern_analysis = await self._analyze_patterns_cross_agent(
                     question, decomposition_result
                 )
-            
+
             # Step 5: Generate reasoning chain
             reasoning_chain = await self._generate_reasoning_chain(
                 question, decomposition_result, pattern_analysis
             )
-            
+
             # Step 6: Quality assessment using MCP tools
             quality_assessment = await self.quality_tools.assess_reasoning_quality(
                 reasoning_chain=reasoning_chain,
                 original_question=question,
                 assessment_criteria=["coherence", "completeness", "logical_flow"]
             )
-            
+
             # Step 7: Performance measurement
             end_time = datetime.now().timestamp()
             if performance_tracking:
@@ -148,12 +148,12 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
                     }
                 )
                 self.performance_metrics[session_id] = performance_metrics
-            
+
             # Step 8: Synthesize final answer
             final_answer = await self._synthesize_answer_with_mcp(
                 question, reasoning_chain, quality_assessment
             )
-            
+
             return {
                 "status": "success",
                 "session_id": session_id,
@@ -167,13 +167,13 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
                 "performance_metrics": self.performance_metrics.get(session_id, {}),
                 "mcp_tools_used": [
                     "validate_reasoning_input",
-                    "decompose_question", 
+                    "decompose_question",
                     "analyze_patterns",
                     "assess_reasoning_quality",
                     "measure_performance_metrics"
                 ]
             }
-            
+
         except Exception as e:
             logger.error(f"Enhanced reasoning analysis failed: {e}")
             return {
@@ -182,7 +182,7 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
                 "error": str(e),
                 "partial_results": self.reasoning_sessions.get(session_id, {})
             }
-    
+
     @mcp_tool(
         name="cross_agent_collaboration",
         description="Collaborate with other agents using MCP protocol",
@@ -191,7 +191,7 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
             "properties": {
                 "task": {"type": "string", "description": "Collaboration task"},
                 "target_agents": {
-                    "type": "array", 
+                    "type": "array",
                     "items": {"type": "string"},
                     "description": "List of agent IDs to collaborate with"
                 },
@@ -217,10 +217,10 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
         """
         collaboration_id = f"collab_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         start_time = datetime.now().timestamp()
-        
+
         try:
             results = {}
-            
+
             if collaboration_mode == "sequential":
                 # Sequential collaboration
                 for agent_id in target_agents:
@@ -228,10 +228,10 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
                         agent_id, task, timeout_seconds
                     )
                     results[agent_id] = agent_result
-                    
+
                     # Use previous results as context for next agent
                     task = f"{task}\nPrevious analysis: {agent_result.get('summary', '')}"
-            
+
             elif collaboration_mode == "parallel":
                 # Parallel collaboration
                 tasks_coroutines = [
@@ -239,19 +239,19 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
                     for agent_id in target_agents
                 ]
                 agent_results = await asyncio.gather(*tasks_coroutines, return_exceptions=True)
-                
+
                 for i, agent_id in enumerate(target_agents):
                     results[agent_id] = agent_results[i] if not isinstance(agent_results[i], Exception) else {
                         "error": str(agent_results[i])
                     }
-            
+
             elif collaboration_mode == "debate":
                 # Debate-style collaboration
                 results = await self._conduct_agent_debate(target_agents, task, timeout_seconds)
-            
+
             # Synthesize collaboration results
             synthesis = await self._synthesize_collaboration_results(results, task)
-            
+
             # Performance tracking
             end_time = datetime.now().timestamp()
             performance_metrics = await self.performance_tools.measure_performance_metrics(
@@ -265,7 +265,7 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
                     "collaboration_mode": collaboration_mode
                 }
             )
-            
+
             return {
                 "status": "success",
                 "collaboration_id": collaboration_id,
@@ -277,7 +277,7 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
                 "performance_metrics": performance_metrics,
                 "mcp_protocol_used": True
             }
-            
+
         except Exception as e:
             logger.error(f"Cross-agent collaboration failed: {e}")
             return {
@@ -285,7 +285,7 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
                 "collaboration_id": collaboration_id,
                 "error": str(e)
             }
-    
+
     @mcp_resource(
         uri="reasoning://session-data",
         name="Reasoning Session Data",
@@ -299,7 +299,7 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
             "performance_metrics": self.performance_metrics,
             "last_updated": datetime.now().isoformat()
         }
-    
+
     @mcp_prompt(
         name="generate_reasoning_prompt",
         description="Generate contextual reasoning prompts based on question type",
@@ -316,7 +316,7 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
         complexity: str = "medium"
     ) -> str:
         """Generate contextual reasoning prompts"""
-        
+
         prompt_templates = {
             "analytical": {
                 "low": f"Analyze the following {domain} question step by step:",
@@ -334,18 +334,18 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
                 "high": f"Employ formal logical reasoning methods for this complex {domain} question:"
             }
         }
-        
-        return prompt_templates.get(question_type, {}).get(complexity, 
+
+        return prompt_templates.get(question_type, {}).get(complexity,
             f"Analyze this {domain} question using {question_type} reasoning:"
         )
-    
+
     async def _decompose_question_with_mcp(self, question: str, depth: str) -> Dict[str, Any]:
         """Decompose question using MCP tools"""
         try:
             # Use MCP skill client to call decomposition tool
             result = await self.mcp_client.call_skill_tool(
                 "question_decomposition",
-                "decompose_question", 
+                "decompose_question",
                 {
                     "question": question,
                     "decomposition_strategy": depth,
@@ -356,7 +356,7 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
         except Exception as e:
             logger.warning(f"MCP decomposition failed, using fallback: {e}")
             return {"sub_questions": [question], "strategy": "fallback"}
-    
+
     async def _analyze_patterns_cross_agent(self, question: str, decomposition: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze patterns using cross-agent MCP tools"""
         try:
@@ -374,17 +374,17 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
         except Exception as e:
             logger.warning(f"Cross-agent pattern analysis failed: {e}")
             return {"patterns": [], "analysis_method": "fallback"}
-    
+
     async def _generate_reasoning_chain(
-        self, 
-        question: str, 
-        decomposition: Dict[str, Any], 
+        self,
+        question: str,
+        decomposition: Dict[str, Any],
         patterns: Dict[str, Any]
     ) -> List[Dict[str, Any]]:
         """Generate reasoning chain based on decomposition and patterns"""
-        
+
         reasoning_chain = []
-        
+
         # Add initial premise
         reasoning_chain.append({
             "step": 1,
@@ -392,7 +392,7 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
             "content": f"Analyzing question: {question}",
             "confidence": 0.9
         })
-        
+
         # Add decomposition steps
         sub_questions = decomposition.get("sub_questions", [question])
         for i, sub_q in enumerate(sub_questions):
@@ -402,7 +402,7 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
                 "content": f"Sub-question {i+1}: {sub_q}",
                 "confidence": 0.8
             })
-        
+
         # Add pattern-based insights
         for i, pattern in enumerate(patterns.get("patterns", [])):
             reasoning_chain.append({
@@ -411,7 +411,7 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
                 "content": f"Pattern identified: {pattern.get('description', 'Unknown pattern')}",
                 "confidence": pattern.get("confidence", 0.7)
             })
-        
+
         # Add synthesis step
         reasoning_chain.append({
             "step": len(reasoning_chain) + 1,
@@ -419,25 +419,25 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
             "content": "Synthesizing insights from decomposition and pattern analysis",
             "confidence": 0.85
         })
-        
+
         return reasoning_chain
-    
+
     async def _synthesize_answer_with_mcp(
-        self, 
-        question: str, 
-        reasoning_chain: List[Dict[str, Any]], 
+        self,
+        question: str,
+        reasoning_chain: List[Dict[str, Any]],
         quality_assessment: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Synthesize final answer using MCP tools"""
-        
+
         # Calculate overall confidence
         confidences = [step.get("confidence", 0.5) for step in reasoning_chain]
         avg_confidence = sum(confidences) / len(confidences) if confidences else 0.5
-        
+
         # Adjust confidence based on quality assessment
         quality_score = quality_assessment.get("overall_score", 0.5)
         final_confidence = (avg_confidence + quality_score) / 2
-        
+
         return {
             "answer": f"Based on comprehensive analysis using MCP tools, the question '{question}' requires consideration of {len(reasoning_chain)} reasoning steps.",
             "confidence": final_confidence,
@@ -445,14 +445,14 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
             "quality_score": quality_score,
             "methodology": "MCP-enhanced reasoning analysis"
         }
-    
+
     async def _call_agent_via_mcp(self, agent_id: str, task: str, timeout: float) -> Dict[str, Any]:
         """Call another agent via MCP protocol"""
         try:
             # Simulate MCP call to another agent
             # In real implementation, this would use actual MCP client
             await asyncio.sleep(0.1)  # Simulate network call
-            
+
             return {
                 "agent_id": agent_id,
                 "task": task,
@@ -462,42 +462,42 @@ class EnhancedMCPReasoningAgent(SecureA2AAgent):
             }
         except Exception as e:
             return {"error": str(e), "agent_id": agent_id}
-    
+
     async def _conduct_agent_debate(self, agents: List[str], topic: str, timeout: float) -> Dict[str, Any]:
         """Conduct debate-style collaboration between agents"""
         debate_rounds = []
-        
+
         for round_num in range(min(3, len(agents))):  # Max 3 rounds
             round_results = {}
-            
+
             for agent_id in agents:
                 # Each agent provides their perspective
                 response = await self._call_agent_via_mcp(
-                    agent_id, 
-                    f"Round {round_num + 1} debate on: {topic}", 
+                    agent_id,
+                    f"Round {round_num + 1} debate on: {topic}",
                     timeout
                 )
                 round_results[agent_id] = response
-            
+
             debate_rounds.append({
                 "round": round_num + 1,
                 "responses": round_results
             })
-        
+
         return {
             "debate_topic": topic,
             "rounds": debate_rounds,
             "participants": agents,
             "methodology": "MCP debate protocol"
         }
-    
+
     async def _synthesize_collaboration_results(self, results: Dict[str, Any], task: str) -> Dict[str, Any]:
         """Synthesize results from agent collaboration"""
-        
+
         successful_results = [r for r in results.values() if not r.get("error")]
         total_confidence = sum(r.get("confidence", 0) for r in successful_results)
         avg_confidence = total_confidence / len(successful_results) if successful_results else 0
-        
+
         return {
             "task": task,
             "agents_participated": len(results),

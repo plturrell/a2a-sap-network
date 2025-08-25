@@ -122,16 +122,16 @@ async def route_message(request: RoutingRequest, router: A2AHumanCommunicationRo
     try:
         # Convert Pydantic model to dict
         message_dict = request.message.dict()
-        
+
         # Route the message
         routing_decision = router.determine_communication_target(
             message=message_dict,
             from_agent=request.from_agent,
             context=request.context
         )
-        
+
         return RoutingResponse(**routing_decision)
-        
+
     except Exception as e:
         logger.error(f"Error routing message: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -152,15 +152,15 @@ async def get_agent_profiles(router: A2AHumanCommunicationRouter = Depends(get_r
 async def get_agent_profile(agent_id: str, router: A2AHumanCommunicationRouter = Depends(get_router)):
     """Get communication profile for a specific agent"""
     profile = router.get_agent_communication_settings(agent_id)
-    
+
     if "error" in profile:
         raise HTTPException(status_code=404, detail=f"Agent profile not found: {agent_id}")
-    
+
     return profile
 
 @app.put("/agents/{agent_id}/profile")
 async def update_agent_profile(
-    agent_id: str, 
+    agent_id: str,
     profile_request: AgentProfileRequest,
     router: A2AHumanCommunicationRouter = Depends(get_router)
 ):
@@ -177,15 +177,15 @@ async def update_agent_profile(
             communication_preferences=profile_request.communication_preferences,
             human_supervisors=profile_request.human_supervisors
         )
-        
+
         router.update_agent_profile(agent_id, profile)
-        
+
         return {
             "message": f"Profile updated for agent {agent_id}",
             "agent_id": agent_id,
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Error updating agent profile: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -194,7 +194,7 @@ async def update_agent_profile(
 async def get_communication_rules(router: A2AHumanCommunicationRouter = Depends(get_router)):
     """Get all communication rules"""
     rules_data = []
-    
+
     for rule in sorted(router.rules, key=lambda r: r.priority):
         rules_data.append({
             "rule_id": rule.rule_id,
@@ -208,7 +208,7 @@ async def get_communication_rules(router: A2AHumanCommunicationRouter = Depends(
             "escalation_timeout_minutes": rule.escalation_timeout_minutes,
             "human_response_timeout_minutes": rule.human_response_timeout_minutes
         })
-    
+
     return {
         "rules": rules_data,
         "total_rules": len(rules_data),
@@ -235,15 +235,15 @@ async def add_communication_rule(
             escalation_timeout_minutes=rule_request.escalation_timeout_minutes,
             human_response_timeout_minutes=rule_request.human_response_timeout_minutes
         )
-        
+
         router.add_custom_rule(rule)
-        
+
         return {
             "message": f"Rule '{rule_request.rule_id}' added successfully",
             "rule_id": rule_request.rule_id,
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Error adding rule: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -256,20 +256,20 @@ async def test_message_routing(
     """Test message routing without actually processing the message"""
     try:
         message_dict = request.message.dict()
-        
+
         # Get routing decision
         routing_decision = router.determine_communication_target(
             message=message_dict,
             from_agent=request.from_agent,
             context=request.context
         )
-        
+
         # Add test information
         routing_decision["test_mode"] = True
         routing_decision["message_would_be_routed_to"] = routing_decision["target"]
-        
+
         return routing_decision
-        
+
     except Exception as e:
         logger.error(f"Error testing routing: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -280,24 +280,24 @@ async def get_routing_statistics(router: A2AHumanCommunicationRouter = Depends(g
     try:
         # Calculate statistics from message history
         total_messages = len(router.message_history)
-        
+
         target_counts = {}
         rule_usage = {}
         agent_activity = {}
-        
+
         for msg in router.message_history:
             # Count targets
             target = msg.get("routing_target", "unknown")
             target_counts[target] = target_counts.get(target, 0) + 1
-            
+
             # Count rule usage
             rule_id = msg.get("rule_applied", {}).get("rule_id", "unknown")
             rule_usage[rule_id] = rule_usage.get(rule_id, 0) + 1
-            
+
             # Count agent activity
             from_agent = msg.get("from_agent", "unknown")
             agent_activity[from_agent] = agent_activity.get(from_agent, 0) + 1
-        
+
         return {
             "total_messages_routed": total_messages,
             "routing_targets": target_counts,
@@ -309,7 +309,7 @@ async def get_routing_statistics(router: A2AHumanCommunicationRouter = Depends(g
             "pending_human_responses": len(router.pending_human_responses),
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Error getting statistics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -321,9 +321,9 @@ async def export_configuration(router: A2AHumanCommunicationRouter = Depends(get
         config = router.export_configuration()
         config["exported_at"] = datetime.utcnow().isoformat()
         config["export_version"] = "1.0.0"
-        
+
         return config
-        
+
     except Exception as e:
         logger.error(f"Error exporting configuration: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -336,26 +336,26 @@ async def simulate_routing_scenario(
     """Simulate a routing scenario with multiple messages"""
     try:
         results = []
-        
+
         messages = scenario.get("messages", [])
         for msg_data in messages:
             message = A2AMessage(**msg_data["message"])
             from_agent = msg_data.get("from_agent", "test_agent")
             context = msg_data.get("context", {})
-            
+
             routing_decision = router.determine_communication_target(
                 message=message.dict(),
                 from_agent=from_agent,
                 context=context
             )
-            
+
             results.append({
                 "message_id": message.messageId or f"sim_{len(results)}",
                 "from_agent": from_agent,
                 "routing_decision": routing_decision,
                 "message_summary": f"{message.message_type} from {from_agent}"
             })
-        
+
         return {
             "scenario_name": scenario.get("name", "Unnamed Scenario"),
             "total_messages": len(messages),
@@ -368,7 +368,7 @@ async def simulate_routing_scenario(
             },
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Error simulating scenario: {e}")
         raise HTTPException(status_code=500, detail=str(e))

@@ -35,7 +35,7 @@ class NetworkConfig:
     enable_encryption: bool = True
 
 
-@dataclass  
+@dataclass
 class NetworkRequest:
     """A2A Network request specification"""
     to_agent: str  # Target agent ID
@@ -49,33 +49,33 @@ class NetworkRequest:
 class A2ANetworkClient:
     """
     A2A Protocol Compliant Network Client
-    
+
     This client ensures all network communication goes through
     the A2A blockchain messaging protocol. Direct HTTP/WebSocket
     connections are NOT allowed.
     """
-    
+
     def __init__(self, agent_id: str, blockchain_client: Any, config: NetworkConfig = None):
         self.agent_id = agent_id
         self.blockchain_client = blockchain_client
         self.config = config or NetworkConfig()
-        
+
         if not blockchain_client:
             raise ValueError(
                 "Blockchain client is required for A2A protocol compliance. "
                 "All network communication must go through the A2A blockchain."
             )
-    
+
     async def send_request(self, request: NetworkRequest) -> Dict[str, Any]:
         """
         Send a request through A2A blockchain messaging
-        
+
         This replaces traditional HTTP/WebSocket requests with
         blockchain-based A2A protocol messages.
         """
         if not self.blockchain_client:
             raise RuntimeError("Cannot send network request without blockchain client")
-        
+
         # Create A2A message
         a2a_message = {
             "from": self.agent_id,
@@ -87,7 +87,7 @@ class A2ANetworkClient:
             "encrypted": request.encrypt and self.config.enable_encryption,
             "priority": request.priority
         }
-        
+
         # Send through blockchain
         try:
             tx_hash = await self.blockchain_client.send_a2a_message(
@@ -95,14 +95,14 @@ class A2ANetworkClient:
                 message=a2a_message,
                 encrypt=request.encrypt
             )
-            
+
             if request.require_receipt:
                 # Wait for blockchain confirmation
                 receipt = await self.blockchain_client.wait_for_receipt(
-                    tx_hash, 
+                    tx_hash,
                     timeout=self.config.blockchain_timeout
                 )
-                
+
                 return {
                     "success": True,
                     "tx_hash": tx_hash,
@@ -115,11 +115,11 @@ class A2ANetworkClient:
                     "tx_hash": tx_hash,
                     "timestamp": datetime.utcnow().isoformat()
                 }
-                
+
         except Exception as e:
             logger.error(f"Failed to send A2A message: {e}")
             raise RuntimeError(f"A2A protocol error: {e}")
-    
+
     async def send_a2a_message(self, to_agent: str, message: Dict[str, Any], message_type: str = "GENERAL") -> Dict[str, Any]:
         """
         Send an A2A message - alias for send_request for backward compatibility
@@ -130,20 +130,20 @@ class A2ANetworkClient:
             payload=message
         )
         return await self.send_request(request)
-    
+
     async def request_with_consensus(
-        self, 
+        self,
         request: NetworkRequest,
         validator_agents: List[str]
     ) -> Dict[str, Any]:
         """
         Send request requiring consensus from multiple agents
-        
+
         This ensures distributed validation through the A2A network
         """
         if not validator_agents:
             raise ValueError("Validator agents required for consensus request")
-        
+
         # Request consensus through blockchain
         consensus_request = {
             "initiator": self.agent_id,
@@ -152,21 +152,21 @@ class A2ANetworkClient:
             "threshold": self.config.consensus_threshold,
             "timeout": self.config.blockchain_timeout
         }
-        
+
         try:
             result = await self.blockchain_client.request_consensus(consensus_request)
-            
+
             return {
                 "success": result.get("consensus_reached", False),
                 "votes": result.get("votes", {}),
                 "threshold": self.config.consensus_threshold,
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
         except Exception as e:
             logger.error(f"Consensus request failed: {e}")
             raise RuntimeError(f"A2A consensus error: {e}")
-    
+
     async def close(self):
         """Close network client connections"""
         # No persistent connections in A2A protocol
@@ -178,11 +178,11 @@ class A2ANetworkClient:
 class LegacyHTTPClient:
     """
     Legacy HTTP client wrapper that enforces A2A protocol
-    
+
     This class exists only to catch legacy HTTP usage and
     redirect it through proper A2A channels.
     """
-    
+
     def __init__(self, *args, **kwargs):
         logger.error(
             "PROTOCOL VIOLATION: Attempted to create HTTP client. "
@@ -193,16 +193,16 @@ class LegacyHTTPClient:
             "Direct HTTP communication is not allowed in A2A protocol compliant systems. "
             "All agent communication must go through blockchain-based A2A messages."
         )
-    
+
     async def get(self, *args, **kwargs):
         raise RuntimeError("HTTP GET not allowed. Use A2A protocol.")
-    
+
     async def post(self, *args, **kwargs):
         raise RuntimeError("HTTP POST not allowed. Use A2A protocol.")
-    
+
     async def put(self, *args, **kwargs):
         raise RuntimeError("HTTP PUT not allowed. Use A2A protocol.")
-    
+
     async def delete(self, *args, **kwargs):
         raise RuntimeError("HTTP DELETE not allowed. Use A2A protocol.")
 

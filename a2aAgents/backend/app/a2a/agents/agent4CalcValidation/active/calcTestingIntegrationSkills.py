@@ -87,15 +87,15 @@ class Scoreboard(BaseModel):
 
 class CalcTestingIntegrationSkills(SecureA2AAgent):
     """Skills for CalcTesting agent to interact with CalculationAgent"""
-    
+
     # Security features provided by SecureA2AAgent:
     # - JWT authentication and authorization
-    # - Rate limiting and request throttling  
+    # - Rate limiting and request throttling
     # - Input validation and sanitization
     # - Audit logging and compliance tracking
     # - Encrypted communication channels
     # - Automatic security scanning
-    
+
     def __init__(self, agent):
         super().__init__()
         self.agent = agent
@@ -107,18 +107,18 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
         # Agent endpoints will be discovered dynamically
         self._agent_endpoints = {}
         self._discovered_agents = {}
-        
+
     async def _discover_agent_endpoint(self, agent_id: str) -> Optional[str]:
         """Discover agent endpoint via Catalog Manager"""
         if agent_id in self._agent_endpoints:
             return self._agent_endpoints[agent_id]
-            
+
         try:
             # Use catalog manager to discover agent
             result = await self.agent._call_catalog_manager("discover_agent", {
                 "agent_id": agent_id
             })
-            
+
             if result and not result.get("error"):
                 endpoint = result.get("endpoint")
                 if endpoint:
@@ -126,21 +126,21 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
                     return endpoint
         except Exception as e:
             logger.error(f"Failed to discover agent {agent_id}: {e}")
-            
+
         # Fallback to environment variable
         env_key = f"{agent_id.upper()}_URL"
         return os.getenv(env_key)
-    
+
     async def _wait_for_response(self, message_id: str) -> Dict[str, Any]:
         """Wait for response message from CalculationAgent"""
         # Store pending response in a class-level dict
         if not hasattr(self, '_pending_responses'):
             self._pending_responses = {}
-        
+
         # Create a future for this message
         future = asyncio.get_event_loop().create_future()
         self._pending_responses[message_id] = future
-        
+
         # Wait for the response
         try:
             return await future
@@ -148,14 +148,14 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
             # Clean up
             if message_id in self._pending_responses:
                 del self._pending_responses[message_id]
-    
+
     def _handle_calculation_response(self, message_id: str, response: Dict[str, Any]):
         """Handle incoming response from CalculationAgent"""
         if hasattr(self, '_pending_responses') and message_id in self._pending_responses:
             future = self._pending_responses[message_id]
             if not future.done():
                 future.set_result(response)
-    
+
     async def _handle_blockchain_response(self, blockchain_msg: Dict[str, Any]):
         """Handle blockchain response message from CalculationAgent"""
         try:
@@ -163,25 +163,25 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
             content = blockchain_msg.get('content', {})
             if isinstance(content, str):
                 content = json.loads(content)
-            
+
             # Extract message ID from content
             original_message_id = content.get('in_reply_to') or blockchain_msg.get('id')
-            
+
             # Handle the response
             self._handle_calculation_response(original_message_id, content)
-            
+
         except Exception as e:
             logger.error(f"Error handling blockchain response: {e}")
-    
+
     async def _call_calculation_agent(self, message: A2AMessage) -> Dict[str, Any]:
         """Send message to CalculationAgent via A2A blockchain network"""
         try:
             # Import A2A blockchain integration from a2aNetwork
             import sys
             sys.path.insert(0, '/Users/apple/projects/a2a/a2aNetwork')
-            
+
             from pythonSdk.blockchain.agentIntegration import BlockchainAgentIntegration
-            
+
             # Initialize blockchain integration if not already done
             if not hasattr(self, '_blockchain_integration'):
                 self._blockchain_integration = BlockchainAgentIntegration(
@@ -189,33 +189,33 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
                     agent_endpoint=self.agent.base_url,
                     capabilities=["calculation_testing", "evaluation"]
                 )
-                
+
                 # Initialize the blockchain integration
                 await self._blockchain_integration.initialize()
-                
+
                 # Register message handler for responses
                 self._blockchain_integration.register_message_handler(
-                    "calculation_response", 
+                    "calculation_response",
                     self._handle_blockchain_response
                 )
-            
+
             # Find calculation agent on blockchain
             calc_agents = await self._blockchain_integration.find_agents_by_capability("calculation")
             if not calc_agents:
                 return {"error": "No calculation agent found on blockchain"}
-            
+
             calc_agent_address = calc_agents[0]['address']
-            
+
             # Send message through blockchain
             message_id = await self._blockchain_integration.send_message(
                 to_agent_address=calc_agent_address,
                 content=json.dumps(message.dict()),
                 message_type="calculation_request"
             )
-            
+
             if not message_id:
                 return {"error": "Failed to send message through blockchain"}
-            
+
             # Wait for response (with timeout)
             try:
                 result = await asyncio.wait_for(
@@ -225,11 +225,11 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
                 return result
             except asyncio.TimeoutError:
                 return {"error": "Timeout waiting for CalculationAgent response"}
-                    
+
         except Exception as e:
             logger.error(f"Failed to send message to CalculationAgent via blockchain: {e}")
             return {"error": str(e)}
-        
+
     async def dispatch_test_question(self, question: TestQuestion) -> Dict[str, Any]:
         """
         Dispatch a test question to CalculationAgent via A2A protocol
@@ -263,7 +263,7 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
                 taskId=question.question_id,
                 contextId=f"test_context_{question.question_id}"
             )
-            
+
             # Sign the message with BDC smart contract
             if hasattr(self.agent, 'trust_identity') and self.agent.trust_identity:
                 try:
@@ -277,16 +277,16 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
                     message.signature = signature.get("signature", "")
                 except ImportError:
                     logger.warning("Trust system not available, sending unsigned message")
-            
+
             # Send to CalculationAgent via A2A protocol
             logger.info(f"Dispatching test question {question.question_id} to CalculationAgent")
-            
+
             # Send via A2A protocol using agent's communication pattern
             response = await self._call_calculation_agent(message)
-            
+
             if response and response.get("success"):
                 result = response.get("data", {})
-                
+
                 # Extract calculation result
                 calc_result = CalculationResult(
                     answer=result.get("result", {}).get("answer"),
@@ -295,10 +295,10 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
                     confidence=result.get("result", {}).get("confidence", 0.0),
                     computation_time=result.get("computation_time", 0.0)
                 )
-                
+
                 # Store raw response for evaluation
                 await self._store_calculation_response(question.question_id, calc_result)
-                
+
                 return {
                     "status": "success",
                     "question_id": question.question_id,
@@ -312,7 +312,7 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
                     "question_id": question.question_id,
                     "error": error_msg
                 }
-                
+
         except Exception as e:
             logger.error(f"Error dispatching test question: {str(e)}")
             return {
@@ -320,10 +320,10 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
                 "question_id": question.question_id,
                 "error": str(e)
             }
-    
+
     async def evaluate_calculation_answer(
-        self, 
-        question: TestQuestion, 
+        self,
+        question: TestQuestion,
         calc_result: CalculationResult,
         expected_answer: Optional[Any] = None
     ) -> EvaluationScore:
@@ -333,30 +333,30 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
         try:
             evaluation_prompt = f"""
             Evaluate the following calculation result:
-            
+
             Question: {question.question}
             Category: {question.category}
             Difficulty: {question.difficulty}
-            
+
             Provided Answer: {calc_result.answer}
             Methodology: {calc_result.methodology}
             Steps: {json.dumps(calc_result.steps, indent=2)}
-            
+
             Expected Answer: {expected_answer if expected_answer else "Not provided - evaluate correctness based on mathematical principles"}
             Expected Methodology: {question.expected_methodology if question.expected_methodology else "Any valid approach"}
-            
+
             Please evaluate:
             1. Accuracy of the answer (0-100 score)
             2. Quality of methodology explanation (0-100 score)
             3. Clarity of step-by-step explanation (0-100 score)
             4. Overall assessment
-            
+
             Consider:
             - Mathematical correctness
             - Logical flow of steps
             - Clarity of explanation
             - Appropriate methodology for the problem type
-            
+
             Return a JSON response with:
             {{
                 "accuracy_score": <0-100>,
@@ -367,7 +367,7 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
                 "passed": <true/false>
             }}
             """
-            
+
             if self.grok_client and GROK_AVAILABLE:
                 # Use Grok for intelligent evaluation
                 evaluation_data = await self.grok_client.evaluate_calculation(
@@ -382,7 +382,7 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
                 evaluation_data = await self._rule_based_evaluation(
                     question, calc_result, expected_answer
                 )
-            
+
             # Create evaluation score
             evaluation = EvaluationScore(
                 question_id=question.question_id,
@@ -393,12 +393,12 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
                 feedback=evaluation_data.get("feedback", ""),
                 passed=evaluation_data.get("passed", False)
             )
-            
+
             # Update scoreboard
             await self._update_scoreboard(question, evaluation)
-            
+
             return evaluation
-            
+
         except Exception as e:
             logger.error(f"Error evaluating calculation answer: {str(e)}")
             return EvaluationScore(
@@ -410,10 +410,10 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
                 feedback=f"Evaluation error: {str(e)}",
                 passed=False
             )
-    
+
     async def _rule_based_evaluation(
-        self, 
-        question: TestQuestion, 
+        self,
+        question: TestQuestion,
         calc_result: CalculationResult,
         expected_answer: Optional[Any]
     ) -> Dict[str, Any]:
@@ -428,7 +428,7 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
             "feedback": "",
             "passed": False
         }
-        
+
         # Check accuracy if expected answer provided
         if expected_answer is not None:
             try:
@@ -446,7 +446,7 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
         else:
             # No expected answer - give benefit of doubt
             scores["accuracy_score"] = 80 if calc_result.confidence > 0.8 else 60
-        
+
         # Evaluate methodology
         if calc_result.methodology:
             methodology_length = len(calc_result.methodology)
@@ -454,7 +454,7 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
                 scores["methodology_score"] = min(100, 50 + methodology_length / 10)
             else:
                 scores["methodology_score"] = methodology_length
-        
+
         # Evaluate explanation steps
         if calc_result.steps:
             step_count = len(calc_result.steps)
@@ -462,17 +462,17 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
                 scores["explanation_score"] = min(100, 60 + step_count * 10)
             else:
                 scores["explanation_score"] = step_count * 20
-        
+
         # Calculate overall score
         scores["overall_score"] = (
             scores["accuracy_score"] * 0.5 +
             scores["methodology_score"] * 0.3 +
             scores["explanation_score"] * 0.2
         )
-        
+
         # Determine if passed
         scores["passed"] = scores["overall_score"] >= 70
-        
+
         # Generate feedback
         feedback_parts = []
         if scores["accuracy_score"] < 70:
@@ -481,27 +481,27 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
             feedback_parts.append("Methodology explanation could be more detailed")
         if scores["explanation_score"] < 70:
             feedback_parts.append("Step-by-step explanation needs more clarity")
-        
+
         scores["feedback"] = ". ".join(feedback_parts) if feedback_parts else "Good performance overall"
-        
+
         return scores
-    
+
     async def _update_scoreboard(self, question: TestQuestion, evaluation: EvaluationScore):
         """
         Update the scoreboard with evaluation results
         """
         # Update total questions
         self.scoreboard.total_questions += 1
-        
+
         # Update correct answers
         if evaluation.passed:
             self.scoreboard.correct_answers += 1
-        
+
         # Update accuracy rate
         self.scoreboard.accuracy_rate = (
             self.scoreboard.correct_answers / self.scoreboard.total_questions * 100
         )
-        
+
         # Update average scores
         n = self.scoreboard.total_questions
         self.scoreboard.average_methodology_score = (
@@ -510,7 +510,7 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
         self.scoreboard.average_explanation_score = (
             (self.scoreboard.average_explanation_score * (n - 1) + evaluation.explanation_score) / n
         )
-        
+
         # Update category scores
         if question.category not in self.scoreboard.category_scores:
             self.scoreboard.category_scores[question.category] = {
@@ -518,16 +518,16 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
                 "passed": 0,
                 "average_score": 0
             }
-        
+
         cat_scores = self.scoreboard.category_scores[question.category]
         cat_scores["total"] += 1
         if evaluation.passed:
             cat_scores["passed"] += 1
         cat_scores["average_score"] = (
-            (cat_scores["average_score"] * (cat_scores["total"] - 1) + evaluation.overall_score) / 
+            (cat_scores["average_score"] * (cat_scores["total"] - 1) + evaluation.overall_score) /
             cat_scores["total"]
         )
-        
+
         # Update difficulty scores
         if question.difficulty not in self.scoreboard.difficulty_scores:
             self.scoreboard.difficulty_scores[question.difficulty] = {
@@ -535,19 +535,19 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
                 "passed": 0,
                 "average_score": 0
             }
-        
+
         diff_scores = self.scoreboard.difficulty_scores[question.difficulty]
         diff_scores["total"] += 1
         if evaluation.passed:
             diff_scores["passed"] += 1
         diff_scores["average_score"] = (
-            (diff_scores["average_score"] * (diff_scores["total"] - 1) + evaluation.overall_score) / 
+            (diff_scores["average_score"] * (diff_scores["total"] - 1) + evaluation.overall_score) /
             diff_scores["total"]
         )
-        
+
         # Store scoreboard in Data Manager
         await self._store_scoreboard()
-    
+
     async def get_scoreboard_report(self) -> Dict[str, Any]:
         """
         Get a comprehensive scoreboard report
@@ -564,7 +564,7 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
             "by_category": {},
             "by_difficulty": {}
         }
-        
+
         # Add category breakdown
         for category, scores in self.scoreboard.category_scores.items():
             report["by_category"][category] = {
@@ -573,7 +573,7 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
                 "pass_rate": f"{(scores['passed'] / scores['total'] * 100):.2f}%" if scores['total'] > 0 else "0%",
                 "average_score": f"{scores['average_score']:.2f}"
             }
-        
+
         # Add difficulty breakdown
         for difficulty, scores in self.scoreboard.difficulty_scores.items():
             report["by_difficulty"][difficulty] = {
@@ -582,9 +582,9 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
                 "pass_rate": f"{(scores['passed'] / scores['total'] * 100):.2f}%" if scores['total'] > 0 else "0%",
                 "average_score": f"{scores['average_score']:.2f}"
             }
-        
+
         return report
-    
+
     async def _store_calculation_response(self, question_id: str, calc_result: CalculationResult):
         """
         Store calculation response in Data Manager
@@ -604,7 +604,7 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
             })
         except Exception as e:
             logger.error(f"Failed to store calculation response: {str(e)}")
-    
+
     async def _store_scoreboard(self):
         """
         Store scoreboard in Data Manager
@@ -623,32 +623,32 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
             })
         except Exception as e:
             logger.error(f"Failed to store scoreboard: {str(e)}")
-    
+
     async def create_test_suite(self, test_config: Dict[str, Any]) -> List[TestQuestion]:
         """
         Create a test suite based on configuration
         """
         test_questions = []
-        
+
         # Get test templates from Data Manager
         try:
             result = await self.agent._call_data_manager("data_read", {
                 "key": "test_templates_calculation",
                 "storage_backend": "filesystem"
             })
-            
+
             if result and not result.get("error"):
                 templates = result.get("data", {})
             else:
                 templates = self._get_default_templates()
         except:
             templates = self._get_default_templates()
-        
+
         # Generate test questions based on config
         for category in test_config.get("categories", ["mathematical"]):
             for difficulty in test_config.get("difficulties", ["easy", "medium", "hard"]):
                 count = test_config.get("questions_per_combination", 3)
-                
+
                 for i in range(count):
                     question_template = templates.get(category, {}).get(difficulty, [])
                     if question_template:
@@ -659,7 +659,7 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
 # A2A Protocol Compliance: All imports must be available
 # No fallback implementations allowed - the agent must have all required dependencies
                         template = secrets.choice(question_template)
-                        
+
                         test_questions.append(TestQuestion(
                             question=template["question"],
                             category=category,
@@ -668,9 +668,9 @@ class CalcTestingIntegrationSkills(SecureA2AAgent):
                             expected_steps=template.get("steps"),
                             tolerance=template.get("tolerance", 0.01)
                         ))
-        
+
         return test_questions
-    
+
     def _get_default_templates(self) -> Dict[str, Any]:
         """
         Get default test templates

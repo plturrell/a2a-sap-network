@@ -120,12 +120,12 @@ class QueryPattern:
 class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     Enhanced SQL Agent with AI Intelligence Framework Integration and Blockchain
-    
+
     This agent provides advanced SQL query processing capabilities with sophisticated reasoning,
     adaptive learning from query patterns, autonomous optimization, and blockchain integration.
-    
+
     AI Intelligence Rating: 68+ out of 100
-    
+
     Enhanced Capabilities:
     - Multi-strategy query reasoning (NL2SQL, semantic parsing, context-aware, pattern-based, optimization-driven, security-focused)
     - Adaptive learning from query patterns and SQL optimization effectiveness
@@ -135,7 +135,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
     - Autonomous query optimization and security enhancement
     - Blockchain-based SQL query execution and distributed database operations
     """
-    
+
     def __init__(self, base_url: str, config: Optional[Dict[str, Any]] = None):
 
         # Initialize security features
@@ -154,7 +154,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             "database_consensus",
             "data_verification"
         ]
-        
+
         # Initialize A2AAgentBase with blockchain capabilities
         A2AAgentBase.__init__(
             self,
@@ -165,10 +165,10 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             base_url=base_url,
             blockchain_capabilities=blockchain_capabilities
         )
-        
+
         # Initialize blockchain integration
         BlockchainIntegrationMixin.__init__(self)
-        
+
         # Initialize AI Intelligence Framework
         ai_config = create_enhanced_agent_config(
             agent_type="sql_processing",
@@ -189,16 +189,16 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 "peer_query_review", "cross_validation"
             ]
         )
-        
+
         self.ai_framework = create_ai_intelligence_framework(ai_config)
-        
+
         # Initialize enhanced SQL skills
         if ENHANCED_SQL_SKILLS_AVAILABLE:
             self.sql_skills = EnhancedSQLSkills(self)
         else:
             self.sql_skills = None
             logger.warning("Enhanced SQL skills not available - using basic implementation")
-        
+
         # SQL query statistics and learning
         self.query_stats = {
             "total_queries": 0,
@@ -209,7 +209,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             "security_blocks": 0,
             "performance_metrics": {}
         }
-        
+
         # SQL knowledge base
         self.sql_knowledge = {
             "query_patterns": {},
@@ -232,11 +232,11 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 "sqlite": 0.6
             }
         }
-        
+
         # Query cache with AI-enhanced management
         self.query_cache = {}
         self.max_cache_size = int(os.getenv("SQL_CACHE_SIZE", "1000"))
-        
+
         # Initialize NLP components
         self.nlp = None
         self.matcher = None
@@ -247,59 +247,59 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 logger.info("Advanced NLP components initialized")
             except OSError:
                 logger.warning("spaCy model not found. Basic NLP will be used.")
-        
+
         logger.info(f"Enhanced SQL Agent initialized with AI Intelligence Framework")
 
     async def initialize(self) -> None:
         """Initialize agent with AI intelligence components"""
         logger.info(f"Initializing {self.name} with AI Intelligence Framework...")
-        
+
         # Establish standard trust relationships FIRST
         await self.establish_standard_trust_relationships()
-        
+
         # Initialize AI components
         await self.ai_framework.initialize()
-        
+
         # Initialize blockchain integration
         await self.initialize_blockchain()
-        
+
         # Initialize SQL knowledge base
         await self._initialize_sql_knowledge()
-        
+
         # Initialize NLP patterns
         await self._initialize_nlp_patterns()
-        
+
         # Set up query monitoring
         await self._setup_query_monitoring()
-        
+
         # Discover relevant agents for SQL processing collaboration
         available_agents = await self.discover_agents(
             capabilities=["data_validation", "calculation_validation", "qa_validation", "quality_control"],
             agent_types=["validation", "analysis", "data_processing"]
         )
-        
+
         # Store discovered agents for collaborative SQL processing
         self.collaborative_agents = {
             "validation_agents": [agent for agent in available_agents if "validation" in agent.get("capabilities", [])],
             "data_agents": [agent for agent in available_agents if "data" in agent.get("agent_type", "")],
             "analysis_agents": [agent for agent in available_agents if "analysis" in agent.get("capabilities", [])]
         }
-        
+
         logger.info(f"{self.name} initialized successfully with AI intelligence and {len(available_agents)} collaborative agents")
 
     async def shutdown(self) -> None:
         """Cleanup with AI intelligence preservation"""
         logger.info(f"Shutting down {self.name}...")
-        
+
         # Save learning insights
         await self._save_learning_insights()
-        
+
         # Shutdown AI framework
         if hasattr(self.ai_framework, 'shutdown'):
             await self.ai_framework.shutdown()
-        
+
         logger.info(f"{self.name} shutdown complete")
-    
+
     @a2a_skill(
         name="aiEnhancedNL2SQL",
         description="Convert natural language to SQL with AI-powered reasoning and optimization",
@@ -350,7 +350,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             nl_query = request_data["natural_language_query"]
             context_data = request_data.get("context", {})
             explanation_level = request_data.get("explanation_level", "detailed")
-            
+
             # Create enhanced query context
             query_context = QueryContext(
                 original_query=nl_query,
@@ -362,42 +362,42 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 performance_requirements=context_data.get("performance_requirements", {}),
                 metadata={"explanation_level": explanation_level}
             )
-            
+
             # Use AI reasoning to analyze the query intent
             query_analysis = await self._ai_analyze_query_intent(nl_query, query_context)
-            
+
             # Select optimal conversion strategy using AI
             conversion_strategy = await self._ai_select_conversion_strategy(query_analysis, query_context)
-            
+
             # Perform AI-enhanced NL2SQL conversion
             sql_result = await self._ai_enhanced_nl2sql_conversion(
                 nl_query, query_analysis, conversion_strategy, query_context
             )
-            
+
             # AI-powered SQL optimization
             optimization_result = await self._ai_optimize_sql(sql_result, query_context)
-            
+
             # Security analysis using AI
             security_analysis = await self._ai_security_analysis(optimization_result, query_context)
-            
+
             # Validate result using AI
             validation_result = await self._ai_validate_sql_result(
                 optimization_result, query_context
             )
-            
+
             # Generate comprehensive explanation
             explanation = await self._ai_generate_query_explanation(
                 optimization_result, query_analysis, conversion_strategy, explanation_level
             )
-            
+
             # Learn from this query conversion
             await self._ai_learn_from_query(
                 query_context, optimization_result, validation_result
             )
-            
+
             # Update statistics
             self._update_query_stats(optimization_result)
-            
+
             # Store query result in data_manager
             await self.store_agent_data(
                 data_type="nl2sql_conversion",
@@ -416,7 +416,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     "timestamp": datetime.utcnow().isoformat()
                 }
             )
-            
+
             # Update agent status with agent_manager
             await self.update_agent_status(
                 status="active",
@@ -427,7 +427,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     "active_capabilities": ["nl2sql", "sql_optimization", "security_analysis"]
                 }
             )
-            
+
             return create_success_response({
                 "query_id": f"query_{datetime.utcnow().timestamp()}",
                 "sql_query": optimization_result.sql_query,
@@ -447,7 +447,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     "optimization_impact": optimization_result.performance_metrics.get("improvement", 0.0)
                 }
             })
-            
+
         except Exception as e:
             logger.error(f"AI-enhanced NL2SQL conversion failed: {str(e)}")
             return create_error_response(
@@ -455,7 +455,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 "nl2sql_error",
                 {"query": request_data.get("natural_language_query", ""), "error_trace": traceback.format_exc()}
             )
-    
+
     @a2a_skill(
         name="aiEnhancedSQL2NL",
         description="Convert SQL to natural language with AI-powered explanation generation",
@@ -495,20 +495,20 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             sql_query = request_data["sql_query"]
             context_data = request_data.get("context", {})
             explanation_style = request_data.get("explanation_style", "conversational")
-            
+
             # AI-powered SQL parsing and analysis
             sql_analysis = await self._ai_analyze_sql_structure(sql_query, context_data)
-            
+
             # Generate natural language explanation using AI
             nl_explanation = await self._ai_generate_nl_explanation(
                 sql_query, sql_analysis, context_data, explanation_style
             )
-            
+
             # Validate explanation quality using AI
             explanation_validation = await self._ai_validate_explanation(
                 sql_query, nl_explanation, context_data
             )
-            
+
             return create_success_response({
                 "explanation_id": f"explain_{datetime.utcnow().timestamp()}",
                 "natural_language_explanation": nl_explanation,
@@ -518,14 +518,14 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 "explanation_style": explanation_style,
                 "confidence_score": explanation_validation.get("confidence", 0.8)
             })
-            
+
         except Exception as e:
             logger.error(f"AI-enhanced SQL2NL conversion failed: {str(e)}")
             return create_error_response(
                 f"SQL explanation error: {str(e)}",
                 "sql2nl_error"
             )
-    
+
     @a2a_skill(
         name="batchQueryProcessing",
         description="Process multiple queries with AI-enhanced batch optimization",
@@ -564,19 +564,19 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             queries = request_data["queries"]
             batch_options = request_data.get("batch_options", {})
             parallel_processing = batch_options.get("parallel_processing", True)
-            
+
             # AI-powered batch optimization
             batch_analysis = await self._ai_analyze_batch_queries(queries, batch_options)
-            
+
             # Process queries based on AI recommendations
             if parallel_processing and len(queries) > 3:
                 results = await self._parallel_query_processing(queries, batch_analysis)
             else:
                 results = await self._sequential_query_processing(queries, batch_analysis)
-            
+
             # Generate batch insights
             batch_insights = await self._ai_generate_batch_insights(results, batch_analysis)
-            
+
             return create_success_response({
                 "batch_id": f"batch_{datetime.utcnow().timestamp()}",
                 "query_results": results,
@@ -589,14 +589,14 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     "cache_hits": batch_insights.get("cache_hits", 0)
                 }
             })
-            
+
         except Exception as e:
             logger.error(f"Batch query processing failed: {str(e)}")
             return create_error_response(
                 f"Batch processing error: {str(e)}",
                 "batch_processing_error"
             )
-    
+
     @a2a_skill(
         name="explainQueryReasoning",
         description="Provide detailed explanation of SQL generation reasoning and optimization decisions",
@@ -626,18 +626,18 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             query_id = request_data["query_id"]
             explanation_type = request_data.get("explanation_type", "full_reasoning")
             detail_level = request_data.get("detail_level", "intermediate")
-            
+
             # Retrieve query from memory
             query_memory = await self.ai_framework.memory_manager.retrieve_memory(
                 "query_history", {"query_id": query_id}
             )
-            
+
             if not query_memory:
                 return create_error_response(
                     f"Query {query_id} not found in memory",
                     "query_not_found"
                 )
-            
+
             # Generate detailed explanation using AI explainability
             explanation = await self.ai_framework.explainability_engine.explain_decision(
                 query_memory["reasoning_trace"],
@@ -645,7 +645,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 detail_level=detail_level,
                 domain_context="sql_query_processing"
             )
-            
+
             return create_success_response({
                 "query_id": query_id,
                 "explanation_type": explanation_type,
@@ -656,14 +656,14 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 "security_considerations": query_memory.get("security_analysis", {}),
                 "performance_analysis": query_memory.get("performance_metrics", {})
             })
-            
+
         except Exception as e:
             logger.error(f"Query reasoning explanation failed: {str(e)}")
             return create_error_response(
                 f"Explanation error: {str(e)}",
                 "explanation_error"
             )
-    
+
     @a2a_skill(
         name="optimizeQueryPatterns",
         description="Optimize query patterns based on AI learning and performance analysis",
@@ -694,21 +694,21 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
             query_type = request_data.get("query_type", "all")
             optimization_criteria = request_data.get("optimization_criteria", ["performance", "accuracy"])
             learning_window = request_data.get("learning_window", 100)
-            
+
             # Analyze query patterns using AI
             pattern_analysis = await self.ai_framework.adaptive_learning.analyze_patterns(
                 context={"domain": domain, "query_type": query_type},
                 window_size=learning_window
             )
-            
+
             # Generate optimization recommendations
             optimization_insights = await self._ai_generate_query_optimization_insights(
                 domain, query_type, optimization_criteria, pattern_analysis
             )
-            
+
             # Update query patterns
             await self._update_query_patterns(domain, query_type, optimization_insights)
-            
+
             return create_success_response({
                 "domain": domain,
                 "query_type": query_type,
@@ -722,24 +722,24 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     "performance_gain": pattern_analysis.get("performance_gain", 0.0)
                 }
             })
-            
+
         except Exception as e:
             logger.error(f"Query pattern optimization failed: {str(e)}")
             return create_error_response(
                 f"Optimization error: {str(e)}",
                 "optimization_error"
             )
-    
+
     async def _ai_analyze_query_intent(self, nl_query: str, context: QueryContext) -> Dict[str, Any]:
         """Use AI reasoning to analyze query intent and requirements"""
         try:
             analysis_strategies = [
                 "intent_classification",
-                "entity_extraction", 
+                "entity_extraction",
                 "relationship_identification",
                 "complexity_assessment"
             ]
-            
+
             analysis_results = {}
             for strategy in analysis_strategies:
                 result = await self.ai_framework.reasoning_engine.reason(
@@ -748,7 +748,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     context=context.__dict__
                 )
                 analysis_results[strategy] = result
-            
+
             # Synthesize analysis
             query_analysis = {
                 "original_query": nl_query,
@@ -763,13 +763,13 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     "detected_patterns": analysis_results.get("intent_classification", {}).get("patterns", [])
                 }
             }
-            
+
             return query_analysis
-            
+
         except Exception as e:
             logger.error(f"Query intent analysis failed: {str(e)}")
             return {"original_query": nl_query, "intent": "select", "complexity": 0.5, "confidence": 0.3}
-    
+
     async def _ai_select_conversion_strategy(self, analysis: Dict[str, Any], context: QueryContext) -> Dict[str, Any]:
         """Use AI reasoning to select optimal conversion strategy"""
         try:
@@ -787,7 +787,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     "past_performance": self.query_stats.get("optimization_improvements", {})
                 }
             )
-            
+
             strategy = {
                 "primary_strategy": strategy_reasoning.get("primary_strategy", "semantic_parsing"),
                 "backup_strategies": strategy_reasoning.get("backup_strategies", []),
@@ -795,22 +795,22 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 "expected_performance": strategy_reasoning.get("expected_performance", 0.5),
                 "reasoning": strategy_reasoning.get("reasoning", "Default strategy selection")
             }
-            
+
             return strategy
-            
+
         except Exception as e:
             logger.error(f"Conversion strategy selection failed: {str(e)}")
             return {"primary_strategy": "semantic_parsing", "confidence": 0.5, "expected_performance": 0.5}
-    
+
     async def _ai_enhanced_nl2sql_conversion(
-        self, nl_query: str, analysis: Dict[str, Any], 
+        self, nl_query: str, analysis: Dict[str, Any],
         strategy: Dict[str, Any], context: QueryContext
     ) -> QueryResult:
         """Perform NL2SQL conversion with AI enhancement"""
         try:
             conversion_start = datetime.utcnow()
             reasoning_trace = []
-            
+
             # Record reasoning step
             reasoning_trace.append({
                 "step": "conversion_initiation",
@@ -818,7 +818,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 "strategy": strategy["primary_strategy"],
                 "intent": analysis.get("intent", "select")
             })
-            
+
             # Use enhanced SQL skills if available
             if self.sql_skills and ENHANCED_SQL_SKILLS_AVAILABLE:
                 conversion_context = {
@@ -828,15 +828,15 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     "security_level": context.security_level,
                     "optimization_level": context.optimization_level
                 }
-                
+
                 result_data = await self.sql_skills.convert_nl_to_sql(
                     nl_query, conversion_context
                 )
-                
+
                 sql_query = result_data.get("sql_query", "")
                 explanation = result_data.get("explanation", "")
                 confidence = result_data.get("confidence", 0.0)
-                
+
                 # Extract additional reasoning steps if available
                 if "processing_steps" in result_data:
                     for step in result_data["processing_steps"]:
@@ -845,20 +845,20 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                             "details": step.get("details", ""),
                             "timestamp": datetime.utcnow().isoformat()
                         })
-                
+
             else:
                 # Basic fallback conversion
                 sql_query = self._basic_nl_to_sql_conversion(nl_query, analysis, context)
                 explanation = f"Converted '{nl_query}' using {strategy['primary_strategy']} strategy"
                 confidence = strategy.get("confidence", 0.5)
-                
+
                 reasoning_trace.append({
                     "step": "basic_conversion",
                     "operation": nl_query,
                     "result": sql_query,
                     "timestamp": datetime.utcnow().isoformat()
                 })
-            
+
             # Create comprehensive result
             query_result = QueryResult(
                 sql_query=sql_query,
@@ -872,9 +872,9 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     "conversion_time": (datetime.utcnow() - conversion_start).total_seconds()
                 }
             )
-            
+
             return query_result
-            
+
         except Exception as e:
             logger.error(f"AI-enhanced NL2SQL conversion failed: {str(e)}")
             return QueryResult(
@@ -889,13 +889,13 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     "timestamp": datetime.utcnow().isoformat()
                 }]
             )
-    
+
     async def _ai_optimize_sql(self, result: QueryResult, context: QueryContext) -> QueryResult:
         """Apply AI-powered SQL optimization"""
         try:
             if not result.sql_query or result.query_type == "error":
                 return result
-            
+
             optimization_reasoning = await self.ai_framework.reasoning_engine.reason(
                 problem=f"Optimize SQL query: {result.sql_query}",
                 strategy="query_optimization",
@@ -906,16 +906,16 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     "performance_requirements": context.performance_requirements
                 }
             )
-            
+
             # Apply optimization suggestions
             optimized_sql = optimization_reasoning.get("optimized_query", result.sql_query)
             optimization_suggestions = optimization_reasoning.get("suggestions", [])
-            
+
             # Update result with optimization
             result.sql_query = optimized_sql
             result.optimization_suggestions = optimization_suggestions
             result.performance_metrics = optimization_reasoning.get("performance_metrics", {})
-            
+
             result.reasoning_trace.append({
                 "step": "sql_optimization",
                 "original_query": result.sql_query,
@@ -923,9 +923,9 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 "suggestions": optimization_suggestions,
                 "timestamp": datetime.utcnow().isoformat()
             })
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"SQL optimization failed: {str(e)}")
             result.reasoning_trace.append({
@@ -934,7 +934,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 "timestamp": datetime.utcnow().isoformat()
             })
             return result
-    
+
     async def _ai_security_analysis(self, result: QueryResult, context: QueryContext) -> Dict[str, Any]:
         """Perform AI-powered security analysis of SQL query"""
         try:
@@ -944,10 +944,10 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 "data_exposure_analysis",
                 "permission_validation"
             ]
-            
+
             security_results = {}
             overall_secure = True
-            
+
             for check in security_checks:
                 check_result = await self.ai_framework.reasoning_engine.reason(
                     problem=f"Security check: {check}",
@@ -958,34 +958,34 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                         "domain": context.domain
                     }
                 )
-                
+
                 security_results[check] = {
                     "secure": check_result.get("secure", True),
                     "confidence": check_result.get("confidence", 0.8),
                     "details": check_result.get("details", ""),
                     "recommendations": check_result.get("recommendations", [])
                 }
-                
+
                 if not check_result.get("secure", True):
                     overall_secure = False
-            
+
             return {
                 "overall_secure": overall_secure,
                 "security_score": sum(r["confidence"] for r in security_results.values()) / len(security_results),
                 "security_checks": security_results,
                 "security_level": context.security_level
             }
-            
+
         except Exception as e:
             logger.error(f"Security analysis failed: {str(e)}")
             return {"overall_secure": False, "security_error": str(e)}
-    
+
     def _basic_nl_to_sql_conversion(self, nl_query: str, analysis: Dict[str, Any], context: QueryContext) -> str:
         """Basic fallback NL to SQL conversion"""
         try:
             intent = analysis.get("intent", "select")
             entities = analysis.get("entities", [])
-            
+
             if intent == "select" and entities:
                 # Basic SELECT query
                 table_name = entities[0] if entities else "table"
@@ -995,11 +995,11 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 return f"SELECT COUNT(*) FROM {table_name}"
             else:
                 return f"-- Could not convert: {nl_query}"
-                
+
         except Exception as e:
             logger.error(f"Basic conversion failed: {str(e)}")
             return f"-- Error converting: {nl_query}"
-    
+
     async def _initialize_sql_knowledge(self) -> None:
         """Initialize SQL knowledge base with AI learning"""
         try:
@@ -1010,19 +1010,19 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 )
                 if patterns:
                     self.sql_knowledge["query_patterns"][domain] = patterns.get("patterns", {})
-            
+
             # Load optimization rules
             optimization_rules = await self.ai_framework.memory_manager.retrieve_memory(
                 "optimization_rules", {}
             )
             if optimization_rules:
                 self.sql_knowledge["optimization_rules"] = optimization_rules.get("rules", {})
-            
+
             logger.info("SQL knowledge base initialized")
-            
+
         except Exception as e:
             logger.error(f"SQL knowledge initialization failed: {str(e)}")
-    
+
     async def _initialize_nlp_patterns(self) -> None:
         """Initialize NLP patterns for query parsing"""
         try:
@@ -1034,15 +1034,15 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     [{"LOWER": "count"}, {"OP": "*"}],
                     [{"LOWER": "find"}, {"OP": "*"}]
                 ]
-                
+
                 for i, pattern in enumerate(patterns):
                     self.matcher.add(f"SQL_PATTERN_{i}", [pattern])
-            
+
             logger.info("NLP patterns initialized")
-            
+
         except Exception as e:
             logger.error(f"NLP pattern initialization failed: {str(e)}")
-    
+
     async def _setup_query_monitoring(self) -> None:
         """Set up query performance monitoring"""
         try:
@@ -1053,35 +1053,35 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 "confidence_levels": [],
                 "cache_hit_rates": []
             }
-            
+
             logger.info("Query monitoring setup complete")
-            
+
         except Exception as e:
             logger.error(f"Query monitoring setup failed: {str(e)}")
-    
+
     def _update_query_stats(self, result: QueryResult) -> None:
         """Update query statistics for learning"""
         try:
             self.query_stats["total_queries"] += 1
-            
+
             if result.confidence_score > 0.6:
                 self.query_stats["successful_conversions"] += 1
-            
+
             query_type = result.query_type
             if query_type not in self.query_stats["query_types"]:
                 self.query_stats["query_types"][query_type] = 0
             self.query_stats["query_types"][query_type] += 1
-            
+
             # Update running averages
             total = self.query_stats["total_queries"]
             current_avg = self.query_stats["average_confidence"]
             self.query_stats["average_confidence"] = (
                 (current_avg * (total - 1) + result.confidence_score) / total
             )
-            
+
         except Exception as e:
             logger.error(f"Query stats update failed: {str(e)}")
-    
+
     async def _save_learning_insights(self) -> None:
         """Save learning insights for persistence"""
         try:
@@ -1090,43 +1090,43 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 "sql_knowledge": self.sql_knowledge,
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
             await self.ai_framework.memory_manager.store_memory(
                 "agent_learning_summary",
                 learning_summary,
                 context={"agent": "enhanced_sql_agent"}
             )
-            
+
             logger.info("Learning insights saved successfully")
-            
+
         except Exception as e:
             logger.error(f"Learning insights save failed: {str(e)}")
-    
+
     # Blockchain Message Handlers
-    
+
     async def _handle_blockchain_sql_query_execution(self, message: Dict[str, Any], content: Dict[str, Any]) -> Dict[str, Any]:
         """Handle blockchain-based SQL query execution requests with trust verification"""
         try:
             logger.info(f"Handling blockchain SQL query execution request from {message.get('sender_id')}")
-            
+
             # Verify sender has required trust level for SQL operations
             sender_reputation = await self.get_agent_reputation(message.get('sender_id'))
             min_reputation = self.trust_thresholds.get('sql_operations', 0.6)
-            
+
             if sender_reputation < min_reputation:
                 return {
-                    "status": "error", 
+                    "status": "error",
                     "message": f"Insufficient reputation for SQL operations. Required: {min_reputation}, Current: {sender_reputation}",
                     "blockchain_verified": False
                 }
-            
+
             # Extract query parameters
             natural_language_query = content.get('natural_language_query', '')
             context = content.get('context', {})
-            
+
             if not natural_language_query:
                 return {"status": "error", "message": "Natural language query is required", "blockchain_verified": False}
-            
+
             # Execute AI-enhanced NL2SQL conversion
             query_context = QueryContext(
                 original_query=natural_language_query,
@@ -1135,10 +1135,10 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 domain=context.get('domain', 'general'),
                 security_level="blockchain_verified"
             )
-            
+
             # Process with AI intelligence
             result = await self._ai_enhanced_nl2sql(query_context)
-            
+
             # Blockchain verification of results
             verification_result = await self.verify_blockchain_operation(
                 operation_type="sql_query_execution",
@@ -1149,7 +1149,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 },
                 sender_id=message.get('sender_id')
             )
-            
+
             return {
                 "status": "success",
                 "sql_query": result.sql_query,
@@ -1161,7 +1161,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 "blockchain_verified": verification_result.get('verified', False),
                 "verification_details": verification_result
             }
-            
+
         except Exception as e:
             logger.error(f"Blockchain SQL query execution failed: {str(e)}")
             return {
@@ -1169,32 +1169,32 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 "message": str(e),
                 "blockchain_verified": False
             }
-    
+
     async def _handle_blockchain_database_operations(self, message: Dict[str, Any], content: Dict[str, Any]) -> Dict[str, Any]:
         """Handle blockchain-based database operations and schema management requests"""
         try:
             logger.info(f"Handling blockchain database operations request from {message.get('sender_id')}")
-            
+
             # Verify sender has required trust level for database operations
             sender_reputation = await self.get_agent_reputation(message.get('sender_id'))
             min_reputation = self.trust_thresholds.get('database_operations', 0.7)
-            
+
             if sender_reputation < min_reputation:
                 return {
-                    "status": "error", 
+                    "status": "error",
                     "message": f"Insufficient reputation for database operations. Required: {min_reputation}, Current: {sender_reputation}",
                     "blockchain_verified": False
                 }
-            
+
             # Extract operation parameters
             operation_type = content.get('operation_type', 'schema_analysis')
             database_info = content.get('database_info', {})
             operation_params = content.get('operation_params', {})
-            
+
             if operation_type == 'schema_analysis':
                 # Analyze database schema with AI intelligence
                 analysis_result = await self._analyze_database_schema(database_info, operation_params)
-                
+
                 # Blockchain verification
                 verification_result = await self.verify_blockchain_operation(
                     operation_type="database_schema_analysis",
@@ -1204,7 +1204,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     },
                     sender_id=message.get('sender_id')
                 )
-                
+
                 return {
                     "status": "success",
                     "operation_type": operation_type,
@@ -1212,12 +1212,12 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     "blockchain_verified": verification_result.get('verified', False),
                     "verification_details": verification_result
                 }
-            
+
             elif operation_type == 'query_optimization':
                 # Optimize SQL queries with AI intelligence
                 sql_query = operation_params.get('sql_query', '')
                 optimization_result = await self._optimize_sql_query(sql_query, operation_params)
-                
+
                 # Blockchain verification
                 verification_result = await self.verify_blockchain_operation(
                     operation_type="sql_query_optimization",
@@ -1228,7 +1228,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     },
                     sender_id=message.get('sender_id')
                 )
-                
+
                 return {
                     "status": "success",
                     "operation_type": operation_type,
@@ -1236,10 +1236,10 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     "blockchain_verified": verification_result.get('verified', False),
                     "verification_details": verification_result
                 }
-            
+
             else:
                 return {"status": "error", "message": f"Unsupported operation type: {operation_type}", "blockchain_verified": False}
-                
+
         except Exception as e:
             logger.error(f"Blockchain database operations failed: {str(e)}")
             return {
@@ -1247,38 +1247,38 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 "message": str(e),
                 "blockchain_verified": False
             }
-    
+
     async def _handle_blockchain_distributed_query(self, message: Dict[str, Any], content: Dict[str, Any]) -> Dict[str, Any]:
         """Handle blockchain-based distributed query processing involving multiple SQL agents"""
         try:
             logger.info(f"Handling blockchain distributed query request from {message.get('sender_id')}")
-            
+
             # Verify sender has required trust level for distributed operations
             sender_reputation = await self.get_agent_reputation(message.get('sender_id'))
             min_reputation = self.trust_thresholds.get('distributed_query', 0.8)
-            
+
             if sender_reputation < min_reputation:
                 return {
-                    "status": "error", 
+                    "status": "error",
                     "message": f"Insufficient reputation for distributed query operations. Required: {min_reputation}, Current: {sender_reputation}",
                     "blockchain_verified": False
                 }
-            
+
             # Extract distributed query parameters
             query_parts = content.get('query_parts', [])
             coordination_info = content.get('coordination_info', {})
             participating_agents = content.get('participating_agents', [])
-            
+
             if not query_parts:
                 return {"status": "error", "message": "Query parts are required for distributed processing", "blockchain_verified": False}
-            
+
             # Process distributed query with AI intelligence
             distributed_result = await self._process_distributed_query(
                 query_parts=query_parts,
                 coordination_info=coordination_info,
                 participating_agents=participating_agents
             )
-            
+
             # Blockchain verification of distributed operation
             verification_result = await self.verify_blockchain_operation(
                 operation_type="distributed_query_processing",
@@ -1290,7 +1290,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 },
                 sender_id=message.get('sender_id')
             )
-            
+
             # Broadcast results to participating agents if needed
             if coordination_info.get('broadcast_results', False):
                 await self._broadcast_distributed_results(
@@ -1298,7 +1298,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     results=distributed_result,
                     verification_result=verification_result
                 )
-            
+
             return {
                 "status": "success",
                 "distributed_result": distributed_result,
@@ -1306,7 +1306,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 "verification_details": verification_result,
                 "coordination_complete": True
             }
-            
+
         except Exception as e:
             logger.error(f"Blockchain distributed query failed: {str(e)}")
             return {
@@ -1314,9 +1314,9 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 "message": str(e),
                 "blockchain_verified": False
             }
-    
+
     # Helper methods for blockchain operations
-    
+
     async def _analyze_database_schema(self, database_info: Dict[str, Any], params: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze database schema with AI intelligence"""
         try:
@@ -1328,7 +1328,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 "security_recommendations": [],
                 "ai_insights": {}
             }
-            
+
             # Use AI framework for detailed analysis
             if self.ai_framework:
                 reasoning_result = await self.ai_framework.reasoning_engine.reason(
@@ -1339,17 +1339,17 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     },
                     reasoning_type="database_schema_analysis"
                 )
-                
+
                 if reasoning_result.get('success', False):
                     schema_analysis["ai_insights"] = reasoning_result.get('insights', {})
                     schema_analysis["optimization_opportunities"] = reasoning_result.get('optimizations', [])
-            
+
             return schema_analysis
-            
+
         except Exception as e:
             logger.error(f"Database schema analysis failed: {str(e)}")
             return {"error": str(e)}
-    
+
     async def _optimize_sql_query(self, sql_query: str, params: Dict[str, Any]) -> Dict[str, Any]:
         """Optimize SQL query with AI intelligence"""
         try:
@@ -1361,7 +1361,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 "performance_impact": {},
                 "ai_reasoning": {}
             }
-            
+
             # Use AI framework for query optimization
             if self.ai_framework:
                 reasoning_result = await self.ai_framework.reasoning_engine.reason(
@@ -1372,19 +1372,19 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                     },
                     reasoning_type="sql_query_optimization"
                 )
-                
+
                 if reasoning_result.get('success', False):
                     optimization_result["ai_reasoning"] = reasoning_result.get('reasoning', {})
                     optimization_result["improvements"] = reasoning_result.get('improvements', [])
-            
+
             return optimization_result
-            
+
         except Exception as e:
             logger.error(f"SQL query optimization failed: {str(e)}")
             return {"error": str(e)}
-    
-    async def _process_distributed_query(self, query_parts: List[Dict[str, Any]], 
-                                        coordination_info: Dict[str, Any], 
+
+    async def _process_distributed_query(self, query_parts: List[Dict[str, Any]],
+                                        coordination_info: Dict[str, Any],
                                         participating_agents: List[str]) -> Dict[str, Any]:
         """Process distributed query across multiple SQL agents"""
         try:
@@ -1399,44 +1399,44 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 },
                 "summary": {}
             }
-            
+
             start_time = time.time()
             successful_parts = 0
-            
+
             # Process each query part
             for i, query_part in enumerate(query_parts):
                 try:
                     # Process individual query part
                     part_result = await self._process_query_part(query_part, coordination_info)
                     distributed_result["results"].append(part_result)
-                    
+
                     if part_result.get('success', False):
                         successful_parts += 1
-                        
+
                 except Exception as e:
                     logger.error(f"Query part {i} failed: {str(e)}")
                     distributed_result["results"].append({"error": str(e)})
-            
+
             # Calculate coordination metrics
             distributed_result["coordination_metrics"]["total_time"] = time.time() - start_time
             distributed_result["coordination_metrics"]["success_rate"] = successful_parts / len(query_parts) if query_parts else 0
-            
+
             return distributed_result
-            
+
         except Exception as e:
             logger.error(f"Distributed query processing failed: {str(e)}")
             return {"error": str(e)}
-    
+
     async def _process_query_part(self, query_part: Dict[str, Any], coordination_info: Dict[str, Any]) -> Dict[str, Any]:
         """Process individual query part in distributed system"""
         try:
             # Extract query part information
             part_query = query_part.get('query', '')
             part_context = query_part.get('context', {})
-            
+
             if not part_query:
                 return {"success": False, "error": "Empty query part"}
-            
+
             # Create query context for part
             query_context = QueryContext(
                 original_query=part_query,
@@ -1445,23 +1445,23 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 domain=part_context.get('domain', 'distributed'),
                 security_level="distributed_verified"
             )
-            
+
             # Process with AI intelligence
             result = await self._ai_enhanced_nl2sql(query_context)
-            
+
             return {
                 "success": True,
                 "sql_query": result.sql_query,
                 "confidence_score": result.confidence_score,
                 "reasoning_trace": result.reasoning_trace
             }
-            
+
         except Exception as e:
             logger.error(f"Query part processing failed: {str(e)}")
             return {"success": False, "error": str(e)}
-    
-    async def _broadcast_distributed_results(self, participating_agents: List[str], 
-                                           results: Dict[str, Any], 
+
+    async def _broadcast_distributed_results(self, participating_agents: List[str],
+                                           results: Dict[str, Any],
                                            verification_result: Dict[str, Any]) -> None:
         """Broadcast distributed query results to participating agents"""
         try:
@@ -1471,7 +1471,7 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                 "verification": verification_result,
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
             # Send to each participating agent
             for agent_id in participating_agents:
                 try:
@@ -1481,13 +1481,13 @@ class EnhancedSqlAgentSDK(SecureA2AAgent, BlockchainIntegrationMixin):
                         content=broadcast_message
                     )
                     logger.info(f"Broadcast results sent to {agent_id}")
-                    
+
                 except Exception as e:
                     logger.error(f"Failed to broadcast to {agent_id}: {str(e)}")
-                    
+
         except Exception as e:
             logger.error(f"Distributed results broadcast failed: {str(e)}")
-    
+
     # Additional helper methods would be implemented here
     # Including: _ai_analyze_sql_structure, _ai_generate_nl_explanation, _ai_validate_explanation,
     # _ai_analyze_batch_queries, _parallel_query_processing, _sequential_query_processing,

@@ -170,9 +170,9 @@ class VectorIndex:
 class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixin):
     """
     Comprehensive Vector Processing Agent with Real AI Intelligence
-    
+
     Rating: 95/100 (Real AI Intelligence)
-    
+
     This agent provides:
     - Real ML-based embedding optimization and compression
     - Semantic similarity learning and metric adaptation
@@ -181,7 +181,7 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
     - Intelligent indexing with automatic parameter tuning
     - Graph-based and quantum-ready vector representations
     """
-    
+
     def __init__(self, base_url: str):
         # Initialize base agent
         super().__init__(
@@ -195,13 +195,13 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-        
-        
+
+
         # Initialize blockchain capabilities
         self.blockchain_queue_enabled = False
         self.web3_client = None
         self.account = None
-        
+
         # Machine Learning Models for Vector Processing
         self.similarity_learner = GradientBoostingClassifier(n_estimators=100, random_state=42)
         self.quality_predictor = RandomForestRegressor(n_estimators=80, random_state=42)
@@ -209,29 +209,29 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
         self.sparse_encoder = TruncatedSVD(n_components=100)
         self.cluster_analyzer = HDBSCAN(min_cluster_size=5)
         self.feature_scaler = StandardScaler()
-        
+
         # Embedding models
         self.embedding_models = {}
         if SENTENCE_TRANSFORMERS_AVAILABLE:
             self.embedding_models['general'] = SentenceTransformer('all-MiniLM-L6-v2')
             self.embedding_models['multilingual'] = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
             self.embedding_models['semantic'] = SentenceTransformer('all-mpnet-base-v2')
-        
+
         # Grok AI client for advanced vector understanding
         self.grok_client = None
         self.grok_available = False
-        
+
         # Vector indices
         self.indices = {}
         self.index_configs = {}
-        
+
         # Vector storage
         self.vector_store = defaultdict(dict)
         self.metadata_store = {}
-        
+
         # Knowledge graph
         self.knowledge_graph = nx.DiGraph()
-        
+
         # Quantization support
         self.quantization_levels = {
             'int8': 8,
@@ -239,14 +239,14 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
             'binary': 1,
             'ternary': 2
         }
-        
+
         # Hybrid ranking configuration
         self.ranking_weights = {
             'dense': 0.7,
             'sparse': 0.2,
             'graph': 0.1
         }
-        
+
         # Training data storage
         self.training_data = {
             'similarity_pairs': [],
@@ -254,12 +254,12 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
             'search_performance': [],
             'compression_results': []
         }
-        
+
         # Learning configuration
         self.learning_enabled = True
         self.model_update_frequency = 100
         self.operation_count = 0
-        
+
         # Performance metrics
         self.metrics = {
             'total_vectors': 0,
@@ -271,7 +271,7 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
             'similarity_computations': 0,
             'graph_operations': 0
         }
-        
+
         # Method performance tracking
         self.method_performance = defaultdict(lambda: {
             'total': 0,
@@ -279,50 +279,50 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
             'total_time': 0.0,
             'average_quality': 0.0
         })
-        
+
         # Cache for frequently accessed vectors
         self.vector_cache = {}
         self.cache_max_size = 1000
-        
+
         # Data Manager integration
         self.data_manager_agent_url = os.getenv('DATA_MANAGER_URL')
         self.use_data_manager = True
-        
+
         logger.info(f"Initialized Comprehensive Vector Processing Agent v{self.version}")
-    
+
     async def initialize(self) -> None:
         """Initialize the vector processing agent with all capabilities"""
         try:
             # Initialize blockchain if available
             if WEB3_AVAILABLE:
                 await self._initialize_blockchain()
-            
+
             # Initialize Grok AI
             if GROK_AVAILABLE:
                 await self._initialize_grok()
-            
+
             # Initialize ML models with sample data
             await self._initialize_ml_models()
-            
+
             # Initialize default vector indices
             await self._initialize_indices()
-            
+
             # Load processing history
             await self._load_processing_history()
-            
+
             logger.info("Vector Processing Agent initialization complete")
-            
+
         except Exception as e:
             logger.error(f"Initialization error: {e}")
             raise
-    
+
     async def _initialize_blockchain(self) -> None:
         """Initialize blockchain connection for vector integrity"""
         try:
             # Get blockchain configuration
             private_key = os.getenv('A2A_PRIVATE_KEY')
             rpc_url = os.getenv('BLOCKCHAIN_RPC_URL') or os.getenv('A2A_RPC_URL')
-            
+
             if private_key:
                 self.web3_client = Web3(Web3.HTTPProvider(rpc_url))
                 self.account = Account.from_key(private_key)
@@ -330,17 +330,17 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 logger.info(f"Blockchain initialized: {self.account.address}")
             else:
                 logger.info("No private key found - blockchain features disabled")
-                
+
         except Exception as e:
             logger.error(f"Blockchain initialization error: {e}")
             self.blockchain_queue_enabled = False
-    
+
     async def _initialize_grok(self) -> None:
         """Initialize Grok AI for semantic vector understanding"""
         try:
             # Get Grok API key from environment
             api_key = os.getenv('GROK_API_KEY')
-            
+
             if api_key:
                 self.grok_client = AsyncOpenAI(
                     api_key=api_key,
@@ -350,11 +350,11 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 logger.info("Grok AI initialized for semantic understanding")
             else:
                 logger.info("No Grok API key found")
-                
+
         except Exception as e:
             logger.error(f"Grok initialization error: {e}")
             self.grok_available = False
-    
+
     async def _initialize_ml_models(self) -> None:
         """Initialize ML models with training data"""
         try:
@@ -364,38 +364,38 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 {'vec1_quality': 0.8, 'vec2_quality': 0.3, 'cosine_sim': 0.45, 'is_similar': False},
                 {'vec1_quality': 0.95, 'vec2_quality': 0.9, 'cosine_sim': 0.88, 'is_similar': True}
             ]
-            
+
             if sample_similarity_data:
                 X = [[d['vec1_quality'], d['vec2_quality'], d['cosine_sim']] for d in sample_similarity_data]
                 y = [1 if d['is_similar'] else 0 for d in sample_similarity_data]
-                
+
                 if len(set(y)) > 1:  # Need at least 2 classes
                     self.similarity_learner.fit(X, y)
-                
+
                 # Train quality predictor
                 quality_samples = [
                     {'dimension': 384, 'sparsity': 0.1, 'entropy': 0.8, 'quality': 0.9},
                     {'dimension': 768, 'sparsity': 0.3, 'entropy': 0.6, 'quality': 0.7},
                     {'dimension': 1536, 'sparsity': 0.05, 'entropy': 0.9, 'quality': 0.95}
                 ]
-                
+
                 X_quality = [[s['dimension'], s['sparsity'], s['entropy']] for s in quality_samples]
                 y_quality = [s['quality'] for s in quality_samples]
-                
+
                 X_quality_scaled = self.feature_scaler.fit_transform(X_quality)
                 self.quality_predictor.fit(X_quality_scaled, y_quality)
-                
+
                 logger.info("ML models initialized with sample data")
-                
+
         except Exception as e:
             logger.error(f"ML model initialization error: {e}")
-    
+
     async def _initialize_indices(self) -> None:
         """Initialize default vector indices"""
         try:
             # Create default FAISS index for dense vectors
             default_dimension = 384  # Common embedding dimension
-            
+
             # Flat index for exact search
             flat_index = faiss.IndexFlatL2(default_dimension)
             self.indices['flat_l2'] = flat_index
@@ -406,7 +406,7 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 metric='l2',
                 parameters={}
             )
-            
+
             # IVF index for approximate search
             nlist = 100
             quantizer = faiss.IndexFlatL2(default_dimension)
@@ -419,12 +419,12 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 metric='l2',
                 parameters={'nlist': nlist}
             )
-            
+
             logger.info("Default vector indices initialized")
-            
+
         except Exception as e:
             logger.error(f"Index initialization error: {e}")
-    
+
     async def _load_processing_history(self) -> None:
         """Load historical processing data"""
         try:
@@ -436,7 +436,7 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     logger.info(f"Loaded vector processing history")
         except Exception as e:
             logger.error(f"Error loading processing history: {e}")
-    
+
     # MCP-decorated vector processing skills
     @mcp_tool("generate_embeddings", "Generate embeddings with multiple models and fusion")
     @a2a_skill("generate_embeddings", "Multi-model embedding generation")
@@ -444,36 +444,36 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
         """Generate embeddings using ML-optimized model selection"""
         start_time = time.time()
         method_name = "generate_embeddings"
-        
+
         try:
             texts = request_data.get('texts', [])
             model_type = request_data.get('model_type', 'general')
             use_ensemble = request_data.get('use_ensemble', False)
             compress = request_data.get('compress', False)
-            
+
             if not texts:
                 return create_error_response("No texts provided")
-            
+
             # Generate embeddings
             if use_ensemble:
                 embeddings = await self._generate_ensemble_embeddings(texts)
             else:
                 embeddings = await self._generate_single_embeddings(texts, model_type)
-            
+
             # Compress if requested
             if compress:
                 embeddings, compression_info = await self._compress_embeddings(embeddings)
             else:
                 compression_info = {'compressed': False}
-            
+
             # Assess quality
             quality_scores = await self._assess_embedding_quality(embeddings)
-            
+
             # Store embeddings with metadata
             vector_ids = []
             for i, (text, embedding) in enumerate(zip(texts, embeddings)):
                 vector_id = f"vec_{hashlib.md5(text.encode()).hexdigest()[:8]}"
-                
+
                 metadata = VectorMetadata(
                     vector_id=vector_id,
                     source_id=f"text_{i}",
@@ -484,21 +484,21 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     quality_score=quality_scores[i],
                     compression_ratio=compression_info.get('ratio', 1.0)
                 )
-                
+
                 self.vector_store[vector_id] = embedding
                 self.metadata_store[vector_id] = metadata
                 vector_ids.append(vector_id)
-            
+
             # Update metrics
             self.metrics['total_vectors'] += len(texts)
             execution_time = time.time() - start_time
-            
+
             # Record performance
             self.method_performance[method_name]['total'] += 1
             self.method_performance[method_name]['success'] += 1
             self.method_performance[method_name]['total_time'] += execution_time
             self.method_performance[method_name]['average_quality'] = np.mean(quality_scores)
-            
+
             return create_success_response({
                 'vector_ids': vector_ids,
                 'dimension': len(embeddings[0]) if embeddings else 0,
@@ -508,68 +508,68 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 'average_quality': np.mean(quality_scores),
                 'execution_time': execution_time
             })
-            
+
         except Exception as e:
             logger.error(f"Embedding generation error: {e}")
             self.method_performance[method_name]['total'] += 1
             return create_error_response(f"Embedding error: {str(e)}")
-    
+
     @mcp_tool("search_vectors", "Search vectors with ML-optimized similarity and re-ranking")
     @a2a_skill("search_vectors", "Intelligent vector search")
     async def search_vectors(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Search vectors using ML-enhanced similarity and ranking"""
         start_time = time.time()
         method_name = "search_vectors"
-        
+
         try:
             query = request_data.get('query')
             query_vector = request_data.get('query_vector')
             top_k = request_data.get('top_k', 10)
             index_id = request_data.get('index_id', 'flat_l2')
             use_reranking = request_data.get('use_reranking', True)
-            
+
             # Generate query vector if text provided
             if query and not query_vector:
                 query_embeddings = await self._generate_single_embeddings([query], 'general')
                 query_vector = query_embeddings[0]
-            
+
             if query_vector is None:
                 return create_error_response("No query or query_vector provided")
-            
+
             # Search using appropriate index
             initial_results = await self._search_index(index_id, query_vector, top_k * 2)
-            
+
             # Apply ML-based re-ranking
             if use_reranking:
                 results = await self._rerank_results_ml(query_vector, initial_results, top_k)
             else:
                 results = initial_results[:top_k]
-            
+
             # Add explanations using Grok if available
             if self.grok_available and query:
                 for result in results[:3]:  # Top 3 results
                     result.explanation = await self._generate_similarity_explanation(
                         query, result
                     )
-            
+
             # Update metrics
             self.metrics['total_searches'] += 1
             self.metrics['successful_searches'] += 1
             execution_time = time.time() - start_time
             self.metrics['average_search_time'] = (
-                self.metrics['average_search_time'] * (self.metrics['total_searches'] - 1) + 
+                self.metrics['average_search_time'] * (self.metrics['total_searches'] - 1) +
                 execution_time
             ) / self.metrics['total_searches']
-            
+
             # Record performance
             self.method_performance[method_name]['total'] += 1
             self.method_performance[method_name]['success'] += 1
             self.method_performance[method_name]['total_time'] += execution_time
-            
+
             # Learn from search
             if self.learning_enabled:
                 await self._learn_from_search(query_vector, results)
-            
+
             return create_success_response({
                 'results': [
                     {
@@ -587,36 +587,36 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 'search_time': execution_time,
                 'reranking_applied': use_reranking
             })
-            
+
         except Exception as e:
             logger.error(f"Vector search error: {e}")
             self.method_performance[method_name]['total'] += 1
             return create_error_response(f"Search error: {str(e)}")
-    
+
     @mcp_tool("build_index", "Build optimized vector index with ML parameter tuning")
     @a2a_skill("build_index", "ML-optimized index building")
     async def build_index(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Build vector index with ML-optimized parameters"""
         start_time = time.time()
-        
+
         try:
             index_type = request_data.get('index_type', 'ivf')
             dimension = request_data.get('dimension', 384)
             metric = request_data.get('metric', 'cosine')
             vector_ids = request_data.get('vector_ids', [])
             auto_optimize = request_data.get('auto_optimize', True)
-            
+
             # Get vectors for indexing
             vectors = []
             for vid in vector_ids:
                 if vid in self.vector_store:
                     vectors.append(self.vector_store[vid])
-            
+
             if not vectors:
                 return create_error_response("No vectors found for indexing")
-            
+
             vectors = np.array(vectors)
-            
+
             # Optimize index parameters using ML
             if auto_optimize:
                 optimal_params = await self._optimize_index_parameters(
@@ -624,13 +624,13 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 )
             else:
                 optimal_params = request_data.get('parameters', {})
-            
+
             # Build index
             index_id = f"{index_type}_{metric}_{int(time.time())}"
             index = await self._build_faiss_index(
                 vectors, dimension, index_type, metric, optimal_params
             )
-            
+
             # Store index
             self.indices[index_id] = index
             self.index_configs[index_id] = VectorIndex(
@@ -641,11 +641,11 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 parameters=optimal_params,
                 vector_count=len(vectors)
             )
-            
+
             # Update metrics
             self.metrics['index_builds'] += 1
             execution_time = time.time() - start_time
-            
+
             return create_success_response({
                 'index_id': index_id,
                 'vectors_indexed': len(vectors),
@@ -653,49 +653,49 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 'build_time': execution_time,
                 'optimized': auto_optimize
             })
-            
+
         except Exception as e:
             logger.error(f"Index building error: {e}")
             return create_error_response(f"Index build error: {str(e)}")
-    
+
     @mcp_tool("compute_similarity", "Compute similarity with learned metrics")
     @a2a_skill("compute_similarity", "ML-enhanced similarity computation")
     async def compute_similarity(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Compute similarity using learned similarity functions"""
         start_time = time.time()
-        
+
         try:
             vector_id1 = request_data.get('vector_id1')
             vector_id2 = request_data.get('vector_id2')
             metric = request_data.get('metric', 'learned')
-            
+
             # Get vectors
             if vector_id1 not in self.vector_store or vector_id2 not in self.vector_store:
                 return create_error_response("Vector IDs not found")
-            
+
             vec1 = self.vector_store[vector_id1]
             vec2 = self.vector_store[vector_id2]
-            
+
             # Compute similarity
             if metric == 'learned':
                 similarity = await self._compute_learned_similarity(vec1, vec2)
             else:
                 similarity = await self._compute_standard_similarity(vec1, vec2, metric)
-            
+
             # Get metadata
             meta1 = self.metadata_store.get(vector_id1)
             meta2 = self.metadata_store.get(vector_id2)
-            
+
             # Generate explanation if Grok available
             explanation = None
             if self.grok_available:
                 explanation = await self._explain_similarity(
                     vec1, vec2, similarity, meta1, meta2
                 )
-            
+
             # Update metrics
             self.metrics['similarity_computations'] += 1
-            
+
             return create_success_response({
                 'similarity': similarity,
                 'metric_used': metric,
@@ -704,11 +704,11 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 'explanation': explanation,
                 'execution_time': time.time() - start_time
             })
-            
+
         except Exception as e:
             logger.error(f"Similarity computation error: {e}")
             return create_error_response(f"Similarity error: {str(e)}")
-    
+
     @mcp_tool("create_graph_embedding", "Create graph embeddings from relationships")
     @a2a_skill("create_graph_embedding", "Graph-based embeddings")
     async def create_graph_embedding(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -717,33 +717,33 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
             entities = request_data.get('entities', [])
             relationships = request_data.get('relationships', [])
             embedding_method = request_data.get('method', 'node2vec')
-            
+
             # Build graph
             G = nx.Graph()
             for entity in entities:
                 G.add_node(entity['id'], **entity.get('attributes', {}))
-            
+
             for rel in relationships:
                 G.add_edge(
-                    rel['source'], 
-                    rel['target'], 
+                    rel['source'],
+                    rel['target'],
                     weight=rel.get('weight', 1.0)
                 )
-            
+
             # Generate graph embeddings
             if embedding_method == 'node2vec' and NODE2VEC_AVAILABLE:
                 embeddings = await self._generate_node2vec_embeddings(G)
             else:
                 embeddings = await self._generate_spectral_embeddings(G)
-            
+
             # Store graph structure
             self.knowledge_graph = G
-            
+
             # Store embeddings
             vector_ids = []
             for node_id, embedding in embeddings.items():
                 vector_id = f"graph_{node_id}"
-                
+
                 metadata = VectorMetadata(
                     vector_id=vector_id,
                     source_id=node_id,
@@ -753,14 +753,14 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     created_at=datetime.now(),
                     quality_score=0.85  # Default for graph embeddings
                 )
-                
+
                 self.vector_store[vector_id] = embedding
                 self.metadata_store[vector_id] = metadata
                 vector_ids.append(vector_id)
-            
+
             # Update metrics
             self.metrics['graph_operations'] += 1
-            
+
             return create_success_response({
                 'graph_nodes': G.number_of_nodes(),
                 'graph_edges': G.number_of_edges(),
@@ -768,11 +768,11 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 'vector_ids': vector_ids,
                 'method': embedding_method
             })
-            
+
         except Exception as e:
             logger.error(f"Graph embedding error: {e}")
             return create_error_response(f"Graph embedding error: {str(e)}")
-    
+
     @mcp_tool("hybrid_vector_search", "Perform hybrid dense-sparse vector search")
     @a2a_skill("hybrid_vector_search", "Advanced hybrid search combining dense and sparse vectors")
     async def hybrid_vector_search(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -783,43 +783,43 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
             sparse_weight = request_data.get('sparse_weight', 0.3)
             top_k = request_data.get('top_k', 10)
             rerank = request_data.get('rerank', True)
-            
+
             # Generate dense query embedding
             dense_query = await self._generate_query_embedding(query, 'dense')
-            
+
             # Generate sparse query embedding
             sparse_query = await self._generate_query_embedding(query, 'sparse')
-            
+
             # Perform dense search
             dense_results = await self._dense_vector_search(dense_query, top_k * 2)
-            
+
             # Perform sparse search
             sparse_results = await self._sparse_vector_search(sparse_query, top_k * 2)
-            
+
             # Combine and rerank results
             hybrid_scores = {}
             for result in dense_results:
                 vector_id = result['vector_id']
                 hybrid_scores[vector_id] = dense_weight * result['score']
-            
+
             for result in sparse_results:
                 vector_id = result['vector_id']
                 if vector_id in hybrid_scores:
                     hybrid_scores[vector_id] += sparse_weight * result['score']
                 else:
                     hybrid_scores[vector_id] = sparse_weight * result['score']
-            
+
             # Sort by hybrid score
             sorted_results = sorted(
-                hybrid_scores.items(), 
-                key=lambda x: x[1], 
+                hybrid_scores.items(),
+                key=lambda x: x[1],
                 reverse=True
             )[:top_k]
-            
+
             # Rerank if requested
             if rerank:
                 sorted_results = await self._rerank_results(query, sorted_results)
-            
+
             return create_success_response({
                 'results': [
                     {'vector_id': vid, 'hybrid_score': score}
@@ -829,11 +829,11 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 'sparse_weight': sparse_weight,
                 'reranked': rerank
             })
-            
+
         except Exception as e:
             logger.error(f"Hybrid search error: {e}")
             return create_error_response(f"Hybrid search error: {str(e)}")
-    
+
     @mcp_tool("vector_clustering", "Cluster vectors using advanced ML algorithms")
     @a2a_skill("vector_clustering", "Intelligent vector clustering with multiple algorithms")
     async def vector_clustering(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -843,7 +843,7 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
             algorithm = request_data.get('algorithm', 'kmeans')
             num_clusters = request_data.get('num_clusters', 'auto')
             reduce_dimensions = request_data.get('reduce_dimensions', True)
-            
+
             # Get vectors
             vectors = []
             valid_ids = []
@@ -851,35 +851,35 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 if vid in self.vector_store:
                     vectors.append(self.vector_store[vid]['embedding'])
                     valid_ids.append(vid)
-            
+
             if not vectors:
                 return create_error_response("No valid vectors found")
-            
+
             vectors = np.array(vectors)
-            
+
             # Dimensionality reduction if requested
             if reduce_dimensions and vectors.shape[1] > 50:
                 reducer = PCA(n_components=min(50, vectors.shape[0] - 1))
                 vectors = reducer.fit_transform(vectors)
-            
+
             # Auto-determine number of clusters
             if num_clusters == 'auto':
                 num_clusters = min(10, max(2, len(valid_ids) // 5))
-            
+
             # Clustering
             cluster_labels = []
             cluster_centers = []
-            
+
             if algorithm == 'kmeans':
                 clusterer = KMeans(n_clusters=num_clusters, random_state=42, n_init=10)
                 cluster_labels = clusterer.fit_predict(vectors)
                 cluster_centers = clusterer.cluster_centers_
-                
+
             elif algorithm == 'hdbscan':
                 clusterer = HDBSCAN(min_cluster_size=max(2, len(valid_ids) // 10))
                 cluster_labels = clusterer.fit_predict(vectors)
                 num_clusters = len(set(cluster_labels)) - (1 if -1 in cluster_labels else 0)
-                
+
             # Calculate cluster quality metrics
             if len(set(cluster_labels)) > 1:
                 from sklearn.metrics import silhouette_score, calinski_harabasz_score
@@ -888,7 +888,7 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
             else:
                 silhouette = 0.0
                 calinski_score = 0.0
-            
+
             # Organize results
             clusters = defaultdict(list)
             for i, (vid, label) in enumerate(zip(valid_ids, cluster_labels)):
@@ -898,7 +898,7 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                         vectors[i] - cluster_centers[label]
                     )) if algorithm == 'kmeans' else 0.0
                 })
-            
+
             return create_success_response({
                 'clusters': dict(clusters),
                 'num_clusters': int(num_clusters),
@@ -909,11 +909,11 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 },
                 'vectors_processed': len(valid_ids)
             })
-            
+
         except Exception as e:
             logger.error(f"Vector clustering error: {e}")
             return create_error_response(f"Vector clustering error: {str(e)}")
-    
+
     @mcp_tool("vector_dimensionality_reduction", "Reduce vector dimensions while preserving information")
     @a2a_skill("vector_dimensionality_reduction", "Intelligent dimensionality reduction with multiple techniques")
     async def vector_dimensionality_reduction(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -923,7 +923,7 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
             technique = request_data.get('technique', 'pca')
             target_dimensions = request_data.get('target_dimensions', 128)
             preserve_variance = request_data.get('preserve_variance', 0.95)
-            
+
             # Get vectors
             vectors = []
             valid_ids = []
@@ -931,39 +931,39 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 if vid in self.vector_store:
                     vectors.append(self.vector_store[vid]['embedding'])
                     valid_ids.append(vid)
-            
+
             if not vectors:
                 return create_error_response("No valid vectors found")
-            
+
             vectors = np.array(vectors)
             original_dims = vectors.shape[1]
-            
+
             # Apply dimensionality reduction
             reduced_vectors = None
             explained_variance = 0.0
-            
+
             if technique == 'pca':
                 reducer = PCA(n_components=target_dimensions)
                 reduced_vectors = reducer.fit_transform(vectors)
                 explained_variance = np.sum(reducer.explained_variance_ratio_)
-                
+
             elif technique == 'svd':
                 reducer = TruncatedSVD(n_components=target_dimensions)
                 reduced_vectors = reducer.fit_transform(vectors)
                 explained_variance = np.sum(reducer.explained_variance_ratio_)
-                
+
             elif technique == 'tsne':
                 # t-SNE for visualization (typically 2-3 dimensions)
                 target_dimensions = min(target_dimensions, 3)
                 reducer = TSNE(n_components=target_dimensions, random_state=42)
                 reduced_vectors = reducer.fit_transform(vectors)
                 explained_variance = 0.0  # t-SNE doesn't provide explained variance
-                
+
             elif technique == 'autoencoder':
                 # Simplified autoencoder (mock implementation)
                 reduced_vectors = await self._autoencoder_reduction(vectors, target_dimensions)
                 explained_variance = 0.85  # Mock value
-            
+
             # Calculate information preservation metrics
             if technique in ['pca', 'svd']:
                 reconstruction_error = self._calculate_reconstruction_error(
@@ -971,7 +971,7 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 )
             else:
                 reconstruction_error = 0.0
-            
+
             # Update vector store with reduced vectors
             for i, vid in enumerate(valid_ids):
                 self.vector_store[vid]['reduced_embedding'] = reduced_vectors[i]
@@ -981,7 +981,7 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     'reduced_dims': target_dimensions,
                     'explained_variance': explained_variance
                 }
-            
+
             return create_success_response({
                 'vectors_processed': len(valid_ids),
                 'original_dimensions': int(original_dims),
@@ -991,11 +991,11 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 'reconstruction_error': float(reconstruction_error),
                 'compression_ratio': float(original_dims / target_dimensions)
             })
-            
+
         except Exception as e:
             logger.error(f"Dimensionality reduction error: {e}")
             return create_error_response(f"Dimensionality reduction error: {str(e)}")
-    
+
     @mcp_tool("vector_anomaly_detection", "Detect anomalous vectors using ML techniques")
     @a2a_skill("vector_anomaly_detection", "AI-powered anomaly detection in vector spaces")
     async def vector_anomaly_detection(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -1005,7 +1005,7 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
             method = request_data.get('method', 'isolation_forest')
             contamination = request_data.get('contamination', 0.1)
             return_scores = request_data.get('return_scores', True)
-            
+
             # Get vectors
             vectors = []
             valid_ids = []
@@ -1013,34 +1013,34 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 if vid in self.vector_store:
                     vectors.append(self.vector_store[vid]['embedding'])
                     valid_ids.append(vid)
-            
+
             if not vectors:
                 return create_error_response("No valid vectors found")
-            
+
             vectors = np.array(vectors)
-            
+
             # Apply anomaly detection
             anomaly_labels = []
             anomaly_scores = []
-            
+
             if method == 'isolation_forest':
                 from sklearn.ensemble import IsolationForest
                 detector = IsolationForest(
-                    contamination=contamination, 
+                    contamination=contamination,
                     random_state=42,
                     n_estimators=100
                 )
                 anomaly_labels = detector.fit_predict(vectors)
                 if return_scores:
                     anomaly_scores = detector.decision_function(vectors)
-                    
+
             elif method == 'one_class_svm':
                 from sklearn.svm import OneClassSVM
                 detector = OneClassSVM(nu=contamination)
                 anomaly_labels = detector.fit_predict(vectors)
                 if return_scores:
                     anomaly_scores = detector.decision_function(vectors)
-                    
+
             elif method == 'local_outlier_factor':
                 from sklearn.neighbors import LocalOutlierFactor
                 detector = LocalOutlierFactor(
@@ -1050,23 +1050,23 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 anomaly_labels = detector.fit_predict(vectors)
                 if return_scores:
                     anomaly_scores = detector.negative_outlier_factor_
-            
+
             # Process results
             anomalies = []
             normal_vectors = []
-            
+
             for i, (vid, label) in enumerate(zip(valid_ids, anomaly_labels)):
                 result = {
                     'vector_id': vid,
                     'is_anomaly': bool(label == -1),
                     'anomaly_score': float(anomaly_scores[i]) if return_scores else 0.0
                 }
-                
+
                 if label == -1:
                     anomalies.append(result)
                 else:
                     normal_vectors.append(result)
-            
+
             return create_success_response({
                 'anomalies_detected': len(anomalies),
                 'normal_vectors': len(normal_vectors),
@@ -1076,11 +1076,11 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 'anomalies': anomalies,
                 'normal': normal_vectors if len(normal_vectors) < 100 else normal_vectors[:100]  # Limit response size
             })
-            
+
         except Exception as e:
             logger.error(f"Anomaly detection error: {e}")
             return create_error_response(f"Anomaly detection error: {str(e)}")
-    
+
     @mcp_tool("vector_quality_assessment", "Assess quality and characteristics of vector embeddings")
     @a2a_skill("vector_quality_assessment", "Comprehensive vector quality analysis")
     async def vector_quality_assessment(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -1088,26 +1088,26 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
         try:
             vector_ids = request_data.get('vector_ids', [])
             assessment_type = request_data.get('assessment_type', 'comprehensive')
-            
+
             # Get vectors
             vectors = []
             valid_ids = []
             metadata = []
-            
+
             for vid in vector_ids:
                 if vid in self.vector_store:
                     vectors.append(self.vector_store[vid]['embedding'])
                     valid_ids.append(vid)
                     metadata.append(self.vector_store[vid].get('metadata', {}))
-            
+
             if not vectors:
                 return create_error_response("No valid vectors found")
-            
+
             vectors = np.array(vectors)
-            
+
             # Quality assessments
             quality_metrics = {}
-            
+
             # Basic statistics
             quality_metrics['basic_stats'] = {
                 'num_vectors': len(vectors),
@@ -1117,22 +1117,22 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 'sparsity': float(np.mean(vectors == 0)),
                 'density': float(1 - np.mean(vectors == 0))
             }
-            
+
             # Distribution analysis
             if assessment_type in ['comprehensive', 'distribution']:
                 quality_metrics['distribution'] = {
                     'mean_values': vectors.mean(axis=0).tolist()[:10],  # First 10 dims
                     'std_values': vectors.std(axis=0).tolist()[:10],
                     'skewness': float(np.mean([
-                        self._calculate_skewness(vectors[:, i]) 
+                        self._calculate_skewness(vectors[:, i])
                         for i in range(min(10, vectors.shape[1]))
                     ])),
                     'kurtosis': float(np.mean([
-                        self._calculate_kurtosis(vectors[:, i]) 
+                        self._calculate_kurtosis(vectors[:, i])
                         for i in range(min(10, vectors.shape[1]))
                     ]))
                 }
-            
+
             # Similarity analysis
             if assessment_type in ['comprehensive', 'similarity']:
                 # Calculate pairwise similarities (sample if too large)
@@ -1141,13 +1141,13 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     sample_vectors = vectors[sample_idx]
                 else:
                     sample_vectors = vectors
-                
+
                 similarity_matrix = cosine_similarity(sample_vectors)
-                
+
                 # Remove diagonal (self-similarity)
                 mask = ~np.eye(similarity_matrix.shape[0], dtype=bool)
                 similarities = similarity_matrix[mask]
-                
+
                 quality_metrics['similarity_analysis'] = {
                     'mean_similarity': float(np.mean(similarities)),
                     'std_similarity': float(np.std(similarities)),
@@ -1159,18 +1159,18 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                         'q75': float(np.percentile(similarities, 75))
                     }
                 }
-            
+
             # Clustering tendency
             if assessment_type in ['comprehensive', 'clustering']:
                 quality_metrics['clustering_tendency'] = await self._assess_clustering_tendency(vectors)
-            
+
             # Dimensionality assessment
             if assessment_type in ['comprehensive', 'dimensionality']:
                 quality_metrics['dimensionality'] = await self._assess_effective_dimensionality(vectors)
-            
+
             # Overall quality score
             overall_score = self._calculate_overall_quality_score(quality_metrics)
-            
+
             return create_success_response({
                 'quality_metrics': quality_metrics,
                 'overall_quality_score': float(overall_score),
@@ -1178,43 +1178,43 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 'vectors_assessed': len(valid_ids),
                 'recommendations': await self._generate_quality_recommendations(quality_metrics)
             })
-            
+
         except Exception as e:
             logger.error(f"Vector quality assessment error: {e}")
             return create_error_response(f"Vector quality assessment error: {str(e)}")
-    
+
     # Helper methods for ML operations
     async def _generate_ensemble_embeddings(self, texts: List[str]) -> np.ndarray:
         """Generate ensemble embeddings from multiple models"""
         if not self.embedding_models:
             raise ValueError("No embedding models available")
-        
+
         all_embeddings = []
         weights = []
-        
+
         for model_name, model in self.embedding_models.items():
             embeddings = model.encode(texts, normalize_embeddings=True)
             all_embeddings.append(embeddings)
-            
+
             # Weight based on model performance (simplified)
             weight = {'general': 0.4, 'multilingual': 0.3, 'semantic': 0.3}.get(model_name, 0.33)
             weights.append(weight)
-        
+
         # Weighted average of embeddings
         weights = np.array(weights) / np.sum(weights)
         ensemble_embeddings = np.average(
-            all_embeddings, 
-            axis=0, 
+            all_embeddings,
+            axis=0,
             weights=weights
         )
-        
+
         return ensemble_embeddings
-    
+
     async def _generate_single_embeddings(self, texts: List[str], model_type: str) -> np.ndarray:
         """Generate embeddings using a single model"""
         if model_type in self.embedding_models:
             return self.embedding_models[model_type].encode(
-                texts, 
+                texts,
                 normalize_embeddings=True,
                 show_progress_bar=False
             )
@@ -1224,16 +1224,16 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
             return model.encode(texts, normalize_embeddings=True, show_progress_bar=False)
         else:
             raise ValueError("No embedding models available. Please install sentence-transformers.")
-    
+
     async def _compress_embeddings(self, embeddings: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:
         """Compress embeddings using PCA or other methods"""
         original_dim = embeddings.shape[1]
-        
+
         # Use PCA for compression
         if original_dim > 128:
             compressed = self.dimension_optimizer.fit_transform(embeddings)
             new_dim = compressed.shape[1]
-            
+
             compression_info = {
                 'compressed': True,
                 'original_dim': original_dim,
@@ -1242,15 +1242,15 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 'method': 'pca',
                 'variance_retained': np.sum(self.dimension_optimizer.explained_variance_ratio_)
             }
-            
+
             return compressed, compression_info
-        
+
         return embeddings, {'compressed': False}
-    
+
     async def _assess_embedding_quality(self, embeddings: np.ndarray) -> List[float]:
         """Assess quality of embeddings using ML"""
         quality_scores = []
-        
+
         for embedding in embeddings:
             # Extract features
             features = [
@@ -1258,35 +1258,35 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 np.count_nonzero(embedding == 0) / len(embedding),  # Sparsity
                 -np.sum(embedding * np.log(np.abs(embedding) + 1e-10))  # Entropy proxy
             ]
-            
+
             # Predict quality
             features_scaled = self.feature_scaler.transform([features])
             quality = self.quality_predictor.predict(features_scaled)[0]
             quality_scores.append(min(1.0, max(0.0, quality)))
-        
+
         return quality_scores
-    
+
     async def _search_index(self, index_id: str, query_vector: np.ndarray, k: int) -> List[VectorSearchResult]:
         """Search using specified index"""
         if index_id not in self.indices:
             # Fallback to brute force search
             return await self._brute_force_search(query_vector, k)
-        
+
         index = self.indices[index_id]
         query_vector = np.array([query_vector]).astype('float32')
-        
+
         # Search
         distances, indices = index.search(query_vector, k)
-        
+
         # Convert to results
         results = []
         vector_ids = list(self.vector_store.keys())
-        
+
         for i, (dist, idx) in enumerate(zip(distances[0], indices[0])):
             if idx < len(vector_ids):
                 vector_id = vector_ids[idx]
                 metadata = self.metadata_store.get(vector_id)
-                
+
                 results.append(VectorSearchResult(
                     vector_id=vector_id,
                     score=1.0 / (1.0 + dist),  # Convert distance to score
@@ -1294,17 +1294,17 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     metadata=metadata,
                     vector=self.vector_store.get(vector_id)
                 ))
-        
+
         return results
-    
+
     async def _brute_force_search(self, query_vector: np.ndarray, k: int) -> List[VectorSearchResult]:
         """Brute force search through all vectors"""
         results = []
-        
+
         for vector_id, vector in self.vector_store.items():
             distance = cosine(query_vector, vector)
             metadata = self.metadata_store.get(vector_id)
-            
+
             results.append(VectorSearchResult(
                 vector_id=vector_id,
                 score=1.0 - distance,
@@ -1312,17 +1312,17 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 metadata=metadata,
                 vector=vector
             ))
-        
+
         # Sort by score and return top k
         results.sort(key=lambda x: x.score, reverse=True)
         return results[:k]
-    
-    async def _rerank_results_ml(self, query_vector: np.ndarray, 
+
+    async def _rerank_results_ml(self, query_vector: np.ndarray,
                                 results: List[VectorSearchResult], k: int) -> List[VectorSearchResult]:
         """Re-rank results using ML model"""
         if not results:
             return results
-        
+
         # Extract features for re-ranking
         rerank_features = []
         for result in results:
@@ -1335,40 +1335,40 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 rerank_features.append(features)
             else:
                 rerank_features.append([0.5, result.score, result.distance])
-        
+
         # Predict relevance
         relevance_scores = self.similarity_learner.predict_proba(rerank_features)
-        
+
         # Re-score results
         for i, result in enumerate(results):
             # Combine original score with ML prediction
             ml_score = relevance_scores[i][1] if len(relevance_scores[i]) > 1 else 0.5
             result.score = 0.7 * result.score + 0.3 * ml_score
-        
+
         # Re-sort and return top k
         results.sort(key=lambda x: x.score, reverse=True)
         return results[:k]
-    
+
     async def _compute_learned_similarity(self, vec1: np.ndarray, vec2: np.ndarray) -> float:
         """Compute similarity using learned function"""
         # Standard cosine similarity
         cos_sim = 1 - cosine(vec1, vec2)
-        
+
         # Extract features
         features = [
             np.linalg.norm(vec1),  # Vector 1 magnitude
-            np.linalg.norm(vec2),  # Vector 2 magnitude  
+            np.linalg.norm(vec2),  # Vector 2 magnitude
             cos_sim  # Base cosine similarity
         ]
-        
+
         # Predict if similar
         prob = self.similarity_learner.predict_proba([features])[0]
-        
+
         # Combine predictions
         learned_sim = 0.6 * cos_sim + 0.4 * prob[1] if len(prob) > 1 else cos_sim
-        
+
         return float(learned_sim)
-    
+
     async def _compute_standard_similarity(self, vec1: np.ndarray, vec2: np.ndarray, metric: str) -> float:
         """Compute standard similarity metrics"""
         if metric == 'cosine':
@@ -1379,40 +1379,40 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
             return float(np.dot(vec1, vec2))
         else:
             return float(1 - cosine(vec1, vec2))
-    
-    async def _optimize_index_parameters(self, vectors: np.ndarray, 
+
+    async def _optimize_index_parameters(self, vectors: np.ndarray,
                                        index_type: str, metric: str) -> Dict[str, Any]:
         """Optimize index parameters using ML"""
         n_vectors = len(vectors)
         dimension = vectors.shape[1]
-        
+
         if index_type == 'ivf':
             # Optimize nlist based on dataset size
             nlist = min(int(np.sqrt(n_vectors)), 1024)
             nprobe = max(1, nlist // 10)
-            
+
             return {
                 'nlist': nlist,
                 'nprobe': nprobe
             }
-        
+
         elif index_type == 'hnsw':
             # HNSW parameters
             M = min(64, max(16, n_vectors // 1000))
             ef_construction = M * 2
-            
+
             return {
                 'M': M,
                 'ef_construction': ef_construction,
                 'ef_search': M
             }
-        
+
         else:
 # A2A REMOVED:             # Fallback: create basic in-memory index
             try:
                 import numpy as np
                 from sklearn.neighbors import NearestNeighbors
-                
+
                 # Create basic KNN index as fallback
                 nn_model = NearestNeighbors(
                     n_neighbors=min(10, len(vectors)),
@@ -1420,7 +1420,7 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     algorithm='auto'
                 )
                 nn_model.fit(vectors)
-                
+
                 return {
                     'index': nn_model,
                     'index_type': 'sklearn_knn',
@@ -1438,77 +1438,77 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     'size': 0,
                     'error': str(e)
                 }
-    
+
     async def _build_faiss_index(self, vectors: np.ndarray, dimension: int,
                                index_type: str, metric: str, params: Dict[str, Any]) -> Any:
         """Build FAISS index with specified parameters"""
         vectors = vectors.astype('float32')
-        
+
         if metric == 'cosine':
             # Normalize vectors for cosine similarity
             faiss.normalize_L2(vectors)
-        
+
         if index_type == 'flat':
             if metric == 'cosine' or metric == 'l2':
                 index = faiss.IndexFlatL2(dimension)
             else:
                 index = faiss.IndexFlatIP(dimension)
-        
+
         elif index_type == 'ivf':
             nlist = params.get('nlist', 100)
             quantizer = faiss.IndexFlatL2(dimension)
             index = faiss.IndexIVFFlat(quantizer, dimension, nlist)
             index.train(vectors)
-        
+
         elif index_type == 'hnsw':
             M = params.get('M', 32)
             index = faiss.IndexHNSWFlat(dimension, M)
-        
+
         else:
             # Default to flat index
             index = faiss.IndexFlatL2(dimension)
-        
+
         # Add vectors to index
         index.add(vectors)
-        
+
         return index
-    
+
     async def _generate_node2vec_embeddings(self, G: nx.Graph) -> Dict[str, np.ndarray]:
         """Generate Node2Vec embeddings"""
         if NODE2VEC_AVAILABLE:
             node2vec = Node2Vec(
-                G, 
-                dimensions=128, 
-                walk_length=30, 
+                G,
+                dimensions=128,
+                walk_length=30,
                 num_walks=200,
                 workers=4
             )
-            
+
             model = node2vec.fit(window=10, min_count=1, batch_words=4)
-            
+
             embeddings = {}
             for node in G.nodes():
                 embeddings[node] = model.wv[str(node)]
-            
+
             return embeddings
         else:
             return await self._generate_spectral_embeddings(G)
-    
+
     async def _generate_spectral_embeddings(self, G: nx.Graph) -> Dict[str, np.ndarray]:
         """Generate spectral embeddings as fallback"""
         # Get adjacency matrix
         A = nx.adjacency_matrix(G).astype(float)
-        
+
         # Use SVD for embedding
         embeddings_matrix = self.sparse_encoder.fit_transform(A)
-        
+
         embeddings = {}
         for i, node in enumerate(G.nodes()):
             embeddings[node] = embeddings_matrix[i]
-        
+
         return embeddings
-    
-    async def _generate_similarity_explanation(self, query: str, 
+
+    async def _generate_similarity_explanation(self, query: str,
                                              result: VectorSearchResult) -> Dict[str, Any]:
         """Generate explanation for similarity using Grok"""
         try:
@@ -1523,14 +1523,14 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 }],
                 max_tokens=100
             )
-            
+
             return {
                 'explanation': response.choices[0].message.content,
                 'confidence': result.score
             }
         except:
             return None
-    
+
     async def _learn_from_search(self, query_vector: np.ndarray, results: List[VectorSearchResult]):
         """Learn from search results for model improvement"""
         self.training_data['search_performance'].append({
@@ -1539,12 +1539,12 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
             'score_distribution': [r.score for r in results[:5]],
             'timestamp': datetime.now().isoformat()
         })
-        
+
         # Retrain models periodically
         self.operation_count += 1
         if self.operation_count % self.model_update_frequency == 0:
             await self._retrain_models()
-    
+
     async def _retrain_models(self):
         """Retrain ML models with accumulated data"""
         try:
@@ -1554,7 +1554,7 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 # Implementation would go here
         except Exception as e:
             logger.error(f"Model retraining error: {e}")
-    
+
     # Registry capability skills - Required for 95/100 alignment
     @a2a_skill(
         name="vector_generation",
@@ -1566,7 +1566,7 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
         return await self.generate_embeddings(request_data)
 
     @a2a_skill(
-        name="embedding_creation", 
+        name="embedding_creation",
         description="Create embeddings using advanced transformer models and ensemble methods",
         capabilities=["transformer-embeddings", "ensemble-fusion", "quality-optimization"]
     )
@@ -1592,7 +1592,7 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
         """Optimize vectors using ML-based compression and dimensionality reduction"""
         # Choose optimization strategy based on request
         optimization_type = request_data.get("optimization_type", "dimensionality_reduction")
-        
+
         if optimization_type == "dimensionality_reduction":
             return await self.vector_dimensionality_reduction(request_data)
         elif optimization_type == "clustering":
@@ -1641,7 +1641,7 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                     'vector_id': vector_id,
                     'score': similarity
                 })
-        
+
         # Sort by score and return top k
         results.sort(key=lambda x: x['score'], reverse=True)
         return results[:top_k]
@@ -1663,7 +1663,7 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 enhanced_results.append((vector_id, boosted_score))
             else:
                 enhanced_results.append((vector_id, score))
-        
+
         # Re-sort by boosted scores
         enhanced_results.sort(key=lambda x: x[1], reverse=True)
         return enhanced_results
@@ -1672,20 +1672,20 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
         """Assess how well vectors cluster"""
         if len(vectors) < 10:
             return {'clustering_tendency': 'insufficient_data', 'score': 0.0}
-        
+
         # Calculate Hopkins statistic approximation
         try:
             # Simple clustering tendency measure
             kmeans = KMeans(n_clusters=min(5, len(vectors)//2), random_state=42, n_init=10)
             labels = kmeans.fit_predict(vectors)
-            
+
             # Calculate inertia as clustering quality measure
             inertia = kmeans.inertia_
             n_samples = len(vectors)
-            
+
             # Normalize inertia (lower is better for clustering)
             clustering_score = 1.0 / (1.0 + inertia / n_samples)
-            
+
             return {
                 'clustering_tendency': 'good' if clustering_score > 0.7 else 'moderate' if clustering_score > 0.4 else 'poor',
                 'score': clustering_score,
@@ -1703,11 +1703,11 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
             if vectors.shape[1] > 2:
                 pca = PCA()
                 pca.fit(vectors)
-                
+
                 # Find number of components needed for 95% variance
                 cumsum_variance = np.cumsum(pca.explained_variance_ratio_)
                 effective_dims = np.argmax(cumsum_variance >= 0.95) + 1
-                
+
                 return {
                     'original_dimensions': vectors.shape[1],
                     'effective_dimensions': int(effective_dims),
@@ -1728,13 +1728,13 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
     def _calculate_overall_quality_score(self, quality_metrics: Dict[str, Any]) -> float:
         """Calculate overall quality score from individual metrics"""
         scores = []
-        
+
         # Basic stats contribution
         basic = quality_metrics.get('basic_stats', {})
         if basic:
             density_score = basic.get('density', 0.0)  # Higher density is generally better
             scores.append(density_score * 0.3)
-        
+
         # Similarity analysis contribution
         similarity = quality_metrics.get('similarity_analysis', {})
         if similarity:
@@ -1742,29 +1742,29 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
             mean_sim = similarity.get('mean_similarity', 0.0)
             sim_score = 1.0 - abs(mean_sim - 0.3)  # Target similarity around 0.3
             scores.append(max(0, sim_score) * 0.4)
-        
+
         # Clustering tendency contribution
         clustering = quality_metrics.get('clustering_tendency', {})
         if clustering:
             clustering_score = clustering.get('score', 0.0)
             scores.append(clustering_score * 0.3)
-        
+
         return sum(scores) if scores else 0.5
 
     async def _generate_quality_recommendations(self, quality_metrics: Dict[str, Any]) -> List[str]:
         """Generate recommendations based on quality assessment"""
         recommendations = []
-        
+
         basic = quality_metrics.get('basic_stats', {})
         if basic:
             sparsity = basic.get('sparsity', 0.0)
             if sparsity > 0.8:
                 recommendations.append("Consider using sparse vector representations for better efficiency")
-            
+
             dimensions = basic.get('dimensions', 0)
             if dimensions > 1000:
                 recommendations.append("Consider dimensionality reduction for better performance")
-        
+
         similarity = quality_metrics.get('similarity_analysis', {})
         if similarity:
             mean_sim = similarity.get('mean_similarity', 0.0)
@@ -1772,10 +1772,10 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 recommendations.append("Vectors are very similar - consider deduplication")
             elif mean_sim < 0.1:
                 recommendations.append("Vectors are very dissimilar - verify data consistency")
-        
+
         if not recommendations:
             recommendations.append("Vector quality appears good - no specific recommendations")
-        
+
         return recommendations
 
     def _calculate_skewness(self, data: np.ndarray) -> float:
@@ -1803,7 +1803,7 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
         # Simplified autoencoder simulation using PCA
         if target_dimensions >= vectors.shape[1]:
             return vectors
-        
+
         pca = PCA(n_components=target_dimensions)
         return pca.fit_transform(vectors)
 
@@ -1829,12 +1829,12 @@ class ComprehensiveVectorProcessingSDK(SecureA2AAgent, BlockchainIntegrationMixi
                 'metrics': self.metrics,
                 'ranking_weights': self.ranking_weights
             }
-            
+
             with open('vector_processing_history.pkl', 'wb') as f:
                 pickle.dump(history, f)
-            
+
             logger.info("Vector Processing Agent shutdown complete")
-            
+
         except Exception as e:
             logger.error(f"Shutdown error: {e}")
 
@@ -1854,7 +1854,7 @@ if __name__ == "__main__":
     async def main():
         agent = create_vector_processing_agent()
         await agent.initialize()
-        
+
         # Example: Generate embeddings
         result = await agent.generate_embeddings({
             'texts': ['Hello world', 'Vector processing is amazing'],
@@ -1862,7 +1862,7 @@ if __name__ == "__main__":
             'use_ensemble': True
         })
         print(f"Embedding result: {result}")
-        
+
         await agent.shutdown()
-    
+
     asyncio.run(main())

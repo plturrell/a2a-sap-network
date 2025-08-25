@@ -27,14 +27,14 @@ class AgentGoalProfile:
 
 class ComprehensiveGoalAssignmentSystem:
     """Manages goal assignment across all A2A agents"""
-    
+
     def __init__(self, orchestrator_handler, notification_system: SMARTGoalNotificationSystem):
         self.orchestrator = orchestrator_handler
         self.notification_system = notification_system
         self.agent_profiles = self._initialize_agent_profiles()
         self.assignment_history = {}
         self.active_assignments = {}
-        
+
     def _initialize_agent_profiles(self) -> Dict[str, AgentGoalProfile]:
         """Initialize goal profiles for all 16 agents"""
         profiles = {
@@ -52,7 +52,7 @@ class ComprehensiveGoalAssignmentSystem:
                 goal_priorities=["registration_efficiency", "quality_improvement", "reliability"],
                 collaboration_preferences=["agent1_standardization", "agent5_qa_validation"]
             ),
-            
+
             "agent1_standardization": AgentGoalProfile(
                 agent_id="agent1_standardization",
                 agent_name="Data Standardization Agent",
@@ -66,7 +66,7 @@ class ComprehensiveGoalAssignmentSystem:
                 goal_priorities=["transformation_efficiency", "compliance_adherence"],
                 collaboration_preferences=["agent0_data_product", "agent2_ai_preparation"]
             ),
-            
+
             "agent2_ai_preparation": AgentGoalProfile(
                 agent_id="agent2_ai_preparation",
                 agent_name="AI Data Preparation Agent",
@@ -80,7 +80,7 @@ class ComprehensiveGoalAssignmentSystem:
                 goal_priorities=["feature_quality", "privacy_compliance", "ml_readiness"],
                 collaboration_preferences=["agent1_standardization", "agent3_vector_processing"]
             ),
-            
+
             "agent3_vector_processing": AgentGoalProfile(
                 agent_id="agent3_vector_processing",
                 agent_name="Vector Processing Agent",
@@ -94,7 +94,7 @@ class ComprehensiveGoalAssignmentSystem:
                 goal_priorities=["embedding_quality", "indexing_performance", "search_accuracy"],
                 collaboration_preferences=["agent2_ai_preparation", "agent14_embedding_finetuner"]
             ),
-            
+
             "agent4_calc_validation": AgentGoalProfile(
                 agent_id="agent4_calc_validation",
                 agent_name="Calculation Validation Agent",
@@ -108,7 +108,7 @@ class ComprehensiveGoalAssignmentSystem:
                 goal_priorities=["validation_accuracy", "throughput_optimization"],
                 collaboration_preferences=["agent10_calculation", "agent5_qa_validation"]
             ),
-            
+
             "agent5_qa_validation": AgentGoalProfile(
                 agent_id="agent5_qa_validation",
                 agent_name="QA Validation Agent",
@@ -122,7 +122,7 @@ class ComprehensiveGoalAssignmentSystem:
                 goal_priorities=["quality_gates", "compliance_verification", "defect_prevention"],
                 collaboration_preferences=["agent0_data_product", "agent6_quality_control"]
             ),
-            
+
             # Management Agents (6-8)
             "agent6_quality_control": AgentGoalProfile(
                 agent_id="agent6_quality_control",
@@ -137,7 +137,7 @@ class ComprehensiveGoalAssignmentSystem:
                 goal_priorities=["proactive_monitoring", "rapid_remediation", "coverage_expansion"],
                 collaboration_preferences=["agent5_qa_validation", "agent7_agent_manager"]
             ),
-            
+
             "agent7_agent_manager": AgentGoalProfile(
                 agent_id="agent7_agent_manager",
                 agent_name="Agent Manager",
@@ -151,7 +151,7 @@ class ComprehensiveGoalAssignmentSystem:
                 goal_priorities=["uptime_maximization", "deployment_reliability", "resource_optimization"],
                 collaboration_preferences=["agent15_orchestrator", "agent13_agent_builder"]
             ),
-            
+
             "agent8_data_manager": AgentGoalProfile(
                 agent_id="agent8_data_manager",
                 agent_name="Data Manager",
@@ -165,7 +165,7 @@ class ComprehensiveGoalAssignmentSystem:
                 goal_priorities=["storage_optimization", "retrieval_performance", "cache_efficiency"],
                 collaboration_preferences=["agent0_data_product", "agent12_catalog_manager"]
             ),
-            
+
             # Specialized Agents (9-11)
             "agent9_reasoning": AgentGoalProfile(
                 agent_id="agent9_reasoning",
@@ -180,7 +180,7 @@ class ComprehensiveGoalAssignmentSystem:
                 goal_priorities=["reasoning_accuracy", "inference_speed", "explanation_clarity"],
                 collaboration_preferences=["agent10_calculation", "agent11_sql"]
             ),
-            
+
             "agent10_calculation": AgentGoalProfile(
                 agent_id="agent10_calculation",
                 agent_name="Calculation Agent",
@@ -194,7 +194,7 @@ class ComprehensiveGoalAssignmentSystem:
                 goal_priorities=["computational_accuracy", "numerical_stability", "self_healing"],
                 collaboration_preferences=["agent4_calc_validation", "agent9_reasoning"]
             ),
-            
+
             "agent11_sql": AgentGoalProfile(
                 agent_id="agent11_sql",
                 agent_name="SQL Agent",
@@ -208,7 +208,7 @@ class ComprehensiveGoalAssignmentSystem:
                 goal_priorities=["nl2sql_accuracy", "query_optimization", "security"],
                 collaboration_preferences=["agent9_reasoning", "agent8_data_manager"]
             ),
-            
+
             # Infrastructure Agents (12-15)
             "agent12_catalog_manager": AgentGoalProfile(
                 agent_id="agent12_catalog_manager",
@@ -223,7 +223,7 @@ class ComprehensiveGoalAssignmentSystem:
                 goal_priorities=["catalog_completeness", "discovery_speed", "metadata_quality"],
                 collaboration_preferences=["agent8_data_manager", "agent7_agent_manager"]
             ),
-            
+
             "agent13_agent_builder": AgentGoalProfile(
                 agent_id="agent13_agent_builder",
                 agent_name="Agent Builder",
@@ -237,7 +237,7 @@ class ComprehensiveGoalAssignmentSystem:
                 goal_priorities=["build_reliability", "code_quality", "deployment_speed"],
                 collaboration_preferences=["agent7_agent_manager", "agent15_orchestrator"]
             ),
-            
+
             "agent14_embedding_finetuner": AgentGoalProfile(
                 agent_id="agent14_embedding_finetuner",
                 agent_name="Embedding Fine-Tuner",
@@ -251,7 +251,7 @@ class ComprehensiveGoalAssignmentSystem:
                 goal_priorities=["model_improvement", "training_efficiency", "embedding_quality"],
                 collaboration_preferences=["agent3_vector_processing", "agent2_ai_preparation"]
             ),
-            
+
             "agent15_orchestrator": AgentGoalProfile(
                 agent_id="agent15_orchestrator",
                 agent_name="Orchestrator Agent",
@@ -266,9 +266,9 @@ class ComprehensiveGoalAssignmentSystem:
                 collaboration_preferences=["agent7_agent_manager", "all_agents"]
             )
         }
-        
+
         return profiles
-    
+
     async def assign_initial_goals_to_all_agents(self) -> Dict[str, Any]:
         """Assign initial goals to all 16 agents based on their profiles"""
         assignment_results = {
@@ -281,12 +281,12 @@ class ComprehensiveGoalAssignmentSystem:
                 "total_goals_assigned": 0
             }
         }
-        
+
         for agent_id, profile in self.agent_profiles.items():
             try:
                 # Assign primary goal for each agent
                 agent_goals = await self._assign_agent_goals(agent_id, profile)
-                
+
                 if agent_goals["status"] == "success":
                     assignment_results["assignments"][agent_id] = agent_goals
                     assignment_results["summary"]["successful_assignments"] += 1
@@ -294,23 +294,23 @@ class ComprehensiveGoalAssignmentSystem:
                 else:
                     assignment_results["assignments"][agent_id] = {"status": "failed", "error": agent_goals.get("error")}
                     assignment_results["summary"]["failed_assignments"] += 1
-                    
+
             except Exception as e:
                 logger.error(f"Failed to assign goals to {agent_id}: {e}")
                 assignment_results["assignments"][agent_id] = {"status": "error", "error": str(e)}
                 assignment_results["summary"]["failed_assignments"] += 1
-        
+
         # Create collaborative goals for compatible agents
         collab_results = await self._create_collaborative_goals()
         assignment_results["collaborative_goals"] = collab_results
-        
+
         return assignment_results
-    
+
     async def _assign_agent_goals(self, agent_id: str, profile: AgentGoalProfile) -> Dict[str, Any]:
         """Assign specific goals to an agent based on its profile"""
         try:
             assigned_goals = []
-            
+
             # Register agent for notifications first
             await self.notification_system.register_agent_for_notifications(
                 agent_id,
@@ -320,18 +320,18 @@ class ComprehensiveGoalAssignmentSystem:
                     "notification_preferences": {"email": False, "a2a_message": True}
                 }
             )
-            
+
             # Assign primary goal based on first goal type
             for goal_type in profile.primary_goal_types[:2]:  # Assign top 2 goal types
                 # Extract agent number/type from agent_id (e.g., agent0_data_product -> agent0)
                 agent_key = agent_id.split('_')[0] if '_' in agent_id else agent_id
                 goal_template_key = f"{agent_key}_{goal_type}"
-                
+
                 if goal_template_key in self.notification_system.goal_templates:
                     # Calculate target metrics based on baseline + improvement
                     target_metrics = {}
                     template = self.notification_system.goal_templates[goal_template_key]
-                    
+
                     for metric in template.measurable_metrics:
                         if metric in profile.performance_baseline:
                             baseline = profile.performance_baseline[metric]
@@ -343,19 +343,29 @@ class ComprehensiveGoalAssignmentSystem:
                                 # Higher is better
                                 target = min(template.achievable_criteria[metric]["max"], baseline * 1.15)
                             target_metrics[metric] = round(target, 2)
-                    
-                    # Create SMART goal
+
+                    # Create SMART goal with proper template parameters
+                    primary_metric = template.measurable_metrics[0] if template.measurable_metrics else "performance"
+                    primary_target = target_metrics.get(primary_metric, 95.0)
+
+                    template_params = {
+                        "target_rate": primary_target,
+                        "metric_name": primary_metric.replace('_', ' ').title(),
+                        "time_constraint": "optimal",
+                        **target_metrics  # Include all target metrics
+                    }
+
                     goal_params = {
-                        "specific": template.specific_template.format(**target_metrics),
+                        "specific": template.specific_template.format(**template_params),
                         "measurable": target_metrics,
                         "time_bound": "30 days",
                         "tracking_frequency": "daily"
                     }
-                    
+
                     smart_goal = self.notification_system.create_smart_goal(
                         agent_id, goal_type, goal_params
                     )
-                    
+
                     # Send goal to orchestrator
                     goal_message = {
                         "operation": "set_agent_goals",
@@ -373,7 +383,7 @@ class ComprehensiveGoalAssignmentSystem:
                             }
                         }
                     }
-                    
+
                     # Process through orchestrator
                     message = A2AMessage(
                         sender_id="goal_assignment_system",
@@ -384,36 +394,36 @@ class ComprehensiveGoalAssignmentSystem:
                         )],
                         timestamp=datetime.utcnow()
                     )
-                    
+
                     result = await self.orchestrator.process_a2a_message(message)
-                    
+
                     if result.get("status") == "success":
                         assigned_goals.append({
                             "goal_id": smart_goal["goal_id"],
                             "goal_type": goal_type,
                             "status": "assigned"
                         })
-                        
+
                         # Store in active assignments
                         if agent_id not in self.active_assignments:
                             self.active_assignments[agent_id] = []
                         self.active_assignments[agent_id].append(smart_goal)
-            
+
             return {
                 "status": "success",
                 "agent_id": agent_id,
                 "goals": assigned_goals,
                 "total_assigned": len(assigned_goals)
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to assign goals to {agent_id}: {e}")
             return {"status": "failed", "error": str(e)}
-    
+
     def _generate_success_criteria(self, goal: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate success criteria for a goal"""
         criteria = []
-        
+
         for metric, target in goal["measurable"].items():
             criterion = {
                 "metric_name": metric,
@@ -422,13 +432,13 @@ class ComprehensiveGoalAssignmentSystem:
                 "weight": 1.0 / len(goal["measurable"])  # Equal weight for all metrics
             }
             criteria.append(criterion)
-        
+
         return criteria
-    
+
     def _generate_alert_thresholds(self, metrics: Dict[str, float]) -> Dict[str, Dict[str, float]]:
         """Generate alert thresholds for metrics"""
         thresholds = {}
-        
+
         for metric, target in metrics.items():
             if metric in ["error_rate", "false_positive_rate", "false_alarm_rate"]:
                 # Lower is better
@@ -442,13 +452,13 @@ class ComprehensiveGoalAssignmentSystem:
                     "warning": target * 0.9,
                     "critical": target * 0.8
                 }
-        
+
         return thresholds
-    
+
     async def _create_collaborative_goals(self) -> Dict[str, Any]:
         """Create collaborative goals for compatible agent groups"""
         collab_goals = []
-        
+
         # Define collaborative goal opportunities
         collaboration_opportunities = [
             {
@@ -502,7 +512,7 @@ class ComprehensiveGoalAssignmentSystem:
                 }
             }
         ]
-        
+
         for collab_config in collaboration_opportunities:
             try:
                 # Create collaborative goal
@@ -515,7 +525,7 @@ class ComprehensiveGoalAssignmentSystem:
                     "duration": "60 days",
                     "status": "proposed"
                 }
-                
+
                 # Assign roles based on pattern
                 if collab_config["pattern"] == "sequential":
                     roles = {agent: f"stage_{i+1}" for i, agent in enumerate(collab_config["agents"])}
@@ -526,18 +536,18 @@ class ComprehensiveGoalAssignmentSystem:
                         collab_config["agents"][0]: "lead",
                         **{agent: "contributor" for agent in collab_config["agents"][1:]}
                     }
-                
+
                 collab_goal["agent_roles"] = roles
                 collab_goals.append(collab_goal)
-                
+
             except Exception as e:
                 logger.error(f"Failed to create collaborative goal: {e}")
-        
+
         return {
             "total_created": len(collab_goals),
             "collaborative_goals": collab_goals
         }
-    
+
     async def monitor_goal_progress(self) -> Dict[str, Any]:
         """Monitor progress across all agent goals"""
         progress_report = {
@@ -550,13 +560,13 @@ class ComprehensiveGoalAssignmentSystem:
                 "goals_completed": 0
             }
         }
-        
+
         for agent_id, goals in self.active_assignments.items():
             agent_progress = {
                 "goals": [],
                 "overall_health": "good"
             }
-            
+
             for goal in goals:
                 # Get progress from orchestrator
                 progress_message = {
@@ -566,7 +576,7 @@ class ComprehensiveGoalAssignmentSystem:
                         "include_progress": True
                     }
                 }
-                
+
                 message = A2AMessage(
                     sender_id="goal_monitoring_system",
                     recipient_id="orchestrator_agent",
@@ -576,20 +586,20 @@ class ComprehensiveGoalAssignmentSystem:
                     )],
                     timestamp=datetime.utcnow()
                 )
-                
+
                 result = await self.orchestrator.process_a2a_message(message)
-                
+
                 if result.get("status") == "success" and "progress" in result["data"]:
                     progress_data = result["data"]["progress"]
                     goal_status = self._assess_goal_status(goal, progress_data)
-                    
+
                     agent_progress["goals"].append({
                         "goal_id": goal["goal_id"],
                         "progress": progress_data.get("overall_progress", 0),
                         "status": goal_status,
                         "metrics": progress_data.get("objective_progress", {})
                     })
-                    
+
                     # Update summary
                     progress_report["summary"]["total_goals"] += 1
                     if goal_status == "on_track":
@@ -599,38 +609,38 @@ class ComprehensiveGoalAssignmentSystem:
                         agent_progress["overall_health"] = "warning"
                     elif goal_status == "completed":
                         progress_report["summary"]["goals_completed"] += 1
-            
+
             progress_report["agent_progress"][agent_id] = agent_progress
-        
+
         return progress_report
-    
+
     def _assess_goal_status(self, goal: Dict[str, Any], progress: Dict[str, Any]) -> str:
         """Assess if a goal is on track, at risk, or completed"""
         overall_progress = progress.get("overall_progress", 0)
-        
+
         # Calculate expected progress based on time elapsed
         start_date = datetime.fromisoformat(goal["assigned_date"])
         target_date = datetime.fromisoformat(goal["target_date"])
         current_date = datetime.utcnow()
-        
+
         total_duration = (target_date - start_date).days
         elapsed_duration = (current_date - start_date).days
         expected_progress = (elapsed_duration / total_duration) * 100 if total_duration > 0 else 0
-        
+
         if overall_progress >= 100:
             return "completed"
         elif overall_progress >= expected_progress * 0.9:  # Within 10% of expected
             return "on_track"
         else:
             return "at_risk"
-    
+
     async def recommend_goal_adjustments(self) -> List[Dict[str, Any]]:
         """Recommend adjustments to goals based on performance"""
         recommendations = []
-        
+
         # Get current progress
         progress_report = await self.monitor_goal_progress()
-        
+
         for agent_id, agent_data in progress_report["agent_progress"].items():
             for goal_data in agent_data["goals"]:
                 if goal_data["status"] == "at_risk":
@@ -641,7 +651,7 @@ class ComprehensiveGoalAssignmentSystem:
                         "current_progress": goal_data["progress"],
                         "recommendations": []
                     }
-                    
+
                     # Analyze underperforming metrics
                     for metric, value in goal_data["metrics"].items():
                         if value < 80:  # Metric is underperforming
@@ -651,14 +661,14 @@ class ComprehensiveGoalAssignmentSystem:
                                 "current_value": value,
                                 "suggestion": f"Focus resources on improving {metric}"
                             })
-                    
+
                     # Suggest timeline adjustment if severely behind
                     if goal_data["progress"] < 50:
                         recommendation["recommendations"].append({
                             "type": "timeline_extension",
                             "suggestion": "Consider extending deadline by 14 days"
                         })
-                    
+
                     # Suggest collaboration if available
                     profile = self.agent_profiles.get(agent_id)
                     if profile and profile.collaboration_preferences:
@@ -666,9 +676,9 @@ class ComprehensiveGoalAssignmentSystem:
                             "type": "collaboration",
                             "suggestion": f"Consider collaboration with {profile.collaboration_preferences[0]}"
                         })
-                    
+
                     recommendations.append(recommendation)
-        
+
         return recommendations
 
 

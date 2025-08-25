@@ -27,11 +27,11 @@ if missing_vars:
 async def test_reasoning_agent():
     print('🧠 Testing Comprehensive Reasoning Agent Real AI Integration')
     print('=' * 70)
-    
+
     # Initialize agent
     agent = ComprehensiveReasoningAgentSDK(os.getenv("A2A_SERVICE_URL"))
     await agent.initialize()
-    
+
     # Test 1: Check if ML models are properly initialized
     print('\n1. 🧠 Testing Machine Learning Initialization:')
     print(f'   Inference Engine: {"✅ Loaded" if agent.inference_engine is not None else "❌ Failed"}')
@@ -43,7 +43,7 @@ async def test_reasoning_agent():
     print(f'   Concept Analyzer (DBSCAN): {"✅ Loaded" if agent.concept_analyzer is not None else "❌ Failed"}')
     print(f'   Feature Scaler: {"✅ Loaded" if agent.feature_scaler is not None else "❌ Failed"}')
     print(f'   Learning Enabled: {"✅ Yes" if agent.learning_enabled else "❌ No"}')
-    
+
     # Test 2: Test semantic understanding capabilities
     print('\n2. 🔍 Testing Semantic Understanding:')
     try:
@@ -51,7 +51,7 @@ async def test_reasoning_agent():
         if agent.embedding_model:
             print('   ✅ Reasoning Semantic Model Loaded')
             print(f'   Model Type: {type(agent.embedding_model).__name__}')
-            
+
             # Test embedding generation for reasoning statements
             test_statements = [
                 "All humans are mortal, Socrates is human, therefore Socrates is mortal",
@@ -65,10 +65,10 @@ async def test_reasoning_agent():
             print('   ✅ Real semantic embeddings for reasoning understanding available')
         else:
             print('   ⚠️  Semantic Model Not Available (using TF-IDF fallback)')
-        
+
     except Exception as e:
         print(f'   ❌ Semantic Understanding Error: {e}')
-    
+
     # Test 3: Test NLP model
     print('\n3. 📝 Testing NLP Model Integration:')
     try:
@@ -80,7 +80,7 @@ async def test_reasoning_agent():
             print('   ⚠️  NLP Model Not Available (basic text processing only)')
     except Exception as e:
         print(f'   ❌ NLP Model Error: {e}')
-    
+
     # Test 4: Test Grok AI integration
     print('\n4. 🤖 Testing Grok AI Integration:')
     try:
@@ -94,26 +94,26 @@ async def test_reasoning_agent():
             print('   ⚠️  Grok Client Not Available (expected if no internet/API key)')
     except Exception as e:
         print(f'   ❌ Grok Integration Error: {e}')
-    
-    # Test 5: Test blockchain integration  
+
+    # Test 5: Test blockchain integration
     print('\n5. ⛓️  Testing Blockchain Integration:')
     try:
         if hasattr(agent, 'web3_client') and agent.web3_client:
             # Test blockchain connection
             is_connected = agent.web3_client.is_connected() if agent.web3_client else False
             print(f'   Blockchain Connection: {"✅ Connected" if is_connected else "❌ Failed"}')
-            
+
             if hasattr(agent, 'account') and agent.account:
                 print(f'   Account Address: {agent.account.address[:10]}...{agent.account.address[-4:]}')
-            
+
             print(f'   Blockchain Queue: {"✅ Enabled" if agent.blockchain_queue_enabled else "❌ Disabled"}')
-            
+
         else:
             print('   ⚠️  Blockchain Not Connected (expected without private key)')
             print('   📝 Note: Set A2A_PRIVATE_KEY environment variable to enable blockchain')
     except Exception as e:
         print(f'   ❌ Blockchain Error: {e}')
-    
+
     # Test 6: Test reasoning types and domains
     print('\n6. 🎯 Testing Reasoning Types and Domains:')
     try:
@@ -121,24 +121,24 @@ async def test_reasoning_agent():
         print(f'   Reasoning Types: {len(ReasoningType)}')
         for reasoning_type in ReasoningType:
             print(f'   - {reasoning_type.value}')
-        
+
         print(f'   Reasoning Domains: {len(ReasoningDomain)}')
         for domain in ReasoningDomain:
             print(f'   - {domain.value}')
-        
+
         print(f'   Logical Operators: {len(LogicalOperator)}')
         for operator in LogicalOperator:
             print(f'   - {operator.value}')
-        
+
         print(f'   Reasoning Engines: {len(agent.reasoning_engines)}')
         for engine_type in agent.reasoning_engines.keys():
             print(f'   - {engine_type.value}: Available')
-        
+
         print('   ✅ Multi-Paradigm Reasoning Framework Ready')
-        
+
     except Exception as e:
         print(f'   ❌ Reasoning Framework Error: {e}')
-    
+
     # Test 7: Test knowledge graph
     print('\n7. 🕸️ Testing Knowledge Graph:')
     try:
@@ -146,7 +146,7 @@ async def test_reasoning_agent():
         print(f'   Domain Knowledge: {len(agent.domain_knowledge)}')
         print(f'   Logical Rules: {len(agent.logical_rules)}')
         print(f'   Reasoning Chains: {len(agent.reasoning_chains)}')
-        
+
         # Test NetworkX integration
         if hasattr(agent, 'concept_graph') and agent.concept_graph is not None:
             print(f'   Concept Graph: {type(agent.concept_graph).__name__} initialized')
@@ -154,12 +154,12 @@ async def test_reasoning_agent():
             print(f'   Graph Edges: {agent.concept_graph.number_of_edges()}')
         else:
             print('   ⚠️  NetworkX not available - using basic graph structure')
-        
+
         print('   ✅ Knowledge Management System Ready')
-        
+
     except Exception as e:
         print(f'   ❌ Knowledge Graph Error: {e}')
-    
+
     # Test 8: Test MCP integration
     print('\n8. 🔌 Testing MCP Integration:')
     try:
@@ -167,7 +167,7 @@ async def test_reasoning_agent():
         mcp_tools = []
         mcp_resources = []
         mcp_prompts = []
-        
+
         for attr_name in dir(agent):
             attr = getattr(agent, attr_name)
             if hasattr(attr, '_mcp_tool'):
@@ -176,27 +176,27 @@ async def test_reasoning_agent():
                 mcp_resources.append(attr_name)
             elif hasattr(attr, '_mcp_prompt'):
                 mcp_prompts.append(attr_name)
-        
+
         print(f'   MCP Tools Found: {len(mcp_tools)}')
         if mcp_tools:
             print(f'   Tools: {mcp_tools[:5]}')
-            
+
         print(f'   MCP Resources Found: {len(mcp_resources)}')
         if mcp_resources:
             print(f'   Resources: {mcp_resources[:3]}')
-            
+
         print(f'   MCP Prompts Found: {len(mcp_prompts)}')
         if mcp_prompts:
             print(f'   Prompts: {mcp_prompts[:3]}')
-        
+
         if mcp_tools or mcp_resources or mcp_prompts:
             print('   ✅ MCP Integration Present')
         else:
             print('   ⚠️  No MCP methods found')
-            
+
     except Exception as e:
         print(f'   ❌ MCP Integration Error: {e}')
-    
+
     # Test 9: Test logical reasoning
     print('\n9. 🧮 Testing Logical Reasoning:')
     try:
@@ -210,7 +210,7 @@ async def test_reasoning_agent():
                 'Socrates is human'
             ]
         })
-        
+
         if deductive_result.get('success'):
             data = deductive_result['data']
             print(f'   Deductive Reasoning Chain ID: {data["chain_id"]}')
@@ -224,24 +224,24 @@ async def test_reasoning_agent():
             print('   ✅ Deductive Reasoning Working')
         else:
             print(f'   ❌ Deductive reasoning failed: {deductive_result.get("error")}')
-            
+
     except Exception as e:
         print(f'   ❌ Logical Reasoning Error: {e}')
-    
+
     # Test 10: Test pattern analysis
     print('\n10. 📊 Testing Pattern Analysis:')
     try:
         pattern_result = await agent.pattern_analysis({
             'data': [
                 'Stock prices rise when earnings increase',
-                'Stock prices fall when earnings decrease', 
+                'Stock prices fall when earnings decrease',
                 'Stock prices correlate with earnings reports',
                 'Market volatility increases before earnings announcements'
             ],
             'pattern_type': 'financial',
             'analysis_depth': 'comprehensive'
         })
-        
+
         if pattern_result.get('success'):
             data = pattern_result['data']
             print(f'   Data Size: {data["data_size"]}')
@@ -252,10 +252,10 @@ async def test_reasoning_agent():
             print('   ✅ Pattern Analysis Working')
         else:
             print(f'   ⚠️  Pattern analysis: {pattern_result.get("error")}')
-            
+
     except Exception as e:
         print(f'   ❌ Pattern Analysis Error: {e}')
-    
+
     # Test 11: Test knowledge synthesis
     print('\n11. 🔬 Testing Knowledge Synthesis:')
     try:
@@ -269,7 +269,7 @@ async def test_reasoning_agent():
             'domain': 'technical',
             'confidence_threshold': 0.7
         })
-        
+
         if synthesis_result.get('success'):
             data = synthesis_result['data']
             print(f'   Sources Processed: {data["sources_processed"]}')
@@ -280,10 +280,10 @@ async def test_reasoning_agent():
             print('   ✅ Knowledge Synthesis Working')
         else:
             print(f'   ⚠️  Knowledge synthesis: {synthesis_result.get("error")}')
-            
+
     except Exception as e:
         print(f'   ❌ Knowledge Synthesis Error: {e}')
-    
+
     # Test 12: Test confidence assessment
     print('\n12. 📈 Testing Confidence Assessment:')
     try:
@@ -297,7 +297,7 @@ async def test_reasoning_agent():
             ],
             'reasoning_type': 'inductive'
         })
-        
+
         if confidence_result.get('success'):
             data = confidence_result['data']
             print(f'   Conclusion: {data["conclusion"][:50]}...')
@@ -308,22 +308,22 @@ async def test_reasoning_agent():
             print('   ✅ Confidence Assessment Working')
         else:
             print(f'   ⚠️  Confidence assessment: {confidence_result.get("error")}')
-            
+
     except Exception as e:
         print(f'   ❌ Confidence Assessment Error: {e}')
-    
+
     # Test 13: Test network connector
     print('\n13. 🌐 Testing Network Connector:')
     try:
         print(f'   Network Connector: {"✅ Initialized" if agent.network_connector else "❌ Failed"}')
         print(f'   Connected Agents: {len(agent.network_connector.connected_agents)}')
         print(f'   Session Available: {"✅ Yes" if hasattr(agent.network_connector, "session") else "❌ No"}')
-        
+
         print('   ✅ Cross-Agent Reasoning Collaboration Ready')
-        
+
     except Exception as e:
         print(f'   ❌ Network Connector Error: {e}')
-    
+
     # Test 14: Test performance metrics
     print('\n14. 📊 Testing Performance Metrics:')
     try:
@@ -336,19 +336,19 @@ async def test_reasoning_agent():
         print(f'   Blockchain Proofs: {agent.metrics["blockchain_proofs"]}')
         print(f'   Domain Specializations: {agent.metrics["domain_specializations"]}')
         print(f'   Method Performance Tracking: {len(agent.method_performance)} methods')
-        
+
         for method, perf in list(agent.method_performance.items())[:3]:
             total = perf["total"]
             success = perf["success"]
             rate = (success / total * 100) if total > 0 else 0
             avg_time = perf["total_time"] / total if total > 0 else 0
             print(f'   - {method}: {success}/{total} ({rate:.1f}% success, {avg_time:.3f}s avg)')
-        
+
         print('   ✅ Performance Metrics Initialized')
-        
+
     except Exception as e:
         print(f'   ❌ Metrics Error: {e}')
-    
+
     # Test 15: Test Data Manager integration
     print('\n15. 💾 Testing Data Manager Integration:')
     try:
@@ -356,10 +356,10 @@ async def test_reasoning_agent():
         print(f'   Data Manager Client: {"✅ Initialized" if data_manager else "❌ Failed"}')
         print(f'   Local Database: {"✅ Ready" if hasattr(data_manager, "local_db_path") else "❌ Failed"}')
         print(f'   Base URL: {data_manager.base_url if data_manager else "Not set"}')
-        
+
         # Test storing a sample reasoning chain
         from comprehensiveReasoningAgentSdk import ReasoningChain, ReasoningType, ReasoningDomain, ReasoningPremise
-        
+
         sample_chain = ReasoningChain(
             chain_id="test_chain_123",
             initial_query="Test reasoning query",
@@ -376,14 +376,14 @@ async def test_reasoning_agent():
             domain=ReasoningDomain.GENERAL,
             start_time=datetime.utcnow()
         )
-        
+
         storage_result = await data_manager.store_reasoning_chain(sample_chain)
         print(f'   Sample Chain Storage: {"✅ Success" if storage_result else "❌ Failed"}')
         print('   ✅ Data Manager Integration Working')
-        
+
     except Exception as e:
         print(f'   ❌ Data Manager Error: {e}')
-    
+
     print('\n📋 Reasoning Agent Summary:')
     print('=' * 60)
     print('✅ Machine Learning: 7 models for inference, pattern recognition, and confidence prediction')
@@ -396,7 +396,7 @@ async def test_reasoning_agent():
     print('⚠️  Blockchain: Requires A2A_PRIVATE_KEY environment variable for proof verification')
     print('✅ Cross-Agent Collaboration: Network connector for distributed reasoning')
     print('✅ Performance: Comprehensive metrics and reasoning chain tracking')
-    
+
     print('\n🎯 Real AI Intelligence Assessment: 95/100')
     print('   - Real ML models for logical inference and pattern recognition')
     print('   - Semantic analysis with transformer-based embeddings for reasoning understanding')
@@ -404,10 +404,10 @@ async def test_reasoning_agent():
     print('   - Knowledge graph construction and maintenance with concept relationships')
     print('   - Cross-agent collaborative reasoning with consensus mechanisms')
     print('   - Advanced confidence assessment with multi-factor analysis')
-    
+
     print('\n🧠 Reasoning Agent Real AI Integration Test Complete')
     print('=' * 70)
-    
+
     # Cleanup
     await agent.shutdown()
 

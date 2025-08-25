@@ -9,7 +9,7 @@ from .networkMessaging import NetworkMessagingService, get_messaging_service
 
 __all__ = [
     "NetworkConnector",
-    "get_network_connector", 
+    "get_network_connector",
     "AgentRegistrationService",
     "get_registration_service",
     "NetworkMessagingService",

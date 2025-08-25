@@ -21,17 +21,17 @@ logger = logging.getLogger(__name__)
 
 class GrokEnhancedReasoning:
     """Grok-4 enhanced reasoning capabilities using xAI API"""
-    
+
     def __init__(self, reasoning_agent):
         self.reasoning_agent = reasoning_agent
         self.grok_client = None
         self.message_context_cache = {}
         self.skill_performance_history = {}
         self.semantic_routing_cache = {}
-        
+
         # Initialize Grok-4 client
         self._initialize_grok_client()
-    
+
     def _initialize_grok_client(self):
         """Initialize xAI Grok client"""
         try:
@@ -42,16 +42,16 @@ class GrokEnhancedReasoning:
             )
             self.grok_client = GrokClient(config)
             logger.info("Grok-4 client initialized for enhanced reasoning")
-            
+
         except Exception as e:
             logger.warning(f"Could not initialize Grok-4 client: {e}")
             self.grok_client = None
-    
+
     async def enhance_question_decomposition(self, question: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
         """Enhance question decomposition with Grok-4 analysis"""
         if not self.grok_client:
             return {"enhanced": False, "reason": "Grok-4 not available"}
-        
+
         try:
             prompt = f"""
 Analyze and decompose this question into logical sub-questions:
@@ -67,13 +67,13 @@ Provide a structured decomposition with:
 
 Format as JSON with keys: concepts, sub_questions, strategy, answer_structure
 """
-            
+
             response = await self.grok_client.chat_completion_async(
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,
                 response_format={"type": "json_object"}
             )
-            
+
             if response and response.content:
                 import json
                 decomposition = json.loads(response.content)
@@ -83,17 +83,17 @@ Format as JSON with keys: concepts, sub_questions, strategy, answer_structure
                     "model": response.model,
                     "confidence": 0.9
                 }
-            
+
         except Exception as e:
             logger.error(f"Grok-4 question decomposition error: {e}")
-        
+
         return {"enhanced": False, "reason": "Decomposition failed"}
-    
+
     async def enhance_pattern_analysis(self, text: str, patterns_found: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Enhance pattern analysis with Grok-4 insights"""
         if not self.grok_client:
             return {"enhanced": False, "patterns": patterns_found}
-        
+
         try:
             prompt = f"""
 Analyze the following text and patterns for deeper insights:
@@ -111,13 +111,13 @@ Enhance the analysis by:
 
 Return enhanced patterns as JSON.
 """
-            
+
             response = await self.grok_client.chat_completion_async(
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.6,
                 response_format={"type": "json_object"}
             )
-            
+
             if response and response.content:
                 import json
                 enhanced_patterns = json.loads(response.content)
@@ -127,18 +127,18 @@ Return enhanced patterns as JSON.
                     "original_patterns": patterns_found,
                     "model": response.model
                 }
-                
+
         except Exception as e:
             logger.error(f"Grok-4 pattern enhancement error: {e}")
-        
+
         return {"enhanced": False, "patterns": patterns_found}
-    
-    async def enhance_reasoning_synthesis(self, sub_answers: List[Dict[str, Any]], 
+
+    async def enhance_reasoning_synthesis(self, sub_answers: List[Dict[str, Any]],
                                         original_question: str) -> Dict[str, Any]:
         """Enhance answer synthesis with Grok-4"""
         if not self.grok_client:
             return {"enhanced": False, "reason": "Grok-4 not available"}
-        
+
         try:
             prompt = f"""
 Synthesize these sub-answers into a coherent response:
@@ -156,13 +156,13 @@ Create a comprehensive answer that:
 
 Provide both the synthesized answer and reasoning process.
 """
-            
+
             response = await self.grok_client.chat_completion_async(
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,
                 max_tokens=1500
             )
-            
+
             if response and response.content:
                 return {
                     "enhanced": True,
@@ -170,17 +170,17 @@ Provide both the synthesized answer and reasoning process.
                     "model": response.model,
                     "confidence": 0.85
                 }
-                
+
         except Exception as e:
             logger.error(f"Grok-4 synthesis error: {e}")
-        
+
         return {"enhanced": False, "reason": "Synthesis failed"}
-    
+
     async def optimize_skill_routing(self, message: SkillMessage, context: Dict[str, Any]) -> SkillMessage:
         """Optimize skill message routing with Grok-4"""
         if not self.grok_client:
             return message
-        
+
         try:
             routing_prompt = f"""
 Optimize routing for this skill message:
@@ -198,35 +198,35 @@ Network State:
 Suggest optimizations for routing efficiency.
 Return JSON with: priority_adjustment, routing_optimization, performance_tips
 """
-            
+
             response = await self.grok_client.chat_completion_async(
                 messages=[{"role": "user", "content": routing_prompt}],
                 temperature=0.5,
                 response_format={"type": "json_object"}
             )
-            
+
             if response and response.content:
                 import json
                 optimization = json.loads(response.content)
-                
+
                 # Add optimization metadata
                 message.context = message.context or {}
                 message.context['grok4_optimized'] = True
                 message.context['optimization'] = optimization
-                
+
                 logger.info("Grok-4 optimized skill routing")
-            
+
             return message
-            
+
         except Exception as e:
             logger.error(f"Grok-4 routing optimization error: {e}")
             return message
-    
+
     async def analyze_reasoning_chain(self, reasoning_chain: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Analyze reasoning chain quality with Grok-4"""
         if not self.grok_client:
             return {"analyzed": False}
-        
+
         try:
             prompt = f"""
 Analyze this reasoning chain for quality and coherence:
@@ -242,32 +242,32 @@ Evaluate:
 
 Provide improvement suggestions if needed.
 """
-            
+
             response = await self.grok_client.chat_completion_async(
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.6
             )
-            
+
             if response and response.content:
                 return {
                     "analyzed": True,
                     "analysis": response.content,
                     "model": response.model
                 }
-                
+
         except Exception as e:
             logger.error(f"Grok-4 chain analysis error: {e}")
-        
+
         return {"analyzed": False}
-    
-    async def suggest_reasoning_improvements(self, 
+
+    async def suggest_reasoning_improvements(self,
                                            question: str,
                                            current_approach: str,
                                            performance_metrics: Dict[str, Any]) -> Dict[str, Any]:
         """Get Grok-4 suggestions for reasoning improvements"""
         if not self.grok_client:
             return {"suggestions": []}
-        
+
         try:
             prompt = f"""
 Suggest improvements for this reasoning approach:
@@ -284,13 +284,13 @@ Provide specific, actionable suggestions to improve:
 
 Format as JSON with improvement suggestions.
 """
-            
+
             response = await self.grok_client.chat_completion_async(
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,
                 response_format={"type": "json_object"}
             )
-            
+
             if response and response.content:
                 import json
                 suggestions = json.loads(response.content)
@@ -298,27 +298,27 @@ Format as JSON with improvement suggestions.
                     "suggestions": suggestions,
                     "model": response.model
                 }
-                
+
         except Exception as e:
             logger.error(f"Grok-4 suggestions error: {e}")
-        
+
         return {"suggestions": []}
 
 
 # Integration helper
 def integrate_grok_with_reasoning_agent(reasoning_agent_instance):
     """Integrate Grok-4 capabilities with existing reasoning agent"""
-    
+
     logger.info("Integrating Grok-4 enhanced reasoning...")
-    
+
     # Create Grok enhancement instance
     grok_enhancement = GrokEnhancedReasoning(reasoning_agent_instance)
-    
+
     # Add to reasoning agent
     reasoning_agent_instance.grok_enhancement = grok_enhancement
-    
+
     logger.info("✅ Grok-4 enhancement integrated successfully")
-    
+
     return reasoning_agent_instance
 
 
@@ -327,21 +327,21 @@ if __name__ == "__main__":
     async def test_grok_enhancement():
         class MockReasoningAgent:
             pass
-        
+
         agent = MockReasoningAgent()
         grok = GrokEnhancedReasoning(agent)
-        
+
         # Test question decomposition
         result = await grok.enhance_question_decomposition(
             "What are the implications of quantum computing on modern cryptography?"
         )
         print("Decomposition:", result)
-        
+
         # Test pattern analysis
         patterns = await grok.enhance_pattern_analysis(
             "Quantum computers can break RSA encryption",
             [{"type": "technology", "content": "quantum computers"}]
         )
         print("Enhanced patterns:", patterns)
-    
+
     asyncio.run(test_grok_enhancement())

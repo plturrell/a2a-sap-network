@@ -63,7 +63,7 @@ class A2AAgentCard(BaseModel):
     capabilities: A2ACapabilities
     skills: List[A2ASkill]
     defaultInputModes: List[str] = ["application/json", "text/plain"]
-    defaultOutputModes: List[str] = ["application/json", "text/plain"] 
+    defaultOutputModes: List[str] = ["application/json", "text/plain"]
     tags: Optional[List[str]] = []
     healthEndpoint: Optional[str] = None
     metricsEndpoint: Optional[str] = None
@@ -105,21 +105,21 @@ class BlockchainConnector:
         self.w3 = Web3(Web3.HTTPProvider(os.getenv("A2A_SERVICE_URL")))  # Anvil
         self.contract = None
         self.account = None
-        
+
     def connect_to_contract(self, contract_address: str, abi: List[Dict]):
         """Connect to the A2A smart contract"""
         self.contract = self.w3.eth.contract(address=contract_address, abi=abi)
         # Use the first account from Anvil
         self.account = self.w3.eth.accounts[0]
-        
+
     def call_contract_function(self, function_name: str, *args, **kwargs):
         """Call a contract function"""
         if not self.contract:
             raise Exception("Contract not connected")
-            
+
         # Get the function
         contract_function = getattr(self.contract.functions, function_name)
-        
+
         # Build transaction
         tx = contract_function(*args, **kwargs).build_transaction({
             'from': self.account,
@@ -127,7 +127,7 @@ class BlockchainConnector:
             'gasPrice': self.w3.to_wei('20', 'gwei'),
             'nonce': self.w3.eth.get_transaction_count(self.account)
         })
-        
+
         # Sign and send
         # Get private key from environment variable
         private_key = os.getenv("BLOCKCHAIN_PRIVATE_KEY")
@@ -139,16 +139,16 @@ class BlockchainConnector:
             )
         signed_tx = self.w3.eth.account.sign_transaction(tx, private_key=private_key)
         tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
-        
+
         # Wait for receipt
         receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
         return receipt
-        
+
     def read_contract_function(self, function_name: str, *args):
         """Read from contract (no transaction)"""
         if not self.contract:
             raise Exception("Contract not connected")
-            
+
         contract_function = getattr(self.contract.functions, function_name)
         return contract_function(*args).call()
 
@@ -177,10 +177,10 @@ app.add_middleware(
 async def startup_event():
     """Initialize blockchain A2A agents"""
     print("🚀 Starting A2A Blockchain Agent Network...")
-    
+
     # Initialize blockchain agents
     await initialize_blockchain_agents()
-    
+
     print("🎯 A2A Blockchain Agent Network is LIVE!")
     print("   • Protocol: A2A v0.2.9 compliant")
     print("   • Execution: On-chain smart contracts")
@@ -188,7 +188,7 @@ async def startup_event():
 
 async def initialize_blockchain_agents():
     """Initialize A2A compliant blockchain agents"""
-    
+
     # Agent 1: Blockchain Financial Agent (A2A compliant)
     financial_agent = A2AAgentCard(
         name="Blockchain Financial Agent",
@@ -221,7 +221,7 @@ async def initialize_blockchain_agents():
                 ]
             ),
             A2ASkill(
-                id="risk-assessment", 
+                id="risk-assessment",
                 name="Risk Assessment",
                 description="Perform comprehensive risk analysis on financial positions",
                 tags=["financial", "risk", "blockchain", "analysis"],
@@ -246,7 +246,7 @@ async def initialize_blockchain_agents():
             "agent_address": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
         }
     )
-    
+
     # Agent 2: Blockchain Message Agent (A2A compliant)
     message_agent = A2AAgentCard(
         name="Blockchain Message Agent",
@@ -256,7 +256,7 @@ async def initialize_blockchain_agents():
         protocolVersion="0.2.9",
         provider=A2AProvider(
             organization="Blockchain A2A Network",
-            url="https://blockchain-a2a.network", 
+            url="https://blockchain-a2a.network",
             contact="agents@blockchain-a2a.network"
         ),
         capabilities=A2ACapabilities(
@@ -280,7 +280,7 @@ async def initialize_blockchain_agents():
             ),
             A2ASkill(
                 id="data-transformation",
-                name="Data Transformation", 
+                name="Data Transformation",
                 description="Transform data formats for A2A compatibility",
                 tags=["data", "transformation", "blockchain", "a2a"],
                 inputModes=["application/json", "text/csv"],
@@ -295,7 +295,7 @@ async def initialize_blockchain_agents():
         metricsEndpoint="http://localhost:8083/agents/0x70997970C51812dc3A010C7d01b50e0d17dc79C8/metrics",
         securitySchemes={
             "bearer": "Bearer token for blockchain authentication",
-            "ethereum": "Ethereum wallet signature"  
+            "ethereum": "Ethereum wallet signature"
         },
         metadata={
             "blockchain": "ethereum",
@@ -304,11 +304,11 @@ async def initialize_blockchain_agents():
             "agent_address": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
         }
     )
-    
+
     # Register agents
     a2a_agents["0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"] = financial_agent
     a2a_agents["0x70997970C51812dc3A010C7d01b50e0d17dc79C8"] = message_agent
-    
+
     print(f"✅ Registered {len(a2a_agents)} A2A-compliant blockchain agents")
 
 # A2A Protocol Endpoints
@@ -331,7 +331,7 @@ async def get_agent_card(agent_id: str):
     """A2A standard agent card endpoint"""
     if agent_id not in a2a_agents:
         raise HTTPException(status_code=404, detail="Agent not found")
-    
+
     agent_card = a2a_agents[agent_id]
     return agent_card.dict()
 
@@ -340,14 +340,14 @@ async def agent_health(agent_id: str):
     """A2A agent health endpoint"""
     if agent_id not in a2a_agents:
         raise HTTPException(status_code=404, detail="Agent not found")
-    
+
     # Check blockchain status
     try:
         # This would check if the smart contract agent is responsive
         blockchain_status = "online" if blockchain.w3.is_connected() else "offline"
     except:
         blockchain_status = "offline"
-    
+
     return {
         "status": "healthy" if blockchain_status == "online" else "unhealthy",
         "agent_id": agent_id,
@@ -370,7 +370,7 @@ async def agent_metrics(agent_id: str):
     """A2A agent metrics endpoint"""
     if agent_id not in a2a_agents:
         raise HTTPException(status_code=404, detail="Agent not found")
-    
+
     return {
         "agent_id": agent_id,
         "metrics": {
@@ -390,11 +390,11 @@ async def send_message(agent_id: str, message: A2AMessage):
     """A2A message endpoint - processes messages on blockchain"""
     if agent_id not in a2a_agents:
         raise HTTPException(status_code=404, detail="Agent not found")
-    
+
     try:
         # Process A2A message on blockchain
         result = await process_a2a_message_on_blockchain(agent_id, message)
-        
+
         return {
             "messageId": message.messageId,
             "status": "processed",
@@ -402,7 +402,7 @@ async def send_message(agent_id: str, message: A2AMessage):
             "blockchain": True,
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Message processing failed: {str(e)}")
 
@@ -411,11 +411,11 @@ async def create_task(agent_id: str, task: A2ATask):
     """A2A task creation endpoint"""
     if agent_id not in a2a_agents:
         raise HTTPException(status_code=404, detail="Agent not found")
-    
+
     try:
         # Create task on blockchain
         result = await create_a2a_task_on_blockchain(agent_id, task)
-        
+
         return {
             "taskId": task.taskId,
             "status": "created",
@@ -423,7 +423,7 @@ async def create_task(agent_id: str, task: A2ATask):
             "blockchain": True,
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Task creation failed: {str(e)}")
 
@@ -432,11 +432,11 @@ async def get_task_status(agent_id: str, task_id: str):
     """Get A2A task status from blockchain"""
     if agent_id not in a2a_agents:
         raise HTTPException(status_code=404, detail="Agent not found")
-    
+
     try:
         # Get task status from blockchain
         status = await get_a2a_task_from_blockchain(agent_id, task_id)
-        
+
         return {
             "taskId": task_id,
             "status": status.get("status", "unknown"),
@@ -444,7 +444,7 @@ async def get_task_status(agent_id: str, task_id: str):
             "blockchain": True,
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Task status retrieval failed: {str(e)}")
 
@@ -452,7 +452,7 @@ async def get_task_status(agent_id: str, task_id: str):
 async def list_agents():
     """List all A2A blockchain agents"""
     agents_list = []
-    
+
     for agent_id, agent_card in a2a_agents.items():
         agents_list.append({
             "agent_id": agent_id,
@@ -463,7 +463,7 @@ async def list_agents():
             "url": agent_card.url,
             "blockchain": True
         })
-    
+
     return {
         "agents": agents_list,
         "total": len(agents_list),
@@ -475,12 +475,12 @@ async def list_agents():
 
 async def process_a2a_message_on_blockchain(agent_id: str, message: A2AMessage):
     """Process A2A message using smart contract"""
-    
+
     # For now, simulate blockchain processing
     # In production, this would call the actual smart contract
-    
+
     results = []
-    
+
     for part in message.parts:
         if part.type == "function-call" and part.name:
             # Execute the skill on blockchain
@@ -500,7 +500,7 @@ async def process_a2a_message_on_blockchain(agent_id: str, message: A2AMessage):
                 }
             elif part.name == "risk-assessment":
                 result = {
-                    "skill": "risk-assessment", 
+                    "skill": "risk-assessment",
                     "status": "completed",
                     "output": {
                         "risk_metrics": {
@@ -515,7 +515,7 @@ async def process_a2a_message_on_blockchain(agent_id: str, message: A2AMessage):
             elif part.name == "message-routing":
                 result = {
                     "skill": "message-routing",
-                    "status": "completed", 
+                    "status": "completed",
                     "output": {
                         "routing": {
                             "status": "routed",
@@ -530,17 +530,17 @@ async def process_a2a_message_on_blockchain(agent_id: str, message: A2AMessage):
                     "status": "unknown_skill",
                     "error": "Skill not implemented"
                 }
-            
+
             results.append(result)
-    
+
     return results
 
 async def create_a2a_task_on_blockchain(agent_id: str, task: A2ATask):
     """Create A2A task on blockchain"""
-    
+
     # Simulate blockchain task creation
     # In production, this would call the smart contract
-    
+
     return {
         "task_id": task.taskId,
         "status": "created",
@@ -549,11 +549,11 @@ async def create_a2a_task_on_blockchain(agent_id: str, task: A2ATask):
     }
 
 async def get_a2a_task_from_blockchain(agent_id: str, task_id: str):
-    """Get A2A task status from blockchain"""  
-    
+    """Get A2A task status from blockchain"""
+
     # Simulate blockchain task retrieval
     # In production, this would read from the smart contract
-    
+
     return {
         "status": "completed",
         "result": "Task executed successfully on blockchain",
@@ -566,7 +566,7 @@ if __name__ == "__main__":
     print("   • Execution: Smart contracts on Ethereum")
     print("   • Server: http://localhost:8083")
     print("   • Agent Cards: /.well-known/agent.json endpoints")
-    
+
     uvicorn.run(
         app,
         host="0.0.0.0",

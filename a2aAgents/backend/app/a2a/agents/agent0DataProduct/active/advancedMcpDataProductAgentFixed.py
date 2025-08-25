@@ -32,7 +32,7 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
     Advanced Data Product Agent with real MCP tool integration (FIXED)
     Handles data product lifecycle, validation, and cross-agent coordination
     """
-    
+
     def __init__(self, base_url: str):
         super().__init__(
             agent_id="advanced_mcp_data_product_agent_fixed",
@@ -41,26 +41,26 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
             version="2.1.0",
             base_url=base_url
         )
-        
+
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-        
+
         # Initialize MCP tool providers - REAL INSTANCES
         self.performance_tools = MCPPerformanceTools()
         self.validation_tools = MCPValidationTools()
         self.quality_tools = MCPQualityAssessmentTools()
-        
-        
+
+
         # Data product management state
         self.data_products = {}
         self.validation_cache = {}
         self.processing_pipelines = {}
         self.quality_metrics = {}
-        
+
         logger.info(f"Initialized {self.name} with real MCP tool integration")
-    
+
     @mcp_tool(
         name="intelligent_data_product_registration",
         description="Register data products with intelligent validation and quality assessment",
@@ -72,7 +72,7 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
                     "description": "Data product definition with metadata"
                 },
                 "data_source": {
-                    "type": "object", 
+                    "type": "object",
                     "description": "Data source information and connection details"
                 },
                 "validation_rules": {
@@ -105,7 +105,7 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
         """
         registration_id = f"reg_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
         start_time = datetime.now().timestamp()
-        
+
         try:
             # Step 1: Validate product definition using REAL MCP tools
             definition_validation = await self.validation_tools.validate_schema_compliance(
@@ -114,7 +114,7 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
                 validation_level="strict",
                 return_details=True
             )
-            
+
             if not definition_validation["is_valid"]:
                 return {
                     "status": "error",
@@ -122,10 +122,10 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
                     "validation_details": definition_validation,
                     "registration_id": registration_id
                 }
-            
+
             # Step 2: Analyze data source using REAL implementation
             source_analysis = await mcp_helpers.analyze_data_source_real(data_source)
-            
+
             # Step 3: Cross-agent validation if enabled
             cross_validation_results = {}
             if cross_agent_validation:
@@ -134,18 +134,18 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
                     product_definition,
                     {"data_type": product_definition.get("type", "structured")}
                 )
-            
+
             # Step 4: Auto-standardization using real standardization
             standardization_results = {}
             if auto_standardization and data_source.get("data"):
                 # Extract sample data for standardization
                 sample_data = data_source["data"][0] if isinstance(data_source.get("data"), list) else data_source.get("data", {})
-                
+
                 if sample_data:
                     standardization_results = await self._apply_auto_standardization(
                         sample_data, product_definition.get("schema", {})
                     )
-            
+
             # Step 5: Quality assessment using REAL MCP tools
             quality_assessment = await self.quality_tools.assess_data_product_quality(
                 product_definition=product_definition,
@@ -153,10 +153,10 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
                 quality_requirements=quality_requirements or {},
                 assessment_criteria=["completeness", "accuracy", "consistency", "timeliness"]
             )
-            
+
             # Step 6: Generate unique product ID and register
             product_id = self._generate_product_id(product_definition)
-            
+
             data_product = {
                 "product_id": product_id,
                 "registration_id": registration_id,
@@ -172,14 +172,14 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
                 "status": "active",
                 "monitoring_enabled": enable_monitoring
             }
-            
+
             self.data_products[product_id] = data_product
-            
+
             # Step 7: Setup monitoring if enabled
             monitoring_setup = {}
             if enable_monitoring:
                 monitoring_setup = await self._setup_real_monitoring(product_id, data_product)
-            
+
             # Step 8: REAL Performance tracking
             end_time = datetime.now().timestamp()
             performance_metrics = await self.performance_tools.measure_performance_metrics(
@@ -196,7 +196,7 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
                 operation_count=1,
                 errors=0
             )
-            
+
             return {
                 "status": "success",
                 "registration_id": registration_id,
@@ -219,10 +219,10 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
                     "measure_performance_metrics"
                 ]
             }
-            
+
         except Exception as e:
             logger.error(f"Intelligent data product registration failed: {e}")
-            
+
             # Track error in performance metrics
             end_time = datetime.now().timestamp()
             error_metrics = await self.performance_tools.measure_performance_metrics(
@@ -232,14 +232,14 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
                 operation_count=1,
                 errors=1
             )
-            
+
             return {
                 "status": "error",
                 "registration_id": registration_id,
                 "error": str(e),
                 "performance_metrics": error_metrics
             }
-    
+
     @mcp_tool(
         name="validate_data_product_real",
         description="Validate existing data product with real checks",
@@ -268,16 +268,16 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
                 "error": f"Product {product_id} not found",
                 "is_valid": False
             }
-        
+
         product = self.data_products[product_id]
-        
+
         # Perform real validation
         validation_results = {
             "product_id": product_id,
             "validation_timestamp": datetime.now().isoformat(),
             "checks_performed": []
         }
-        
+
         # Check 1: Schema validation
         schema_check = await self.validation_tools.validate_schema_compliance(
             data=product["definition"],
@@ -289,7 +289,7 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
             "result": schema_check["is_valid"],
             "details": schema_check.get("validation_details", {})
         })
-        
+
         # Check 2: Data source accessibility
         source_check = await self._check_data_source_accessibility(product["data_source"])
         validation_results["checks_performed"].append({
@@ -297,7 +297,7 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
             "result": source_check["accessible"],
             "details": source_check
         })
-        
+
         # Check 3: Quality thresholds
         if product.get("quality_requirements"):
             quality_check = await self._validate_quality_thresholds(
@@ -309,15 +309,15 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
                 "result": quality_check["meets_requirements"],
                 "details": quality_check
             })
-        
+
         # Overall validation result
         validation_results["is_valid"] = all(
             check["result"] for check in validation_results["checks_performed"]
         )
         validation_results["status"] = "success"
-        
+
         return validation_results
-    
+
     @mcp_resource(
         uri="data-product://registry",
         name="Data Product Registry",
@@ -344,28 +344,28 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
             "quality_summary": self._get_quality_summary(),
             "last_updated": datetime.now().isoformat()
         }
-    
+
     # Private helper methods with REAL implementations
-    
+
     async def _apply_auto_standardization(
-        self, 
-        sample_data: Dict[str, Any], 
+        self,
+        sample_data: Dict[str, Any],
         schema: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Apply real auto-standardization"""
         try:
             # Analyze patterns in the data
             patterns = await mcp_helpers.analyze_data_patterns_real(sample_data)
-            
+
             # Generate standardization rules
             rules = await mcp_helpers.generate_standardization_rules_real(
                 sample_data, schema, patterns
             )
-            
+
             # Apply basic standardization
             standardized_data = sample_data.copy()
             transformations_applied = []
-            
+
             for rule in rules.get("rules", []):
                 if rule["type"] == "type_conversion":
                     field = rule["field"]
@@ -377,7 +377,7 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
                                 standardized_data[field] = float(standardized_data[field])
                             elif rule["target_type"] == "string":
                                 standardized_data[field] = str(standardized_data[field])
-                            
+
                             transformations_applied.append({
                                 "field": field,
                                 "transformation": rule["type"],
@@ -386,21 +386,21 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
                             })
                         except (ValueError, TypeError) as e:
                             logger.warning(f"Failed to convert {field}: {e}")
-            
+
             return {
                 "standardized_sample": standardized_data,
                 "rules_generated": len(rules.get("rules", [])),
                 "transformations_applied": transformations_applied,
                 "confidence": rules.get("overall_confidence", 0)
             }
-            
+
         except Exception as e:
             logger.error(f"Auto-standardization failed: {e}")
             return {"error": str(e), "standardization_applied": False}
-    
+
     async def _setup_real_monitoring(
-        self, 
-        product_id: str, 
+        self,
+        product_id: str,
         data_product: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Setup real monitoring for data product"""
@@ -421,20 +421,20 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
             "alerts_enabled": True,
             "alert_channels": ["log", "metrics"]
         }
-        
+
         # In a real implementation, this would set up actual monitoring
         # For now, we'll store the config
         data_product["monitoring_config"] = monitoring_config
-        
+
         return monitoring_config
-    
+
     async def _check_data_source_accessibility(
-        self, 
+        self,
         data_source: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Check if data source is accessible"""
         source_type = data_source.get("type", "unknown")
-        
+
         if source_type == "memory":
             return {
                 "accessible": True,
@@ -462,7 +462,7 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
                 "latency_ms": -1,
                 "status": "unknown_type"
             }
-    
+
     async def _validate_quality_thresholds(
         self,
         quality_assessment: Dict[str, Any],
@@ -470,7 +470,7 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
     ) -> Dict[str, Any]:
         """Validate quality against thresholds"""
         violations = []
-        
+
         for metric, threshold in requirements.items():
             actual_value = quality_assessment.get(metric, 0)
             if actual_value < threshold:
@@ -480,25 +480,25 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
                     "actual": actual_value,
                     "gap": threshold - actual_value
                 })
-        
+
         return {
             "meets_requirements": len(violations) == 0,
             "violations": violations,
             "compliance_score": 1.0 - (len(violations) / len(requirements)) if requirements else 1.0
         }
-    
+
     def _generate_product_id(self, product_definition: Dict[str, Any]) -> str:
         """Generate unique product ID"""
         product_name = product_definition.get("name", "unknown")
         product_type = product_definition.get("type", "generic")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        
+
         # Create hash of definition for uniqueness
         definition_str = json.dumps(product_definition, sort_keys=True)
         definition_hash = hashlib.md5(definition_str.encode()).hexdigest()[:8]
-        
+
         return f"{product_type}_{product_name}_{timestamp}_{definition_hash}"
-    
+
     def _get_data_product_schema(self) -> Dict[str, Any]:
         """Get the schema for data product validation"""
         return {
@@ -513,7 +513,7 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
             },
             "required": ["name", "type"]
         }
-    
+
     def _get_product_type_summary(self) -> Dict[str, int]:
         """Get summary of product types"""
         type_counts = {}
@@ -521,19 +521,19 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
             product_type = product.get("definition", {}).get("type", "unknown")
             type_counts[product_type] = type_counts.get(product_type, 0) + 1
         return type_counts
-    
+
     def _get_quality_summary(self) -> Dict[str, Any]:
         """Get quality summary across all products"""
         if not self.data_products:
             return {"average_quality": 0, "quality_distribution": {}}
-        
+
         quality_scores = []
         for product in self.data_products.values():
             score = product.get("quality_assessment", {}).get("overall_score", 0)
             quality_scores.append(score)
-        
+
         avg_quality = sum(quality_scores) / len(quality_scores) if quality_scores else 0
-        
+
         # Quality distribution
         quality_ranges = {"high": 0, "medium": 0, "low": 0}
         for score in quality_scores:
@@ -543,7 +543,7 @@ class AdvancedMCPDataProductAgentFixed(SecureA2AAgent):
                 quality_ranges["medium"] += 1
             else:
                 quality_ranges["low"] += 1
-        
+
         return {
             "average_quality": avg_quality,
             "quality_distribution": quality_ranges,

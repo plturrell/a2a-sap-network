@@ -19,11 +19,11 @@ logger = logging.getLogger(__name__)
 
 class MCPPerformanceTools:
     """MCP-enabled performance measurement and analysis tools"""
-    
+
     def __init__(self):
         self.metrics_history = defaultdict(deque)
         self.max_history_size = 1000
-        
+
         # Standard SLA metrics
         self.sla_metrics = [
             "response_time",
@@ -35,7 +35,7 @@ class MCPPerformanceTools:
             "disk_io",
             "network_io"
         ]
-        
+
         # Performance benchmarks (baseline values)
         self.benchmarks = {
             "response_time_p95": 1000,  # ms
@@ -45,7 +45,7 @@ class MCPPerformanceTools:
             "cpu_usage_max": 0.80,      # 80%
             "memory_usage_max": 0.85    # 85%
         }
-    
+
     @mcp_tool(
         name="measure_performance_metrics",
         description="Comprehensive performance measurement for operations",
@@ -114,12 +114,12 @@ class MCPPerformanceTools:
                                     operation_count: int = 1,
                                     errors: int = 0) -> Dict[str, Any]:
         """Measure comprehensive performance metrics for an operation"""
-        
+
         # Calculate basic timing metrics
         duration_ms = (end_time - start_time) * 1000
         throughput = operation_count / ((end_time - start_time)) if (end_time - start_time) > 0 else 0
         error_rate = errors / operation_count if operation_count > 0 else 0
-        
+
         # Store metrics for historical analysis
         self.metrics_history[operation_id].append({
             "timestamp": datetime.now(),
@@ -129,11 +129,11 @@ class MCPPerformanceTools:
             "operation_count": operation_count,
             "errors": errors
         })
-        
+
         # Maintain history size limit
         if len(self.metrics_history[operation_id]) > self.max_history_size:
             self.metrics_history[operation_id].popleft()
-        
+
         # Calculate resource efficiency
         resource_efficiency = {}
         if resource_usage:
@@ -142,7 +142,7 @@ class MCPPerformanceTools:
                 resource_efficiency["cpu_efficiency"] = operation_count / resource_usage["cpu_percent"]
             if resource_usage.get("memory_mb", 0) > 0:
                 resource_efficiency["memory_efficiency"] = operation_count / resource_usage["memory_mb"]
-        
+
         # Calculate percentiles from historical data
         percentiles = {}
         if len(self.metrics_history[operation_id]) >= 5:
@@ -152,12 +152,12 @@ class MCPPerformanceTools:
                 "p95": self._calculate_percentile(durations, 95),
                 "p99": self._calculate_percentile(durations, 99)
             }
-        
+
         # Calculate overall performance score
         performance_score = await self._calculate_performance_score(
             duration_ms, throughput, error_rate, resource_usage
         )
-        
+
         result = {
             "operation_id": operation_id,
             "duration_ms": duration_ms,
@@ -170,17 +170,17 @@ class MCPPerformanceTools:
             "percentiles": percentiles,
             "measurement_timestamp": datetime.now().isoformat()
         }
-        
+
         # Add custom metrics if provided
         if custom_metrics:
             result["custom_metrics"] = custom_metrics
-        
+
         # Add resource usage if provided
         if resource_usage:
             result["resource_usage"] = resource_usage
-        
+
         return result
-    
+
     @mcp_tool(
         name="calculate_sla_compliance",
         description="Calculate SLA compliance based on performance metrics",
@@ -217,16 +217,16 @@ class MCPPerformanceTools:
                                  time_window: str = "1h",
                                  operation_id: Optional[str] = None) -> Dict[str, Any]:
         """Calculate SLA compliance scores and identify violations"""
-        
+
         compliance_scores = {}
         violations = []
         compliant_metrics = []
-        
+
         # Calculate compliance for each metric
         for metric_name, current_value in metrics.items():
             if metric_name in sla_targets:
                 target_value = sla_targets[metric_name]
-                
+
                 # Determine compliance based on metric type
                 if metric_name in ["response_time", "error_rate", "cpu_usage", "memory_usage"]:
                     # Lower is better metrics
@@ -236,9 +236,9 @@ class MCPPerformanceTools:
                     # Higher is better metrics (throughput, availability)
                     compliance = min(1.0, current_value / target_value) if target_value > 0 else 1.0
                     is_compliant = current_value >= target_value
-                
+
                 compliance_scores[metric_name] = compliance
-                
+
                 if is_compliant:
                     compliant_metrics.append(metric_name)
                 else:
@@ -249,17 +249,17 @@ class MCPPerformanceTools:
                         "compliance_score": compliance,
                         "deviation": abs(current_value - target_value)
                     })
-        
+
         # Calculate overall SLA compliance
         overall_compliance = statistics.mean(compliance_scores.values()) if compliance_scores else 0.0
-        
+
         # Trend analysis if historical data is available
         trend_analysis = {}
         if operation_id and operation_id in self.metrics_history:
             trend_analysis = await self._analyze_compliance_trend(
                 operation_id, time_window, sla_targets
             )
-        
+
         return {
             "overall_compliance": overall_compliance,
             "compliance_scores": compliance_scores,
@@ -270,7 +270,7 @@ class MCPPerformanceTools:
             "sla_status": "COMPLIANT" if overall_compliance >= 0.95 else "NON_COMPLIANT",
             "assessment_timestamp": datetime.now().isoformat()
         }
-    
+
     @mcp_tool(
         name="benchmark_performance",
         description="Benchmark current performance against historical data or targets",
@@ -309,12 +309,12 @@ class MCPPerformanceTools:
                               benchmark_type: str = "statistical",
                               confidence_level: float = 0.95) -> Dict[str, Any]:
         """Benchmark current performance against historical data or baselines"""
-        
+
         benchmark_results = {}
         performance_rating = "unknown"
         comparison_scores = {}
         recommendations = []
-        
+
         if benchmark_type == "baseline":
             # Compare against predefined baselines
             for metric, current_value in current_metrics.items():
@@ -326,7 +326,7 @@ class MCPPerformanceTools:
                             score = min(1.0, baseline / current_value) if current_value > 0 else 1.0
                         else:
                             score = min(1.0, current_value / baseline) if baseline > 0 else 1.0
-                        
+
                         comparison_scores[metric] = score
                         benchmark_results[metric] = {
                             "current": current_value,
@@ -334,22 +334,22 @@ class MCPPerformanceTools:
                             "score": score,
                             "status": "good" if score >= 0.8 else "warning" if score >= 0.6 else "poor"
                         }
-        
+
         elif benchmark_type == "statistical" and historical_data:
             # Statistical comparison with historical data
             for metric, current_value in current_metrics.items():
                 historical_values = [
-                    d.get(metric) for d in historical_data 
+                    d.get(metric) for d in historical_data
                     if d.get(metric) is not None
                 ]
-                
+
                 if historical_values:
                     mean_val = statistics.mean(historical_values)
                     stdev_val = statistics.stdev(historical_values) if len(historical_values) > 1 else 0
-                    
+
                     # Calculate z-score
                     z_score = (current_value - mean_val) / stdev_val if stdev_val > 0 else 0
-                    
+
                     # Determine performance relative to historical performance
                     if metric in ["response_time", "error_rate", "cpu_usage", "memory_usage"]:
                         # Lower is better - negative z-score is good
@@ -359,7 +359,7 @@ class MCPPerformanceTools:
                         # Higher is better - positive z-score is good
                         score = max(0.0, 1.0 - abs(z_score) / 3.0)
                         performance_vs_history = "better" if z_score > 1 else "worse" if z_score < -1 else "similar"
-                    
+
                     comparison_scores[metric] = score
                     benchmark_results[metric] = {
                         "current": current_value,
@@ -369,7 +369,7 @@ class MCPPerformanceTools:
                         "score": score,
                         "performance_vs_history": performance_vs_history
                     }
-        
+
         # Calculate overall performance rating
         if comparison_scores:
             overall_score = statistics.mean(comparison_scores.values())
@@ -381,12 +381,12 @@ class MCPPerformanceTools:
                 performance_rating = "fair"
             else:
                 performance_rating = "poor"
-            
+
             # Generate recommendations
             recommendations = await self._generate_performance_recommendations(
                 benchmark_results, performance_rating
             )
-        
+
         return {
             "performance_rating": performance_rating,
             "overall_score": statistics.mean(comparison_scores.values()) if comparison_scores else 0.0,
@@ -397,7 +397,7 @@ class MCPPerformanceTools:
             "confidence_level": confidence_level,
             "analysis_timestamp": datetime.now().isoformat()
         }
-    
+
     @mcp_tool(
         name="get_system_metrics",
         description="Get current system resource metrics",
@@ -422,24 +422,24 @@ class MCPPerformanceTools:
                            include_processes: bool = False,
                            process_count: int = 5) -> Dict[str, Any]:
         """Get current system performance metrics"""
-        
+
         try:
             # CPU metrics
             cpu_percent = psutil.cpu_percent(interval=1)
             cpu_count = psutil.cpu_count()
             cpu_freq = psutil.cpu_freq()
-            
+
             # Memory metrics
             memory = psutil.virtual_memory()
             swap = psutil.swap_memory()
-            
+
             # Disk metrics
             disk_usage = psutil.disk_usage('/')
             disk_io = psutil.disk_io_counters()
-            
+
             # Network metrics
             network_io = psutil.net_io_counters()
-            
+
             metrics = {
                 "cpu": {
                     "percent": cpu_percent,
@@ -471,7 +471,7 @@ class MCPPerformanceTools:
                 },
                 "timestamp": datetime.now().isoformat()
             }
-            
+
             # Add disk I/O if available
             if disk_io:
                 metrics["disk_io"] = {
@@ -480,7 +480,7 @@ class MCPPerformanceTools:
                     "read_count": disk_io.read_count,
                     "write_count": disk_io.write_count
                 }
-            
+
             # Add process information if requested
             if include_processes:
                 processes = []
@@ -491,25 +491,25 @@ class MCPPerformanceTools:
                             processes.append(proc_info)
                     except (psutil.NoSuchProcess, psutil.AccessDenied):
                         continue
-                
+
                 # Sort by CPU usage and take top N
                 top_processes = sorted(
-                    processes, 
-                    key=lambda x: x['cpu_percent'] or 0, 
+                    processes,
+                    key=lambda x: x['cpu_percent'] or 0,
                     reverse=True
                 )[:process_count]
-                
+
                 metrics["top_processes"] = top_processes
-            
+
             return metrics
-            
+
         except Exception as e:
             logger.error(f"Error getting system metrics: {e}")
             return {
                 "error": f"Failed to get system metrics: {str(e)}",
                 "timestamp": datetime.now().isoformat()
             }
-    
+
     @mcp_resource(
         uri="performance://benchmarks/default",
         name="Default Performance Benchmarks",
@@ -529,12 +529,12 @@ class MCPPerformanceTools:
             },
             "recommended_monitoring_intervals": {
                 "real_time": "1s",
-                "operational": "1m", 
+                "operational": "1m",
                 "tactical": "5m",
                 "strategic": "1h"
             }
         }
-    
+
     @mcp_prompt(
         name="performance_analysis_report",
         description="Generate comprehensive performance analysis report",
@@ -555,16 +555,16 @@ class MCPPerformanceTools:
                                     performance_data: Dict[str, Any],
                                     report_focus: str = "comprehensive") -> str:
         """Generate detailed performance analysis report"""
-        
+
         report = f"# Performance Analysis Report\n\n"
         report += f"**Analysis Timestamp**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}\n\n"
-        
+
         # Overall performance summary
         if "performance_rating" in performance_data:
             rating = performance_data["performance_rating"]
             score = performance_data.get("overall_score", 0)
             report += f"**Overall Performance**: {rating.title()} ({score:.1%})\n\n"
-        
+
         # SLA compliance section
         if "overall_compliance" in performance_data:
             compliance = performance_data["overall_compliance"]
@@ -572,14 +572,14 @@ class MCPPerformanceTools:
             report += f"## SLA Compliance\n\n"
             report += f"**Compliance Score**: {compliance:.1%}\n"
             report += f"**Status**: {status}\n\n"
-            
+
             violations = performance_data.get("violations", [])
             if violations:
                 report += f"### Violations ({len(violations)})\n\n"
                 for violation in violations:
                     report += f"- **{violation['metric']}**: {violation['current_value']:.2f} "
                     report += f"(Target: {violation['target_value']:.2f})\n"
-        
+
         # Performance metrics breakdown
         if "benchmark_results" in performance_data:
             report += f"## Performance Metrics\n\n"
@@ -588,7 +588,7 @@ class MCPPerformanceTools:
                 status = result.get("status", "unknown")
                 status_icon = "✅" if status == "good" else "⚠️" if status == "warning" else "❌"
                 report += f"- **{metric.replace('_', ' ').title()}**: {current:.2f} {status_icon}\n"
-        
+
         # Recommendations
         if "recommendations" in performance_data:
             recommendations = performance_data["recommendations"]
@@ -596,31 +596,31 @@ class MCPPerformanceTools:
                 report += f"\n## Recommendations\n\n"
                 for rec in recommendations:
                     report += f"- {rec}\n"
-        
+
         # Focus-specific sections
         if report_focus == "trends" and "trend_analysis" in performance_data:
             report += f"\n## Trend Analysis\n\n"
             trend_data = performance_data["trend_analysis"]
             report += f"Trend analysis shows: {trend_data}\n"
-        
+
         elif report_focus == "optimization":
             report += f"\n## Optimization Opportunities\n\n"
             report += "- Consider resource scaling based on current utilization\n"
             report += "- Review code efficiency for high-latency operations\n"
             report += "- Implement caching for frequently accessed data\n"
-        
+
         return report
-    
+
     # Internal helper methods
     def _calculate_percentile(self, data: List[float], percentile: float) -> float:
         """Calculate the specified percentile of the data"""
         if not data:
             return 0.0
-        
+
         sorted_data = sorted(data)
         n = len(sorted_data)
         index = (percentile / 100) * (n - 1)
-        
+
         if index.is_integer():
             return sorted_data[int(index)]
         else:
@@ -628,11 +628,11 @@ class MCPPerformanceTools:
             upper_index = lower_index + 1
             if upper_index >= n:
                 return sorted_data[-1]
-            
+
             # Linear interpolation
             weight = index - lower_index
             return sorted_data[lower_index] * (1 - weight) + sorted_data[upper_index] * weight
-    
+
     async def _calculate_performance_score(self,
                                      duration_ms: float,
                                      throughput: float,
@@ -640,14 +640,14 @@ class MCPPerformanceTools:
                                      resource_usage: Optional[Dict[str, float]]) -> float:
         """Calculate overall performance score"""
         score = 1.0
-        
+
         # Duration penalty (assuming 1000ms baseline)
         if duration_ms > 1000:
             score *= max(0.1, 1000 / duration_ms)
-        
+
         # Error rate penalty
         score *= max(0.1, 1.0 - (error_rate * 10))  # 10% error rate = 0 score
-        
+
         # Resource usage bonus/penalty
         if resource_usage:
             cpu_usage = resource_usage.get("cpu_percent", 50) / 100
@@ -655,9 +655,9 @@ class MCPPerformanceTools:
                 score *= 0.8  # High CPU penalty
             elif cpu_usage < 0.2:
                 score *= 1.1  # Low CPU bonus
-        
+
         return min(1.0, max(0.0, score))
-    
+
     async def _analyze_compliance_trend(self,
                                   operation_id: str,
                                   time_window: str,
@@ -669,19 +669,19 @@ class MCPPerformanceTools:
             "violations_last_hour": 0,
             "improvement_percentage": 5.2
         }
-    
+
     async def _generate_performance_recommendations(self,
                                               benchmark_results: Dict[str, Any],
                                               performance_rating: str) -> List[str]:
         """Generate performance improvement recommendations"""
         recommendations = []
-        
+
         if performance_rating == "poor":
             recommendations.append("Immediate performance optimization required")
             recommendations.append("Review resource allocation and scaling options")
         elif performance_rating == "fair":
             recommendations.append("Consider performance tuning and optimization")
-        
+
         # Specific metric recommendations
         for metric, result in benchmark_results.items():
             score = result.get("score", 1.0)
@@ -694,7 +694,7 @@ class MCPPerformanceTools:
                     recommendations.append("Review CPU-intensive operations and consider optimization")
                 elif "memory" in metric:
                     recommendations.append("Analyze memory usage patterns and implement memory optimization")
-        
+
         return recommendations
 
 

@@ -46,20 +46,20 @@ async def create_api_key(
 ) -> APIKeyResponse:
     """
     Create a new API key for request signing
-    
+
     - **key_id**: Unique identifier for the API key
     - **permissions**: List of permissions (read, write, admin, a2a)
     - **description**: Optional description of the key's purpose
-    
+
     Returns the key ID and secret. The secret is only shown once!
     """
     try:
         # Check user permissions
         if not current_user.has_permission(Permission.ADMIN):
             raise HTTPException(status_code=403, detail="Admin permission required")
-        
+
         signing_service = get_signing_service()
-        
+
         # Validate permissions
         valid_permissions = {"read", "write", "admin", "a2a"}
         invalid_perms = set(request.permissions) - valid_permissions
@@ -68,20 +68,20 @@ async def create_api_key(
                 status_code=400,
                 detail=f"Invalid permissions: {', '.join(invalid_perms)}"
             )
-        
+
         # Calculate expiration date if specified
         expires_at = None
         if request.expires_in_days:
             from datetime import datetime, timedelta
             expires_at = (datetime.utcnow() + timedelta(days=request.expires_in_days)).isoformat()
-        
+
         # Create API key
         result = signing_service.create_api_key(
             key_id=request.key_id,
             permissions=request.permissions,
             expires_at=expires_at
         )
-        
+
         # Log security event
         await report_security_event(
             EventType.ACCESS_DENIED,  # Using as audit event
@@ -94,12 +94,12 @@ async def create_api_key(
                 "created_by": current_user.id
             }
         )
-        
+
         logger.info(f"API key created: {request.key_id} by user {current_user.id}")
-        
+
         # Get key info
         key_info = signing_service.api_keys[request.key_id]
-        
+
         return APIKeyResponse(
             key_id=result["key_id"],
             secret=result["secret"],  # Only returned on creation
@@ -109,7 +109,7 @@ async def create_api_key(
             expires_at=key_info.get("expires_at"),
             is_expired=False  # New keys are never expired
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -123,18 +123,18 @@ async def list_api_keys(
 ) -> List[APIKeyResponse]:
     """
     List all API keys
-    
+
     Returns list of API keys without secrets.
     """
     try:
         # Check user permissions
         if not current_user.has_permission(Permission.ADMIN):
             raise HTTPException(status_code=403, detail="Admin permission required")
-        
+
         signing_service = get_signing_service()
-        
+
         from datetime import datetime
-        
+
         keys = []
         for key_id, key_info in signing_service.api_keys.items():
             # Check if key is expired
@@ -142,7 +142,7 @@ async def list_api_keys(
             expires_at = key_info.get("expires_at")
             if expires_at:
                 is_expired = datetime.fromisoformat(expires_at.replace('Z', '+00:00')) < datetime.utcnow()
-            
+
             keys.append(APIKeyResponse(
                 key_id=key_id,
                 active=key_info["active"],
@@ -153,9 +153,9 @@ async def list_api_keys(
                 expires_at=expires_at,
                 is_expired=is_expired
             ))
-        
+
         return keys
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -170,19 +170,19 @@ async def rotate_api_key(
 ) -> Dict[str, Any]:
     """
     Rotate an API key (generate new secret)
-    
+
     Returns the new secret. The secret is only shown once!
     """
     try:
         # Check user permissions
         if not current_user.has_permission(Permission.ADMIN):
             raise HTTPException(status_code=403, detail="Admin permission required")
-        
+
         signing_service = get_signing_service()
-        
+
         # Rotate key
         new_secret = signing_service.rotate_api_key(key_id)
-        
+
         # Log security event
         await report_security_event(
             EventType.ACCESS_DENIED,  # Using as audit event
@@ -194,15 +194,15 @@ async def rotate_api_key(
                 "rotated_by": current_user.id
             }
         )
-        
+
         logger.info(f"API key rotated: {key_id} by user {current_user.id}")
-        
+
         return {
             "key_id": key_id,
             "secret": new_secret,
             "message": "API key rotated successfully. Save the new secret - it won't be shown again!"
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -217,19 +217,19 @@ async def revoke_api_key(
 ) -> Dict[str, Any]:
     """
     Revoke an API key
-    
+
     The key will be immediately invalidated.
     """
     try:
         # Check user permissions
         if not current_user.has_permission(Permission.ADMIN):
             raise HTTPException(status_code=403, detail="Admin permission required")
-        
+
         signing_service = get_signing_service()
-        
+
         # Revoke key
         signing_service.revoke_api_key(key_id)
-        
+
         # Log security event
         await report_security_event(
             EventType.ACCESS_DENIED,  # Using as audit event
@@ -241,15 +241,15 @@ async def revoke_api_key(
                 "revoked_by": current_user.id
             }
         )
-        
+
         logger.info(f"API key revoked: {key_id} by user {current_user.id}")
-        
+
         return {
             "key_id": key_id,
             "status": "revoked",
             "message": "API key has been revoked and is no longer valid"
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -264,28 +264,28 @@ async def get_api_key(
 ) -> APIKeyResponse:
     """
     Get details of a specific API key
-    
+
     Returns key information without the secret.
     """
     try:
         # Check user permissions
         if not current_user.has_permission(Permission.ADMIN):
             raise HTTPException(status_code=403, detail="Admin permission required")
-        
+
         signing_service = get_signing_service()
-        
+
         if key_id not in signing_service.api_keys:
             raise HTTPException(status_code=404, detail="API key not found")
-        
+
         key_info = signing_service.api_keys[key_id]
-        
+
         # Check if key is expired
         from datetime import datetime
         is_expired = False
         expires_at = key_info.get("expires_at")
         if expires_at:
             is_expired = datetime.fromisoformat(expires_at.replace('Z', '+00:00')) < datetime.utcnow()
-        
+
         return APIKeyResponse(
             key_id=key_id,
             active=key_info["active"],
@@ -296,7 +296,7 @@ async def get_api_key(
             expires_at=expires_at,
             is_expired=is_expired
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:

@@ -62,13 +62,13 @@ try:
 except ImportError:
     def initialize_agent_trust(*args, **kwargs):
         return {"status": "trust_system_unavailable"}
-    
+
     def get_trust_contract():
         return None
-    
+
     def verify_a2a_message(*args, **kwargs):
         return True, {"status": "trust_system_unavailable"}
-    
+
     def sign_a2a_message(*args, **kwargs):
         return {"message": args[1] if len(args) > 1 else {}, "signature": {"status": "trust_system_unavailable"}}
 
@@ -157,11 +157,11 @@ class DataResult:
 class EnhancedDataManagerAgent(SecureA2AAgent):
     """
     Enhanced Data Manager Agent with AI Intelligence Framework
-    
+
     Advanced data management and storage with sophisticated reasoning,
     adaptive learning, and autonomous optimization capabilities.
     """
-    
+
     def __init__(self, base_url: str, storage_backend: str = "sqlite"):
         super().__init__(
             agent_id="enhanced_data_manager_agent",
@@ -174,16 +174,16 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-        
-        
+
+
         # Initialize AI Intelligence Framework with enhanced configuration for data management
         ai_config = create_enhanced_agent_config(
             reasoning_strategies=[
-                "query_optimization", "storage_pattern", "access_driven", 
+                "query_optimization", "storage_pattern", "access_driven",
                 "quality_focused", "performance_based", "schema_adaptive"
             ],
             learning_strategies=[
-                "access_pattern_learning", "query_optimization", 
+                "access_pattern_learning", "query_optimization",
                 "storage_efficiency", "data_quality_improvement", "performance_tuning"
             ],
             memory_types=[
@@ -199,9 +199,9 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
                 "performance_alignment", "integrity_assurance"
             ]
         )
-        
+
         self.ai_framework = create_ai_intelligence_framework(ai_config)
-        
+
         # Data management
         self.storage_backend = StorageBackend(storage_backend)
         self.db_connection = None
@@ -209,13 +209,13 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
         self.data_cache = {}
         self.query_patterns = {}
         self.access_analytics = {}
-        
+
         # AI-enhanced features
         self.query_optimizations = {}
         self.storage_insights = {}
         self.performance_predictions = {}
         self.data_relationships = {}
-        
+
         # Performance tracking
         self.data_metrics = {
             "total_records": 0,
@@ -224,7 +224,7 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
             "ai_optimizations": 0,
             "performance_improvements": 0
         }
-        
+
         # Configuration
         self.sqlite_db_path = os.getenv("SQLITE_DB_PATH", "/tmp/enhanced_data.db")
         self.postgres_url = os.getenv("POSTGRES_URL", "")
@@ -237,9 +237,9 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
         }
         self.redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
         self.cache_ttl = int(os.getenv("CACHE_TTL", "3600"))
-        
+
         logger.info(f"Initialized {self.name} with AI Intelligence Framework v6.0.0")
-    
+
     @async_retry(max_retries=3, operation_type=AsyncOperationType.IO_BOUND)
     @async_timeout(30.0)
     async def initialize(self) -> None:
@@ -248,55 +248,55 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
         try:
             # Initialize AI framework
             await self.ai_framework.initialize()
-            
+
             # Initialize storage backend with AI context
             await self._ai_initialize_storage()
-            
+
             # Initialize Redis cache with AI optimization
             await self._ai_initialize_cache()
-            
+
             # Load existing data patterns with AI analysis
             await self._ai_load_data_patterns()
-            
+
             # Initialize blockchain integration if enabled
             if self.blockchain_enabled:
                 logger.info("Blockchain integration is enabled for Enhanced Data Manager")
                 # The blockchain is already initialized by A2AAgentBase
                 # Register data-specific blockchain handlers
                 await self._register_blockchain_handlers()
-            
+
             # Initialize AI reasoning for data patterns
             await self._ai_initialize_data_intelligence()
-            
+
             # Setup performance monitoring
             await self._ai_setup_performance_monitoring()
-            
+
             logger.info("Enhanced Data Manager Agent initialization complete")
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize enhanced data manager: {e}")
             raise
-    
+
     async def _register_blockchain_handlers(self):
         """Register blockchain-specific message handlers"""
         logger.info("Registering blockchain handlers for Data Manager")
-        
+
         # Override the base blockchain message handler for data-specific handling
         self._handle_blockchain_message = self._handle_data_blockchain_message
-        
+
     def _handle_data_blockchain_message(self, message: Dict[str, Any]):
         """Handle incoming blockchain messages for data operations"""
         logger.info(f"Data Manager received blockchain message: {message}")
-        
+
         message_type = message.get('messageType', '')
         content = message.get('content', {})
-        
+
         if isinstance(content, str):
             try:
                 content = json.loads(content)
             except:
                 pass
-        
+
         # Handle data-specific blockchain messages
         if message_type == "DATA_REQUEST":
             asyncio.create_task(self._handle_blockchain_data_request(message, content))
@@ -307,28 +307,28 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
         else:
             # Default handling
             logger.info(f"Received blockchain message type: {message_type}")
-            
+
         # Mark message as delivered
         if self.blockchain_integration and message.get('messageId'):
             try:
                 self.blockchain_integration.mark_message_delivered(message['messageId'])
             except Exception as e:
                 logger.error(f"Failed to mark message as delivered: {e}")
-    
+
     async def _handle_blockchain_data_request(self, message: Dict[str, Any], content: Dict[str, Any]):
         """Handle data request from blockchain"""
         try:
             record_id = content.get('record_id')
             requester_address = message.get('from')
-            
+
             # Verify trust before processing
             if not self.verify_trust(requester_address):
                 logger.warning(f"Data request from untrusted agent: {requester_address}")
                 return
-            
+
             # Retrieve the requested data
             data_result = await self._ai_retrieve_data({"record_id": record_id})
-            
+
             # Send response via blockchain
             if data_result and data_result.success:
                 self.send_blockchain_message(
@@ -340,25 +340,25 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
                     },
                     message_type="DATA_RESPONSE"
                 )
-                
+
         except Exception as e:
             logger.error(f"Failed to handle blockchain data request: {e}")
-    
+
     async def _handle_blockchain_data_sync(self, message: Dict[str, Any], content: Dict[str, Any]):
         """Handle data synchronization request from blockchain"""
         try:
             sync_type = content.get('sync_type', 'full')
             since_timestamp = content.get('since_timestamp')
             requester_address = message.get('from')
-            
+
             # Verify trust with higher threshold for sync operations
             if not self.verify_trust(requester_address, min_reputation=75):
                 logger.warning(f"Data sync request from insufficiently trusted agent: {requester_address}")
                 return
-            
+
             # Perform data sync
             sync_data = await self._ai_get_sync_data(sync_type, since_timestamp)
-            
+
             # Send sync response via blockchain
             self.send_blockchain_message(
                 to_address=requester_address,
@@ -370,20 +370,20 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
                 },
                 message_type="DATA_SYNC_RESPONSE"
             )
-            
+
         except Exception as e:
             logger.error(f"Failed to handle blockchain data sync: {e}")
-    
+
     async def _handle_blockchain_data_validation(self, message: Dict[str, Any], content: Dict[str, Any]):
         """Handle data validation request from blockchain"""
         try:
             data_hash = content.get('data_hash')
             record_id = content.get('record_id')
             requester_address = message.get('from')
-            
+
             # Perform validation
             validation_result = await self._ai_validate_data_integrity(record_id, data_hash)
-            
+
             # Send validation response via blockchain
             self.send_blockchain_message(
                 to_address=requester_address,
@@ -396,39 +396,39 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
                 },
                 message_type="DATA_VALIDATION_RESPONSE"
             )
-            
+
         except Exception as e:
             logger.error(f"Failed to handle blockchain data validation: {e}")
-    
+
     @a2a_handler("ai_data_storage")
     async def handle_ai_data_storage(self, message: A2AMessage) -> Dict[str, Any]:
         """AI-enhanced handler for data storage with sophisticated reasoning"""
         start_time = time.time()
-        
+
         try:
             # Extract data context from message with AI analysis
             data_context = await self._ai_extract_data_context(message)
             if not data_context:
                 return create_error_response("No valid data context found in message")
-            
+
             # AI-powered storage analysis
             storage_analysis = await self._ai_analyze_storage_requirements(data_context)
-            
+
             # Intelligent storage optimization with reasoning
             storage_optimization = await self._ai_optimize_storage(
                 data_context, storage_analysis
             )
-            
+
             # Store data with AI enhancements
             storage_result = await self.ai_store_data(
                 data_context=data_context,
                 storage_optimization=storage_optimization,
                 context_id=message.conversation_id
             )
-            
+
             # AI learning from storage process
             await self._ai_learn_from_storage(data_context, storage_result)
-            
+
             # Notify via blockchain if significant data stored
             if self.blockchain_enabled and storage_result.success:
                 await self._notify_blockchain_data_operation(
@@ -437,42 +437,42 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
                     data_type=data_context.data_record.get("data_type", "unknown"),
                     size=len(str(data_context.data_record))
                 )
-            
+
             # Record metrics with AI insights
             self.data_metrics["total_records"] += 1
             self.data_metrics["ai_optimizations"] += 1
-            
+
             processing_time = time.time() - start_time
-            
+
             return create_success_response({
                 **storage_result.dict(),
                 "ai_processing_time": processing_time,
                 "ai_framework_version": "6.0.0"
             })
-            
+
         except Exception as e:
             logger.error(f"AI data storage failed: {e}")
             return create_error_response(f"AI data storage failed: {str(e)}")
-    
+
     @a2a_handler("ai_data_retrieval")
     async def handle_ai_data_retrieval(self, message: A2AMessage) -> Dict[str, Any]:
         """AI-enhanced handler for data retrieval with intelligent optimization"""
         start_time = time.time()
-        
+
         try:
             # Extract retrieval context from message with AI analysis
             retrieval_context = await self._ai_extract_retrieval_context(message)
             if not retrieval_context:
                 return create_error_response("No valid retrieval context found in message")
-            
+
             # AI-powered query optimization
             query_optimization = await self._ai_optimize_query(retrieval_context)
-            
+
             # Intelligent caching strategy
             caching_strategy = await self._ai_determine_caching_strategy(
                 retrieval_context, query_optimization
             )
-            
+
             # Retrieve data with AI enhancements
             retrieval_result = await self.ai_retrieve_data(
                 retrieval_context=retrieval_context,
@@ -480,10 +480,10 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
                 caching_strategy=caching_strategy,
                 context_id=message.conversation_id
             )
-            
+
             # AI learning from retrieval process
             await self._ai_learn_from_retrieval(retrieval_context, retrieval_result)
-            
+
             # Notify via blockchain for complex queries
             if self.blockchain_enabled and retrieval_result.success:
                 complexity = query_optimization.get("complexity_score", 0)
@@ -494,25 +494,25 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
                         complexity_score=complexity,
                         record_count=len(retrieval_result.records)
                     )
-            
+
             # Record metrics with AI insights
             self.data_metrics["queries_processed"] += 1
-            
+
             processing_time = time.time() - start_time
-            
+
             return create_success_response({
                 **retrieval_result.dict(),
                 "ai_processing_time": processing_time
             })
-            
+
         except Exception as e:
             logger.error(f"AI data retrieval failed: {e}")
             return create_error_response(f"AI data retrieval failed: {str(e)}")
-    
+
     @a2a_skill("ai_query_optimization")
     async def ai_query_optimization_skill(self, query_data: Dict[str, Any]) -> Dict[str, Any]:
         """AI-powered query optimization for data retrieval"""
-        
+
         # Use AI reasoning to optimize queries
         reasoning_result = await self.ai_framework.reasoning_engine.reason(
             problem="query_optimization",
@@ -523,25 +523,25 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
             },
             strategy="query_optimization"
         )
-        
+
         # Analyze query patterns
         pattern_analysis = await self._ai_analyze_query_patterns(query_data)
-        
+
         # Generate optimization strategies
         optimization_strategies = await self._ai_generate_optimization_strategies(
             query_data, pattern_analysis
         )
-        
+
         # Predict query performance
         performance_prediction = await self._ai_predict_query_performance(
             query_data, optimization_strategies
         )
-        
+
         # Generate optimized query
         optimized_query = await self._ai_generate_optimized_query(
             query_data, optimization_strategies, performance_prediction
         )
-        
+
         return {
             "pattern_analysis": pattern_analysis,
             "optimization_strategies": optimization_strategies,
@@ -551,11 +551,11 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
             "confidence_score": reasoning_result.get("confidence", 0.0),
             "optimization_quality": "high"
         }
-    
+
     @a2a_skill("ai_storage_optimization")
     async def ai_storage_optimization_skill(self, storage_data: Dict[str, Any]) -> Dict[str, Any]:
         """AI-powered storage optimization for data persistence"""
-        
+
         # Use AI reasoning for storage optimization
         reasoning_result = await self.ai_framework.reasoning_engine.reason(
             problem="storage_optimization",
@@ -566,19 +566,19 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
             },
             strategy="storage_pattern"
         )
-        
+
         # Analyze storage patterns
         storage_analysis = await self._ai_analyze_storage_patterns(storage_data)
-        
+
         # Optimize data structure
         structure_optimization = await self._ai_optimize_data_structure(storage_data, storage_analysis)
-        
+
         # Determine optimal indexing
         indexing_strategy = await self._ai_determine_indexing_strategy(storage_data, structure_optimization)
-        
+
         # Generate compression recommendations
         compression_strategy = await self._ai_recommend_compression(storage_data, structure_optimization)
-        
+
         return {
             "storage_analysis": storage_analysis,
             "structure_optimization": structure_optimization,
@@ -587,11 +587,11 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
             "reasoning_trace": reasoning_result.get("reasoning_trace", {}),
             "optimization_confidence": reasoning_result.get("confidence", 0.0)
         }
-    
+
     @a2a_skill("ai_data_quality_assessment")
     async def ai_data_quality_assessment_skill(self, data_record: Dict[str, Any]) -> Dict[str, Any]:
         """AI-powered data quality assessment"""
-        
+
         # Use AI reasoning for quality assessment
         reasoning_result = await self.ai_framework.reasoning_engine.reason(
             problem="data_quality_assessment",
@@ -602,19 +602,19 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
             },
             strategy="quality_focused"
         )
-        
+
         # Assess data completeness
         completeness_score = await self._ai_assess_data_completeness(data_record)
-        
+
         # Assess data accuracy
         accuracy_score = await self._ai_assess_data_accuracy(data_record)
-        
+
         # Assess data consistency
         consistency_score = await self._ai_assess_data_consistency(data_record)
-        
+
         # Assess data freshness
         freshness_score = await self._ai_assess_data_freshness(data_record)
-        
+
         # Calculate overall quality score
         overall_score = (
             completeness_score * 0.3 +
@@ -622,12 +622,12 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
             consistency_score * 0.25 +
             freshness_score * 0.15
         )
-        
+
         # Generate quality recommendations
         quality_recommendations = await self._ai_generate_data_quality_recommendations(
             data_record, completeness_score, accuracy_score, consistency_score, freshness_score
         )
-        
+
         return {
             "completeness_score": completeness_score,
             "accuracy_score": accuracy_score,
@@ -638,11 +638,11 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
             "reasoning_trace": reasoning_result.get("reasoning_trace", {}),
             "assessment_confidence": reasoning_result.get("confidence", 0.0)
         }
-    
+
     @a2a_skill("ai_performance_analysis")
     async def ai_performance_analysis_skill(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
         """AI-powered performance analysis for data operations"""
-        
+
         # Use AI reasoning for performance analysis
         reasoning_result = await self.ai_framework.reasoning_engine.reason(
             problem="performance_analysis",
@@ -653,25 +653,25 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
             },
             strategy="performance_based"
         )
-        
+
         # Analyze operation performance
         operation_analysis = await self._ai_analyze_operation_performance(operation_data)
-        
+
         # Identify performance bottlenecks
         bottleneck_analysis = await self._ai_identify_performance_bottlenecks(
             operation_data, operation_analysis
         )
-        
+
         # Generate performance optimizations
         performance_optimizations = await self._ai_generate_performance_optimizations(
             operation_data, bottleneck_analysis
         )
-        
+
         # Predict future performance
         performance_predictions = await self._ai_predict_future_performance(
             operation_data, performance_optimizations
         )
-        
+
         return {
             "operation_analysis": operation_analysis,
             "bottleneck_analysis": bottleneck_analysis,
@@ -680,46 +680,46 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
             "reasoning_trace": reasoning_result.get("reasoning_trace", {}),
             "analysis_confidence": reasoning_result.get("confidence", 0.0)
         }
-    
+
     @a2a_task(
         task_type="ai_data_storage_workflow",
         description="Complete AI-enhanced data storage workflow",
         timeout=300,
         retry_attempts=2
     )
-    async def ai_store_data(self, data_context: DataContext, 
+    async def ai_store_data(self, data_context: DataContext,
                            storage_optimization: Dict[str, Any], context_id: str) -> DataResult:
         """Complete AI-enhanced data storage workflow"""
-        
+
         try:
             # Stage 1: AI data validation
             data_validation = await self.execute_skill("ai_data_quality_assessment", data_context.data_record)
-            
+
             # Stage 2: AI storage optimization
             storage_optimization_result = await self.execute_skill("ai_storage_optimization", data_context.data_record)
-            
+
             # Stage 3: AI performance prediction
             performance_analysis = await self.execute_skill("ai_performance_analysis", {
                 "operation": "store",
                 "data_size": len(str(data_context.data_record)),
                 "data_type": data_context.data_record.get("data_type", "unknown")
             })
-            
+
             # Stage 4: Execute optimized storage
             storage_execution = await self._ai_execute_optimized_storage(
                 data_context, storage_optimization_result, performance_analysis
             )
-            
+
             # Stage 5: Update caches and indexes
             cache_update = await self._ai_update_caches_and_indexes(
                 data_context, storage_execution
             )
-            
+
             # Stage 6: Generate AI insights
             data_insights = await self._ai_generate_data_insights(
                 data_context, storage_execution, performance_analysis
             )
-            
+
             # Create result with AI metadata
             result = DataResult(
                 operation="store",
@@ -735,14 +735,14 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
                 optimization_suggestions=storage_optimization_result.get("optimization_strategies", []),
                 data_insights=data_insights
             )
-            
+
             # Update analytics
             await self._ai_update_storage_analytics(data_context, result)
-            
+
             self.data_metrics["total_records"] += 1
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"AI data storage workflow failed: {e}")
             return DataResult(
@@ -751,27 +751,27 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
                 success=False,
                 error_details=str(e)
             )
-    
+
     @a2a_task(
         task_type="ai_data_retrieval_workflow",
         description="Complete AI-enhanced data retrieval workflow",
         timeout=300,
         retry_attempts=2
     )
-    async def ai_retrieve_data(self, retrieval_context: DataContext, 
-                              query_optimization: Dict[str, Any], 
+    async def ai_retrieve_data(self, retrieval_context: DataContext,
+                              query_optimization: Dict[str, Any],
                               caching_strategy: Dict[str, Any], context_id: str) -> DataResult:
         """Complete AI-enhanced data retrieval workflow"""
-        
+
         try:
             # Stage 1: AI query optimization
             query_optimization_result = await self.execute_skill("ai_query_optimization", retrieval_context.query_criteria)
-            
+
             # Stage 2: Check intelligent cache
             cache_result = await self._ai_check_intelligent_cache(
                 retrieval_context, caching_strategy
             )
-            
+
             # Stage 3: Execute optimized query (if not cached)
             if not cache_result.get("cache_hit", False):
                 query_execution = await self._ai_execute_optimized_query(
@@ -779,25 +779,25 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
                 )
             else:
                 query_execution = {"results": cache_result["cached_data"], "from_cache": True}
-            
+
             # Stage 4: AI performance analysis
             performance_analysis = await self.execute_skill("ai_performance_analysis", {
                 "operation": "retrieve",
                 "query_criteria": retrieval_context.query_criteria,
                 "result_count": len(query_execution.get("results", []))
             })
-            
+
             # Stage 5: Update cache with AI strategy
             if not cache_result.get("cache_hit", False):
                 await self._ai_update_intelligent_cache(
                     retrieval_context, query_execution, caching_strategy
                 )
-            
+
             # Stage 6: Generate retrieval insights
             retrieval_insights = await self._ai_generate_retrieval_insights(
                 retrieval_context, query_execution, performance_analysis
             )
-            
+
             # Create result with AI metadata
             result = DataResult(
                 operation="retrieve",
@@ -812,16 +812,16 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
                 optimization_suggestions=query_optimization_result.get("optimization_strategies", []),
                 data_insights=retrieval_insights
             )
-            
+
             # Update analytics
             await self._ai_update_retrieval_analytics(retrieval_context, result)
-            
+
             self.data_metrics["queries_processed"] += 1
             if cache_result.get("cache_hit", False):
                 self.data_metrics["cache_hits"] += 1
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"AI data retrieval workflow failed: {e}")
             return DataResult(
@@ -830,22 +830,22 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
                 success=False,
                 error_details=str(e)
             )
-    
+
     # Private AI helper methods for enhanced functionality
-    
+
     async def _ai_extract_data_context(self, message: A2AMessage) -> Optional[DataContext]:
         """Extract data context from message with AI analysis"""
         request_data = {}
-        
+
         for part in message.parts:
             if part.kind == "data" and part.data:
                 request_data.update(part.data)
             elif part.kind == "file" and part.file:
                 request_data["file"] = part.file
-        
+
         if not request_data:
             return None
-        
+
         try:
             return DataContext(
                 operation_type=request_data.get("operation_type", "store"),
@@ -859,7 +859,7 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
         except Exception as e:
             logger.error(f"Failed to extract data context: {e}")
             return None
-    
+
     async def _ai_initialize_storage(self):
         """Initialize storage backend with AI context"""
         try:
@@ -872,14 +872,14 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
         except Exception as e:
             logger.error(f"Failed to initialize AI-enhanced storage: {e}")
             raise
-    
+
     async def _ai_initialize_sqlite(self):
         """Initialize SQLite with AI-enhanced schema"""
         try:
             os.makedirs(os.path.dirname(self.sqlite_db_path), exist_ok=True)
             self.db_connection = await aiosqlite.connect(self.sqlite_db_path)
             self.db_connection.row_factory = aiosqlite.Row
-            
+
             # Enhanced data records table with AI fields
             await self.db_connection.execute("""
                 CREATE TABLE IF NOT EXISTS enhanced_data_records (
@@ -899,13 +899,13 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
                     is_deleted BOOLEAN DEFAULT FALSE
                 )
             """)
-            
+
             await self.db_connection.commit()
             logger.info("AI-enhanced SQLite database initialized")
         except Exception as e:
             logger.error(f"Failed to initialize AI-enhanced SQLite: {e}")
             raise
-    
+
     async def _ai_initialize_cache(self):
         """Initialize Redis cache with AI optimization"""
         try:
@@ -916,13 +916,13 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
         except Exception as e:
             logger.warning(f"AI-optimized Redis cache not available: {e}")
             self.redis_client = None
-    
+
     async def _notify_blockchain_data_operation(self, operation: str, **kwargs):
         """Notify blockchain network about significant data operations"""
         try:
             # Find agents interested in data operations
             interested_agents = self.get_agent_by_capability("data_monitoring")
-            
+
             # Prepare notification content
             notification = {
                 "operation": operation,
@@ -930,7 +930,7 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
                 "timestamp": datetime.now().isoformat(),
                 **kwargs
             }
-            
+
             # Send to interested agents via blockchain
             for agent_info in interested_agents:
                 if agent_info.get('address') != getattr(self.agent_identity, 'address', None):
@@ -939,7 +939,7 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
                         content=notification,
                         message_type="DATA_OPERATION_NOTIFICATION"
                     )
-            
+
             # Also notify quality control manager for validation workflows
             qc_agents = self.get_agent_by_capability("quality_assessment")
             for qc_agent in qc_agents:
@@ -952,10 +952,10 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
                         },
                         message_type="DATA_VALIDATION_REQUEST"
                     )
-                    
+
         except Exception as e:
             logger.warning(f"Failed to notify blockchain about data operation: {e}")
-    
+
     async def _ai_get_sync_data(self, sync_type: str, since_timestamp: Optional[str]) -> List[Dict[str, Any]]:
         """Get data for synchronization with AI optimization"""
         try:
@@ -970,20 +970,20 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
         except Exception as e:
             logger.error(f"Failed to get sync data: {e}")
             return []
-    
+
     async def _ai_validate_data_integrity(self, record_id: str, expected_hash: str) -> Dict[str, Any]:
         """Validate data integrity with AI-enhanced checks"""
         try:
             # Retrieve the data
             data_result = await self._ai_retrieve_data({"record_id": record_id})
-            
+
             if not data_result or not data_result.success or not data_result.records:
                 return {"is_valid": False, "details": {"error": "Record not found"}}
-            
+
             # Calculate actual hash
             record_data = data_result.records[0]
             actual_hash = hashlib.sha256(json.dumps(record_data, sort_keys=True).encode()).hexdigest()
-            
+
             # AI-enhanced validation
             ai_validation = await self.ai_framework.reason(
                 task="validate_data_integrity",
@@ -993,7 +993,7 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
                     "expected_patterns": self.data_relationships.get(record_id, {})
                 }
             )
-            
+
             return {
                 "is_valid": actual_hash == expected_hash,
                 "details": {
@@ -1004,32 +1004,32 @@ class EnhancedDataManagerAgent(SecureA2AAgent):
                     "confidence": ai_validation.get("confidence", 0.0)
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to validate data integrity: {e}")
             return {"is_valid": False, "details": {"error": str(e)}}
-    
+
     def _get_data_structure(self, data: Dict[str, Any]) -> Dict[str, str]:
         """Extract data structure for AI analysis"""
         structure = {}
         for key, value in data.items():
             structure[key] = type(value).__name__
         return structure
-    
+
     async def cleanup(self) -> None:
         """Cleanup agent resources with AI state preservation"""
         try:
             # Close database connections
             if self.db_connection:
                 await self.db_connection.close()
-            
+
             # Close Redis connection
             if self.redis_client:
                 await self.redis_client.close()
-            
+
             # Cleanup AI framework
             await self.ai_framework.cleanup()
-            
+
             logger.info(f"Enhanced Data Manager Agent cleanup completed with AI state preservation")
         except Exception as e:
             logger.error(f"Enhanced Data Manager Agent cleanup failed: {e}")

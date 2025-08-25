@@ -82,7 +82,7 @@ async def get_agent_goals(
         # Validate agent_id
         if not agent_id or not agent_id.strip():
             raise GoalValidationError("Agent ID cannot be empty")
-            
+
         # Create A2A message
         message_data = {
             "operation": "get_agent_goals",
@@ -92,7 +92,7 @@ async def get_agent_goals(
                 "include_history": include_history
             }
         }
-        
+
         message = A2AMessage(
             sender_id="api_client",
             recipient_id="orchestrator_agent",
@@ -102,9 +102,9 @@ async def get_agent_goals(
             )],
             timestamp=datetime.utcnow()
         )
-        
+
         result = await handler.process_a2a_message(message)
-        
+
         if result.get("status") == "success":
             return JSONResponse(content=result["data"])
         elif result.get("status") == "not_found":
@@ -116,7 +116,7 @@ async def get_agent_goals(
                 status_code=result.get("status_code", 500),
                 details=error_details
             )
-            
+
     except GoalManagementError:
         raise
     except HTTPException:
@@ -143,7 +143,7 @@ async def get_all_agent_goals(
                 "include_history": include_history
             }
         }
-        
+
         message = A2AMessage(
             sender_id="api_client",
             recipient_id="orchestrator_agent",
@@ -153,14 +153,14 @@ async def get_all_agent_goals(
             )],
             timestamp=datetime.utcnow()
         )
-        
+
         result = await handler.process_a2a_message(message)
-        
+
         if result.get("status") == "success":
             return JSONResponse(content=result["data"])
         else:
             raise HTTPException(status_code=500, detail=result.get("message", "Failed to get goals"))
-            
+
     except Exception as e:
         logger.error(f"Failed to get all agent goals: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -176,10 +176,10 @@ async def set_agent_goals(
         # Validate input
         if not agent_id or not agent_id.strip():
             raise GoalValidationError("Agent ID cannot be empty")
-            
+
         if not goals_data:
             raise GoalValidationError("Goals data cannot be empty")
-            
+
         # Validate goal structure
         required_fields = ["goal_id", "specific", "measurable", "achievable", "relevant", "time_bound"]
         missing_fields = [field for field in required_fields if field not in goals_data]
@@ -188,14 +188,14 @@ async def set_agent_goals(
                 "Missing required goal fields",
                 details={"missing_fields": missing_fields}
             )
-            
+
         # Check for dependencies if specified
         if "dependencies" in goals_data:
             await validate_goal_dependencies(agent_id, goals_data["dependencies"], handler)
-            
+
         # Check for conflicts with existing goals
         await check_goal_conflicts(agent_id, goals_data, handler)
-        
+
         message_data = {
             "operation": "set_agent_goals",
             "data": {
@@ -203,7 +203,7 @@ async def set_agent_goals(
                 "goals": goals_data
             }
         }
-        
+
         message = A2AMessage(
             sender_id="api_client",
             recipient_id="orchestrator_agent",
@@ -213,9 +213,9 @@ async def set_agent_goals(
             )],
             timestamp=datetime.utcnow()
         )
-        
+
         result = await handler.process_a2a_message(message)
-        
+
         if result.get("status") == "success":
             return JSONResponse(content=result["data"], status_code=201)
         elif result.get("status") == "conflict":
@@ -234,7 +234,7 @@ async def set_agent_goals(
                 status_code=result.get("status_code", 400),
                 details=result.get("error_details", {})
             )
-            
+
     except GoalManagementError:
         raise
     except HTTPException:
@@ -257,10 +257,10 @@ async def update_agent_progress(
         # Validate input
         if not agent_id or not agent_id.strip():
             raise GoalValidationError("Agent ID cannot be empty")
-            
+
         if not progress_data:
             raise GoalValidationError("Progress data cannot be empty")
-            
+
         # Validate progress values are in valid range
         if "overall_progress" in progress_data:
             overall = progress_data["overall_progress"]
@@ -269,7 +269,7 @@ async def update_agent_progress(
                     "Overall progress must be between 0 and 100",
                     details={"invalid_value": overall}
                 )
-                
+
         # Validate objective progress if provided
         if "objective_progress" in progress_data:
             for obj_name, value in progress_data["objective_progress"].items():
@@ -278,7 +278,7 @@ async def update_agent_progress(
                         f"Objective progress for '{obj_name}' must be between 0 and 100",
                         details={"objective": obj_name, "invalid_value": value}
                     )
-        
+
         message_data = {
             "operation": "track_goal_progress",
             "data": {
@@ -286,7 +286,7 @@ async def update_agent_progress(
                 "progress": progress_data
             }
         }
-        
+
         message = A2AMessage(
             sender_id="api_client",
             recipient_id="orchestrator_agent",
@@ -296,9 +296,9 @@ async def update_agent_progress(
             )],
             timestamp=datetime.utcnow()
         )
-        
+
         result = await handler.process_a2a_message(message)
-        
+
         if result.get("status") == "success":
             return JSONResponse(content=result["data"])
         elif result.get("status") == "not_found":
@@ -309,7 +309,7 @@ async def update_agent_progress(
                 status_code=result.get("status_code", 400),
                 details=result.get("error_details", {})
             )
-            
+
     except GoalManagementError:
         raise
     except HTTPException:
@@ -340,10 +340,10 @@ async def update_goal_status(
         # Validate input
         if not agent_id or not agent_id.strip():
             raise GoalValidationError("Agent ID cannot be empty")
-            
+
         if not status_data or "status" not in status_data:
             raise GoalValidationError("Status is required")
-            
+
         # Validate status value
         new_status = status_data.get("status")
         try:
@@ -353,13 +353,13 @@ async def update_goal_status(
                 f"Invalid status value: {new_status}",
                 details={"valid_statuses": [s.value for s in GoalStatus]}
             )
-            
+
         # Require reason for certain status changes
         if new_status in [GoalStatus.CANCELLED, GoalStatus.FAILED] and not status_data.get("reason"):
             raise GoalValidationError(
                 f"Reason is required when setting status to {new_status}"
             )
-        
+
         message_data = {
             "operation": "update_goal_status",
             "data": {
@@ -369,7 +369,7 @@ async def update_goal_status(
                 "updated_by": status_data.get("updated_by", "api_client")
             }
         }
-        
+
         message = A2AMessage(
             sender_id="api_client",
             recipient_id="orchestrator_agent",
@@ -379,9 +379,9 @@ async def update_goal_status(
             )],
             timestamp=datetime.utcnow()
         )
-        
+
         result = await handler.process_a2a_message(message)
-        
+
         if result.get("status") == "success":
             return JSONResponse(content=result["data"])
         elif result.get("status") == "not_found":
@@ -397,7 +397,7 @@ async def update_goal_status(
                 status_code=result.get("status_code", 400),
                 details=result.get("error_details", {})
             )
-            
+
     except GoalManagementError:
         raise
     except HTTPException:
@@ -419,7 +419,7 @@ async def get_system_analytics(
             "operation": "get_goal_analytics",
             "data": {}
         }
-        
+
         message = A2AMessage(
             sender_id="api_client",
             recipient_id="orchestrator_agent",
@@ -429,14 +429,14 @@ async def get_system_analytics(
             )],
             timestamp=datetime.utcnow()
         )
-        
+
         result = await handler.process_a2a_message(message)
-        
+
         if result.get("status") == "success":
             return JSONResponse(content=result["data"])
         else:
             raise HTTPException(status_code=500, detail=result.get("message", "Failed to get analytics"))
-            
+
     except Exception as e:
         logger.error(f"Failed to get system analytics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -454,7 +454,7 @@ async def get_agent_analytics(
                 "agent_id": agent_id
             }
         }
-        
+
         message = A2AMessage(
             sender_id="api_client",
             recipient_id="orchestrator_agent",
@@ -464,14 +464,14 @@ async def get_agent_analytics(
             )],
             timestamp=datetime.utcnow()
         )
-        
+
         result = await handler.process_a2a_message(message)
-        
+
         if result.get("status") == "success":
             return JSONResponse(content=result["data"])
         else:
             raise HTTPException(status_code=404, detail=result.get("message", "Analytics not found"))
-            
+
     except Exception as e:
         logger.error(f"Failed to get agent analytics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -497,13 +497,13 @@ async def enable_auto_progress_updates(
     try:
         # Add background task for automated updates
         background_tasks.add_task(automated_progress_monitor, agent_id, handler)
-        
+
         return {
             "status": "success",
             "message": f"Automated progress monitoring enabled for {agent_id}",
             "agent_id": agent_id
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to enable auto-updates: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -513,38 +513,38 @@ async def automated_progress_monitor(agent_id: str, handler: OrchestratorAgentA2
     retry_count = 0
     max_retries = 3
     base_delay = 300  # 5 minutes
-    
+
     try:
         logger.info(f"Starting automated progress monitoring for {agent_id}")
-        
+
         while True:
             try:
                 # Check agent performance metrics and update progress
                 await update_progress_from_metrics(agent_id, handler)
-                
+
                 # Reset retry count on success
                 retry_count = 0
-                
+
                 # Wait before next update
                 await asyncio.sleep(base_delay)
-                
+
             except Exception as e:
                 retry_count += 1
                 logger.warning(
                     f"Error in progress monitoring for {agent_id} (attempt {retry_count}/{max_retries}): {e}"
                 )
-                
+
                 if retry_count >= max_retries:
                     logger.error(
                         f"Max retries reached for progress monitoring of {agent_id}. Stopping monitor."
                     )
                     break
-                    
+
                 # Exponential backoff
                 wait_time = base_delay * (2 ** retry_count)
                 logger.info(f"Retrying in {wait_time} seconds...")
                 await asyncio.sleep(wait_time)
-                
+
     except asyncio.CancelledError:
         logger.info(f"Progress monitoring cancelled for {agent_id}")
         raise
@@ -556,17 +556,17 @@ async def update_progress_from_metrics(agent_id: str, handler: OrchestratorAgent
     try:
         # Get current agent metrics from real monitoring system
         metrics = await get_agent_performance_metrics(agent_id)
-        
+
         if not metrics:
             logger.debug(f"No metrics available for {agent_id}, skipping progress update")
             return
-        
+
         # Calculate progress based on metrics with safe defaults
         try:
             # Response time progress calculation with bounds checking
             response_time = metrics.get("avg_response_time", 5000)
             response_time_progress = max(0, min(100, 100 - (response_time / 50)))
-            
+
             progress_update = {
                 "overall_progress": min(100.0, metrics.get("success_rate", 0.0)),
                 "objective_progress": {
@@ -582,7 +582,7 @@ async def update_progress_from_metrics(agent_id: str, handler: OrchestratorAgent
         except (TypeError, ValueError) as e:
             logger.error(f"Error calculating progress for {agent_id}: {e}")
             return
-        
+
         # Add new milestones based on metrics
         milestones = []
         milestone_checks = [
@@ -592,14 +592,14 @@ async def update_progress_from_metrics(agent_id: str, handler: OrchestratorAgent
             (metrics.get("error_rate", 100) < 5, "Low error rate achieved (<5%)"),
             (metrics.get("validation_accuracy", 0) > 98, "High validation accuracy achieved (>98%)")
         ]
-        
+
         for condition, milestone in milestone_checks:
             if condition:
                 milestones.append(milestone)
-        
+
         if milestones:
             progress_update["milestones_achieved"] = milestones
-        
+
         # Update progress through A2A message
         message_data = {
             "operation": "track_goal_progress",
@@ -609,7 +609,7 @@ async def update_progress_from_metrics(agent_id: str, handler: OrchestratorAgent
                 "source": "automated_monitor"
             }
         }
-        
+
         message = A2AMessage(
             sender_id="automated_monitor",
             recipient_id="orchestrator_agent",
@@ -619,9 +619,9 @@ async def update_progress_from_metrics(agent_id: str, handler: OrchestratorAgent
             )],
             timestamp=datetime.utcnow()
         )
-        
+
         result = await handler.process_a2a_message(message)
-        
+
         if result.get("status") == "success":
             logger.info(
                 f"Automated progress update successful for {agent_id}: "
@@ -632,7 +632,7 @@ async def update_progress_from_metrics(agent_id: str, handler: OrchestratorAgent
                 f"Automated progress update failed for {agent_id}: "
                 f"status={result.get('status')}, message={result.get('message')}"
             )
-            
+
     except Exception as e:
         logger.error(f"Failed to update progress from metrics for {agent_id}: {e}\n{traceback.format_exc()}")
 
@@ -641,12 +641,12 @@ async def get_agent_performance_metrics(agent_id: str) -> Optional[Dict[str, flo
     try:
         # Connect to real monitoring system - Prometheus, agent health endpoints
         from ....core.monitoring import get_agent_metrics_client
-        
+
         metrics_client = get_agent_metrics_client()
         if not metrics_client:
             logger.warning(f"No metrics client available for {agent_id}")
             return None
-        
+
         # Get real metrics from monitoring system with timeout
         try:
             raw_metrics = await asyncio.wait_for(
@@ -656,11 +656,11 @@ async def get_agent_performance_metrics(agent_id: str) -> Optional[Dict[str, flo
         except asyncio.TimeoutError:
             logger.warning(f"Timeout getting metrics for agent {agent_id}")
             return None
-            
+
         if not raw_metrics:
             logger.warning(f"No metrics available for agent {agent_id}")
             return None
-        
+
         # Transform raw metrics to goal-relevant format with validation
         metrics = {}
         metric_mappings = {
@@ -674,7 +674,7 @@ async def get_agent_performance_metrics(agent_id: str) -> Optional[Dict[str, flo
             "uptime": (0.0, 100.0),
             "error_rate": (0.0, 100.0)
         }
-        
+
         for metric_name, (min_val, max_val) in metric_mappings.items():
             value = raw_metrics.get(metric_name, min_val)
             # Validate and clamp values
@@ -685,9 +685,9 @@ async def get_agent_performance_metrics(agent_id: str) -> Optional[Dict[str, flo
             except (TypeError, ValueError):
                 logger.warning(f"Invalid metric value for {metric_name}: {value}")
                 metrics[metric_name] = min_val
-                
+
         return metrics
-        
+
     except ImportError:
         logger.error(f"Monitoring module not available for agent {agent_id}")
         return None
@@ -700,7 +700,7 @@ async def validate_goal_dependencies(agent_id: str, dependencies: List[str], han
     """Validate that all goal dependencies exist and are achievable"""
     if not dependencies:
         return
-        
+
     missing_deps = []
     for dep_goal_id in dependencies:
         # Check if dependency goal exists
@@ -716,11 +716,11 @@ async def validate_goal_dependencies(agent_id: str, dependencies: List[str], han
             )],
             timestamp=datetime.utcnow()
         )
-        
+
         result = await handler.process_a2a_message(message)
         if not result.get("exists", False):
             missing_deps.append(dep_goal_id)
-            
+
     if missing_deps:
         raise GoalDependencyError(
             "Cannot set goal with missing dependencies",
@@ -745,7 +745,7 @@ async def check_goal_conflicts(agent_id: str, new_goal: Dict[str, Any], handler:
         )],
         timestamp=datetime.utcnow()
     )
-    
+
     result = await handler.process_a2a_message(message)
     if result.get("has_conflicts", False):
         conflicting_goals = result.get("conflicting_goals", [])

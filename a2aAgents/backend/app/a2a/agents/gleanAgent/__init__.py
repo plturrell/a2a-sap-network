@@ -6,7 +6,7 @@ from .gleanAgentSdk import GleanAgent, AnalysisType, IssueType, IssueSeverity, C
 
 __all__ = [
     "GleanAgent",
-    "AnalysisType", 
+    "AnalysisType",
     "IssueType",
     "IssueSeverity",
     "CodeIssue",

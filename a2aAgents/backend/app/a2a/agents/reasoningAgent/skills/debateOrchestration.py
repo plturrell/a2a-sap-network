@@ -24,7 +24,7 @@ async def debate_orchestration(
 ) -> Dict[str, Any]:
     """
     Orchestrate a structured debate between multiple agents
-    
+
     Args:
         topic: Topic to debate
         positions: Initial positions (if None, agents develop their own)
@@ -35,23 +35,23 @@ async def debate_orchestration(
     try:
         # Import debate architecture
         from ..debateArchitecture import create_debate_coordinator
-        
+
         # Create debate coordinator
         coordinator = create_debate_coordinator()
-        
+
         # Run debate
         result = await coordinator.reason(
             question=topic,
             context={"positions": positions} if positions else None,
             rounds=max_rounds
         )
-        
+
         # Extract debate transcript
         transcript = await coordinator.get_debate_transcript()
-        
+
         # Analyze debate dynamics
         dynamics = await coordinator.analyze_dynamics()
-        
+
         return {
             "success": True,
             "topic": topic,
@@ -69,7 +69,7 @@ async def debate_orchestration(
                 "threshold_met": result.get("confidence", 0) >= consensus_threshold
             }
         }
-        
+
     except Exception as e:
         logger.error(f"Debate orchestration error: {e}")
         return {

@@ -60,7 +60,7 @@ async def get_system_health(
 
 
 @router.post(
-    "/agents/register", 
+    "/agents/register",
     response_model=TrustAgentRegistrationResponse,
     status_code=status.HTTP_201_CREATED
 )
@@ -71,12 +71,12 @@ async def register_agent_trust(
     """Register A2A Agent with Trust System"""
     try:
         logger.info(f"Registering agent with trust system: {request.agent_card.get('name')}")
-        
+
         response = await service.register_agent_with_trust(request)
-        
+
         logger.info(f"Agent registered successfully: {response.trust_agent_id}")
         return response
-        
+
     except ValueError as e:
         logger.error(f"Validation error in agent registration: {e}")
         raise HTTPException(
@@ -100,7 +100,7 @@ async def get_agent_trust_score(
     try:
         trust_score = await service.get_agent_trust_score(agent_id)
         return trust_score
-        
+
     except Exception as e:
         logger.error(f"Error getting trust score for {agent_id}: {e}")
         raise HTTPException(
@@ -118,7 +118,7 @@ async def record_agent_interaction(
     """Record Agent Interaction for trust score calculation"""
     try:
         success = await service.record_interaction(agent_id, interaction)
-        
+
         if success:
             return {"message": "Interaction recorded successfully"}
         else:
@@ -126,7 +126,7 @@ async def record_agent_interaction(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed to record interaction"
             )
-            
+
     except ValueError as e:
         logger.error(f"Validation error recording interaction: {e}")
         raise HTTPException(
@@ -142,7 +142,7 @@ async def record_agent_interaction(
 
 
 @router.post(
-    "/workflows", 
+    "/workflows",
     response_model=TrustWorkflowResponse,
     status_code=status.HTTP_201_CREATED
 )
@@ -153,12 +153,12 @@ async def create_trust_workflow(
     """Create Trust-Managed Workflow"""
     try:
         logger.info(f"Creating trust workflow: {request.workflow_definition.get('workflow_name')}")
-        
+
         response = await service.create_trust_workflow(request)
-        
+
         logger.info(f"Trust workflow created: {response.trust_workflow_id}")
         return response
-        
+
     except ValueError as e:
         logger.error(f"Validation error creating workflow: {e}")
         raise HTTPException(
@@ -181,12 +181,12 @@ async def create_sla_contract(
     """Create Service Level Agreement"""
     try:
         sla_id = await service.create_sla_contract(request)
-        
+
         return {
             "sla_id": sla_id,
             "message": "SLA contract created successfully"
         }
-        
+
     except ValueError as e:
         logger.error(f"Validation error creating SLA: {e}")
         raise HTTPException(
@@ -209,12 +209,12 @@ async def get_trust_leaderboard(
     """Get trust score leaderboard"""
     try:
         leaderboard = await service.get_trust_leaderboard(limit)
-        
+
         return {
             "leaderboard": leaderboard,
             "total_agents": len(service.trust_scores)
         }
-        
+
     except Exception as e:
         logger.error(f"Error getting trust leaderboard: {e}")
         raise HTTPException(
@@ -232,7 +232,7 @@ async def get_trust_metrics(
     try:
         metrics = await service.get_trust_metrics(period)
         return metrics
-        
+
     except Exception as e:
         logger.error(f"Error getting trust metrics: {e}")
         raise HTTPException(
@@ -257,12 +257,12 @@ async def list_trust_agents(
             }
             for agent_data in service.trust_agents.values()
         ]
-        
+
         return {
             "agents": agents,
             "total_count": len(agents)
         }
-        
+
     except Exception as e:
         logger.error(f"Error listing trust agents: {e}")
         raise HTTPException(

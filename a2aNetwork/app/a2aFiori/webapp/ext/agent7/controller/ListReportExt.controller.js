@@ -1158,8 +1158,6 @@ sap.ui.define([
             return encodeXML(input.toString().trim());
         },
 
-
-
         /**
          * @function _createPerformanceChart
          * @description Creates performance visualization chart.
@@ -1183,7 +1181,6 @@ sap.ui.define([
             // Implementation placeholder for operations chart creation
             // This would create charts for operation counts, success rates, etc.
         },
-
 
         /**
          * @function onCreateStreamProcessing
@@ -1535,7 +1532,6 @@ sap.ui.define([
             });
             oChart.setModel(oChartModel);
         },
-
 
         /**
          * @function _auditLogger

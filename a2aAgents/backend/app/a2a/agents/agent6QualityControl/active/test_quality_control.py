@@ -11,7 +11,7 @@ from typing import Dict, Any
 
 from app.a2a.core.security_base import SecureA2AAgent
 from qualityControlManagerAgent import (
-    QualityControlManagerAgent, 
+    QualityControlManagerAgent,
     QualityAssessmentRequest,
     QualityDecision
 )
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 def create_sample_calculation_result(scenario: str) -> Dict[str, Any]:
     """Create sample calculation agent results for different scenarios"""
-    
+
     scenarios = {
         "high_quality": {
             "success": True,
@@ -71,13 +71,13 @@ def create_sample_calculation_result(scenario: str) -> Dict[str, Any]:
             "key_findings": ["Low accuracy", "Performance problems", "Multiple failures"]
         }
     }
-    
+
     return scenarios.get(scenario, scenarios["medium_quality"])
 
 
 def create_sample_qa_result(scenario: str) -> Dict[str, Any]:
     """Create sample QA validation agent results for different scenarios"""
-    
+
     scenarios = {
         "high_quality": {
             "success": True,
@@ -131,25 +131,25 @@ def create_sample_qa_result(scenario: str) -> Dict[str, Any]:
             "issues_found": ["Multiple validation failures", "Poor coverage", "Data quality issues"]
         }
     }
-    
+
     return scenarios.get(scenario, scenarios["medium_quality"])
 
 
 async def test_quality_assessment(agent: QualityControlManagerAgent, scenario: str):
     """Test quality assessment for a specific scenario"""
-    
+
     print(f"\n{'='*60}")
     print(f"Testing Quality Assessment - {scenario.upper()} QUALITY SCENARIO")
     print(f"{'='*60}")
-    
+
     # Create sample inputs
     calc_result = create_sample_calculation_result(scenario)
     qa_result = create_sample_qa_result(scenario)
-    
+
     print(f"\n📊 Input Data:")
     print(f"  Calculation Success Rate: {calc_result['passed_tests']}/{calc_result['total_tests']} ({calc_result['passed_tests']/calc_result['total_tests']:.1%})")
     print(f"  QA Validation Success Rate: {qa_result['validation_passed']}/{qa_result['validation_count']} ({qa_result['validation_passed']/qa_result['validation_count']:.1%})")
-    
+
     # Create assessment request
     request = QualityAssessmentRequest(
         calculation_result=calc_result,
@@ -159,29 +159,29 @@ async def test_quality_assessment(agent: QualityControlManagerAgent, scenario: s
             "is_critical": scenario == "high_quality"
         }
     )
-    
+
     # Perform assessment
     try:
         result = await agent.quality_assessment_skill(request)
-        
+
         print(f"\n🎯 Quality Assessment Results:")
         print(f"  Assessment ID: {result.assessment_id}")
         print(f"  Decision: {result.decision.value}")
         print(f"  Confidence Level: {result.confidence_level:.2%}")
-        
+
         print(f"\n📈 Quality Scores:")
         for metric, score in result.quality_scores.items():
             print(f"  {metric.title()}: {score:.2f}")
-        
+
         print(f"\n🧭 Routing Instructions:")
         if result.routing_instructions:
             print(f"  Route To: {result.routing_instructions.get('routing', 'N/A')}")
             print(f"  Reason: {result.routing_instructions.get('reason', 'N/A')}")
-        
+
         print(f"\n💡 Improvement Recommendations:")
         for i, rec in enumerate(result.improvement_recommendations[:3], 1):
             print(f"  {i}. {rec}")
-        
+
         # Test Lean Six Sigma if required
         if result.decision == QualityDecision.REQUIRE_LEAN_ANALYSIS:
             print(f"\n🏭 Lean Six Sigma Analysis:")
@@ -191,7 +191,7 @@ async def test_quality_assessment(agent: QualityControlManagerAgent, scenario: s
                 print(f"  Sigma Level: {lean_analysis.get('sigma_level', 'N/A'):.1f}")
                 print(f"  Defects per Million: {lean_analysis.get('defects_per_million', 'N/A'):,.0f}")
                 print(f"  Process Capability: {lean_analysis.get('process_capability', 'N/A')}")
-        
+
         # Test AI improvement if required
         if result.decision == QualityDecision.REQUIRE_AI_IMPROVEMENT:
             print(f"\n🤖 AI Improvement Parameters:")
@@ -200,9 +200,9 @@ async def test_quality_assessment(agent: QualityControlManagerAgent, scenario: s
                 print(f"  Improvement Type: {ai_params.get('improvement_type', 'N/A')}")
                 print(f"  Use Machine Learning: {ai_params.get('optimization_approach', {}).get('use_machine_learning', False)}")
                 print(f"  Target Metrics: {len(ai_params.get('target_metrics', {}))}")
-        
+
         return result
-        
+
     except Exception as e:
         print(f"❌ Assessment failed: {e}")
         return None
@@ -210,11 +210,11 @@ async def test_quality_assessment(agent: QualityControlManagerAgent, scenario: s
 
 async def test_lean_six_sigma_analysis(agent: QualityControlManagerAgent):
     """Test detailed Lean Six Sigma analysis"""
-    
+
     print(f"\n{'='*60}")
     print(f"Testing Detailed Lean Six Sigma Analysis")
     print(f"{'='*60}")
-    
+
     # Sample quality and process data
     quality_data = {
         "current_sigma": 3.2,
@@ -222,7 +222,7 @@ async def test_lean_six_sigma_analysis(agent: QualityControlManagerAgent):
         "defect_rate": 0.066,
         "success_rate": 0.934
     }
-    
+
     process_data = {
         "total_opportunities": 1000,
         "total_defects": 66,
@@ -242,23 +242,23 @@ async def test_lean_six_sigma_analysis(agent: QualityControlManagerAgent):
             "other": 2
         }
     }
-    
+
     try:
         result = await agent.lean_six_sigma_analysis_skill(quality_data, process_data)
-        
+
         print(f"\n📊 Six Sigma Metrics:")
         sigma_metrics = result.get("sigma_metrics", {})
         print(f"  Current Sigma Level: {sigma_metrics.get('current_sigma', 'N/A'):.1f}")
         print(f"  Target Sigma Level: {sigma_metrics.get('target_sigma', 'N/A'):.1f}")
         print(f"  Current DPMO: {sigma_metrics.get('current_dpmo', 'N/A'):,.0f}")
         print(f"  Yield Rate: {sigma_metrics.get('yield_rate', 'N/A'):.2%}")
-        
+
         print(f"\n🎯 Process Capability:")
         capability = result.get("capability_analysis", {})
         print(f"  Cp: {capability.get('cp', 'N/A')}")
         print(f"  Cpk: {capability.get('cpk', 'N/A')}")
         print(f"  Capability Rating: {capability.get('capability_rating', 'N/A')}")
-        
+
         print(f"\n📈 Control Charts:")
         control_charts = result.get("control_charts", {})
         print(f"  Chart Type: {control_charts.get('chart_type', 'N/A')}")
@@ -266,27 +266,27 @@ async def test_lean_six_sigma_analysis(agent: QualityControlManagerAgent):
         print(f"  UCL: {control_charts.get('upper_control_limit', 'N/A'):.3f}")
         print(f"  LCL: {control_charts.get('lower_control_limit', 'N/A'):.3f}")
         print(f"  Out of Control Points: {len(control_charts.get('out_of_control_points', []))}")
-        
+
         print(f"\n🔍 Root Cause Analysis:")
         rca = result.get("root_cause_analysis", {})
         pareto = rca.get("pareto_analysis", {})
         vital_few = pareto.get("vital_few", [])
         print(f"  Vital Few Defects: {', '.join(vital_few[:3])}")
         print(f"  Recommendation: {pareto.get('recommendation', 'N/A')}")
-        
+
         print(f"\n📋 Improvement Plan:")
         improvement = result.get("improvement_plan", {})
         short_term = improvement.get("short_term_actions", [])
         for i, action in enumerate(short_term[:2], 1):
             print(f"  {i}. {action.get('action', 'N/A')} ({action.get('timeline', 'N/A')})")
-        
+
         print(f"\n💰 Estimated Benefits:")
         benefits = result.get("estimated_benefits", {})
         for key, value in benefits.items():
             print(f"  {key.replace('_', ' ').title()}: {value}")
-        
+
         return result
-        
+
     except Exception as e:
         print(f"❌ Lean Six Sigma analysis failed: {e}")
         return None
@@ -294,49 +294,49 @@ async def test_lean_six_sigma_analysis(agent: QualityControlManagerAgent):
 
 async def test_mcp_tools(agent: QualityControlManagerAgent):
     """Test MCP tools integration"""
-    
+
     print(f"\n{'='*60}")
     print(f"Testing MCP Tools Integration")
     print(f"{'='*60}")
-    
+
     try:
         # Test assess_quality MCP tool
         print(f"\n🔧 Testing MCP Tool: assess_quality")
-        
+
         calc_result = create_sample_calculation_result("medium_quality")
         qa_result = create_sample_qa_result("medium_quality")
-        
+
         mcp_result = await agent.assess_quality_mcp(
             calculation_result=calc_result,
             qa_validation_result=qa_result,
             quality_thresholds={"accuracy": 0.8, "reliability": 0.75}
         )
-        
+
         print(f"  Decision: {mcp_result.get('decision', 'N/A')}")
         print(f"  Quality Scores: {len(mcp_result.get('quality_scores', {}))}")
         print(f"  Confidence: {mcp_result.get('confidence', 'N/A'):.2%}")
         print(f"  Recommendations: {len(mcp_result.get('recommendations', []))}")
-        
+
         # Test quality metrics MCP resource
         print(f"\n📊 Testing MCP Resource: quality metrics")
-        
+
         metrics = await agent.get_quality_metrics_mcp()
         print(f"  Processing Stats: {len(metrics.get('processing_stats', {}))}")
         print(f"  Default Thresholds: {len(metrics.get('default_thresholds', {}))}")
         print(f"  Recent Assessments: {metrics.get('recent_assessments', 'N/A')}")
-        
+
         # Test quality improvement MCP prompt
         print(f"\n💭 Testing MCP Prompt: quality improvement")
-        
+
         current_scores = {"accuracy": 0.65, "reliability": 0.70}
         target_scores = {"accuracy": 0.85, "reliability": 0.90}
-        
+
         prompt = await agent.quality_improvement_prompt(current_scores, target_scores)
         print(f"  Prompt Length: {len(prompt)} characters")
         print(f"  Contains Scores: {'accuracy' in prompt and 'reliability' in prompt}")
-        
+
         return True
-        
+
     except Exception as e:
         print(f"❌ MCP tools test failed: {e}")
         return False
@@ -344,14 +344,14 @@ async def test_mcp_tools(agent: QualityControlManagerAgent):
 
 async def main():
     """Main test function"""
-    
+
     print("""
 ╔═══════════════════════════════════════════════════════════════════════════════╗
 ║                    Quality Control Manager Agent Test Suite                   ║
 ║                                    Agent 6                                    ║
 ╚═══════════════════════════════════════════════════════════════════════════════╝
     """)
-    
+
     # Create agent instance
     agent = QualityControlManagerAgent(
         base_url=os.getenv("A2A_SERVICE_URL"),
@@ -359,38 +359,38 @@ async def main():
         catalog_manager_url=os.getenv("A2A_SERVICE_URL"),
         enable_monitoring=False  # Disable for testing
     )
-    
+
     try:
         # Initialize agent
         print("🔧 Initializing Quality Control Manager Agent...")
         await agent.initialize()
         print("✅ Agent initialized successfully")
-        
+
         # Test different quality scenarios
         scenarios = ["high_quality", "medium_quality", "low_quality"]
-        
+
         for scenario in scenarios:
             result = await test_quality_assessment(agent, scenario)
-            
+
             if result:
                 print(f"✅ {scenario} scenario test completed")
             else:
                 print(f"❌ {scenario} scenario test failed")
-        
+
         # Test Lean Six Sigma analysis
         lean_result = await test_lean_six_sigma_analysis(agent)
         if lean_result:
             print("✅ Lean Six Sigma analysis test completed")
         else:
             print("❌ Lean Six Sigma analysis test failed")
-        
+
         # Test MCP tools
         mcp_success = await test_mcp_tools(agent)
         if mcp_success:
             print("✅ MCP tools test completed")
         else:
             print("❌ MCP tools test failed")
-        
+
         # Show final statistics
         print(f"\n{'='*60}")
         print(f"Test Summary")
@@ -398,15 +398,15 @@ async def main():
         print(f"📊 Processing Statistics:")
         for key, value in agent.processing_stats.items():
             print(f"  {key.replace('_', ' ').title()}: {value}")
-        
+
         print(f"\n🎯 Quality Thresholds:")
         for key, value in agent.default_thresholds.items():
             print(f"  {key.title()}: {value:.2f}")
-        
+
     except Exception as e:
         print(f"❌ Test suite failed: {e}")
         raise
-    
+
     finally:
         # Cleanup
         try:

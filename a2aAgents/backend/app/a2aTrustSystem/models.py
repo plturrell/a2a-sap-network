@@ -51,7 +51,7 @@ class TrustScore(BaseModel):
     trust_rating: float = Field(default=0.0, ge=0.0, le=5.0)
     last_updated: datetime = Field(default_factory=datetime.utcnow)
     skill_ratings: Dict[str, float] = Field(default_factory=dict)
-    
+
     @property
     def success_rate(self) -> float:
         """Calculate success rate"""

@@ -59,7 +59,7 @@ class AgentStatus(str, Enum):
 
 class WorkflowStatus(str, Enum):
     PENDING = "pending"
-    RUNNING = "running" 
+    RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
@@ -97,7 +97,7 @@ class AgentManagerAgentMCP(SecureA2AAgent):
     Enhanced Agent Manager with proper MCP integration
     Orchestrates the A2A ecosystem with advanced capabilities
     """
-    
+
     def __init__(self, base_url: str):
         super().__init__(
             agent_id=create_agent_id("agent_manager"),
@@ -106,60 +106,60 @@ class AgentManagerAgentMCP(SecureA2AAgent):
             version="2.0.0",
             base_url=base_url
         )
-        
+
         # Initialize security features
         self._init_security_features()
         self._init_rate_limiting()
         self._init_input_validation()
-        
+
         # Agent registry
         self.registered_agents: Dict[str, Dict[str, Any]] = {}
         self.agent_health: Dict[str, AgentHealthMetrics] = {}
         self.trust_contracts: Dict[str, Dict[str, Any]] = {}
         self.active_workflows: Dict[str, Dict[str, Any]] = {}
-        
+
         # Circuit breakers for each agent
         self.circuit_breakers: Dict[str, CircuitBreaker] = {}
-        
+
         # Task tracker
         self.task_tracker = AgentTaskTracker(
             agent_id=self.agent_id,
             agent_name=self.name
         )
-        
+
         # Registry client
         self.registry_client = get_registry_client()
-        
+
         # Help seeking support - optional
         try:
             self.help_seeker = AgentHelpSeeker()
         except Exception as e:
             logger.warning(f"Help seeker not available: {e}")
             self.help_seeker = None
-        
+
         # AI advisor
         self.ai_advisor = None
-        
+
         # Load balancing state
         self.round_robin_index = 0
-        
+
         # Private key for trust system
         self.private_key = os.getenv("AGENT_PRIVATE_KEY")
         if not self.private_key:
             raise ValueError("AGENT_PRIVATE_KEY environment variable is required")
-        
+
         # State persistence
         self.state_file = os.path.join(
             os.getenv("A2A_STATE_DIR", "/tmp/a2a"),
             "agent_manager_state.json"
         )
-        
+
         logger.info(f"Initialized Agent Manager MCP at {base_url}")
-    
+
     # ==========================================
     # MCP Tools for Agent Management
     # ==========================================
-    
+
     @mcp_tool(
         name="register_agent",
         description="Register a new agent with the manager",
@@ -184,7 +184,7 @@ class AgentManagerAgentMCP(SecureA2AAgent):
             # Check if already registered
             if agent_id in self.registered_agents:
                 return {"success": False, "error": f"Agent {agent_id} already registered"}
-            
+
             # Verify agent is reachable
             try:
                 # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
@@ -194,14 +194,14 @@ class AgentManagerAgentMCP(SecureA2AAgent):
                         return {"success": False, "error": f"Agent health check failed with status {response.status_code}"}
             except Exception as e:
                 return {"success": False, "error": f"Agent not reachable: {str(e)}"}
-            
+
             # Create circuit breaker for agent
             self.circuit_breakers[agent_id] = CircuitBreaker(
                 failure_threshold=3,
                 recovery_timeout=30,
                 expected_exception=httpx.HTTPError
             )
-            
+
             # Initialize health metrics
             self.agent_health[agent_id] = AgentHealthMetrics(
                 agent_id=agent_id,
@@ -209,7 +209,7 @@ class AgentManagerAgentMCP(SecureA2AAgent):
                 response_time_ms=0,
                 healthy=True
             )
-            
+
             # Store agent info
             self.registered_agents[agent_id] = {
                 "agent_name": agent_name,
@@ -220,7 +220,7 @@ class AgentManagerAgentMCP(SecureA2AAgent):
                 "registered_at": datetime.utcnow(),
                 "status": AgentStatus.ACTIVE
             }
-            
+
             # Register with A2A registry if available
             if self.registry_client:
                 try:
@@ -237,19 +237,19 @@ class AgentManagerAgentMCP(SecureA2AAgent):
                     })
                 except Exception as e:
                     logger.warning(f"Failed to register with A2A registry: {e}")
-            
+
             logger.info(f"✅ Agent {agent_id} registered successfully via MCP")
-            
+
             return {
                 "success": True,
                 "agent_id": agent_id,
                 "message": f"Agent {agent_name} registered successfully"
             }
-            
+
         except Exception as e:
             logger.error(f"Agent registration failed: {e}")
             return {"success": False, "error": str(e)}
-    
+
     @mcp_tool(
         name="discover_agents",
         description="Discover agents by capability with load balancing",
@@ -264,49 +264,49 @@ class AgentManagerAgentMCP(SecureA2AAgent):
             "required": ["required_capabilities"]
         }
     )
-    async def discover_agents_mcp(self, required_capabilities: List[str], 
+    async def discover_agents_mcp(self, required_capabilities: List[str],
                                 required_skills: List[str] = None,
                                 strategy: str = "least_loaded",
                                 max_results: int = 5) -> Dict[str, Any]:
         """Discover agents with load balancing via MCP"""
         try:
             matching_agents = []
-            
+
             # Find agents with required capabilities
             for agent_id, agent_info in self.registered_agents.items():
                 # Check if agent is healthy
                 health = self.agent_health.get(agent_id)
                 if not health or not health.healthy:
                     continue
-                
+
                 # Check capabilities
                 agent_caps = set(agent_info["capabilities"].keys())
                 if not all(cap in agent_caps for cap in required_capabilities):
                     continue
-                
+
                 # Check skills if specified
                 if required_skills:
                     agent_skills = {s["id"] for s in agent_info.get("skills", [])}
                     if not all(skill in agent_skills for skill in required_skills):
                         continue
-                
+
                 matching_agents.append({
                     "agent_id": agent_id,
                     "agent_info": agent_info,
                     "health": health
                 })
-            
+
             if not matching_agents:
                 return {
                     "success": True,
                     "agents": [],
                     "message": "No matching agents found"
                 }
-            
+
             # Apply load balancing strategy
             strategy_enum = LoadBalancingStrategy(strategy)
             selected = self._apply_load_balancing(matching_agents, strategy_enum, max_results)
-            
+
             return {
                 "success": True,
                 "agents": [
@@ -323,11 +323,11 @@ class AgentManagerAgentMCP(SecureA2AAgent):
                 "total_matches": len(matching_agents),
                 "strategy_used": strategy
             }
-            
+
         except Exception as e:
             logger.error(f"Agent discovery failed: {e}")
             return {"success": False, "error": str(e)}
-    
+
     @mcp_tool(
         name="create_workflow",
         description="Create and orchestrate multi-agent workflow",
@@ -352,10 +352,10 @@ class AgentManagerAgentMCP(SecureA2AAgent):
             missing_agents = [a for a in agents if a not in self.registered_agents]
             if missing_agents:
                 return {"success": False, "error": f"Unknown agents: {missing_agents}"}
-            
+
             # Create workflow
             workflow_id = f"wf_{uuid4().hex[:8]}"
-            
+
             self.active_workflows[workflow_id] = {
                 "workflow_name": workflow_name,
                 "agents": agents,
@@ -365,22 +365,22 @@ class AgentManagerAgentMCP(SecureA2AAgent):
                 "created_at": datetime.utcnow(),
                 "timeout_seconds": timeout_seconds
             }
-            
+
             # Start workflow execution
             asyncio.create_task(self._execute_workflow(workflow_id))
-            
+
             logger.info(f"✅ Workflow {workflow_id} created via MCP")
-            
+
             return {
                 "success": True,
                 "workflow_id": workflow_id,
                 "message": f"Workflow '{workflow_name}' created successfully"
             }
-            
+
         except Exception as e:
             logger.error(f"Workflow creation failed: {e}")
             return {"success": False, "error": str(e)}
-    
+
     @mcp_tool(
         name="monitor_agent_health",
         description="Perform health check on specific agent",
@@ -398,31 +398,31 @@ class AgentManagerAgentMCP(SecureA2AAgent):
         try:
             if agent_id not in self.registered_agents:
                 return {"success": False, "error": f"Agent {agent_id} not found"}
-            
+
             agent_info = self.registered_agents[agent_id]
             base_url = agent_info["base_url"]
-            
+
             # Perform health check
             start_time = datetime.utcnow()
             health_data = {}
-            
+
             try:
                 # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
                 async with httpx.AsyncClient() as client:
                     response = await client.get(f"{base_url}/health")
                     response_time_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
-                    
+
                     if response.status_code == 200:
                         health_data = response.json()
                         healthy = True
                     else:
                         healthy = False
-                        
+
             except Exception as e:
                 response_time_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
                 healthy = False
                 health_data = {"error": str(e)}
-            
+
             # Update health metrics
             metrics = self.agent_health.get(agent_id)
             if metrics:
@@ -433,13 +433,13 @@ class AgentManagerAgentMCP(SecureA2AAgent):
                     metrics.success_count += 1
                 else:
                     metrics.error_count += 1
-                
+
                 # Update average response time
                 total_checks = metrics.success_count + metrics.error_count
                 metrics.average_response_time = (
                     (metrics.average_response_time * (total_checks - 1) + response_time_ms) / total_checks
                 )
-            
+
             result = {
                 "success": True,
                 "agent_id": agent_id,
@@ -447,7 +447,7 @@ class AgentManagerAgentMCP(SecureA2AAgent):
                 "response_time_ms": response_time_ms,
                 "last_check": datetime.utcnow().isoformat()
             }
-            
+
             if detailed:
                 result["health_data"] = health_data
                 result["metrics"] = {
@@ -456,17 +456,17 @@ class AgentManagerAgentMCP(SecureA2AAgent):
                     "average_response_time": metrics.average_response_time,
                     "load_score": metrics.load_score
                 }
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Health monitoring failed: {e}")
             return {"success": False, "error": str(e)}
-    
+
     # ==========================================
     # MCP Resources for State Access
     # ==========================================
-    
+
     @mcp_resource(
         uri="agent://registry",
         name="Agent Registry",
@@ -490,7 +490,7 @@ class AgentManagerAgentMCP(SecureA2AAgent):
             },
             "last_updated": datetime.utcnow().isoformat()
         }
-    
+
     @mcp_resource(
         uri="agent://workflows",
         name="Active Workflows",
@@ -510,13 +510,13 @@ class AgentManagerAgentMCP(SecureA2AAgent):
                 for wf_id, wf_info in self.active_workflows.items()
             },
             "by_status": {
-                status.value: len([w for w in self.active_workflows.values() 
+                status.value: len([w for w in self.active_workflows.values()
                                  if w.get("status") == status])
                 for status in WorkflowStatus
             },
             "last_updated": datetime.utcnow().isoformat()
         }
-    
+
     @mcp_resource(
         uri="agent://health-metrics",
         name="Agent Health Metrics",
@@ -546,13 +546,13 @@ class AgentManagerAgentMCP(SecureA2AAgent):
             },
             "last_updated": datetime.utcnow().isoformat()
         }
-    
+
     # ==========================================
     # Internal Methods
     # ==========================================
-    
-    def _apply_load_balancing(self, agents: List[Dict[str, Any]], 
-                            strategy: LoadBalancingStrategy, 
+
+    def _apply_load_balancing(self, agents: List[Dict[str, Any]],
+                            strategy: LoadBalancingStrategy,
                             max_results: int) -> List[Dict[str, Any]]:
         """Apply load balancing strategy to select agents"""
         if strategy == LoadBalancingStrategy.ROUND_ROBIN:
@@ -563,63 +563,63 @@ class AgentManagerAgentMCP(SecureA2AAgent):
                 selected.append(agents[idx])
             self.round_robin_index = (self.round_robin_index + len(selected)) % len(agents)
             return selected
-            
+
         elif strategy == LoadBalancingStrategy.LEAST_LOADED:
             # Sort by load score
             sorted_agents = sorted(agents, key=lambda a: a["health"].load_score)
             return sorted_agents[:max_results]
-            
+
         elif strategy == LoadBalancingStrategy.PERFORMANCE_BASED:
             # Sort by average response time
             sorted_agents = sorted(agents, key=lambda a: a["health"].average_response_time)
             return sorted_agents[:max_results]
-            
+
         else:
             # Default: return first N agents
             return agents[:max_results]
-    
+
     async def _execute_workflow(self, workflow_id: str):
         """Execute a workflow (simplified)"""
         workflow = self.active_workflows.get(workflow_id)
         if not workflow:
             return
-        
+
         try:
             workflow["status"] = WorkflowStatus.RUNNING
             workflow["started_at"] = datetime.utcnow()
-            
+
             # Simple sequential execution
             for i, task in enumerate(workflow["tasks"]):
                 agent_id = workflow["agents"][i % len(workflow["agents"])]
-                
+
                 # Execute task on agent
                 # In real implementation, this would call the agent's API
                 await asyncio.sleep(1)  # Simulate task execution
-            
+
             workflow["status"] = WorkflowStatus.COMPLETED
             workflow["completed_at"] = datetime.utcnow()
-            
+
         except Exception as e:
             logger.error(f"Workflow {workflow_id} failed: {e}")
             workflow["status"] = WorkflowStatus.FAILED
             workflow["error"] = str(e)
-    
+
     # ==========================================
     # A2A Handlers (keeping compatibility)
     # ==========================================
-    
+
     @a2a_handler("agent_registration")
     async def handle_agent_registration(self, message: A2AMessage) -> Dict[str, Any]:
         """Handle agent registration via A2A protocol"""
         params = message.parts[0].data if message.parts else {}
         return await self.register_agent_mcp(**params)
-    
+
     @a2a_handler("discover_agents")
     async def handle_discover_agents(self, message: A2AMessage) -> Dict[str, Any]:
         """Handle agent discovery via A2A protocol"""
         params = message.parts[0].data if message.parts else {}
         return await self.discover_agents_mcp(**params)
-    
+
     async def initialize(self) -> Dict[str, Any]:
         """Initialize the agent manager"""
         try:
@@ -632,7 +632,7 @@ class AgentManagerAgentMCP(SecureA2AAgent):
             except Exception as e:
                 logger.warning(f"Trust initialization failed: {e}")
                 self.trust_identity = None
-            
+
             # Create AI advisor
             try:
                 self.ai_advisor = create_agent_advisor(self.agent_id)
@@ -641,15 +641,15 @@ class AgentManagerAgentMCP(SecureA2AAgent):
             except Exception as e:
                 logger.warning(f"AI advisor creation failed: {e}")
                 self.ai_advisor = None
-            
+
             # Load persisted state
             await self._load_state()
-            
+
             # Start health monitoring
             asyncio.create_task(self._health_monitor_loop())
-            
+
             logger.info("Agent Manager initialized successfully")
-            
+
             return {
                 "agent_id": self.agent_id,
                 "name": self.name,
@@ -657,24 +657,24 @@ class AgentManagerAgentMCP(SecureA2AAgent):
                 "mcp_tools": len(self.list_mcp_tools()),
                 "mcp_resources": len(self.list_mcp_resources())
             }
-            
+
         except Exception as e:
             logger.error(f"Initialization failed: {e}")
             raise
-    
+
     async def _health_monitor_loop(self):
         """Background health monitoring"""
         while True:
             try:
                 for agent_id in list(self.registered_agents.keys()):
                     await self.monitor_agent_health_mcp(agent_id)
-                
+
                 await asyncio.sleep(30)  # Check every 30 seconds
-                
+
             except Exception as e:
                 logger.error(f"Health monitoring error: {e}")
                 await asyncio.sleep(30)
-    
+
     async def _load_state(self):
         """Load persisted state"""
         try:
@@ -687,7 +687,7 @@ class AgentManagerAgentMCP(SecureA2AAgent):
                     logger.info(f"Loaded state with {len(self.registered_agents)} agents")
         except Exception as e:
             logger.error(f"Failed to load state: {e}")
-    
+
     async def _save_state(self):
         """Save state to disk"""
         try:
@@ -700,14 +700,14 @@ class AgentManagerAgentMCP(SecureA2AAgent):
                 json.dump(state, f, indent=2)
         except Exception as e:
             logger.error(f"Failed to save state: {e}")
-    
+
     async def shutdown(self):
         """Shutdown the agent manager"""
         try:
             # Save state before shutdown
             await self._save_state()
-            
+
             logger.info("Agent Manager shutdown complete")
-            
+
         except Exception as e:
             logger.error(f"Error during shutdown: {e}")

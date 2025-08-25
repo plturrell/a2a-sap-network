@@ -155,7 +155,7 @@ class FailoverManager:
         self._running = False
         self._monitor_task = None
         self._recovery_task = None
-        
+
         # Instance URL registry
         self.instance_urls: Dict[str, str] = {}
 
@@ -636,12 +636,12 @@ class FailoverManager:
 
             # Perform actual health check
             is_healthy = await self.network_client.health_check(instance_url, timeout=5)
-            
+
             if is_healthy:
                 logger.debug(f"Health check passed for {instance_id}")
             else:
                 logger.warning(f"Health check failed for {instance_id}")
-                
+
             return is_healthy
 
         except Exception as e:
@@ -804,7 +804,7 @@ class FailoverManager:
         """Get URL for a specific instance"""
         if instance_id in self.instance_urls:
             return self.instance_urls[instance_id]
-        
+
         # Try to find instance in failover groups
         for group in self.failover_groups.values():
             for instance in group.instances:
@@ -812,7 +812,7 @@ class FailoverManager:
                     url = instance.base_url
                     self.instance_urls[instance_id] = url
                     return url
-        
+
         # Default to localhost-based URL for development
         port = 8000 + int(instance_id.split('_')[-1]) if '_' in instance_id else 8000
         url = f"http://localhost:{port}"
@@ -829,7 +829,7 @@ class FailoverManager:
         if not self.network_client:
             logger.warning("Network client not available for routing table updates")
             return False
-            
+
         try:
             # Prepare routing update
             routing_update = {
@@ -839,13 +839,13 @@ class FailoverManager:
                 "timestamp": datetime.utcnow().isoformat(),
                 "operation": "failover"
             }
-            
+
             # Update routing on all healthy instances in the group
             success_count = 0
             for instance in group.instances:
                 if instance.instance_id in [source_id, target_id]:
                     continue  # Skip the failover instances
-                    
+
                 try:
                     instance_url = await self._get_instance_url(instance.instance_id)
                     if instance_url:
@@ -857,10 +857,10 @@ class FailoverManager:
                 except Exception as e:
                     logger.warning(f"Failed to update routing on {instance.instance_id}: {e}")
                     continue
-            
+
             logger.info(f"Updated routing tables on {success_count} instances for failover {source_id} -> {target_id}")
             return success_count > 0
-            
+
         except Exception as e:
             logger.error(f"Failed to update routing tables: {e}")
             return False
@@ -870,28 +870,28 @@ class FailoverManager:
         if not self.network_client:
             logger.warning("Network client not available for recovery step execution")
             return False
-            
+
         try:
             instance_url = await self._get_instance_url(instance_id)
             if not instance_url:
                 logger.error(f"URL not found for instance {instance_id}")
                 return False
-            
+
             # Map recovery step to parameters
             parameters = self._get_recovery_step_parameters(step)
-            
+
             # Execute recovery step
             success = await self.network_client.execute_recovery_step(
                 instance_url, step, parameters
             )
-            
+
             if success:
                 logger.debug(f"Recovery step '{step}' executed successfully on {instance_id}")
             else:
                 logger.warning(f"Recovery step '{step}' failed on {instance_id}")
-                
+
             return success
-            
+
         except Exception as e:
             logger.error(f"Error executing recovery step '{step}' on {instance_id}: {e}")
             return False
@@ -943,7 +943,7 @@ class FailoverManager:
                 "gradual_rejoin": True
             }
         }
-        
+
         return step_parameters.get(step, {})
 
 

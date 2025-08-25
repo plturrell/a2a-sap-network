@@ -33,7 +33,7 @@ try:
     aiq_path = Path(__file__).parent.parent.parent.parent.parent.parent.parent / "coverage" / "src"
     if str(aiq_path) not in sys.path:
         sys.path.insert(0, str(aiq_path))
-    
+
     from aiq.llm.sap_ai_core import LLMService, ExecutionMode, Message
     SAP_AI_CORE_AVAILABLE = True
     logger.info("SAP AI Core SDK integration enabled")
@@ -63,7 +63,7 @@ class GrokClient:
         self.temperature = temperature or float(os.getenv("GROK_TEMPERATURE", "0.7"))
         # Accept any additional parameters without error
         self.client = httpx.AsyncClient(timeout=60.0)
-        
+
         # Initialize SAP AI Core SDK if available
         self.sap_llm_service = None
         if SAP_AI_CORE_AVAILABLE:
@@ -71,7 +71,7 @@ class GrokClient:
                 self.sap_llm_service = LLMService()
                 mode = self.sap_llm_service.get_current_mode()
                 logger.info(f"SAP AI Core LLM Service initialized in {mode.value} mode")
-                
+
                 # Log available connections
                 connections = self.sap_llm_service.validate_connection()
                 logger.info(f"SAP AI Core connections: {connections}")
@@ -84,17 +84,17 @@ class GrokClient:
         self.quality_monitor = None
         self.real_time_training = True
         self.quality_check_enabled = True
-        
+
         if LNN_AVAILABLE:
             try:
                 self.lnn_client = LNNFallbackClient()
                 logger.info("LNN fallback client initialized")
-                
+
                 # Initialize quality monitor for continuous benchmarking
                 if self.quality_check_enabled:
                     self.quality_monitor = LNNQualityMonitor(self, self.lnn_client)
                     logger.info("LNN quality monitor initialized")
-                    
+
             except Exception as e:
                 logger.warning(f"Failed to initialize LNN fallback: {e}")
 
@@ -110,7 +110,7 @@ class GrokClient:
             logger.info(f"Initialized GrokClient with model: {self.model}")
             if self.lnn_client:
                 logger.info("LNN fallback available as secondary option")
-                
+
         # Start quality monitoring for continuous benchmarking
         if self.quality_monitor and not self.use_local_analysis:
             import asyncio
@@ -149,31 +149,31 @@ class GrokClient:
                     ),
                     Message(role="user", content=prompt)
                 ]
-                
+
                 if context:
                     messages[0] = Message(
                         role="system",
                         content=messages[0].content + f" Additional context: {json.dumps(context)}"
                     )
-                
+
                 response = await self.sap_llm_service.generate(
                     messages=messages,
                     temperature=0.1,
                     max_tokens=1000
                 )
-                
+
                 content = response.content
-                
+
                 # Try to extract JSON from the response
                 if "{" in content and "}" in content:
                     start = content.find("{")
                     end = content.rfind("}") + 1
                     json_str = content[start:end]
                     json.loads(json_str)  # Validate JSON
-                    
+
                     # Store successful AI result for real-time LNN training
                     self._last_successful_ai_result = json_str
-                    
+
                     # Real-time training: immediately add successful response to LNN training
                     if self.real_time_training and self.lnn_client:
                         try:
@@ -182,17 +182,17 @@ class GrokClient:
                             logger.debug("Added real-time training data to LNN")
                         except Exception as e:
                             logger.debug(f"Real-time training failed: {e}")
-                    
+
                     return json_str
                 else:
                     # Fallback to LNN analysis if no JSON
                     logger.warning("SAP AI Core response was not valid JSON, using fallback")
                     return await self._fallback_analysis(prompt, context)
-                    
+
             except Exception as e:
                 logger.warning(f"SAP AI Core analysis failed: {e}, trying original API")
                 # Fall through to original implementation
-        
+
         # Original implementation
         try:
             headers = {
@@ -234,10 +234,10 @@ class GrokClient:
                     end = content.rfind("}") + 1
                     json_str = content[start:end]
                     json.loads(json_str)  # Validate JSON
-                    
+
                     # Store successful AI result for real-time LNN training
                     self._last_successful_ai_result = json_str
-                    
+
                     # Real-time training: immediately add successful response to LNN training
                     if self.real_time_training and self.lnn_client:
                         try:
@@ -246,7 +246,7 @@ class GrokClient:
                             logger.debug("Added real-time training data to LNN")
                         except Exception as e:
                             logger.debug(f"Real-time training failed: {e}")
-                    
+
                     return json_str
                 else:
                     # Fallback to LNN analysis if no JSON
@@ -268,7 +268,7 @@ class GrokClient:
             if self.lnn_client:
                 logger.info("Using LNN fallback analysis")
                 result = await self.lnn_client.analyze(prompt, context)
-                
+
                 # If we have successful AI analysis data and LNN client, add it as training data
                 if hasattr(self, '_last_successful_ai_result') and self._last_successful_ai_result:
                     try:
@@ -277,12 +277,12 @@ class GrokClient:
                         logger.debug("Added training data to LNN from successful AI analysis")
                     except Exception as e:
                         logger.debug(f"Could not add training data to LNN: {e}")
-                
+
                 return result
             else:
                 logger.info("LNN not available, using rule-based analysis")
                 return await self._local_analysis(prompt, context)
-                
+
         except Exception as e:
             logger.error(f"LNN fallback failed: {e}")
             return await self._local_analysis(prompt, context)
@@ -402,18 +402,18 @@ class GrokClient:
         """
         evaluation_prompt = f"""
         Evaluate this mathematical calculation:
-        
+
         Question: {question}
         Provided Answer: {answer}
         Methodology: {methodology}
         Steps: {json.dumps(steps, indent=2)}
         Expected Answer: {expected_answer if expected_answer else "Not provided"}
-        
+
         Provide evaluation scores (0-100) for:
         1. Accuracy of the answer
         2. Quality of methodology explanation
         3. Clarity of step-by-step explanation
-        
+
         Return JSON with: accuracy_score, methodology_score, explanation_score, overall_score, feedback, passed (true/false)
         """
 
@@ -490,7 +490,7 @@ class GrokClient:
         """Get information about the LNN fallback system"""
         if not self.lnn_client:
             return {"lnn_available": False, "reason": "LNN client not initialized"}
-        
+
         try:
             return {
                 "lnn_available": True,
@@ -498,12 +498,12 @@ class GrokClient:
             }
         except Exception as e:
             return {"lnn_available": False, "error": str(e)}
-    
+
     async def train_lnn(self, force_retrain: bool = False) -> Dict[str, Any]:
         """Manually trigger LNN training"""
         if not self.lnn_client:
             return {"success": False, "error": "LNN client not available"}
-        
+
         try:
             if force_retrain or not self.lnn_client.is_trained:
                 await self.lnn_client.train_model()
@@ -512,12 +512,12 @@ class GrokClient:
                 return {"success": True, "message": "LNN already trained, use force_retrain=True to retrain"}
         except Exception as e:
             return {"success": False, "error": str(e)}
-    
+
     def add_lnn_training_data(self, prompt: str, expected_result: Dict[str, Any]) -> bool:
         """Add training data to LNN client"""
         if not self.lnn_client:
             return False
-        
+
         try:
             self.lnn_client.add_training_data(prompt, expected_result)
             return True
@@ -536,7 +536,7 @@ class GrokClient:
             "checks": {},
             "recommendations": []
         }
-        
+
         try:
             # 1. Check LNN availability
             if not self.lnn_client:
@@ -546,12 +546,12 @@ class GrokClient:
                 }
                 readiness_check["recommendations"].append("Initialize LNN fallback system")
                 return readiness_check
-            
+
             readiness_check["checks"]["lnn_available"] = {
                 "status": "passed",
                 "message": "LNN client initialized"
             }
-            
+
             # 2. Check LNN training status
             if not self.lnn_client.is_trained:
                 readiness_check["checks"]["lnn_trained"] = {
@@ -564,7 +564,7 @@ class GrokClient:
                     "status": "passed",
                     "message": f"LNN trained with {len(self.lnn_client.training_data)} samples"
                 }
-            
+
             # 3. Check quality monitoring status
             if not self.quality_monitor:
                 readiness_check["checks"]["quality_monitoring"] = {
@@ -580,10 +580,10 @@ class GrokClient:
                     "message": f"Quality status: {quality_status.get('status', 'unknown')}",
                     "details": quality_status
                 }
-                
+
                 if not quality_status.get("ready_for_failover"):
                     readiness_check["recommendations"].append("LNN quality below acceptable threshold")
-            
+
             # 4. Check real-time training capability
             if not self.real_time_training:
                 readiness_check["checks"]["real_time_training"] = {
@@ -596,36 +596,36 @@ class GrokClient:
                     "status": "passed",
                     "message": "Real-time training enabled"
                 }
-            
+
             # 5. Check fallback chain
             readiness_check["checks"]["fallback_chain"] = {
                 "status": "passed",
                 "message": "Complete fallback chain: Grok API → LNN → Rule-based"
             }
-            
+
             # Overall readiness assessment
             passed_checks = sum(1 for check in readiness_check["checks"].values() if check["status"] == "passed")
             total_checks = len(readiness_check["checks"])
             warning_checks = sum(1 for check in readiness_check["checks"].values() if check["status"] == "warning")
             failed_checks = sum(1 for check in readiness_check["checks"].values() if check["status"] == "failed")
-            
+
             # Ready if all checks pass or only warnings
             readiness_check["ready_for_failover"] = failed_checks == 0
             readiness_check["confidence_score"] = passed_checks / total_checks if total_checks > 0 else 0.0
             readiness_check["summary"] = {
                 "passed": passed_checks,
-                "warnings": warning_checks, 
+                "warnings": warning_checks,
                 "failed": failed_checks,
                 "total": total_checks
             }
-            
+
             if readiness_check["ready_for_failover"]:
                 logger.info(f"✅ Failover readiness check passed - confidence: {readiness_check['confidence_score']:.2f}")
             else:
                 logger.warning(f"⚠️ Failover readiness check failed - {failed_checks} critical issues")
-            
+
             return readiness_check
-            
+
         except Exception as e:
             logger.error(f"Failover readiness check failed: {e}")
             readiness_check["checks"]["system_error"] = {
@@ -634,43 +634,43 @@ class GrokClient:
             }
             readiness_check["recommendations"].append("Fix system errors before attempting failover")
             return readiness_check
-    
+
     async def force_failover_test(self) -> Dict[str, Any]:
         """
         Force a controlled failover test to validate LNN performance
         Temporarily disables Grok API to test failover chain
         """
         logger.info("🧪 Starting controlled failover test")
-        
+
         # Store original state
         original_api_key = self.api_key
         original_use_local = self.use_local_analysis
-        
+
         test_results = {
             "test_started": datetime.utcnow().isoformat(),
             "success": False,
             "results": {},
             "recommendations": []
         }
-        
+
         try:
             # Temporarily disable API
             self.api_key = None
             self.use_local_analysis = True
             logger.info("🔒 Temporarily disabled Grok API for failover test")
-            
+
             # Run quality check during failover
             if self.quality_monitor:
                 failover_quality = await self.quality_monitor.run_immediate_quality_check()
                 test_results["results"]["quality_check"] = failover_quality
-            
+
             # Test a few sample prompts
             test_prompts = [
                 "Calculate 15 + 25 = 40. Show your work step by step.",
                 "Find the derivative of f(x) = x^2 + 3x + 2",
                 "This is wrong: 2 + 2 = 5. Please evaluate this."
             ]
-            
+
             lnn_responses = []
             for i, prompt in enumerate(test_prompts):
                 try:
@@ -687,14 +687,14 @@ class GrokClient:
                         "prompt_id": i,
                         "error": str(e)
                     })
-            
+
             test_results["results"]["lnn_responses"] = lnn_responses
-            
+
             # Analyze results
             successful_responses = [r for r in lnn_responses if "error" not in r]
             avg_score = sum(r.get("overall_score", 0) for r in successful_responses) / len(successful_responses) if successful_responses else 0
             avg_confidence = sum(r.get("confidence", 0) for r in successful_responses) / len(successful_responses) if successful_responses else 0
-            
+
             test_results["results"]["summary"] = {
                 "successful_responses": len(successful_responses),
                 "total_responses": len(lnn_responses),
@@ -702,14 +702,14 @@ class GrokClient:
                 "average_confidence": avg_confidence,
                 "success_rate": len(successful_responses) / len(lnn_responses) if lnn_responses else 0
             }
-            
+
             # Determine test success
             test_results["success"] = (
                 len(successful_responses) == len(lnn_responses) and
                 avg_score >= 60 and  # Minimum acceptable score
                 avg_confidence >= 0.4  # Minimum confidence
             )
-            
+
             if test_results["success"]:
                 test_results["recommendations"].append("✅ Failover system ready - quality acceptable")
                 logger.info("✅ Failover test passed - system ready for production failover")
@@ -720,22 +720,22 @@ class GrokClient:
                 if avg_confidence < 0.4:
                     test_results["recommendations"].append("Improve LNN confidence through additional training")
                 logger.warning("⚠️ Failover test revealed quality issues")
-            
+
         except Exception as e:
             logger.error(f"Failover test failed: {e}")
             test_results["error"] = str(e)
             test_results["recommendations"].append("Fix failover system errors")
-        
+
         finally:
             # Restore original state
             self.api_key = original_api_key
             self.use_local_analysis = original_use_local
             logger.info("🔓 Restored Grok API access after failover test")
-            
+
             test_results["test_completed"] = datetime.utcnow().isoformat()
-        
+
         return test_results
-    
+
     def get_system_status(self) -> Dict[str, Any]:
         """Get comprehensive system status including LNN and quality monitoring"""
         # Determine active failover chain based on available services
@@ -750,12 +750,12 @@ class GrokClient:
                 failover_chain.extend(["Grok4", "LNN"])
         elif self.api_key:
             failover_chain.append("Grok API")
-        
+
         if self.lnn_client:
             if "LNN" not in failover_chain:
                 failover_chain.append("LNN")
         failover_chain.append("Rule-based")
-        
+
         status = {
             "timestamp": datetime.utcnow().isoformat(),
             "sap_ai_core": {
@@ -776,21 +776,21 @@ class GrokClient:
             "real_time_training": self.real_time_training,
             "failover_chain": failover_chain
         }
-        
+
         # Add quality monitoring status
         if self.quality_monitor:
             try:
                 status["quality_monitoring"]["current_status"] = self.quality_monitor.get_current_quality_status()
             except Exception as e:
                 status["quality_monitoring"]["error"] = str(e)
-        
+
         return status
 
     async def cleanup(self):
         """Cleanup resources"""
         if hasattr(self, "client"):
             await self.client.aclose()
-        
+
         # Stop quality monitoring
         if self.quality_monitor:
             try:
@@ -798,7 +798,7 @@ class GrokClient:
                 logger.info("Stopped LNN quality monitoring")
             except Exception as e:
                 logger.error(f"Failed to stop quality monitoring: {e}")
-        
+
         # Save LNN model state if available
         if self.lnn_client and self.lnn_client.is_trained:
             try:

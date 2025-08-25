@@ -667,7 +667,7 @@ class PriorityRouter:
         if not self.network_client:
             logger.warning("Network client not available for capability check")
             return True  # Assume capabilities are met if we can't check
-        
+
         try:
             return await self.network_client.check_capabilities(instance.base_url, required_capabilities)
         except Exception as e:
@@ -679,21 +679,21 @@ class PriorityRouter:
         if not self.network_client:
             logger.error("Network client not available for message delivery")
             return False
-        
+
         # Extract instance info from queue key
         agent_id, instance_id = queue_key.split(':', 1)
-        
+
         # Find the instance
         instance = None
         for inst in await self._get_available_instances(request):
             if inst.instance_id == instance_id:
                 instance = inst
                 break
-        
+
         if not instance:
             logger.error(f"Instance {instance_id} not found for message delivery")
             return False
-        
+
         try:
             # Prepare message payload
             message_payload = {
@@ -711,33 +711,33 @@ class PriorityRouter:
                     "routing_timestamp": datetime.utcnow().isoformat()
                 }
             }
-            
+
             # Send message with appropriate priority header
             priority_header = "high" if request.priority in [MessagePriority.HIGH, MessagePriority.CRITICAL] else "normal"
-            
+
             response = await self.network_client.send_message(
                 instance.base_url,
                 message_payload,
                 priority=priority_header
             )
-            
+
             # Check if delivery was successful
             success = response.status_code in [200, 202]  # 200 = processed, 202 = accepted for processing
-            
+
             if success:
                 logger.debug(f"Message {request.message_id} delivered to {instance_id}")
-                
+
                 # Update instance metrics
                 delivery_time = response.response_time
                 instance.response_times.append(delivery_time)
                 if len(instance.response_times) > 100:
                     instance.response_times = instance.response_times[-100:]
-                
+
             else:
                 logger.warning(f"Message delivery failed: {request.message_id} -> {instance_id}, status: {response.status_code}")
-            
+
             return success
-            
+
         except Exception as e:
             logger.error(f"Error delivering message {request.message_id} to {instance_id}: {e}")
             return False

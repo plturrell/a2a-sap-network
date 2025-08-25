@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 
 class ThoughtStep:
     """Represents a single step in the chain of thought"""
-    
+
     def __init__(self, step_number: int, thought: str, reasoning: str, confidence: float):
         self.step_number = step_number
         self.thought = thought
@@ -46,16 +46,16 @@ class ThoughtStep:
         self.timestamp = datetime.utcnow()
         self.dependencies: List[int] = []  # Steps this depends on
         self.evidence: List[str] = []
-        
+
     def add_evidence(self, evidence: str):
         """Add supporting evidence to this step"""
         self.evidence.append(evidence)
-        
+
     def add_dependency(self, step_number: int):
         """Add a dependency on another step"""
         if step_number not in self.dependencies:
             self.dependencies.append(step_number)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary"""
         return {
@@ -79,13 +79,13 @@ class ReasoningStrategy(Enum):
 
 class ChainOfThoughtReasoner:
     """Implements chain-of-thought reasoning with direct step processing"""
-    
+
     def __init__(self, grok_client=None):
         self.grok_client = grok_client
         self.thought_chains: Dict[str, List[ThoughtStep]] = {}
         self.max_steps = 10
         self.min_confidence = 0.6
-        
+
     @mcp_tool(
         name="chain_of_thought_reasoning",
         description="Step-by-step reasoning with explicit thought chains"
@@ -99,14 +99,14 @@ class ChainOfThoughtReasoner:
         """Execute chain-of-thought reasoning"""
         start_time = datetime.utcnow()
         chain_id = f"chain_{start_time.timestamp()}"
-        
+
         # Initialize thought chain
         thought_chain = []
-        
+
         # Step 1: Problem understanding
         understanding_step = await self._understand_problem(question, context)
         thought_chain.append(understanding_step)
-        
+
         # Step 2: Generate reasoning chain based on strategy
         if strategy == ReasoningStrategy.LINEAR:
             chain_steps = await self._linear_reasoning(question, understanding_step, context)
@@ -116,20 +116,20 @@ class ChainOfThoughtReasoner:
             chain_steps = await self._recursive_reasoning(question, understanding_step, context)
         else:  # ITERATIVE
             chain_steps = await self._iterative_reasoning(question, understanding_step, context)
-        
+
         thought_chain.extend(chain_steps)
-        
+
         # Step 3: Synthesize conclusion
         conclusion = await self._synthesize_conclusion(thought_chain, question)
         thought_chain.append(conclusion)
-        
+
         # Store chain
         self.thought_chains[chain_id] = thought_chain
-        
+
         # Calculate metrics
         execution_time = (datetime.utcnow() - start_time).total_seconds()
         avg_confidence = sum(step.confidence for step in thought_chain) / len(thought_chain)
-        
+
         return {
             "answer": conclusion.thought,
             "reasoning_type": "chain_of_thought",
@@ -140,7 +140,7 @@ class ChainOfThoughtReasoner:
             "execution_time": execution_time,
             "chain_id": chain_id
         }
-    
+
     async def _understand_problem(self, question: str, context: Dict[str, Any]) -> ThoughtStep:
         """Initial problem understanding step"""
         if self.grok_client:
@@ -161,19 +161,19 @@ class ChainOfThoughtReasoner:
             # Fallback understanding
             understanding = f"Understanding: {question}"
             confidence = 0.7
-        
+
         step = ThoughtStep(
             step_number=1,
             thought=understanding,
             reasoning="Initial problem analysis and concept identification",
             confidence=confidence
         )
-        
+
         if context:
             step.add_evidence(f"Context provided: {list(context.keys())}")
-        
+
         return step
-    
+
     async def _linear_reasoning(
         self,
         question: str,
@@ -183,7 +183,7 @@ class ChainOfThoughtReasoner:
         """Linear step-by-step reasoning"""
         steps = []
         current_step_num = 2
-        
+
         # Generate reasoning steps
         reasoning_prompts = [
             "What are the key facts we need to consider?",
@@ -191,14 +191,14 @@ class ChainOfThoughtReasoner:
             "What conclusions follow from these connections?",
             "Are there any counterarguments to consider?"
         ]
-        
+
         for prompt in reasoning_prompts:
             if current_step_num > self.max_steps:
                 break
-                
+
             # Create thought for this step
             thought = f"Step {current_step_num}: {prompt}"
-            
+
             # Generate reasoning
             if current_step_num == 2:  # Facts
                 reasoning = "Identifying relevant facts from the question and context"
@@ -212,25 +212,25 @@ class ChainOfThoughtReasoner:
             else:  # Counterarguments
                 reasoning = "Considering alternative perspectives and counterarguments"
                 confidence = 0.65
-            
+
             step = ThoughtStep(
                 step_number=current_step_num,
                 thought=thought,
                 reasoning=reasoning,
                 confidence=confidence
             )
-            
+
             # Add dependency on previous step
             if steps:
                 step.add_dependency(current_step_num - 1)
             else:
                 step.add_dependency(1)  # Depends on understanding
-            
+
             steps.append(step)
             current_step_num += 1
-        
+
         return steps
-    
+
     async def _branching_reasoning(
         self,
         question: str,
@@ -239,7 +239,7 @@ class ChainOfThoughtReasoner:
     ) -> List[ThoughtStep]:
         """Branching reasoning - explore multiple paths"""
         steps = []
-        
+
         # Branch 1: Optimistic path
         optimistic_step = ThoughtStep(
             step_number=2,
@@ -249,7 +249,7 @@ class ChainOfThoughtReasoner:
         )
         optimistic_step.add_dependency(1)
         steps.append(optimistic_step)
-        
+
         # Branch 2: Pessimistic path
         pessimistic_step = ThoughtStep(
             step_number=3,
@@ -259,7 +259,7 @@ class ChainOfThoughtReasoner:
         )
         pessimistic_step.add_dependency(1)
         steps.append(pessimistic_step)
-        
+
         # Branch 3: Neutral path
         neutral_step = ThoughtStep(
             step_number=4,
@@ -269,7 +269,7 @@ class ChainOfThoughtReasoner:
         )
         neutral_step.add_dependency(1)
         steps.append(neutral_step)
-        
+
         # Merge branches
         merge_step = ThoughtStep(
             step_number=5,
@@ -281,9 +281,9 @@ class ChainOfThoughtReasoner:
         merge_step.add_dependency(3)
         merge_step.add_dependency(4)
         steps.append(merge_step)
-        
+
         return steps
-    
+
     async def _recursive_reasoning(
         self,
         question: str,
@@ -292,7 +292,7 @@ class ChainOfThoughtReasoner:
     ) -> List[ThoughtStep]:
         """Recursive reasoning - break into sub-problems"""
         steps = []
-        
+
         # Decompose into sub-problems
         decompose_step = ThoughtStep(
             step_number=2,
@@ -302,7 +302,7 @@ class ChainOfThoughtReasoner:
         )
         decompose_step.add_dependency(1)
         steps.append(decompose_step)
-        
+
         # Solve sub-problems
         sub_problems = ["Component A", "Component B", "Component C"]
         for i, sub_problem in enumerate(sub_problems):
@@ -314,7 +314,7 @@ class ChainOfThoughtReasoner:
             )
             sub_step.add_dependency(2)
             steps.append(sub_step)
-        
+
         # Combine solutions
         combine_step = ThoughtStep(
             step_number=6,
@@ -325,9 +325,9 @@ class ChainOfThoughtReasoner:
         for i in range(3, 6):
             combine_step.add_dependency(i)
         steps.append(combine_step)
-        
+
         return steps
-    
+
     async def _iterative_reasoning(
         self,
         question: str,
@@ -336,7 +336,7 @@ class ChainOfThoughtReasoner:
     ) -> List[ThoughtStep]:
         """Iterative reasoning - refine through iterations"""
         steps = []
-        
+
         # Initial hypothesis
         hypothesis_step = ThoughtStep(
             step_number=2,
@@ -346,7 +346,7 @@ class ChainOfThoughtReasoner:
         )
         hypothesis_step.add_dependency(1)
         steps.append(hypothesis_step)
-        
+
         # Iterations of refinement
         for iteration in range(3):
             # Test hypothesis
@@ -358,7 +358,7 @@ class ChainOfThoughtReasoner:
             )
             test_step.add_dependency(2 + (iteration * 2))
             steps.append(test_step)
-            
+
             # Refine hypothesis
             refine_step = ThoughtStep(
                 step_number=4 + (iteration * 2),
@@ -368,9 +368,9 @@ class ChainOfThoughtReasoner:
             )
             refine_step.add_dependency(3 + (iteration * 2))
             steps.append(refine_step)
-        
+
         return steps
-    
+
     async def _synthesize_conclusion(
         self,
         thought_chain: List[ThoughtStep],
@@ -380,38 +380,38 @@ class ChainOfThoughtReasoner:
         # Analyze the chain
         key_insights = []
         total_confidence = 0
-        
+
         for step in thought_chain[1:]:  # Skip understanding step
             if step.confidence >= self.min_confidence:
                 key_insights.append(step.thought)
                 total_confidence += step.confidence
-        
+
         avg_confidence = total_confidence / len(thought_chain[1:]) if len(thought_chain) > 1 else 0.5
-        
+
         # Build conclusion
         conclusion_parts = [
             f"After chain-of-thought reasoning about '{question}':",
             f"Key insights from {len(key_insights)} high-confidence steps:",
         ]
-        
+
         for insight in key_insights[-3:]:  # Last 3 key insights
             conclusion_parts.append(f"- {insight}")
-        
+
         conclusion_parts.append(f"\nFinal answer: Based on the reasoning chain, {question}")
-        
+
         conclusion_step = ThoughtStep(
             step_number=len(thought_chain) + 1,
             thought="\n".join(conclusion_parts),
             reasoning="Synthesis of all reasoning steps into final conclusion",
             confidence=avg_confidence
         )
-        
+
         # Add dependencies on all previous steps
         for step in thought_chain:
             conclusion_step.add_dependency(step.step_number)
-        
+
         return conclusion_step
-    
+
     @mcp_resource(
         uri="chain_of_thought_history",
         description="Access stored reasoning chains"
@@ -441,7 +441,7 @@ class ChainOfThoughtReasoner:
                     for cid, chain in self.thought_chains.items()
                 ]
             }
-    
+
     @mcp_prompt(
         name="explain_reasoning_step",
         description="Explain a specific reasoning step"
@@ -451,23 +451,23 @@ class ChainOfThoughtReasoner:
         chain = self.thought_chains.get(chain_id)
         if not chain:
             return f"Chain {chain_id} not found"
-        
+
         step = next((s for s in chain if s.step_number == step_number), None)
         if not step:
             return f"Step {step_number} not found in chain {chain_id}"
-        
+
         explanation = [
             f"Step {step.step_number}: {step.thought}",
             f"Reasoning: {step.reasoning}",
             f"Confidence: {step.confidence:.2f}",
         ]
-        
+
         if step.dependencies:
             explanation.append(f"Depends on steps: {step.dependencies}")
-        
+
         if step.evidence:
             explanation.append(f"Evidence: {'; '.join(step.evidence)}")
-        
+
         return "\n".join(explanation)
 
 

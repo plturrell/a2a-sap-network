@@ -44,14 +44,14 @@ def test_cli_capabilities():
     """Test all CLI capabilities"""
     print("🧪 TESTING GLEAN AGENT CLI CAPABILITIES")
     print("=" * 70)
-    
+
     # Create test project
     test_dir = tempfile.mkdtemp(prefix="cli_test_")
     print(f"📁 Test directory: {test_dir}")
-    
+
     # Create test files
     (Path(test_dir) / "src").mkdir()
-    
+
     # Simple Python file
     simple_py = Path(test_dir) / "src" / "simple.py"
     simple_py.write_text('''
@@ -73,13 +73,13 @@ def complex_function(data):
 # Hardcoded secret for security testing
 API_KEY = "sk-1234567890abcdef"
 ''')
-    
+
     # Requirements file with vulnerable packages
     (Path(test_dir) / "requirements.txt").write_text("django==3.2.10\nflask==1.1.0\n")
-    
+
     print("\n🧪 Testing CLI Commands:")
     print("-" * 50)
-    
+
     # Test 1: Help command
     print("\n1️⃣ Testing help command:")
     result = run_cli_command(["--help"])
@@ -87,7 +87,7 @@ API_KEY = "sk-1234567890abcdef"
         print("   ✅ Help command works")
     else:
         print(f"   ❌ Help failed: {result.get('error', 'unknown')}")
-    
+
     # Test 2: Security analysis
     print("\n2️⃣ Testing security analysis:")
     result = run_cli_command(["security", test_dir, "--max-vulns", "5"])
@@ -97,7 +97,7 @@ API_KEY = "sk-1234567890abcdef"
             print("   ✅ Vulnerabilities detected")
     else:
         print(f"   ❌ Security analysis failed: {result.get('error', 'unknown')}")
-    
+
     # Test 3: Refactoring analysis
     print("\n3️⃣ Testing refactoring analysis:")
     result = run_cli_command(["refactor", str(simple_py), "--max-suggestions", "3"])
@@ -107,7 +107,7 @@ API_KEY = "sk-1234567890abcdef"
             print("   ✅ Refactoring suggestions generated")
     else:
         print(f"   ❌ Refactoring analysis failed: {result.get('error', 'unknown')}")
-    
+
     # Test 4: Complexity analysis
     print("\n4️⃣ Testing complexity analysis:")
     result = run_cli_command(["complexity", test_dir, "--threshold", "5"])
@@ -117,7 +117,7 @@ API_KEY = "sk-1234567890abcdef"
             print("   ✅ Complexity metrics calculated")
     else:
         print(f"   ❌ Complexity analysis failed: {result.get('error', 'unknown')}")
-    
+
     # Test 5: Quality analysis
     print("\n5️⃣ Testing quality analysis:")
     result = run_cli_command(["quality", test_dir])
@@ -127,13 +127,13 @@ API_KEY = "sk-1234567890abcdef"
             print("   ✅ Quality score calculated")
     else:
         print(f"   ❌ Quality analysis failed: {result.get('error', 'unknown')}")
-    
+
     # Test 6: Quick comprehensive analysis with output
     output_file = Path(test_dir) / "analysis_output.json"
     print("\n6️⃣ Testing comprehensive analysis with output:")
     result = run_cli_command([
-        "analyze", test_dir, 
-        "--quick", 
+        "analyze", test_dir,
+        "--quick",
         "--output", str(output_file)
     ])
     if result["success"]:
@@ -143,7 +143,7 @@ API_KEY = "sk-1234567890abcdef"
             print("   ✅ Output file created successfully")
     else:
         print(f"   ❌ Comprehensive analysis failed: {result.get('error', 'unknown')}")
-    
+
     print("\n" + "=" * 70)
     print("🎉 CLI CAPABILITIES TEST SUMMARY")
     print("✅ All major CLI commands tested successfully!")
@@ -156,7 +156,7 @@ API_KEY = "sk-1234567890abcdef"
     print("  🧪 coverage - Test coverage analysis")
     print("  📜 history - Analysis history and trends")
     print("  🌐 server - A2A server mode with MCP tools")
-    
+
     print("\n🚀 Key CLI Features:")
     print("  ✅ Real AST-based analysis (no fake implementations)")
     print("  ✅ Built-in vulnerability database with CVE data")
@@ -165,11 +165,11 @@ API_KEY = "sk-1234567890abcdef"
     print("  ✅ A2A protocol compliance")
     print("  ✅ MCP tool integration")
     print("  ✅ Production-ready error handling")
-    
+
     # Cleanup
     shutil.rmtree(test_dir)
     print(f"\n🧹 Cleaned up test directory")
-    
+
     return True
 
 if __name__ == "__main__":

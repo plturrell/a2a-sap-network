@@ -59,12 +59,12 @@ class GrokResponse:
 
 class AsyncGrokConnectionPool:
     """Connection pool manager for Grok API calls"""
-    
+
     def __init__(self, config: GrokConfig):
         self.config = config
         self._client: Optional[httpx.AsyncClient] = None
         self._lock = asyncio.Lock()
-        
+
     async def get_client(self) -> httpx.AsyncClient:
         """Get or create HTTP client with connection pooling"""
         if self._client is None:
@@ -74,14 +74,14 @@ class AsyncGrokConnectionPool:
                         max_connections=self.config.pool_connections,
                         max_keepalive_connections=self.config.pool_maxsize
                     )
-                    
+
                     timeout = httpx.Timeout(
                         connect=10.0,
                         read=self.config.timeout,
                         write=10.0,
                         pool=5.0
                     )
-                    
+
                     # WARNING: httpx AsyncClient usage violates A2A protocol - must use blockchain messaging
                     # self._client = httpx.AsyncClient(
                     #     limits=limits,
@@ -95,9 +95,9 @@ class AsyncGrokConnectionPool:
                     #     }
                     # )
                     self._client = None  # Placeholder for blockchain messaging
-                    
+
         return self._client
-    
+
     async def close(self):
         """Close the connection pool"""
         if self._client:
@@ -107,7 +107,7 @@ class AsyncGrokConnectionPool:
 
 class AsyncGrokCache:
     """Async caching layer for Grok API responses"""
-    
+
     def __init__(self, cache_ttl: int = 300, use_redis: bool = False, redis_url: str = None):
         self.cache_ttl = cache_ttl
         self.use_redis = use_redis
@@ -115,7 +115,7 @@ class AsyncGrokCache:
         self._local_cache: Dict[str, Dict] = {}
         self._local_timestamps: Dict[str, float] = {}
         self._redis_client: Optional[redis.Redis] = None
-        
+
     async def initialize(self):
         """Initialize the cache system"""
         if self.use_redis and self.redis_url:
@@ -126,7 +126,7 @@ class AsyncGrokCache:
             except Exception as e:
                 logger.warning(f"Redis initialization failed, using local cache: {e}")
                 self.use_redis = False
-    
+
     def _generate_cache_key(self, messages: List[Dict], **kwargs) -> str:
         """Generate cache key from request parameters"""
         # Create deterministic key from messages and parameters
@@ -138,7 +138,7 @@ class AsyncGrokCache:
         }
         key_string = json.dumps(key_data, sort_keys=True)
         return hashlib.md5(key_string.encode()).hexdigest()
-    
+
     async def get(self, cache_key: str) -> Optional[GrokResponse]:
         """Get cached response"""
         try:
@@ -163,13 +163,13 @@ class AsyncGrokCache:
                         # Expired, remove from cache
                         del self._local_cache[cache_key]
                         del self._local_timestamps[cache_key]
-            
+
             return None
-            
+
         except Exception as e:
             logger.warning(f"Cache get error: {e}")
             return None
-    
+
     async def set(self, cache_key: str, response: GrokResponse):
         """Set cached response"""
         try:
@@ -182,7 +182,7 @@ class AsyncGrokCache:
                 "raw_response": response.raw_response,
                 "response_time": response.response_time
             }
-            
+
             if self.use_redis and self._redis_client:
                 # Cache in Redis
                 await self._redis_client.setex(
@@ -194,17 +194,17 @@ class AsyncGrokCache:
                 # Cache locally
                 self._local_cache[cache_key] = cache_data
                 self._local_timestamps[cache_key] = time.time()
-                
+
                 # Simple cleanup - remove oldest if too many
                 if len(self._local_cache) > 1000:
                     oldest_key = min(self._local_timestamps.keys(),
                                    key=lambda k: self._local_timestamps[k])
                     del self._local_cache[oldest_key]
                     del self._local_timestamps[oldest_key]
-                    
+
         except Exception as e:
             logger.warning(f"Cache set error: {e}")
-    
+
     async def close(self):
         """Close cache connections"""
         if self._redis_client:
@@ -214,7 +214,7 @@ class AsyncGrokCache:
 
 class AsyncGrokClient:
     """High-performance async Grok client with connection pooling and caching"""
-    
+
     def __init__(self, config: GrokConfig, use_cache: bool = True, redis_url: str = None):
         self.config = config
         self.connection_pool = AsyncGrokConnectionPool(config)
@@ -223,7 +223,7 @@ class AsyncGrokClient:
         self.cache_hits = 0
         self.total_response_time = 0.0
         self._initialized = False
-    
+
     async def initialize(self):
         """Initialize the async client"""
         if not self._initialized:
@@ -231,7 +231,7 @@ class AsyncGrokClient:
                 await self.cache.initialize()
             self._initialized = True
             logger.info("Async Grok client initialized with connection pooling")
-    
+
     async def chat_completion_async(
         self,
         messages: List[Dict[str, str]],
@@ -242,9 +242,9 @@ class AsyncGrokClient:
     ) -> GrokResponse:
         """Async chat completion with caching and connection pooling"""
         await self.initialize()
-        
+
         start_time = time.time()
-        
+
         # Check cache first
         cache_key = None
         if self.cache:
@@ -257,7 +257,7 @@ class AsyncGrokClient:
                 self.cache_hits += 1
                 self.request_count += 1
                 return cached_response
-        
+
         # Prepare request payload
         payload = {
             "model": self.config.model,
@@ -265,43 +265,43 @@ class AsyncGrokClient:
             "temperature": temperature,
             **kwargs
         }
-        
+
         if max_tokens:
             payload["max_tokens"] = max_tokens
-            
+
         if response_format:
             payload["response_format"] = response_format
-        
+
         # Make API call with retries
         response = await self._make_request_with_retries(payload, start_time)
-        
+
         # Cache the response
         if self.cache and cache_key and response:
             await self.cache.set(cache_key, response)
-        
+
         self.request_count += 1
         self.total_response_time += response.response_time if response else 0
-        
+
         return response
-    
+
     async def _make_request_with_retries(self, payload: Dict, start_time: float) -> GrokResponse:
         """Make API request with exponential backoff retries"""
         last_exception = None
-        
+
         for attempt in range(self.config.max_retries + 1):
             try:
                 client = await self.connection_pool.get_client()
-                
+
                 response = await client.post(
                     f"{self.config.base_url}/chat/completions",
                     json=payload
                 )
-                
+
                 response_time = time.time() - start_time
-                
+
                 if response.status_code == 200:
                     data = response.json()
-                    
+
                     return GrokResponse(
                         content=data['choices'][0]['message']['content'],
                         model=data['model'],
@@ -324,7 +324,7 @@ class AsyncGrokClient:
                         raise Exception(f"Rate limit exceeded after {self.config.max_retries} retries")
                 else:
                     raise Exception(f"HTTP {response.status_code}: {response.text}")
-                    
+
             except Exception as e:
                 last_exception = e
                 if attempt < self.config.max_retries:
@@ -334,7 +334,7 @@ class AsyncGrokClient:
                 else:
                     logger.error(f"Request failed after {self.config.max_retries} retries: {e}")
                     break
-        
+
         # If all retries failed, return error response
         response_time = time.time() - start_time
         return GrokResponse(
@@ -345,7 +345,7 @@ class AsyncGrokClient:
             raw_response={"error": str(last_exception)},
             response_time=response_time
         )
-    
+
     async def stream_completion_async(
         self,
         messages: List[Dict[str, str]],
@@ -355,7 +355,7 @@ class AsyncGrokClient:
     ) -> AsyncGenerator[str, None]:
         """Async streaming completion with connection pooling"""
         await self.initialize()
-        
+
         payload = {
             "model": self.config.model,
             "messages": messages,
@@ -363,13 +363,13 @@ class AsyncGrokClient:
             "stream": True,
             **kwargs
         }
-        
+
         if max_tokens:
             payload["max_tokens"] = max_tokens
-        
+
         try:
             client = await self.connection_pool.get_client()
-            
+
             async with client.stream(
                 "POST",
                 f"{self.config.base_url}/chat/completions",
@@ -391,15 +391,15 @@ class AsyncGrokClient:
                                 continue
                 else:
                     logger.error(f"Streaming failed: HTTP {response.status_code}")
-                    
+
         except Exception as e:
             logger.error(f"Streaming error: {e}")
-    
+
     async def get_performance_stats(self) -> Dict[str, Any]:
         """Get client performance statistics"""
         cache_hit_rate = self.cache_hits / max(self.request_count, 1)
         avg_response_time = self.total_response_time / max(self.request_count, 1)
-        
+
         return {
             "total_requests": self.request_count,
             "cache_hits": self.cache_hits,
@@ -408,7 +408,7 @@ class AsyncGrokClient:
             "cache_enabled": self.cache is not None,
             "connection_pool_size": self.config.pool_connections
         }
-    
+
     async def close(self):
         """Close all connections and cleanup"""
         await self.connection_pool.close()
@@ -420,7 +420,7 @@ class AsyncGrokClient:
 # Enhanced Grok Reasoning with connection pooling
 class AsyncGrokReasoning:
     """Async Grok reasoning with performance optimizations"""
-    
+
     def __init__(self, config: Optional[GrokConfig] = None, redis_url: Optional[str] = None):
         if config is None:
             import os
@@ -430,9 +430,9 @@ class AsyncGrokReasoning:
                 pool_maxsize=20,
                 cache_ttl=300
             )
-        
+
         self.grok_client = AsyncGrokClient(config, use_cache=True, redis_url=redis_url)
-    
+
     async def decompose_question(self, question: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
         """Decompose question using async Grok-4 with caching"""
         try:
@@ -450,13 +450,13 @@ Provide:
 
 Format as JSON.
 """
-            
+
             response = await self.grok_client.chat_completion_async(
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,
                 response_format={"type": "json_object"}
             )
-            
+
             if response and response.content and not response.content.startswith("Error:"):
                 result = json.loads(response.content)
                 return {
@@ -466,12 +466,12 @@ Format as JSON.
                     "cached": response.cached,
                     "response_time": response.response_time
                 }
-            
+
         except Exception as e:
             logger.error(f"Async Grok-4 decomposition error: {e}")
-        
+
         return {"success": False, "reason": "Decomposition failed"}
-    
+
     async def analyze_patterns(self, text: str, existing_patterns: List[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Analyze patterns using async Grok-4 with caching"""
         try:
@@ -489,13 +489,13 @@ Identify:
 
 Return as JSON.
 """
-            
+
             response = await self.grok_client.chat_completion_async(
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.6,
                 response_format={"type": "json_object"}
             )
-            
+
             if response and response.content and not response.content.startswith("Error:"):
                 patterns = json.loads(response.content)
                 return {
@@ -505,12 +505,12 @@ Return as JSON.
                     "cached": response.cached,
                     "response_time": response.response_time
                 }
-                
+
         except Exception as e:
             logger.error(f"Async Grok-4 pattern analysis error: {e}")
-        
+
         return {"success": False, "patterns": existing_patterns or []}
-    
+
     async def synthesize_answer(self, sub_answers: List[Dict[str, Any]], original_question: str) -> Dict[str, Any]:
         """Synthesize answer using async Grok-4 with caching"""
         try:
@@ -528,13 +528,13 @@ Create an answer that:
 3. Directly addresses the question
 4. Includes confidence assessment
 """
-            
+
             response = await self.grok_client.chat_completion_async(
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,
                 max_tokens=1500
             )
-            
+
             if response and response.content and not response.content.startswith("Error:"):
                 return {
                     "success": True,
@@ -543,16 +543,16 @@ Create an answer that:
                     "cached": response.cached,
                     "response_time": response.response_time
                 }
-                
+
         except Exception as e:
             logger.error(f"Async Grok-4 synthesis error: {e}")
-        
+
         return {"success": False, "reason": "Synthesis failed"}
-    
+
     async def get_performance_stats(self) -> Dict[str, Any]:
         """Get performance statistics"""
         return await self.grok_client.get_performance_stats()
-    
+
     async def close(self):
         """Close the async reasoning client"""
         await self.grok_client.close()
@@ -563,15 +563,15 @@ async def test_async_grok_client():
     """Test the async Grok client with connection pooling"""
     try:
         import os
-        
+
         config = GrokConfig(
             api_key=os.getenv('XAI_API_KEY', 'test-key'),
             pool_connections=5,
             cache_ttl=60
         )
-        
+
         grok = AsyncGrokReasoning(config)
-        
+
         # Test multiple concurrent requests
         tasks = []
         questions = [
@@ -581,21 +581,21 @@ async def test_async_grok_client():
             "Explain deep learning",
             "What is artificial intelligence?"  # Duplicate for cache test
         ]
-        
+
         for question in questions:
             task = grok.decompose_question(question)
             tasks.append(task)
-        
+
         # Execute concurrently
         results = await asyncio.gather(*tasks)
-        
+
         # Print results
         for i, result in enumerate(results):
             cached = result.get('cached', False)
             response_time = result.get('response_time', 0)
             print(f"Question {i+1}: Success={result.get('success')}, "
                   f"Cached={cached}, Time={response_time:.2f}s")
-        
+
         # Get performance stats
         stats = await grok.get_performance_stats()
         print(f"\nPerformance Stats:")
@@ -603,10 +603,10 @@ async def test_async_grok_client():
         print(f"  Cache hits: {stats['cache_hits']}")
         print(f"  Cache hit rate: {stats['cache_hit_rate']:.2f}")
         print(f"  Avg response time: {stats['avg_response_time']:.2f}s")
-        
+
         await grok.close()
         print("✅ Async Grok client test completed!")
-        
+
     except Exception as e:
         print(f"❌ Test failed: {e}")
 

@@ -68,17 +68,17 @@ class HANAAdvancedFeatures:
     SAP HANA Advanced Features Integration
     Provides spatial processing, graph analytics, and advanced functions
     """
-    
+
     def __init__(self):
         # Validate database URL is properly configured
         db_url = getattr(settings, 'HANA_DATABASE_URL', None)
         if not db_url:
             raise ValueError("HANA_DATABASE_URL must be configured in environment variables")
-        
+
         # Security: Ensure connection uses encryption
         if not any(param in db_url.lower() for param in ['encrypt=true', 'ssl=true', 'sslmode=require']):
             raise SecurityError("🔒 HANA connections must use encryption for SAP enterprise standards")
-        
+
         # Create engine with secure connection parameters
         self.engine = create_async_engine(
             db_url,
@@ -95,14 +95,14 @@ class HANAAdvancedFeatures:
             }
         )
         self.session_maker = sessionmaker(
-            self.engine, 
-            class_=AsyncSession, 
+            self.engine,
+            class_=AsyncSession,
             expire_on_commit=False
         )
-    
+
     async def create_spatial_tables(self):
         """Create spatial tables for financial data geolocation"""
-        
+
         spatial_ddl = """
         -- Financial institutions location table
         CREATE TABLE FINANCIAL_INSTITUTIONS_SPATIAL (
@@ -115,7 +115,7 @@ class HANAAdvancedFeatures:
             COVERAGE_AREA ST_GEOMETRY(4326),
             CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-        
+
         -- Market regions with geographic boundaries
         CREATE TABLE MARKET_REGIONS_SPATIAL (
             REGION_ID VARCHAR(50) PRIMARY KEY,
@@ -127,7 +127,7 @@ class HANAAdvancedFeatures:
             TIMEZONE VARCHAR(50),
             CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-        
+
         -- Trading venues with location data
         CREATE TABLE TRADING_VENUES_SPATIAL (
             VENUE_ID VARCHAR(50) PRIMARY KEY,
@@ -138,7 +138,7 @@ class HANAAdvancedFeatures:
             OPERATING_HOURS VARCHAR(100),
             CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-        
+
         -- Risk concentration by geography
         CREATE TABLE RISK_CONCENTRATION_SPATIAL (
             CONCENTRATION_ID VARCHAR(50) PRIMARY KEY,
@@ -150,14 +150,14 @@ class HANAAdvancedFeatures:
             MEASUREMENT_DATE DATE,
             CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-        
+
         -- Create spatial indexes
         CREATE INDEX IDX_FI_LOCATION ON FINANCIAL_INSTITUTIONS_SPATIAL(LOCATION);
         CREATE INDEX IDX_MR_BOUNDARY ON MARKET_REGIONS_SPATIAL(BOUNDARY);
         CREATE INDEX IDX_TV_LOCATION ON TRADING_VENUES_SPATIAL(LOCATION);
         CREATE INDEX IDX_RC_AREA ON RISK_CONCENTRATION_SPATIAL(GEOGRAPHIC_AREA);
         """
-        
+
         async with self.session_maker() as session:
             try:
                 for statement in spatial_ddl.split(';'):
@@ -170,10 +170,10 @@ class HANAAdvancedFeatures:
                 if "already exists" not in str(e).lower():
                     logger.error(f"Error creating spatial tables: {e}")
                     raise
-    
+
     async def create_graph_tables(self):
         """Create graph tables for relationship analysis"""
-        
+
         graph_ddl = """
         -- Financial entity relationships graph
         CREATE TABLE FINANCIAL_ENTITIES_VERTICES (
@@ -186,7 +186,7 @@ class HANAAdvancedFeatures:
             RISK_RATING VARCHAR(10),
             CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-        
+
         CREATE TABLE FINANCIAL_RELATIONSHIPS_EDGES (
             EDGE_ID VARCHAR(50) PRIMARY KEY,
             SOURCE_ENTITY VARCHAR(50),
@@ -201,7 +201,7 @@ class HANAAdvancedFeatures:
             FOREIGN KEY (SOURCE_ENTITY) REFERENCES FINANCIAL_ENTITIES_VERTICES(ENTITY_ID),
             FOREIGN KEY (TARGET_ENTITY) REFERENCES FINANCIAL_ENTITIES_VERTICES(ENTITY_ID)
         );
-        
+
         -- Market correlation network
         CREATE TABLE MARKET_INSTRUMENTS_VERTICES (
             INSTRUMENT_ID VARCHAR(50) PRIMARY KEY,
@@ -213,7 +213,7 @@ class HANAAdvancedFeatures:
             MARKET_CAP DECIMAL(15,2),
             CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-        
+
         CREATE TABLE MARKET_CORRELATIONS_EDGES (
             CORRELATION_ID VARCHAR(50) PRIMARY KEY,
             SOURCE_INSTRUMENT VARCHAR(50),
@@ -227,7 +227,7 @@ class HANAAdvancedFeatures:
             FOREIGN KEY (SOURCE_INSTRUMENT) REFERENCES MARKET_INSTRUMENTS_VERTICES(INSTRUMENT_ID),
             FOREIGN KEY (TARGET_INSTRUMENT) REFERENCES MARKET_INSTRUMENTS_VERTICES(INSTRUMENT_ID)
         );
-        
+
         -- Create graph workspace
         CREATE GRAPH WORKSPACE FINANCIAL_NETWORK
             EDGE TABLE FINANCIAL_RELATIONSHIPS_EDGES
@@ -236,16 +236,16 @@ class HANAAdvancedFeatures:
             KEY COLUMN EDGE_ID
             VERTEX TABLE FINANCIAL_ENTITIES_VERTICES
             KEY COLUMN ENTITY_ID;
-            
+
         CREATE GRAPH WORKSPACE MARKET_CORRELATION_NETWORK
-            EDGE TABLE MARKET_CORRELATIONS_EDGES  
+            EDGE TABLE MARKET_CORRELATIONS_EDGES
             SOURCE COLUMN SOURCE_INSTRUMENT
             TARGET COLUMN TARGET_INSTRUMENT
             KEY COLUMN CORRELATION_ID
             VERTEX TABLE MARKET_INSTRUMENTS_VERTICES
             KEY COLUMN INSTRUMENT_ID;
         """
-        
+
         async with self.session_maker() as session:
             try:
                 for statement in graph_ddl.split(';'):
@@ -258,13 +258,13 @@ class HANAAdvancedFeatures:
                 if "already exists" not in str(e).lower():
                     logger.error(f"Error creating graph tables: {e}")
                     raise
-    
-    async def spatial_risk_analysis(self, portfolio_id: str, 
+
+    async def spatial_risk_analysis(self, portfolio_id: str,
                                   risk_threshold: float = 0.1) -> Dict[str, Any]:
         """Analyze geographic risk concentration using spatial functions"""
-        
+
         spatial_query = """
-        SELECT 
+        SELECT
             r.REGION_ID,
             r.NAME as REGION_NAME,
             r.CURRENCY,
@@ -273,14 +273,14 @@ class HANAAdvancedFeatures:
             COUNT(*) as NUM_POSITIONS,
             ST_Area(r.BOUNDARY) as REGION_AREA_SQM
         FROM MARKET_REGIONS_SPATIAL r
-        JOIN RISK_CONCENTRATION_SPATIAL rc 
+        JOIN RISK_CONCENTRATION_SPATIAL rc
             ON ST_Within(rc.GEOGRAPHIC_AREA, r.BOUNDARY) = 1
         WHERE rc.PORTFOLIO_ID = :portfolio_id
             AND rc.CONCENTRATION_RATIO > :risk_threshold
         GROUP BY r.REGION_ID, r.NAME, r.CURRENCY, r.BOUNDARY
         ORDER BY TOTAL_EXPOSURE DESC
         """
-        
+
         async with self.session_maker() as session:
             result = await session.execute(
                 text(spatial_query),
@@ -289,7 +289,7 @@ class HANAAdvancedFeatures:
                     "risk_threshold": risk_threshold
                 }
             )
-            
+
             risk_concentrations = []
             for row in result:
                 risk_concentrations.append({
@@ -301,7 +301,7 @@ class HANAAdvancedFeatures:
                     "num_positions": row.NUM_POSITIONS,
                     "region_area_sqm": float(row.REGION_AREA_SQM)
                 })
-        
+
         return {
             "portfolio_id": portfolio_id,
             "risk_threshold": risk_threshold,
@@ -310,15 +310,15 @@ class HANAAdvancedFeatures:
             "total_regions": len(risk_concentrations),
             "max_exposure": max([r["total_exposure"] for r in risk_concentrations] or [0])
         }
-    
-    async def find_nearby_financial_institutions(self, 
-                                               latitude: float, 
+
+    async def find_nearby_financial_institutions(self,
+                                               latitude: float,
                                                longitude: float,
                                                radius_km: float = 50) -> List[Dict[str, Any]]:
         """Find financial institutions within specified radius using spatial search"""
-        
+
         spatial_search = """
-        SELECT 
+        SELECT
             INSTITUTION_ID,
             NAME,
             TYPE,
@@ -329,7 +329,7 @@ class HANAAdvancedFeatures:
         WHERE ST_DWithin(LOCATION, ST_GeomFromText('POINT(:longitude :latitude)', 4326), :radius_km, 'kilometer') = 1
         ORDER BY DISTANCE_KM ASC
         """
-        
+
         async with self.session_maker() as session:
             result = await session.execute(
                 text(spatial_search),
@@ -339,7 +339,7 @@ class HANAAdvancedFeatures:
                     "radius_km": radius_km
                 }
             )
-            
+
             institutions = []
             for row in result:
                 institutions.append({
@@ -350,22 +350,22 @@ class HANAAdvancedFeatures:
                     "city": row.CITY,
                     "distance_km": float(row.DISTANCE_KM)
                 })
-        
+
         return institutions
-    
+
     async def analyze_market_network_centrality(self) -> Dict[str, Any]:
         """Analyze market network using graph algorithms"""
-        
+
         # PageRank analysis for market influence
         pagerank_query = """
-        SELECT 
+        SELECT
             v.INSTRUMENT_ID,
             v.SYMBOL,
             v.NAME,
             v.ASSET_CLASS,
             v.MARKET,
             pr.PAGERANK_VALUE
-        FROM 
+        FROM
             GRAPH_TABLE (
                 MARKET_CORRELATION_NETWORK,
                 'PAGERANK',
@@ -375,15 +375,15 @@ class HANAAdvancedFeatures:
         ORDER BY pr.PAGERANK_VALUE DESC
         LIMIT 50
         """
-        
+
         # Betweenness centrality for systemic risk identification
         betweenness_query = """
-        SELECT 
+        SELECT
             v.INSTRUMENT_ID,
             v.SYMBOL,
             v.NAME,
             bc.BETWEENNESS_CENTRALITY
-        FROM 
+        FROM
             GRAPH_TABLE (
                 MARKET_CORRELATION_NETWORK,
                 'BETWEENNESS_CENTRALITY',
@@ -393,7 +393,7 @@ class HANAAdvancedFeatures:
         ORDER BY bc.BETWEENNESS_CENTRALITY DESC
         LIMIT 20
         """
-        
+
         async with self.session_maker() as session:
             # Execute PageRank analysis
             pagerank_result = await session.execute(text(pagerank_query))
@@ -407,7 +407,7 @@ class HANAAdvancedFeatures:
                     "market": row.MARKET,
                     "pagerank_value": float(row.PAGERANK_VALUE)
                 })
-            
+
             # Execute betweenness centrality analysis
             betweenness_result = await session.execute(text(betweenness_query))
             systemic_risk_indicators = []
@@ -418,7 +418,7 @@ class HANAAdvancedFeatures:
                     "name": row.NAME,
                     "betweenness_centrality": float(row.BETWEENNESS_CENTRALITY)
                 })
-        
+
         return {
             "analysis_timestamp": datetime.utcnow().isoformat(),
             "market_influence_ranking": market_influence,
@@ -428,12 +428,12 @@ class HANAAdvancedFeatures:
                 "high_centrality_instruments": len([x for x in systemic_risk_indicators if x["betweenness_centrality"] > 0.1])
             }
         }
-    
+
     async def detect_financial_network_communities(self) -> Dict[str, Any]:
         """Detect communities in financial entity network"""
-        
+
         community_query = """
-        SELECT 
+        SELECT
             v.ENTITY_ID,
             v.NAME,
             v.ENTITY_TYPE,
@@ -441,7 +441,7 @@ class HANAAdvancedFeatures:
             v.COUNTRY,
             cd.COMMUNITY_ID,
             COUNT(*) OVER (PARTITION BY cd.COMMUNITY_ID) as COMMUNITY_SIZE
-        FROM 
+        FROM
             GRAPH_TABLE (
                 FINANCIAL_NETWORK,
                 'LOUVAIN_COMMUNITY_DETECTION',
@@ -450,10 +450,10 @@ class HANAAdvancedFeatures:
         JOIN FINANCIAL_ENTITIES_VERTICES v ON cd.VERTEX = v.ENTITY_ID
         ORDER BY cd.COMMUNITY_ID, v.NAME
         """
-        
+
         async with self.session_maker() as session:
             result = await session.execute(text(community_query))
-            
+
             communities = {}
             for row in result:
                 community_id = row.COMMUNITY_ID
@@ -463,7 +463,7 @@ class HANAAdvancedFeatures:
                         "size": row.COMMUNITY_SIZE,
                         "members": []
                     }
-                
+
                 communities[community_id]["members"].append({
                     "entity_id": row.ENTITY_ID,
                     "name": row.NAME,
@@ -471,13 +471,13 @@ class HANAAdvancedFeatures:
                     "sector": row.SECTOR,
                     "country": row.COUNTRY
                 })
-        
+
         # Calculate community statistics
         community_stats = []
         for community in communities.values():
             sectors = [m["sector"] for m in community["members"] if m["sector"]]
             countries = [m["country"] for m in community["members"] if m["country"]]
-            
+
             community_stats.append({
                 "community_id": community["community_id"],
                 "size": community["size"],
@@ -485,20 +485,20 @@ class HANAAdvancedFeatures:
                 "geographic_diversity": len(set(countries)),
                 "members": community["members"]
             })
-        
+
         return {
             "analysis_timestamp": datetime.utcnow().isoformat(),
             "total_communities": len(communities),
             "communities": community_stats,
             "network_modularity": self._calculate_modularity(community_stats)
         }
-    
-    async def shortest_path_analysis(self, source_entity: str, 
+
+    async def shortest_path_analysis(self, source_entity: str,
                                    target_entity: str) -> Dict[str, Any]:
         """Find shortest path between financial entities"""
-        
+
         path_query = """
-        SELECT 
+        SELECT
             sp.EDGE_ORDER,
             e.EDGE_ID,
             e.SOURCE_ENTITY,
@@ -508,7 +508,7 @@ class HANAAdvancedFeatures:
             e.TRANSACTION_VOLUME,
             vs.NAME as SOURCE_NAME,
             vt.NAME as TARGET_NAME
-        FROM 
+        FROM
             GRAPH_TABLE (
                 FINANCIAL_NETWORK,
                 'SHORTEST_PATH',
@@ -521,7 +521,7 @@ class HANAAdvancedFeatures:
         JOIN FINANCIAL_ENTITIES_VERTICES vt ON e.TARGET_ENTITY = vt.ENTITY_ID
         ORDER BY sp.EDGE_ORDER
         """
-        
+
         async with self.session_maker() as session:
             result = await session.execute(
                 text(path_query),
@@ -530,11 +530,11 @@ class HANAAdvancedFeatures:
                     "target_entity": target_entity
                 }
             )
-            
+
             path_edges = []
             total_strength = 0
             total_volume = 0
-            
+
             for row in result:
                 edge_info = {
                     "order": row.EDGE_ORDER,
@@ -550,7 +550,7 @@ class HANAAdvancedFeatures:
                 path_edges.append(edge_info)
                 total_strength += edge_info["relationship_strength"]
                 total_volume += edge_info["transaction_volume"]
-        
+
         return {
             "source_entity": source_entity,
             "target_entity": target_entity,
@@ -561,35 +561,35 @@ class HANAAdvancedFeatures:
             "total_transaction_volume": total_volume,
             "analysis_timestamp": datetime.utcnow().isoformat()
         }
-    
-    async def time_series_forecast_with_hana(self, 
+
+    async def time_series_forecast_with_hana(self,
                                            instrument_id: str,
                                            forecast_horizon: int = 30) -> Dict[str, Any]:
         """Time series forecasting using HANA PAL algorithms"""
-        
+
         # Auto ARIMA forecasting
         forecast_query = """
         CREATE LOCAL TEMPORARY COLUMN TABLE #FORECAST_INPUT AS (
-            SELECT 
+            SELECT
                 ROW_NUMBER() OVER (ORDER BY PRICE_DATE) as ID,
                 PRICE_DATE,
                 CLOSE_PRICE
-            FROM PRICE_DATA 
+            FROM PRICE_DATA
             WHERE INSTRUMENT_ID = :instrument_id
                 AND PRICE_DATE >= ADD_DAYS(CURRENT_DATE, -365)
             ORDER BY PRICE_DATE
         );
-        
+
         CALL _SYS_AFL.PAL_AUTO_ARIMA(
             #FORECAST_INPUT,
             (SELECT * FROM #FORECAST_INPUT),
             FORECAST_RESULT,
             'FORECAST_LENGTH', :forecast_horizon
         ) WITH OVERVIEW;
-        
+
         SELECT * FROM FORECAST_RESULT ORDER BY ID;
         """
-        
+
         async with self.session_maker() as session:
             try:
                 result = await session.execute(
@@ -599,7 +599,7 @@ class HANAAdvancedFeatures:
                         "forecast_horizon": forecast_horizon
                     }
                 )
-                
+
                 forecasts = []
                 for row in result:
                     forecasts.append({
@@ -609,7 +609,7 @@ class HANAAdvancedFeatures:
                         "confidence_interval_lower": float(getattr(row, 'CI_LOWER', 0)),
                         "confidence_interval_upper": float(getattr(row, 'CI_UPPER', 0))
                     })
-                
+
                 return {
                     "instrument_id": instrument_id,
                     "forecast_horizon_days": forecast_horizon,
@@ -617,7 +617,7 @@ class HANAAdvancedFeatures:
                     "model_type": "AUTO_ARIMA",
                     "generated_at": datetime.utcnow().isoformat()
                 }
-                
+
             except Exception as e:
                 logger.error(f"Time series forecasting failed: {e}")
                 return {
@@ -625,45 +625,45 @@ class HANAAdvancedFeatures:
                     "error": str(e),
                     "forecasts": []
                 }
-    
+
     def _calculate_modularity(self, communities: List[Dict[str, Any]]) -> float:
         """Calculate network modularity score"""
         total_entities = sum(c["size"] for c in communities)
         if total_entities == 0:
             return 0.0
-        
+
         # Simplified modularity calculation
         # In practice, this would use the actual edge weights and degrees
         modularity = sum((c["size"] / total_entities) ** 2 for c in communities)
         return round(1 - modularity, 4)
-    
+
     async def create_sample_data(self):
         """Create sample spatial and graph data for testing"""
-        
+
         sample_data_sql = """
         -- Sample financial institutions
         INSERT INTO FINANCIAL_INSTITUTIONS_SPATIAL VALUES
         ('FI001', 'Deutsche Bank', 'BANK', 'DEU', 'Frankfurt', ST_GeomFromText('POINT(8.6821 50.1109)', 4326), NULL, CURRENT_TIMESTAMP),
         ('FI002', 'JPMorgan Chase', 'BANK', 'USA', 'New York', ST_GeomFromText('POINT(-74.0059 40.7128)', 4326), NULL, CURRENT_TIMESTAMP),
         ('FI003', 'HSBC', 'BANK', 'GBR', 'London', ST_GeomFromText('POINT(-0.1276 51.5074)', 4326), NULL, CURRENT_TIMESTAMP);
-        
-        -- Sample market regions  
+
+        -- Sample market regions
         INSERT INTO MARKET_REGIONS_SPATIAL VALUES
         ('MR001', 'European Union', 'ECONOMIC_ZONE', ST_GeomFromText('POLYGON(((-10 35), (30 35), (30 70), (-10 70), (-10 35)))', 4326), 'MiFID II', 'EUR', 'CET', CURRENT_TIMESTAMP),
         ('MR002', 'North America', 'REGION', ST_GeomFromText('POLYGON(((-130 25), (-60 25), (-60 55), (-130 55), (-130 25)))', 4326), 'Dodd-Frank', 'USD', 'EST', CURRENT_TIMESTAMP);
-        
+
         -- Sample financial entities for graph
         INSERT INTO FINANCIAL_ENTITIES_VERTICES VALUES
         ('ENTITY001', 'BANK', 'Deutsche Bank AG', 'DEU', 'Banking', 25000000000, 'A-', CURRENT_TIMESTAMP),
         ('ENTITY002', 'BANK', 'JPMorgan Chase & Co', 'USA', 'Banking', 400000000000, 'AA-', CURRENT_TIMESTAMP),
         ('ENTITY003', 'COMPANY', 'BMW AG', 'DEU', 'Automotive', 50000000000, 'A', CURRENT_TIMESTAMP);
-        
+
         -- Sample relationships
         INSERT INTO FINANCIAL_RELATIONSHIPS_EDGES VALUES
         ('EDGE001', 'ENTITY001', 'ENTITY003', 'LENDS_TO', 0.8, 1000000000, 0.3, '2024-01-01', NULL, CURRENT_TIMESTAMP),
         ('EDGE002', 'ENTITY002', 'ENTITY001', 'TRADES_WITH', 0.9, 5000000000, 0.2, '2024-01-01', NULL, CURRENT_TIMESTAMP);
         """
-        
+
         async with self.session_maker() as session:
             try:
                 for statement in sample_data_sql.split(';'):
@@ -679,15 +679,15 @@ class HANAAdvancedFeatures:
 # Integration with A2A agents
 class HANAAdvancedIntegration:
     """Integration of HANA advanced features with A2A agents"""
-    
+
     def __init__(self):
         self.hana_features = HANAAdvancedFeatures()
-    
+
     async def enhance_agent3_vector_processing(self, vector_data: Dict[str, Any]) -> Dict[str, Any]:
         """Enhance Agent 3 vector processing with spatial and graph context"""
-        
+
         enhanced_data = vector_data.copy()
-        
+
         # Add spatial context if location data is available
         if "location" in vector_data:
             lat, lon = vector_data["location"]["latitude"], vector_data["location"]["longitude"]
@@ -696,7 +696,7 @@ class HANAAdvancedIntegration:
                 "nearby_institutions": nearby_institutions,
                 "location_risk_factors": len(nearby_institutions)
             }
-        
+
         # Add network centrality if entity relationships exist
         if "entity_id" in vector_data:
             try:
@@ -704,21 +704,21 @@ class HANAAdvancedIntegration:
                 enhanced_data["network_context"] = network_analysis
             except Exception as e:
                 logger.warning(f"Network analysis failed: {e}")
-        
+
         return enhanced_data
-    
+
     async def enhance_agent4_calculations(self, calculation_request: Dict[str, Any]) -> Dict[str, Any]:
         """Enhance Agent 4 calculations with advanced HANA analytics"""
-        
+
         enhanced_request = calculation_request.copy()
-        
+
         # Add spatial risk analysis for geographic concentration
         if "portfolio_id" in calculation_request:
             spatial_risk = await self.hana_features.spatial_risk_analysis(
                 calculation_request["portfolio_id"]
             )
             enhanced_request["spatial_risk_analysis"] = spatial_risk
-        
+
         # Add time series forecasting for predictive analytics
         if "instruments" in calculation_request:
             forecasts = {}
@@ -728,7 +728,7 @@ class HANAAdvancedIntegration:
                     forecasts[instrument_id] = forecast
                 except Exception as e:
                     logger.warning(f"Forecast failed for {instrument_id}: {e}")
-            
+
             enhanced_request["predictive_analytics"] = forecasts
-        
+
         return enhanced_request

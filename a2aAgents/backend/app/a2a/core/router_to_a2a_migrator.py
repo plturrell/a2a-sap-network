@@ -11,7 +11,7 @@ from pathlib import Path
 
 class RouterToA2AMigrator:
     """Utility to migrate REST routers to A2A handlers"""
-    
+
     # Common REST endpoint patterns to A2A operations mapping
     ENDPOINT_MAPPINGS = {
         # Standard endpoints
@@ -27,7 +27,7 @@ class RouterToA2AMigrator:
         r"execute.*": "execute_{operation}",
         r".*_status": "get_{operation}_status",
     }
-    
+
     # Template for A2A handler
     A2A_HANDLER_TEMPLATE = '''"""
 A2A-Compliant Message Handler for {agent_name}
@@ -58,7 +58,7 @@ class {class_name}(SecureA2AAgent):
     A2A-compliant handler for {agent_name}
     All communication through blockchain messaging only
     """
-    
+
     def __init__(self, agent_sdk: {sdk_class}):
         """Initialize A2A handler with agent SDK"""
         # Configure secure agent
@@ -75,27 +75,27 @@ class {class_name}(SecureA2AAgent):
             rate_limit_requests=100,
             rate_limit_window=60
         )
-        
+
         super().__init__(config)
-        
+
         self.agent_sdk = agent_sdk
-        
+
         # Initialize A2A blockchain client
         self.a2a_client = A2ANetworkClient(
             agent_id=config.agent_id,
             private_key=os.getenv('A2A_PRIVATE_KEY'),
             rpc_url=os.getenv('A2A_RPC_URL', 'http://localhost:8545')
         )
-        
+
         # Register message handlers
         self._register_handlers()
-        
+
         logger.info(f"A2A-compliant handler initialized for {{config.agent_name}}")
-    
+
     def _register_handlers(self):
         """Register A2A message handlers"""
 {handlers}
-    
+
     async def process_a2a_message(self, message: A2AMessage) -> Dict[str, Any]:
         """
         Main entry point for A2A messages
@@ -105,19 +105,19 @@ class {class_name}(SecureA2AAgent):
             # Extract operation from message
             operation = None
             data = {{}}
-            
+
             if message.parts and len(message.parts) > 0:
                 part = message.parts[0]
                 if part.data:
                     operation = part.data.get("operation")
                     data = part.data.get("data", {{}})
-            
+
             if not operation:
                 return self.create_secure_response(
                     "No operation specified in message",
                     status="error"
                 )
-            
+
             # Get handler for operation
             handler = self.handlers.get(operation)
             if not handler:
@@ -125,17 +125,17 @@ class {class_name}(SecureA2AAgent):
                     f"Unknown operation: {{operation}}",
                     status="error"
                 )
-            
+
             # Create context ID
             context_id = f"{{message.sender_id}}:{{operation}}:{{datetime.utcnow().timestamp()}}"
-            
+
             # Process through handler
             return await handler(message, context_id, data)
-            
+
         except Exception as e:
             logger.error(f"Failed to process A2A message: {{e}}")
             return self.create_secure_response(str(e), status="error")
-    
+
     async def _log_blockchain_transaction(self, operation: str, data_hash: str, result_hash: str, context_id: str):
         """Log transaction to blockchain for audit trail"""
         try:
@@ -147,33 +147,33 @@ class {class_name}(SecureA2AAgent):
                 "context_id": context_id,
                 "timestamp": datetime.utcnow().isoformat()
             }}
-            
+
             # Send to blockchain through A2A client
             await self.a2a_client.log_transaction(transaction_data)
-            
+
         except Exception as e:
             logger.error(f"Failed to log blockchain transaction: {{e}}")
-    
+
     def _hash_data(self, data: Any) -> str:
         """Create hash of data for blockchain logging"""
         import hashlib
         json_str = json.dumps(data, sort_keys=True, default=str)
         return hashlib.sha256(json_str.encode()).hexdigest()
-    
+
     async def _check_blockchain_connection(self) -> bool:
         """Check if blockchain connection is active"""
         try:
             return await self.a2a_client.is_connected()
         except Exception:
             return False
-    
+
     async def start(self):
         """Start the A2A handler"""
         logger.info(f"Starting A2A handler for {{self.config.agent_name}}")
-        
+
         # Connect to blockchain
         await self.a2a_client.connect()
-        
+
         # Register agent on blockchain
         await self.a2a_client.register_agent({{
             "agent_id": self.config.agent_id,
@@ -181,22 +181,22 @@ class {class_name}(SecureA2AAgent):
             "capabilities": list(self.config.allowed_operations),
             "version": self.config.agent_version
         }})
-        
+
         logger.info(f"A2A handler started and registered on blockchain")
-    
+
     async def stop(self):
         """Stop the A2A handler"""
         logger.info(f"Stopping A2A handler for {{self.config.agent_name}}")
-        
+
         # Unregister from blockchain
         await self.a2a_client.unregister_agent(self.config.agent_id)
-        
+
         # Disconnect
         await self.a2a_client.disconnect()
-        
+
         # Parent cleanup
         await self.shutdown()
-        
+
         logger.info(f"A2A handler stopped")
 
 
@@ -212,14 +212,14 @@ To migrate from REST endpoints to A2A messaging:
 
 1. Replace router initialization:
    # OLD: router = APIRouter(...)
-   # NEW: 
+   # NEW:
    handler = create_{agent_id}_a2a_handler({agent_id}_sdk)
 
 2. Replace FastAPI app with A2A listener:
    # OLD: app.include_router(router)
    # NEW:
    await handler.start()
-   
+
 3. Process messages through A2A:
    # Messages arrive through blockchain
    result = await handler.process_a2a_message(a2a_message)
@@ -231,7 +231,7 @@ To migrate from REST endpoints to A2A messaging:
             """{doc_string}"""
             try:
 {implementation}
-                
+
                 # Log blockchain transaction
                 await self._log_blockchain_transaction(
                     operation="{operation}",
@@ -239,21 +239,21 @@ To migrate from REST endpoints to A2A messaging:
                     result_hash=self._hash_data(result),
                     context_id=context_id
                 )
-                
+
                 return self.create_secure_response(result)
-                
+
             except Exception as e:
                 logger.error(f"Failed to {operation}: {{e}}")
                 return self.create_secure_response(str(e), status="error")'''
 
     def __init__(self):
         self.migrations = []
-    
+
     def extract_router_info(self, router_path: str) -> Dict[str, Any]:
         """Extract information from router file"""
         with open(router_path, 'r') as f:
             content = f.read()
-        
+
         info = {
             'path': router_path,
             'agent_id': None,
@@ -264,7 +264,7 @@ To migrate from REST endpoints to A2A messaging:
             'version': '1.0.0',
             'endpoints': []
         }
-        
+
         # Extract agent ID from path
         path_match = re.search(r'/agent(\d+\w*)', router_path)
         if path_match:
@@ -277,23 +277,23 @@ To migrate from REST endpoints to A2A messaging:
             info['agent_id'] = 'catalog_manager'
         elif 'reasoningAgent' in router_path:
             info['agent_id'] = 'reasoning_agent'
-        
+
         # Extract router prefix
         prefix_match = re.search(r'prefix="([^"]+)"', content)
         if prefix_match:
             info['prefix'] = prefix_match.group(1)
-        
+
         # Extract tags for agent name
         tags_match = re.search(r'tags=\["([^"]+)"\]', content)
         if tags_match:
             info['agent_name'] = tags_match.group(1)
-        
+
         # Extract SDK import
         sdk_match = re.search(r'from \.([\w]+) import ([\w]+)', content)
         if sdk_match:
             info['sdk_import'] = sdk_match.group(1)
             info['sdk_class'] = sdk_match.group(2)
-        
+
         # Extract endpoints
         endpoint_pattern = re.compile(r'@router\.(get|post|put|delete|patch)\("([^"]+)"\).*?async def (\w+)', re.DOTALL)
         for match in endpoint_pattern.finditer(content):
@@ -304,9 +304,9 @@ To migrate from REST endpoints to A2A messaging:
                 'func_name': func_name,
                 'operation': self._map_to_operation(func_name)
             })
-        
+
         return info
-    
+
     def _map_to_operation(self, func_name: str) -> str:
         """Map function name to A2A operation"""
         # Check exact mappings first
@@ -319,10 +319,10 @@ To migrate from REST endpoints to A2A messaging:
                     if op_match:
                         return operation.format(operation=op_match.group(1))
                 return operation
-        
+
         # Default: use function name as operation
         return func_name
-    
+
     def generate_handler(self, router_info: Dict[str, Any]) -> str:
         """Generate A2A handler code from router info"""
         # Generate operations list
@@ -330,17 +330,17 @@ To migrate from REST endpoints to A2A messaging:
         for endpoint in router_info['endpoints']:
             operations.append(f'                "{endpoint["operation"]}"')
         operations_str = ',\n'.join(operations)
-        
+
         # Generate handler methods
         handlers = []
         for endpoint in router_info['endpoints']:
             handler = self._generate_handler_method(endpoint, router_info)
             handlers.append(handler)
         handlers_str = '\n'.join(handlers)
-        
+
         # Generate class name
         class_name = f"{router_info['agent_id'].title().replace('_', '')}A2AHandler"
-        
+
         # Fill template
         handler_code = self.A2A_HANDLER_TEMPLATE.format(
             agent_name=router_info['agent_name'],
@@ -352,19 +352,19 @@ To migrate from REST endpoints to A2A messaging:
             operations=operations_str,
             handlers=handlers_str
         )
-        
+
         return handler_code
-    
+
     def _generate_handler_method(self, endpoint: Dict[str, Any], router_info: Dict[str, Any]) -> str:
         """Generate handler method for endpoint"""
         operation = endpoint['operation']
-        
+
         # Generate appropriate implementation based on operation
         if operation == "get_agent_card":
             implementation = '''                agent_card = await self.agent_sdk.get_agent_card()
                 result = agent_card'''
             doc_string = "Get agent card information"
-        
+
         elif operation == "health_check":
             implementation = '''                health_status = {
                     "status": "healthy",
@@ -376,74 +376,74 @@ To migrate from REST endpoints to A2A messaging:
                 }
                 result = health_status'''
             doc_string = "Health check for agent"
-        
+
         elif operation == "get_task_status":
             implementation = '''                task_id = data.get("task_id")
                 if not task_id:
                     raise ValueError("task_id is required")
-                
+
                 status = await self.agent_sdk.get_task_status(task_id)
                 result = status'''
             doc_string = "Get status of a specific task"
-        
+
         elif operation == "process_message":
             implementation = '''                # Process message through agent SDK
                 result = await self.agent_sdk.process_message(message, context_id)'''
             doc_string = "Process incoming message"
-        
+
         else:
             # Generic implementation
             implementation = f'''                # TODO: Implement {operation} logic
                 # Example: result = await self.agent_sdk.{endpoint['func_name']}(data)
                 result = {{"status": "success", "operation": "{operation}"}}'''
             doc_string = f"Handle {operation} operation"
-        
+
         return self.HANDLER_TEMPLATE.format(
             operation=operation,
             doc_string=doc_string,
             implementation=implementation
         )
-    
+
     def migrate_router(self, router_path: str) -> Tuple[str, str]:
         """Migrate a single router to A2A handler"""
         # Extract router information
         router_info = self.extract_router_info(router_path)
-        
+
         # Generate A2A handler code
         handler_code = self.generate_handler(router_info)
-        
+
         # Generate output path
         router_dir = os.path.dirname(router_path)
         handler_filename = f"{router_info['agent_id']}A2AHandler.py"
         handler_path = os.path.join(router_dir, handler_filename)
-        
+
         return handler_path, handler_code
-    
+
     def migrate_all_routers(self, router_paths: List[str]) -> List[Dict[str, Any]]:
         """Migrate all routers to A2A handlers"""
         results = []
-        
+
         for router_path in router_paths:
             try:
                 handler_path, handler_code = self.migrate_router(router_path)
-                
+
                 # Write handler file
                 with open(handler_path, 'w') as f:
                     f.write(handler_code)
-                
+
                 results.append({
                     'router_path': router_path,
                     'handler_path': handler_path,
                     'status': 'success'
                 })
-                
+
             except Exception as e:
                 results.append({
                     'router_path': router_path,
                     'status': 'error',
                     'error': str(e)
                 })
-        
+
         return results
 
 
@@ -461,10 +461,10 @@ def main():
         "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/catalogManager/active/catalogManagerRouter.py",
         "/Users/apple/projects/a2a/a2aAgents/backend/app/a2a/agents/reasoningAgent/active/agent9Router.py"
     ]
-    
+
     migrator = RouterToA2AMigrator()
     results = migrator.migrate_all_routers(router_files)
-    
+
     print("Migration Results:")
     for result in results:
         if result['status'] == 'success':

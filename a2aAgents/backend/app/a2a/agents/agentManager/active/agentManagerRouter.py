@@ -30,13 +30,13 @@ except ImportError:
     # Fallback if trust system not available
     def initialize_agent_trust(*args, **kwargs):
         return {"status": "trust_system_unavailable"}
-    
+
     def get_trust_contract():
         return None
-    
+
     def verify_a2a_message(*args, **kwargs):
         return True, {"status": "trust_system_unavailable"}
-    
+
     def sign_a2a_message(*args, **kwargs):
         return {"message": args[1] if len(args) > 1 else {}, "signature": {"status": "trust_system_unavailable"}}
 
@@ -50,7 +50,7 @@ agent_manager = None
 def initialize_agent_manager():
     """Initialize the Agent Manager instance for the main application"""
     global agent_manager
-    
+
     if agent_manager is None:
         from .agentManagerAgent import AgentManagerAgent
 
@@ -67,14 +67,14 @@ def initialize_agent_manager():
             # Fallback if trust system not available
             def get_trust_contract():
                 return None
-        
+
         # Agent Manager configuration
         agent_id = "agent_manager"
         agent_name = "Agent Manager"
         # Allow test environments to run without explicitly setting this variable.
         # Default to a localhost base URL if the environment variable is absent.
         base_url = os.getenv("AGENT_MANAGER_BASE_URL", os.getenv("AGENT_MANAGER_URL", "http://localhost:8000"))
-        
+
         # Agent Manager capabilities
         capabilities = {
             "streaming": True,
@@ -90,7 +90,7 @@ def initialize_agent_manager():
             "workflowOrchestration": True,
             "systemMonitoring": True
         }
-        
+
         # Agent Manager skills
         skills = [
             {
@@ -103,7 +103,7 @@ def initialize_agent_manager():
             },
             {
                 "id": "trust-contract-management",
-                "name": "Trust Contract Management", 
+                "name": "Trust Contract Management",
                 "description": "Create and manage trust contracts between agents",
                 "tags": ["trust", "contracts", "delegation"],
                 "inputModes": ["application/json"],
@@ -126,7 +126,7 @@ def initialize_agent_manager():
                 "outputModes": ["application/json"]
             }
         ]
-        
+
         # Create the Agent Manager instance
         agent_manager = AgentManagerAgent(
             base_url=base_url,
@@ -135,7 +135,7 @@ def initialize_agent_manager():
             capabilities=capabilities,
             skills=skills
         )
-    
+
     return agent_manager
 
 
@@ -154,7 +154,7 @@ async def json_rpc_handler(request: Request):
     """Handle JSON-RPC 2.0 requests for Agent Manager"""
     try:
         body = await request.json()
-        
+
         if "jsonrpc" not in body or body["jsonrpc"] != "2.0":
             return JSONResponse(
                 status_code=400,
@@ -167,25 +167,25 @@ async def json_rpc_handler(request: Request):
                     "id": body.get("id")
                 }
             )
-        
+
         method = body.get("method")
         params = body.get("params", {})
         request_id = body.get("id")
-        
+
         if method == "agent.getCard":
             result = await agent_manager.get_agent_card()
-        
+
         elif method == "agent.processMessage":
             message = A2AMessage(**params.get("message", {}))
             context_id = params.get("contextId", str(datetime.utcnow().timestamp()))
             priority = params.get("priority", "medium")
             processing_mode = params.get("processing_mode", "auto")
             result = await agent_manager.process_message(message, context_id, priority, processing_mode)
-        
+
         elif method == "agent.getTaskStatus":
             task_id = params.get("taskId")
             result = await agent_manager.get_task_status(task_id)
-        
+
         else:
             return JSONResponse(
                 status_code=400,
@@ -198,7 +198,7 @@ async def json_rpc_handler(request: Request):
                     "id": request_id
                 }
             )
-        
+
         return JSONResponse(
             content={
                 "jsonrpc": "2.0",
@@ -206,7 +206,7 @@ async def json_rpc_handler(request: Request):
                 "id": request_id
             }
         )
-        
+
     except Exception as e:
         return JSONResponse(
             status_code=500,
@@ -231,10 +231,10 @@ async def rest_message_handler(request: Request):
         context_id = body.get("contextId", str(datetime.utcnow().timestamp()))
         priority = body.get("priority", "medium")
         processing_mode = body.get("processing_mode", "auto")
-        
+
         result = await agent_manager.process_message(message, context_id, priority, processing_mode)
         return JSONResponse(content=result)
-        
+
     except Exception as e:
         return JSONResponse(
             status_code=400,
@@ -317,7 +317,7 @@ async def health_check():
             "streaming_enabled": queue_status["capabilities"]["streaming_enabled"],
             "batch_processing_enabled": queue_status["capabilities"]["batch_processing_enabled"]
         }
-    
+
     return {
         "status": "healthy",
         "agent": "Agent Manager",
@@ -351,10 +351,10 @@ async def register_agent(registration: AgentRegistrationRequest):
                 )
             ]
         )
-        
+
         result = await agent_manager.process_message(message, str(datetime.utcnow().timestamp()))
         return result
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -377,10 +377,10 @@ async def deregister_agent(agent_id: str, force: bool = False):
                 )
             ]
         )
-        
+
         result = await agent_manager.process_message(message, str(datetime.utcnow().timestamp()))
         return result
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -429,10 +429,10 @@ async def check_agent_health(agent_id: str):
                 )
             ]
         )
-        
+
         result = await agent_manager.process_message(message, str(datetime.utcnow().timestamp()))
         return result
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -459,10 +459,10 @@ async def create_trust_contract(contract: TrustContractRequest):
                 )
             ]
         )
-        
+
         result = await agent_manager.process_message(message, str(datetime.utcnow().timestamp()))
         return result
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -530,10 +530,10 @@ async def create_workflow(workflow: WorkflowRequest):
                 )
             ]
         )
-        
+
         result = await agent_manager.process_message(message, str(datetime.utcnow().timestamp()))
         return result
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -600,10 +600,10 @@ async def system_health_check():
                 )
             ]
         )
-        
+
         result = await agent_manager.process_message(message, str(datetime.utcnow().timestamp()))
         return result
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -621,15 +621,15 @@ async def system_metrics():
                 "uptime": (datetime.utcnow() - agent_manager.startup_time).total_seconds() if hasattr(agent_manager, 'startup_time') else 0,
                 "timestamp": datetime.utcnow().isoformat()
             }
-            
+
             # Add agent status breakdown
             agent_statuses = {}
             for agent_info in agent_manager.registered_agents.values():
                 status = agent_info["status"]
                 agent_statuses[status] = agent_statuses.get(status, 0) + 1
-            
+
             metrics["agent_status_breakdown"] = agent_statuses
-            
+
             return metrics
         else:
             raise HTTPException(status_code=503, detail="Agent Manager not available")
@@ -653,9 +653,9 @@ async def all_agents_health():
                 )
             ]
         )
-        
+
         result = await agent_manager.process_message(message, str(datetime.utcnow().timestamp()))
         return result
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -21,7 +21,7 @@ class MessageStatus(str, Enum):
 
 class MessageTemplate:
     """Standard message templates for A2A communication"""
-    
+
     @staticmethod
     def create_request(
         skill: str,
@@ -39,7 +39,7 @@ class MessageTemplate:
             "timestamp": datetime.utcnow().isoformat(),
             "context": context or {}
         }
-    
+
     @staticmethod
     def create_response(
         request_id: str,
@@ -55,21 +55,21 @@ class MessageTemplate:
             "status": status.value,
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
         if result is not None:
             response["result"] = result
-        
+
         if error:
             response["error"] = error
-        
+
         if agent_id:
             response["agent_id"] = agent_id
-            
+
         if metadata:
             response["metadata"] = metadata
-            
+
         return response
-    
+
     @staticmethod
     def create_task_update(
         task_id: str,
@@ -85,21 +85,21 @@ class MessageTemplate:
             "status": status.value,
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
         if progress is not None:
             update["progress"] = progress
-            
+
         if message:
             update["message"] = message
-            
+
         if result is not None:
             update["result"] = result
-            
+
         if error:
             update["error"] = error
-            
+
         return update
-    
+
     @staticmethod
     def create_error_response(
         error_message: str,
@@ -116,21 +116,21 @@ class MessageTemplate:
                 "timestamp": datetime.utcnow().isoformat()
             }
         }
-        
+
         if error_code:
             error_response["error"]["code"] = error_code
-            
+
         if request_id:
             error_response["request_id"] = request_id
-            
+
         if agent_id:
             error_response["agent_id"] = agent_id
-            
+
         if details:
             error_response["error"]["details"] = details
-            
+
         return error_response
-    
+
     @staticmethod
     def create_inter_agent_message(
         from_agent: str,
@@ -151,7 +151,7 @@ class MessageTemplate:
             "reply_to": reply_to,
             "timestamp": datetime.utcnow().isoformat()
         }
-    
+
     @staticmethod
     def create_broadcast_message(
         from_agent: str,
@@ -169,19 +169,19 @@ class MessageTemplate:
             "payload": payload,
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
         if target_roles:
             message["target_roles"] = target_roles
-            
+
         if target_capabilities:
             message["target_capabilities"] = target_capabilities
-            
+
         return message
 
 
 class ReasoningMessageTemplate(MessageTemplate):
     """Extended templates specific to reasoning operations"""
-    
+
     @staticmethod
     def create_reasoning_request(
         question: str,
@@ -201,7 +201,7 @@ class ReasoningMessageTemplate(MessageTemplate):
             },
             sender_id=sender_id
         )
-    
+
     @staticmethod
     def create_sub_task_assignment(
         task_id: str,
@@ -223,7 +223,7 @@ class ReasoningMessageTemplate(MessageTemplate):
             "deadline": deadline,
             "timestamp": datetime.utcnow().isoformat()
         }
-    
+
     @staticmethod
     def create_evidence_request(
         query: str,
@@ -242,7 +242,7 @@ class ReasoningMessageTemplate(MessageTemplate):
             },
             "timestamp": datetime.utcnow().isoformat()
         }
-    
+
     @staticmethod
     def create_debate_message(
         debate_id: str,
@@ -266,19 +266,19 @@ class ReasoningMessageTemplate(MessageTemplate):
 
 class MessageValidator:
     """Validate messages against expected formats"""
-    
+
     @staticmethod
     def validate_request(message: Dict[str, Any]) -> bool:
         """Validate request message format"""
         required_fields = ["skill", "parameters", "sender", "timestamp"]
         return all(field in message for field in required_fields)
-    
+
     @staticmethod
     def validate_response(message: Dict[str, Any]) -> bool:
         """Validate response message format"""
         required_fields = ["status", "timestamp"]
         return all(field in message for field in required_fields)
-    
+
     @staticmethod
     def validate_task_update(message: Dict[str, Any]) -> bool:
         """Validate task update format"""

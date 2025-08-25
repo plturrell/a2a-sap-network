@@ -17,7 +17,7 @@ class LocationStandardizer:
         self.js_file_path = os.path.join(project_root, "scripts/build/location_standardization.js")
         # Initialize Grok client for enrichment
         self.grok_client = None
-        
+
     async def standardize(self, location_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Standardize location data using the JavaScript standardizer
@@ -37,13 +37,13 @@ class LocationStandardizer:
             else:
                 # Already structured data
                 input_data = location_data
-            
+
             # Call JavaScript standardizer via Node.js
             result = await self._call_js_standardizer([input_data])
-            
+
             if result and len(result) > 0:
                 standardized = result[0]
-                
+
                 # Extract initial standardized data
                 initial_standardized = {
                     "name": standardized.get("L4_clean_name") or standardized.get("L3_clean_name") or standardized.get("L2_clean_name"),
@@ -58,24 +58,24 @@ class LocationStandardizer:
                     },
                     "hierarchy_path": standardized.get("hierarchy_path")
                 }
-                
+
                 # Calculate initial completeness
                 completeness = self._calculate_completeness(initial_standardized)
-                
+
                 # If completeness is low, try to enrich with Grok (up to 3 passes)
                 enrichment_passes = 0
                 max_passes = 3
-                
+
                 while completeness < 0.8 and self._should_use_grok() and enrichment_passes < max_passes:
                     enrichment_passes += 1
                     logger.info(f"Location enrichment pass {enrichment_passes} - completeness: {completeness:.2f}")
-                    
+
                     # Get missing fields for targeted enrichment
                     missing_fields = self._get_missing_fields(initial_standardized)
-                    
+
                     if not missing_fields:
                         break
-                    
+
                     enriched = await self._enrich_with_grok(initial_standardized, location_data, missing_fields, enrichment_passes)
                     if enriched:
                         # Update with enriched data
@@ -95,20 +95,20 @@ class LocationStandardizer:
                         if enriched.get("subregion") and not initial_standardized["subregion"]:
                             initial_standardized["subregion"] = enriched["subregion"]
                             fields_updated += 1
-                        
+
                         # Recalculate completeness
                         new_completeness = self._calculate_completeness(initial_standardized)
-                        
+
                         # If no improvement, stop trying
                         if new_completeness <= completeness or fields_updated == 0:
                             logger.info(f"No improvement in pass {enrichment_passes}, stopping enrichment")
                             break
-                            
+
                         completeness = new_completeness
                     else:
                         # If enrichment failed, don't try again
                         break
-                
+
                 return {
                     "original": location_data,
                     "standardized": initial_standardized,
@@ -124,7 +124,7 @@ class LocationStandardizer:
                 }
             else:
                 raise ValueError("No standardization result returned")
-                
+
         except Exception as e:
             logger.error(f"Error standardizing location: {str(e)}")
             return {
@@ -134,23 +134,23 @@ class LocationStandardizer:
                 "completeness": 0.0,
                 "error": str(e)
             }
-    
+
     async def _call_js_standardizer(self, data: List[Dict]) -> List[Dict]:
         """
         Call the JavaScript standardizer via Node.js subprocess
         """
         # Use absolute path to ensure it's found
         absolute_js_path = os.path.abspath(self.js_file_path)
-        
+
         # Create a temporary Node.js wrapper script
         wrapper_script = f"""
         const LocationStandardizer = require('{absolute_js_path}');
-        
+
         // Override console.log for the standardizer to redirect logs to stderr
         const originalLog = console.log;
         const originalInfo = console.info;
         const originalWarn = console.warn;
-        
+
         // Create standardizer with custom logger that writes to stderr
         const standardizer = new LocationStandardizer({{
             logger: {{
@@ -160,7 +160,7 @@ class LocationStandardizer:
                 debug: (msg) => console.error(`[DEBUG] ${{msg}}`)
             }}
         }});
-        
+
         async function run() {{
             try {{
                 const input = JSON.parse(process.argv[2]);
@@ -172,16 +172,16 @@ class LocationStandardizer:
                 process.exit(1);
             }}
         }}
-        
+
         run();
         """
-        
+
         # Write wrapper to temporary file
         import tempfile
         with tempfile.NamedTemporaryFile(mode='w', suffix='.js', delete=False) as f:
             f.write(wrapper_script)
             wrapper_path = f.name
-        
+
         try:
             # Run Node.js subprocess
             process = await asyncio.create_subprocess_exec(
@@ -189,16 +189,16 @@ class LocationStandardizer:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
-            
+
             stdout, stderr = await process.communicate()
-            
+
             if process.returncode != 0:
                 raise RuntimeError(f"Node.js error: {stderr.decode()}")
-            
+
             # Debug: log the output
             output = stdout.decode()
             stderr_output = stderr.decode()
-            
+
             # Filter out INFO/WARN logs from stderr
             if stderr_output and not output.strip():
                 # Check if stderr contains the actual output (sometimes Node.js logs go there)
@@ -207,53 +207,53 @@ class LocationStandardizer:
                     if line.strip() and not line.startswith('['):
                         output = line
                         break
-            
+
             if not output.strip():
                 logger.error(f"No output from Node.js. Stdout: '{output}', Stderr: '{stderr_output}'")
                 raise RuntimeError(f"No output from Node.js")
-            
+
             return json.loads(output)
-            
+
         finally:
             # Clean up temporary file
             os.unlink(wrapper_path)
-    
+
     def _calculate_confidence(self, standardized_data: Dict) -> float:
         """
         Calculate confidence score for standardized location
         """
         score = 0.0
         max_score = 5.0
-        
+
         # Check if valid location was found
         if standardized_data.get("is_valid_location"):
             score += 1.0
-        
+
         # Check if ISO codes were found
         if standardized_data.get("iso2_code"):
             score += 1.0
         if standardized_data.get("iso3_code"):
             score += 0.5
-        
+
         # Check if coordinates were found
         if standardized_data.get("latitude") and standardized_data.get("longitude"):
             score += 1.0
-        
+
         # Check if UN region data was found
         if standardized_data.get("un_region"):
             score += 0.5
         if standardized_data.get("un_subregion"):
             score += 0.5
-        
+
         # Check standardization quality
         quality = standardized_data.get("standardization_quality", "")
         if quality == "Excellent":
             score += 0.5
         elif quality == "Good":
             score += 0.3
-        
+
         return min(1.0, score / max_score)
-    
+
     def _calculate_completeness(self, standardized: Dict) -> float:
         """
         Calculate completeness score (0-1) for standardized location data
@@ -268,10 +268,10 @@ class LocationStandardizer:
             ("coordinates.latitude", 1.0),
             ("coordinates.longitude", 1.0)
         ]
-        
+
         total_weight = sum(weight for _, weight in fields)
         score = 0.0
-        
+
         for field, weight in fields:
             if "." in field:
                 # Handle nested fields
@@ -284,21 +284,21 @@ class LocationStandardizer:
             else:
                 if standardized.get(field):
                     score += weight
-        
+
         return min(1.0, score / total_weight)
-    
+
     def _should_use_grok(self) -> bool:
         """
         Check if Grok API is available and should be used
         """
         return os.getenv('XAI_API_KEY') is not None
-    
+
     def _get_missing_fields(self, standardized: Dict) -> List[str]:
         """
         Get list of missing fields that need enrichment
         """
         missing = []
-        
+
         # Check each field
         if not standardized.get("iso2"):
             missing.append("iso2")
@@ -308,14 +308,14 @@ class LocationStandardizer:
             missing.append("region")
         if not standardized.get("subregion"):
             missing.append("subregion")
-        
+
         # Check coordinates
         coords = standardized.get("coordinates", {})
         if not coords or not coords.get("latitude") or not coords.get("longitude"):
             missing.append("coordinates")
-        
+
         return missing
-    
+
     async def _enrich_with_grok(self, standardized: Dict, original: Dict, missing_fields: List[str] = None, pass_number: int = 1) -> Optional[Dict]:
         """
         Use Grok API to enrich missing location data
@@ -323,16 +323,16 @@ class LocationStandardizer:
         try:
             if not self.grok_client:
                 self.grok_client = create_grok_client()
-            
+
             # Build prompt for Grok
             location_name = standardized.get('name', '')
             hierarchy = standardized.get('hierarchy_path', '')
             country = standardized.get('country', 'Unknown')
-            
+
             # Use missing fields if provided, otherwise check all fields
             if missing_fields is None:
                 missing_fields = self._get_missing_fields(standardized)
-            
+
             # Build targeted prompt based on what's missing
             missing_items = []
             if "iso2" in missing_fields:
@@ -345,12 +345,12 @@ class LocationStandardizer:
                 missing_items.append("region: The UN M49 region name")
             if "subregion" in missing_fields:
                 missing_items.append("subregion: The UN M49 subregion name")
-            
+
             # Add context hints for later passes
             context_hint = ""
             if pass_number > 1:
                 context_hint = f"\n\nThis is enrichment pass {pass_number}. Previous attempts may have failed to find some information. Please try alternative sources or make educated estimates based on the location hierarchy."
-            
+
             prompt = f"""Given this location information:
 Location Name: {location_name}
 Hierarchy: {hierarchy}
@@ -367,23 +367,23 @@ Important: Only include the fields I've asked for above. Return ONLY valid JSON 
                 temperature=0.1,
                 max_tokens=500
             )
-            
+
             if response.content:
                 # Parse JSON response
                 import re
                 # Remove any markdown code blocks if present
                 json_str = re.sub(r'```json\s*|\s*```', '', response.content)
                 enriched_data = json.loads(json_str)
-                
+
                 # Validate and return only the fields we need
                 result = {}
-                
+
                 if enriched_data.get("iso2") and len(enriched_data["iso2"]) == 2:
                     result["iso2"] = enriched_data["iso2"].upper()
-                    
+
                 if enriched_data.get("iso3") and len(enriched_data["iso3"]) == 3:
                     result["iso3"] = enriched_data["iso3"].upper()
-                    
+
                 if enriched_data.get("coordinates"):
                     coords = enriched_data["coordinates"]
                     if isinstance(coords, dict) and "latitude" in coords and "longitude" in coords:
@@ -394,30 +394,30 @@ Important: Only include the fields I've asked for above. Return ONLY valid JSON 
                                 result["coordinates"] = {"latitude": lat, "longitude": lng}
                         except (ValueError, TypeError):
                             pass
-                
+
                 if enriched_data.get("region"):
                     result["region"] = enriched_data["region"]
-                    
+
                 if enriched_data.get("subregion"):
                     result["subregion"] = enriched_data["subregion"]
-                    
+
                 return result if result else None
-                
+
         except Exception as e:
             logger.warning(f"Failed to enrich location with Grok: {str(e)}")
-        
+
         return None
 
 
 # For compatibility with async/await pattern in Python < 3.7
 if not hasattr(asyncio, 'create_subprocess_exec'):
     import subprocess
-    
+
     async def create_subprocess_exec(*args, **kwargs):
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
             None,
             lambda: subprocess.Popen(args, **kwargs)
         )
-    
+
     asyncio.create_subprocess_exec = create_subprocess_exec
