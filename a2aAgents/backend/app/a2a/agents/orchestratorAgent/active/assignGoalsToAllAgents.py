@@ -51,9 +51,12 @@ async def assign_goals_to_all_agents():
         orchestrator_sdk = ComprehensiveOrchestratorAgentSDK()
         orchestrator_handler = OrchestratorAgentA2AHandler(orchestrator_sdk)
 
-        # Start orchestrator handler
-        await orchestrator_handler.start()
-        logger.info("Orchestrator handler started successfully")
+        # Skip starting orchestrator handler for development mode to avoid blockchain dependency
+        if os.getenv("A2A_DEV_MODE", "false").lower() != "true":
+            await orchestrator_handler.start()
+            logger.info("Orchestrator handler started successfully")
+        else:
+            logger.info("Skipping orchestrator handler startup in development mode")
 
         # Initialize notification system
         notification_system = SMARTGoalNotificationSystem(orchestrator_handler)

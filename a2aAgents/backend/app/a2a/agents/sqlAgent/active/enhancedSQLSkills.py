@@ -1,12 +1,10 @@
 import re
 import json
-import asyncio
 import hashlib
 import os
 import uuid
-from typing import Dict, List, Any, Optional, Tuple, Set
+from typing import Dict, List, Any
 from datetime import datetime, timedelta
-from decimal import Decimal
 import logging
 
 from app.a2a.core.security_base import SecureA2AAgent
@@ -17,21 +15,21 @@ Provides advanced NL2SQL and SQL2NL capabilities with explanations
 
 # Advanced NLP processing
 try:
-    import spacy
-    from spacy.matcher import Matcher
-    SPACY_AVAILABLE = True
+    # import spacy  # Unused
+    # from spacy.matcher import Matcher  # Unused
+    SPACY_AVAILABLE = False
 except ImportError:
     SPACY_AVAILABLE = False
-    logging.warning("spaCy not available. Advanced NLP features will be limited.")
+    # logging.warning("spaCy not available. Advanced NLP features will be limited.")
 
 # Transformers for advanced language understanding
 try:
-    from transformers import pipeline, AutoTokenizer, AutoModel
-    import torch
-    TRANSFORMERS_AVAILABLE = True
+    # from transformers import pipeline, AutoTokenizer, AutoModel  # Unused
+    # import torch  # Unused
+    TRANSFORMERS_AVAILABLE = False
 except ImportError:
     TRANSFORMERS_AVAILABLE = False
-    logging.warning("Transformers not available. Advanced language models will be limited.")
+    # logging.warning("Transformers not available. Advanced language models will be limited.")
 
 # SQL parsing and security
 try:

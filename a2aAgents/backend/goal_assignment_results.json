@@ -1,0 +1,112 @@
+{
+  "timestamp": "2025-08-25T11:09:51.394919",
+  "summary": {
+    "total_agents": 16,
+    "successful_assignments": 3,
+    "failed_assignments": 13,
+    "total_goals_assigned": 5
+  },
+  "assigned_goals": {
+    "agent0_data_product": [
+      {
+        "goal_id": "agent0_data_product_performance_1756091391",
+        "agent_id": "agent0_data_product",
+        "goal_type": "performance",
+        "title": "Data Product Agent Performance Goal",
+        "specific": "Achieve 99.9% Registration Success Rate with optimal processing time",
+        "measurable": {
+          "registration_success_rate": 99.9,
+          "avg_registration_time": 3.45,
+          "validation_accuracy": 99.9
+        },
+        "achievable": true,
+        "relevant": "Critical for data product registration and validation efficiency",
+        "time_bound": "30 days",
+        "created_at": "2025-08-25T11:09:51.394735",
+        "target_date": "2025-09-24T11:09:51.394737",
+        "assigned_date": "2025-08-25T11:09:51.394740",
+        "status": "active",
+        "progress": 0
+      },
+      {
+        "goal_id": "agent0_data_product_quality_1756091391",
+        "agent_id": "agent0_data_product",
+        "goal_type": "quality",
+        "title": "Data Product Agent Quality Goal",
+        "specific": "Maintain 97.75+ data quality score with 95.0% compliance",
+        "measurable": {
+          "data_quality_score": 97.75
+        },
+        "achievable": true,
+        "relevant": "Ensures high-quality data products meet enterprise standards",
+        "time_bound": "30 days",
+        "created_at": "2025-08-25T11:09:51.394748",
+        "target_date": "2025-09-24T11:09:51.394748",
+        "assigned_date": "2025-08-25T11:09:51.394750",
+        "status": "active",
+        "progress": 0
+      }
+    ],
+    "agent1_standardization": [
+      {
+        "goal_id": "agent1_standardization_transformation_1756091391",
+        "agent_id": "agent1_standardization",
+        "goal_type": "transformation",
+        "title": "Data Standardization Agent Transformation Goal",
+        "specific": "Achieve 99.9% standardization success with 2.3s avg time",
+        "measurable": {
+          "standardization_success_rate": 99.9,
+          "avg_transformation_time": 2.3,
+          "schema_mapping_accuracy": 100.0
+        },
+        "achievable": true,
+        "relevant": "Critical for maintaining data consistency across the enterprise",
+        "time_bound": "30 days",
+        "created_at": "2025-08-25T11:09:51.394759",
+        "target_date": "2025-09-24T11:09:51.394760",
+        "assigned_date": "2025-08-25T11:09:51.394761",
+        "status": "active",
+        "progress": 0
+      },
+      {
+        "goal_id": "agent1_standardization_compliance_1756091391",
+        "agent_id": "agent1_standardization",
+        "goal_type": "compliance",
+        "title": "Data Standardization Agent Compliance Goal",
+        "specific": "Maintain 100.0% canonical format compliance with 98.0% accuracy",
+        "measurable": {
+          "canonical_compliance_rate": 100.0
+        },
+        "achievable": true,
+        "relevant": "Ensures all data conforms to enterprise canonical standards",
+        "time_bound": "30 days",
+        "created_at": "2025-08-25T11:09:51.394766",
+        "target_date": "2025-09-24T11:09:51.394767",
+        "assigned_date": "2025-08-25T11:09:51.394768",
+        "status": "active",
+        "progress": 0
+      }
+    ],
+    "agent2_ai_preparation": [
+      {
+        "goal_id": "agent2_ai_preparation_feature_engineering_1756091391",
+        "agent_id": "agent2_ai_preparation",
+        "goal_type": "feature_engineering",
+        "title": "AI Data Preparation Agent Feature Engineering Goal",
+        "specific": "Generate 99.0% quality features with 85.0% coverage",
+        "measurable": {
+          "feature_quality_score": 99.0,
+          "feature_generation_speed": 345.0
+        },
+        "achievable": true,
+        "relevant": "Prepares data for advanced ML/AI model training and inference",
+        "time_bound": "30 days",
+        "created_at": "2025-08-25T11:09:51.394776",
+        "target_date": "2025-09-24T11:09:51.394777",
+        "assigned_date": "2025-08-25T11:09:51.394778",
+        "status": "active",
+        "progress": 0
+      }
+    ]
+  }
+}

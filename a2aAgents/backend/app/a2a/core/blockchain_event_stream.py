@@ -4,15 +4,12 @@ Replaces WebSocket connections with blockchain event monitoring for real-time up
 """
 
 import asyncio
-import json
 import logging
-from typing import Dict, List, Optional, Any, Callable, Set
+from typing import Dict, List, Any, Callable, Set
 from datetime import datetime
 from collections import defaultdict
-import hashlib
 
 from web3 import Web3
-from web3.exceptions import BlockNotFound
 from eth_utils import is_address
 
 logger = logging.getLogger(__name__)
